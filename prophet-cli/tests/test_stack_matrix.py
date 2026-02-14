@@ -77,7 +77,9 @@ class StackMatrixTests(unittest.TestCase):
         self.assertIn("python_flask_sqlalchemy", ids)
         self.assertIn("python_django_orm", ids)
         self.assertTrue(by_id["java_spring_jpa"]["implemented"])
+        self.assertEqual(by_id["java_spring_jpa"]["status"], "implemented")
         self.assertFalse(by_id["python_fastapi_sqlalchemy"]["implemented"])
+        self.assertEqual(by_id["python_fastapi_sqlalchemy"]["status"], "planned")
 
 
 if __name__ == "__main__":

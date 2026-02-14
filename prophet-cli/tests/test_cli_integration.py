@@ -213,6 +213,8 @@ dependencies {
             self.assertIn("changes", payload)
             self.assertIn("summary", payload)
             self.assertEqual(payload["stack"]["id"], "java_spring_jpa")
+            self.assertEqual(payload["stack"]["status"], "implemented")
+            self.assertTrue(payload["stack"]["implemented"])
             self.assertIn("change_count", payload["summary"])
 
     def test_version_check_succeeds_after_generation(self) -> None:
@@ -261,6 +263,7 @@ dependencies {
             result = run_cli(root, "plan", "--json")
             payload = json.loads(result.stdout)
             self.assertEqual(payload["stack"]["id"], "java_spring_jpa")
+            self.assertEqual(payload["stack"]["status"], "implemented")
 
 
 if __name__ == "__main__":

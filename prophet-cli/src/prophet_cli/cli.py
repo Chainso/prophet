@@ -4444,6 +4444,8 @@ def cmd_plan(args: argparse.Namespace) -> int:
                 "language": stack.language,
                 "framework": stack.framework,
                 "orm": stack.orm,
+                "status": stack.status,
+                "implemented": stack.implemented,
                 "capabilities": sorted(stack.capabilities),
             },
             "changes": change_items,
@@ -4734,7 +4736,7 @@ def cmd_stacks(args: argparse.Namespace) -> int:
     rows = supported_stack_table()
     print("Supported stacks:")
     for row in rows:
-        status = "implemented" if row.get("implemented") else "planned"
+        status = str(row.get("status", "planned"))
         print(f"- {row['id']}: {row['language']}/{row['framework']}/{row['orm']} [{status}]")
         print(f"  capabilities: {', '.join(row['capabilities'])}")
     return 0
@@ -4859,6 +4861,8 @@ def cmd_check(args: argparse.Namespace) -> int:
                 "language": stack.language,
                 "framework": stack.framework,
                 "orm": stack.orm,
+                "status": stack.status,
+                "implemented": stack.implemented,
                 "capabilities": sorted(stack.capabilities),
             },
             "validation": {

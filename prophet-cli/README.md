@@ -65,6 +65,7 @@ prophet check --against .prophet/baselines/main.ir.json
 
 ### `prophet stacks`
 Lists supported stack ids, framework/ORM pairings, implementation status, and capability metadata.
+Entries come from a schema-validated stack manifest.
 
 ```bash
 prophet stacks

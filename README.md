@@ -24,6 +24,7 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
 
 - `prophet-cli/`: CLI package (`prophet`)
 - `prophet-cli/src/prophet_cli/core/`: modularized compiler core (parser, validation, IR, compatibility)
+- `prophet-cli/src/prophet_cli/codegen/stack_manifest.py`: canonical stack matrix + schema validation
 - `prophet-cli/src/prophet_cli/targets/java_spring_jpa/`: reference stack generation module
 - `docs/`: DSL, architecture, JPA mapping, compatibility policy
 - `docs/prophet-generator-modularization-roadmap-v0.1.md`: modularization strategy and contributor-ready execution roadmap

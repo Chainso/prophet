@@ -22,6 +22,7 @@ Completed so far:
 12. Added a standardized `IRReader` boundary and routed reference target generation through it.
 13. Added extension hook manifest generation (`gen/manifest/extension-hooks.json`) for action handler surfaces.
 14. Added deterministic no-op generation cache support via `prophet gen --skip-unchanged`.
+15. Introduced a schema-validated stack manifest layer for stack matrix governance.
 
 In progress:
 

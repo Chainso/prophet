@@ -4,6 +4,8 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Set
 
 from prophet_cli.core.errors import ProphetError
+from prophet_cli.codegen.stack_manifest import STACK_MANIFEST
+from prophet_cli.codegen.stack_manifest import validate_stack_manifest
 
 
 @dataclass(frozen=True)
@@ -12,76 +14,27 @@ class StackSpec:
     language: str
     framework: str
     orm: str
+    status: str
     implemented: bool
     capabilities: Set[str]
 
 
-SUPPORTED_STACKS: Dict[str, StackSpec] = {
-    "java_spring_jpa": StackSpec(
-        id="java_spring_jpa",
-        language="java",
-        framework="spring_boot",
-        orm="jpa",
-        implemented=True,
-        capabilities={
-            "action_endpoints",
-            "typed_query_filters",
-            "pagination",
-            "object_refs",
-            "nested_lists",
-            "structs",
-            "extension_hooks",
-        },
-    ),
-    "node_express_typeorm": StackSpec(
-        id="node_express_typeorm",
-        language="node",
-        framework="express",
-        orm="typeorm",
-        implemented=False,
-        capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
-    ),
-    "node_express_prisma": StackSpec(
-        id="node_express_prisma",
-        language="node",
-        framework="express",
-        orm="prisma",
-        implemented=False,
-        capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
-    ),
-    "node_express_mongoose": StackSpec(
-        id="node_express_mongoose",
-        language="node",
-        framework="express",
-        orm="mongoose",
-        implemented=False,
-        capabilities={"action_endpoints", "typed_query_filters", "pagination", "nested_lists", "structs"},
-    ),
-    "python_fastapi_sqlalchemy": StackSpec(
-        id="python_fastapi_sqlalchemy",
-        language="python",
-        framework="fastapi",
-        orm="sqlalchemy",
-        implemented=False,
-        capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
-    ),
-    "python_flask_sqlalchemy": StackSpec(
-        id="python_flask_sqlalchemy",
-        language="python",
-        framework="flask",
-        orm="sqlalchemy",
-        implemented=False,
-        capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
-    ),
-    "python_django_orm": StackSpec(
-        id="python_django_orm",
-        language="python",
-        framework="django",
-        orm="django_orm",
-        implemented=False,
-        capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
-    ),
-}
+def _load_supported_stacks() -> Dict[str, StackSpec]:
+    supported: Dict[str, StackSpec] = {}
+    for entry in validate_stack_manifest(STACK_MANIFEST):
+        supported[entry["id"]] = StackSpec(
+            id=entry["id"],
+            language=entry["language"],
+            framework=entry["framework"],
+            orm=entry["orm"],
+            status=entry["status"],
+            implemented=entry["status"] == "implemented",
+            capabilities=set(entry["capabilities"]),
+        )
+    return supported
+
+
+SUPPORTED_STACKS: Dict[str, StackSpec] = _load_supported_stacks()
 
 
 def _cfg_get(cfg: Dict[str, Any], keys: List[str], default: Any = None) -> Any:
@@ -172,6 +125,7 @@ def supported_stack_table() -> List[Dict[str, Any]]:
                 "language": spec.language,
                 "framework": spec.framework,
                 "orm": spec.orm,
+                "status": spec.status,
                 "implemented": spec.implemented,
                 "capabilities": sorted(spec.capabilities),
             }
