@@ -36,6 +36,10 @@ from prophet_cli.codegen.stacks import resolve_stack_spec
 from prophet_cli.codegen.stacks import supported_stack_table
 from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.contracts import StackGenerator
+from prophet_cli.codegen.cache import compute_generation_signature
+from prophet_cli.codegen.cache import generation_cache_path
+from prophet_cli.codegen.cache import load_generation_cache
+from prophet_cli.codegen.cache import write_generation_cache
 from prophet_cli.codegen.pipeline import run_generation_pipeline
 from prophet_cli.codegen.artifacts import managed_existing_files as _managed_existing_files
 from prophet_cli.codegen.artifacts import remove_stale_outputs as _remove_stale_outputs
@@ -4272,41 +4276,6 @@ def hints_for_prophet_error(message: str) -> List[str]:
     return hints
 
 
-def generation_cache_path(root: Path) -> Path:
-    return root / ".prophet" / "cache" / "generation.json"
-
-
-def compute_generation_signature(cfg: Dict[str, Any], ir: Dict[str, Any], stack_id: str) -> str:
-    payload = {
-        "toolchain_version": TOOLCHAIN_VERSION,
-        "stack_id": stack_id,
-        "ir_hash": str(ir.get("ir_hash", "")),
-        "out_dir": str(cfg_get(cfg, ["generation", "out_dir"], "gen")),
-        "targets": list(cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"])),
-        "baseline_ir": str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json")),
-    }
-    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
-
-
-def load_generation_cache(root: Path) -> Dict[str, Any]:
-    path = generation_cache_path(root)
-    if not path.exists():
-        return {}
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if isinstance(payload, dict):
-            return payload
-    except Exception:
-        return {}
-    return {}
-
-
-def write_generation_cache(root: Path, payload: Dict[str, Any]) -> None:
-    path = generation_cache_path(root)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
-
-
 def ensure_baseline_exists(root: Path, cfg: Dict[str, Any], ir: Dict[str, Any]) -> Path:
     baseline_rel = str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline = root / baseline_rel
@@ -4510,8 +4479,17 @@ def cmd_generate(args: argparse.Namespace) -> int:
     if args.verify_clean and args.skip_unchanged:
         raise ProphetError("--skip-unchanged cannot be used with --verify-clean")
 
-    signature = compute_generation_signature(cfg, ir, stack.id)
     out_dir = str(cfg_get(cfg, ["generation", "out_dir"], "gen"))
+    targets = list(cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"]))
+    baseline_ir = str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
+    signature = compute_generation_signature(
+        toolchain_version=TOOLCHAIN_VERSION,
+        stack_id=stack.id,
+        ir_hash=str(ir.get("ir_hash", "")),
+        out_dir=out_dir,
+        targets=targets,
+        baseline_ir=baseline_ir,
+    )
     manifest_path = root / out_dir / "manifest" / "generated-files.json"
     cache_payload = load_generation_cache(root)
     cached_signature = str(cache_payload.get("signature", "")) if isinstance(cache_payload, dict) else ""

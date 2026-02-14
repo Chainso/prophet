@@ -26,6 +26,7 @@ Completed so far:
 16. Added explicit generator registry checks to ensure implemented stacks map to concrete generators.
 17. Added semantic conformance tests for action/query/struct/object-ref contracts independent of file snapshots.
 18. Added `prophet hooks` command with JSON output to expose generated extension surfaces directly.
+19. Extracted generation cache/signature behavior into `prophet_cli.codegen.cache` with dedicated tests.
 
 In progress:
 
