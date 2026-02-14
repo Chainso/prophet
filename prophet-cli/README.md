@@ -47,6 +47,18 @@ prophet plan
 prophet plan --show-reasons
 ```
 
+### `prophet check`
+Runs a CI-style gate in one command:
+1. ontology validation
+2. generated output cleanliness check
+3. compatibility/version-bump check against baseline IR
+
+```bash
+prophet check
+prophet check --show-reasons
+prophet check --against .prophet/baselines/main.ir.json
+```
+
 ### `prophet generate` / `prophet gen`
 Writes generated artifacts and current IR.
 
@@ -166,3 +178,4 @@ compatibility:
   - `GET /<objects>/{id}`
   - `GET /<objects>` with pagination + field filters
   - list responses returned as generated `*ListResponse` DTOs (no raw Spring `Page` payload)
+- Generated Spring query layer now uses dedicated `generated.mapping.*DomainMapper` classes for entity-to-domain mapping.

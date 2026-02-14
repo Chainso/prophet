@@ -2,6 +2,7 @@ package com.example.prophet.generated.api;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.generated.domain.User;
+import com.example.prophet.generated.mapping.UserDomainMapper;
 import com.example.prophet.generated.persistence.UserEntity;
 import com.example.prophet.generated.persistence.UserRepository;
 import java.util.List;
@@ -23,9 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserQueryController {
 
     private final UserRepository repository;
+    private final UserDomainMapper mapper;
 
-    public UserQueryController(UserRepository repository) {
+    public UserQueryController(UserRepository repository, UserDomainMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @GetMapping
@@ -42,7 +45,7 @@ public class UserQueryController {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("email"), email));
         }
         Page<UserEntity> entityPage = repository.findAll(spec, pageable);
-        List<User> items = entityPage.stream().map(this::toDomain).toList();
+        List<User> items = entityPage.stream().map(mapper::toDomain).toList();
         UserListResponse result = UserListResponse.builder()
             .items(items)
             .page(entityPage.getNumber())
@@ -60,14 +63,7 @@ public class UserQueryController {
             return ResponseEntity.notFound().build();
         }
 
-        User domain = toDomain(maybeEntity.get());
+        User domain = mapper.toDomain(maybeEntity.get());
         return ResponseEntity.ok(domain);
     }
-    private User toDomain(UserEntity entity) {
-        return User.builder()
-            .userId(entity.getUserId())
-            .email(entity.getEmail())
-            .build();
-    }
-
 }

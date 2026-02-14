@@ -80,6 +80,7 @@ dependencies {
             run_cli(root, "plan")
             run_cli(root, "gen", "--wire-gradle")
             run_cli(root, "generate", "--verify-clean")
+            run_cli(root, "check", "--show-reasons")
 
             self.assertTrue((root / "gen" / "sql" / "schema.sql").exists())
             self.assertTrue((root / "gen" / "openapi" / "openapi.yaml").exists())
@@ -90,6 +91,13 @@ dependencies {
             self.assertIn('include(":prophet_generated")', settings_text)
             self.assertIn('implementation(project(":prophet_generated"))', build_text)
 
+            schema_path = root / "gen" / "sql" / "schema.sql"
+            schema_path.write_text(schema_path.read_text(encoding="utf-8") + "\n-- local change\n", encoding="utf-8")
+            dirty_check = run_cli(root, "check", expect_code=1)
+            self.assertIn("Generated outputs are not clean", dirty_check.stdout)
+            self.assertIn("How to fix:", dirty_check.stdout)
+
+            run_cli(root, "gen")
             run_cli(root, "clean")
 
             self.assertFalse((root / "gen").exists())
@@ -102,6 +110,13 @@ dependencies {
 
             verify_after_clean = run_cli(root, "generate", "--verify-clean", expect_code=1)
             self.assertIn("Generated outputs are not clean", verify_after_clean.stdout)
+
+    def test_missing_config_includes_actionable_hint(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-hints-") as tmp:
+            root = Path(tmp)
+            result = run_cli(root, "validate", expect_code=1)
+            self.assertIn("prophet.yaml not found", result.stderr)
+            self.assertIn("Run `prophet init`", result.stderr)
 
 
 if __name__ == "__main__":

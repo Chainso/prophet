@@ -3,7 +3,7 @@ package com.example.prophet.generated.api;
 import javax.annotation.processing.Generated;
 import com.example.prophet.generated.domain.Order;
 import com.example.prophet.generated.domain.OrderState;
-import com.example.prophet.generated.domain.UserRef;
+import com.example.prophet.generated.mapping.OrderDomainMapper;
 import com.example.prophet.generated.persistence.OrderEntity;
 import com.example.prophet.generated.persistence.OrderRepository;
 import jakarta.persistence.criteria.JoinType;
@@ -27,9 +27,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class OrderQueryController {
 
     private final OrderRepository repository;
+    private final OrderDomainMapper mapper;
 
-    public OrderQueryController(OrderRepository repository) {
+    public OrderQueryController(OrderRepository repository, OrderDomainMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @GetMapping
@@ -58,7 +60,7 @@ public class OrderQueryController {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("currentState"), currentState));
         }
         Page<OrderEntity> entityPage = repository.findAll(spec, pageable);
-        List<Order> items = entityPage.stream().map(this::toDomain).toList();
+        List<Order> items = entityPage.stream().map(mapper::toDomain).toList();
         OrderListResponse result = OrderListResponse.builder()
             .items(items)
             .page(entityPage.getNumber())
@@ -76,19 +78,7 @@ public class OrderQueryController {
             return ResponseEntity.notFound().build();
         }
 
-        Order domain = toDomain(maybeEntity.get());
+        Order domain = mapper.toDomain(maybeEntity.get());
         return ResponseEntity.ok(domain);
     }
-    private Order toDomain(OrderEntity entity) {
-        return Order.builder()
-            .orderId(entity.getOrderId())
-            .customer(entity.getCustomer() == null ? null : UserRef.builder().userId(entity.getCustomer().getUserId()).build())
-            .totalAmount(entity.getTotalAmount())
-            .discountCode(entity.getDiscountCode())
-            .tags(entity.getTags())
-            .shippingAddress(entity.getShippingAddress())
-            .currentState(entity.getCurrentState())
-            .build();
-    }
-
 }

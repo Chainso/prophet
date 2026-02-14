@@ -55,3 +55,4 @@ cd examples/java/prophet_example_spring
 - Generated query APIs include:
 `GET /<objects>/{id}` and paginated/filterable `GET /<objects>` backed by JPA specifications.
 - List endpoints return generated DTO envelopes (`*ListResponse`) instead of raw Spring `Page` serialization.
+- Generated query controllers use generated mapping components (`generated.mapping.*DomainMapper`) for entity-to-domain conversion boundaries.

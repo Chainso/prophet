@@ -172,8 +172,13 @@ def pluralize(value: str) -> str:
 
 
 def load_config(path: Path) -> Dict[str, Any]:
-    with path.open("r", encoding="utf-8") as f:
-        cfg = yaml.safe_load(f)
+    if not path.exists():
+        raise ProphetError(f"prophet.yaml not found in current directory: {path.parent}")
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            cfg = yaml.safe_load(f)
+    except OSError as exc:
+        raise ProphetError(f"Failed to read config {path}: {exc}") from exc
     if not isinstance(cfg, dict):
         raise ProphetError(f"Invalid config format in {path}")
     return cfg
@@ -2767,6 +2772,7 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         repo_name = f"{obj['name']}Repository"
         entity_name = f"{obj['name']}Entity"
         domain_name = obj["name"]
+        mapper_name = f"{obj['name']}DomainMapper"
         list_response_name = f"{obj['name']}ListResponse"
         pk_prop = camel_case(pk["name"])
         pk_java = java_type_for_field(pk, type_by_id, object_by_id, struct_by_id)
@@ -2786,6 +2792,7 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             "import org.springframework.web.bind.annotation.RequestMapping;",
             "import org.springframework.web.bind.annotation.RestController;",
             f"import {base_package}.generated.domain.{domain_name};",
+            f"import {base_package}.generated.mapping.{mapper_name};",
             f"import {base_package}.generated.persistence.{entity_name};",
             f"import {base_package}.generated.persistence.{repo_name};",
         }
@@ -2814,6 +2821,30 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             enum_cls = f"{obj['name']}State"
             imports.add(f"import {base_package}.generated.domain.{enum_cls};")
             domain_builder_steps.append("            .currentState(entity.getCurrentState())")
+
+        mapper_imports = {
+            "import org.springframework.stereotype.Component;",
+            f"import {base_package}.generated.domain.{domain_name};",
+            f"import {base_package}.generated.persistence.{entity_name};",
+        }
+        mapper_imports = mapper_imports.union(ref_imports)
+        mapper_src = (
+            f"package {base_package}.generated.mapping;\n\n"
+            + "\n".join(sorted(mapper_imports))
+            + "\n\n"
+            + "@Component\n"
+            + f"public class {mapper_name} {{\n"
+            + f"    public {domain_name} toDomain({entity_name} entity) {{\n"
+            + "        if (entity == null) {\n"
+            + "            return null;\n"
+            + "        }\n"
+            + f"        return {domain_name}.builder()\n"
+            + "\n".join(domain_builder_steps)
+            + "\n            .build();\n"
+            + "    }\n"
+            + "}\n"
+        )
+        files[f"src/main/java/{package_path}/generated/mapping/{mapper_name}.java"] = mapper_src
 
         list_method_params: List[str] = []
         filter_conditions: List[str] = []
@@ -2917,24 +2948,18 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         )
         files[f"src/main/java/{package_path}/generated/api/{list_response_name}.java"] = list_response_src
 
-        to_domain_method = (
-            f"    private {domain_name} toDomain({entity_name} entity) {{\n"
-            f"        return {domain_name}.builder()\n"
-            + "\n".join(domain_builder_steps)
-            + "\n            .build();\n"
-            "    }\n\n"
-        )
-
-        imports_block = "\n".join(sorted(imports.union(ref_imports)))
+        imports_block = "\n".join(sorted(imports))
         query_src = (
             f"package {base_package}.generated.api;\n\n"
             f"{imports_block}\n\n"
             "@RestController\n"
             f"@RequestMapping(\"/{path_table}\")\n"
             f"public class {obj['name']}QueryController {{\n\n"
-            f"    private final {repo_name} repository;\n\n"
-            f"    public {obj['name']}QueryController({repo_name} repository) {{\n"
+            f"    private final {repo_name} repository;\n"
+            f"    private final {mapper_name} mapper;\n\n"
+            f"    public {obj['name']}QueryController({repo_name} repository, {mapper_name} mapper) {{\n"
             "        this.repository = repository;\n"
+            "        this.mapper = mapper;\n"
             "    }\n\n"
             "    @GetMapping\n"
             f"    public ResponseEntity<{list_response_name}> list(\n"
@@ -2943,7 +2968,7 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             f"        Specification<{entity_name}> spec = (root, query, cb) -> cb.conjunction();\n"
             + (filter_block + "\n" if filter_block else "")
             + f"        Page<{entity_name}> entityPage = repository.findAll(spec, pageable);\n"
-            + f"        List<{domain_name}> items = entityPage.stream().map(this::toDomain).toList();\n"
+            + f"        List<{domain_name}> items = entityPage.stream().map(mapper::toDomain).toList();\n"
             + f"        {list_response_name} result = {list_response_name}.builder()\n"
             + "            .items(items)\n"
             + "            .page(entityPage.getNumber())\n"
@@ -2959,10 +2984,9 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             "        if (maybeEntity.isEmpty()) {\n"
             "            return ResponseEntity.notFound().build();\n"
             "        }\n\n"
-            f"        {domain_name} domain = toDomain(maybeEntity.get());\n"
+            f"        {domain_name} domain = mapper.toDomain(maybeEntity.get());\n"
             "        return ResponseEntity.ok(domain);\n"
             "    }\n"
-            + to_domain_method
             + "}\n"
         )
 
@@ -3304,17 +3328,74 @@ def unwire_gradle_multi_module(root: Path, cfg: Dict[str, Any]) -> List[str]:
     return messages
 
 
-def load_ontology_from_cfg(root: Path, cfg: Dict[str, Any]) -> Ontology:
+def ontology_path_from_cfg(root: Path, cfg: Dict[str, Any]) -> Path:
     ontology_file = cfg_get(cfg, ["project", "ontology_file"], None)
     if not ontology_file:
         raise ProphetError(
             "Missing required config: project.ontology_file in prophet.yaml "
             "(see examples/java/prophet_example_spring/ontology/local/main.prophet for an example)."
         )
-    ont_path = root / str(ontology_file)
+    return root / str(ontology_file)
+
+
+def load_ontology_from_cfg(root: Path, cfg: Dict[str, Any]) -> Ontology:
+    ont_path = ontology_path_from_cfg(root, cfg)
     if not ont_path.exists():
         raise ProphetError(f"Ontology file not found: {ont_path}")
     return parse_ontology(ont_path.read_text(encoding="utf-8"))
+
+
+def print_validation_failure(errors: List[str], ontology_path: Path) -> None:
+    print(f"Validation failed for {ontology_path} ({len(errors)} errors):")
+    for idx, err in enumerate(errors, start=1):
+        print(f"{idx}) {err}")
+    print("")
+    print("How to fix:")
+    print("- Correct the ontology DSL lines listed above.")
+    print("- Re-run: prophet validate")
+
+
+def collect_dirty_generated_files(root: Path, cfg: Dict[str, Any], outputs: Dict[str, str]) -> List[str]:
+    dirty: List[str] = []
+    existing = set(managed_existing_files(root, cfg))
+    new_files = set(outputs.keys())
+
+    for rel in sorted(new_files):
+        path = root / rel
+        if not path.exists() or path.read_text(encoding="utf-8") != outputs[rel]:
+            dirty.append(rel)
+
+    for rel in sorted(existing - new_files):
+        dirty.append(rel)
+    return dirty
+
+
+def print_dirty_generated_files(dirty: List[str]) -> None:
+    print("Generated outputs are not clean:")
+    for rel in dirty:
+        print(f"- {rel}")
+    print("")
+    print("How to fix:")
+    print("- Re-run generation: prophet gen")
+    print("- Commit regenerated files if expected.")
+
+
+def hints_for_prophet_error(message: str) -> List[str]:
+    msg = message.lower()
+    hints: List[str] = []
+    if "prophet.yaml not found" in msg:
+        hints.append("Run `prophet init` in your project root, then set `project.ontology_file`.")
+    if "missing required config: project.ontology_file" in msg:
+        hints.append("Set `project.ontology_file` in prophet.yaml to your ontology DSL path.")
+    if "ontology file not found" in msg:
+        hints.append("Verify `project.ontology_file` points to an existing file relative to your current directory.")
+    if "baseline ir not found" in msg:
+        hints.append("Run `prophet gen` once to create a baseline, or set `compatibility.baseline_ir`.")
+    if "--wire-gradle cannot be used with --verify-clean" in msg:
+        hints.append("Use `prophet gen --wire-gradle` and `prophet check` (or `prophet generate --verify-clean`) as separate steps.")
+    if "invalid semver" in msg:
+        hints.append("Use semantic versions in ontology `version`, for example `1.2.3`.")
+    return hints
 
 
 def ensure_baseline_exists(root: Path, cfg: Dict[str, Any], ir: Dict[str, Any]) -> Path:
@@ -3394,13 +3475,12 @@ determinism:
 def cmd_validate(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
     errors = validate_ontology(ont, strict_enums=strict_enums)
     if errors:
-        print(f"Validation failed ({len(errors)} errors):")
-        for idx, err in enumerate(errors, start=1):
-            print(f"{idx}) {err}")
+        print_validation_failure(errors, ontology_path)
         return 1
     print("Validation passed.")
     return 0
@@ -3409,13 +3489,12 @@ def cmd_validate(args: argparse.Namespace) -> int:
 def cmd_plan(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
     errors = validate_ontology(ont, strict_enums=strict_enums)
     if errors:
-        print(f"Validation failed ({len(errors)} errors):")
-        for idx, err in enumerate(errors, start=1):
-            print(f"{idx}) {err}")
+        print_validation_failure(errors, ontology_path)
         return 1
 
     ir = build_ir(ont, cfg)
@@ -3480,13 +3559,12 @@ def cmd_plan(args: argparse.Namespace) -> int:
 def cmd_generate(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
     errors = validate_ontology(ont, strict_enums=strict_enums)
     if errors:
-        print(f"Validation failed ({len(errors)} errors):")
-        for idx, err in enumerate(errors, start=1):
-            print(f"{idx}) {err}")
+        print_validation_failure(errors, ontology_path)
         return 1
 
     ir = build_ir(ont, cfg)
@@ -3496,22 +3574,9 @@ def cmd_generate(args: argparse.Namespace) -> int:
         raise ProphetError("--wire-gradle cannot be used with --verify-clean")
 
     if args.verify_clean:
-        dirty: List[str] = []
-        existing = set(managed_existing_files(root, cfg))
-        new_files = set(outputs.keys())
-
-        for rel in sorted(new_files):
-            path = root / rel
-            if not path.exists() or path.read_text(encoding="utf-8") != outputs[rel]:
-                dirty.append(rel)
-
-        for rel in sorted(existing - new_files):
-            dirty.append(rel)
-
+        dirty = collect_dirty_generated_files(root, cfg, outputs)
         if dirty:
-            print("Generated outputs are not clean:")
-            for rel in dirty:
-                print(f"- {rel}")
+            print_dirty_generated_files(dirty)
             return 1
 
         print("Generated outputs are clean.")
@@ -3685,13 +3750,12 @@ def cmd_clean(args: argparse.Namespace) -> int:
 def cmd_version_check(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
     errors = validate_ontology(ont, strict_enums=strict_enums)
     if errors:
-        print(f"Validation failed ({len(errors)} errors):")
-        for idx, err in enumerate(errors, start=1):
-            print(f"{idx}) {err}")
+        print_validation_failure(errors, ontology_path)
         return 1
 
     current_ir = build_ir(ont, cfg)
@@ -3733,6 +3797,66 @@ def cmd_version_check(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_check(args: argparse.Namespace) -> int:
+    root = Path.cwd()
+    cfg = load_config(root / "prophet.yaml")
+    ontology_path = ontology_path_from_cfg(root, cfg)
+    ont = load_ontology_from_cfg(root, cfg)
+    strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
+    errors = validate_ontology(ont, strict_enums=strict_enums)
+    if errors:
+        print_validation_failure(errors, ontology_path)
+        return 1
+
+    print("Validation passed.")
+    ir = build_ir(ont, cfg)
+    outputs = build_generated_outputs(ir, cfg)
+    dirty = collect_dirty_generated_files(root, cfg, outputs)
+    status = 0
+
+    if dirty:
+        print("")
+        print_dirty_generated_files(dirty)
+        status = 1
+    else:
+        print("Generated outputs are clean.")
+
+    baseline_rel = args.against or str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
+    baseline_path = root / baseline_rel
+    print("")
+    if not baseline_path.exists():
+        print(f"Version check failed: baseline IR not found: {baseline_path}")
+        print("How to fix:")
+        print("- Run `prophet gen` once to create a baseline IR.")
+        print("- Or set `compatibility.baseline_ir` to the correct baseline path.")
+        status = 1
+    else:
+        baseline_ir = json.loads(baseline_path.read_text(encoding="utf-8"))
+        compatibility, changes = compare_irs(baseline_ir, ir)
+        required_bump = required_level_to_bump(compatibility)
+        old_ver = str(baseline_ir.get("ontology", {}).get("version", "0.0.0"))
+        new_ver = str(ir.get("ontology", {}).get("version", "0.0.0"))
+        declared = declared_bump(old_ver, new_ver)
+
+        print(f"Compatibility result: {compatibility}")
+        print(f"Required version bump: {required_bump}")
+        print(f"Declared version bump: {declared} ({old_ver} -> {new_ver})")
+        if changes and args.show_reasons:
+            print("Detected compatibility changes:")
+            for item in changes:
+                print(f"- {item}")
+        if bump_rank(declared) < bump_rank(required_bump):
+            print("Version check failed: declared bump is lower than required bump.")
+            status = 1
+
+    print("")
+    if status == 0:
+        print("Check passed.")
+    else:
+        print("Check failed.")
+    return status
+
+
 def build_cli() -> argparse.ArgumentParser:
     class HelpFormatter(argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHelpFormatter):
         pass
@@ -3747,11 +3871,9 @@ def build_cli() -> argparse.ArgumentParser:
         ),
         epilog=(
             "Common workflow:\n"
-            "  prophet validate\n"
-            "  prophet plan --show-reasons\n"
+            "  prophet check --show-reasons\n"
             "  prophet gen --wire-gradle\n"
-            "  prophet clean\n"
-            "  prophet version check --against .prophet/baselines/main.ir.json"
+            "  prophet check"
         ),
     )
     sub = parser.add_subparsers(
@@ -3801,6 +3923,29 @@ def build_cli() -> argparse.ArgumentParser:
         help="Include compatibility change reasons (field/state/transition level)",
     )
     p_plan.set_defaults(func=cmd_plan)
+
+    p_check = sub.add_parser(
+        "check",
+        formatter_class=HelpFormatter,
+        help="Run validation + generated output cleanliness + compatibility bump checks",
+        description=(
+            "Run a CI-friendly quality gate in one command:\n"
+            "1) validate ontology\n"
+            "2) verify generated outputs are clean\n"
+            "3) check compatibility/version bump against baseline IR"
+        ),
+    )
+    p_check.add_argument(
+        "--against",
+        type=str,
+        help="Path to baseline IR JSON (defaults to compatibility.baseline_ir in prophet.yaml)",
+    )
+    p_check.add_argument(
+        "--show-reasons",
+        action="store_true",
+        help="Include compatibility change reasons from baseline comparison",
+    )
+    p_check.set_defaults(func=cmd_check)
 
     p_generate = sub.add_parser(
         "generate",
@@ -3907,7 +4052,13 @@ def main() -> int:
     try:
         return int(args.func(args))
     except ProphetError as e:
-        print(f"Error: {e}", file=sys.stderr)
+        message = str(e)
+        print(f"Error: {message}", file=sys.stderr)
+        hints = hints_for_prophet_error(message)
+        if hints:
+            print("Hints:", file=sys.stderr)
+            for hint in hints:
+                print(f"- {hint}", file=sys.stderr)
         return 1
 
 
