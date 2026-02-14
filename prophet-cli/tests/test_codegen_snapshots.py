@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
@@ -14,6 +15,7 @@ from prophet_cli.cli import build_generated_outputs
 from prophet_cli.cli import build_ir
 from prophet_cli.cli import load_config
 from prophet_cli.cli import parse_ontology
+from prophet_cli.cli import resolve_migration_runtime_modes
 from prophet_cli.cli import validate_ontology
 
 ROOT = PROJECT_ROOT
@@ -81,6 +83,48 @@ class CodegenSnapshotTests(unittest.TestCase):
             [],
             "spring runtime migration resources should only be generated when Flyway/Liquibase is detected in host Gradle config",
         )
+
+    def test_migration_runtime_mode_warnings_when_nothing_detected(self) -> None:
+        cfg = {
+            "generation": {
+                "targets": ["sql", "openapi", "spring_boot", "flyway", "liquibase"],
+            }
+        }
+        with tempfile.TemporaryDirectory(prefix="prophet-modes-none-") as tmp:
+            requested, detected, enabled, warnings = resolve_migration_runtime_modes(cfg, Path(tmp))
+
+        self.assertEqual(requested, {"flyway", "liquibase"})
+        self.assertEqual(detected, set())
+        self.assertEqual(enabled, set())
+        self.assertTrue(any("Flyway target is enabled" in warning for warning in warnings))
+        self.assertTrue(any("Liquibase target is enabled" in warning for warning in warnings))
+
+    def test_migration_runtime_mode_warnings_when_both_detected(self) -> None:
+        cfg = {
+            "generation": {
+                "targets": ["sql", "openapi", "spring_boot", "flyway", "liquibase"],
+            }
+        }
+        with tempfile.TemporaryDirectory(prefix="prophet-modes-both-") as tmp:
+            root = Path(tmp)
+            (root / "build.gradle.kts").write_text(
+                """plugins {
+    id("org.flywaydb.flyway") version "10.0.0"
+    id("org.liquibase.gradle") version "2.2.0"
+}
+dependencies {
+    implementation("org.flywaydb:flyway-core")
+    implementation("org.liquibase:liquibase-core")
+}
+""",
+                encoding="utf-8",
+            )
+            requested, detected, enabled, warnings = resolve_migration_runtime_modes(cfg, root)
+
+        self.assertEqual(requested, {"flyway", "liquibase"})
+        self.assertEqual(detected, {"flyway", "liquibase"})
+        self.assertEqual(enabled, {"flyway", "liquibase"})
+        self.assertTrue(any("Both Flyway and Liquibase were detected" in warning for warning in warnings))
 
 
 if __name__ == "__main__":

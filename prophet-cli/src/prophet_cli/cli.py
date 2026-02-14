@@ -2041,6 +2041,32 @@ def detect_gradle_migration_tools(root: Path) -> set[str]:
     return tools
 
 
+def resolve_migration_runtime_modes(cfg: Dict[str, Any], root: Path) -> Tuple[set[str], set[str], set[str], List[str]]:
+    targets = set(cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"]))
+    requested = {"flyway", "liquibase"}.intersection(targets)
+    detected = detect_gradle_migration_tools(root)
+    enabled = requested.intersection(detected)
+    warnings: List[str] = []
+
+    if "flyway" in requested and "flyway" not in detected:
+        warnings.append(
+            "Flyway target is enabled, but Flyway was not detected in host Gradle config; "
+            "skipping Spring runtime Flyway resource wiring."
+        )
+    if "liquibase" in requested and "liquibase" not in detected:
+        warnings.append(
+            "Liquibase target is enabled, but Liquibase was not detected in host Gradle config; "
+            "skipping Spring runtime Liquibase resource wiring."
+        )
+    if "flyway" in enabled and "liquibase" in enabled:
+        warnings.append(
+            "Both Flyway and Liquibase were detected in host Gradle config; "
+            "Spring runtime resources are generated for both. Ensure runtime activates only one migration engine."
+        )
+
+    return requested, detected, enabled, warnings
+
+
 def render_liquibase_root_changelog() -> str:
     return (
         "# GENERATED FILE: do not edit directly.\n"
@@ -2080,10 +2106,9 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         fallback_boot_version,
         fallback_dep_mgmt_version,
     )
-    targets = set(cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"]))
-    detected_tools = detect_gradle_migration_tools(Path.cwd())
-    include_flyway = "flyway" in targets and "flyway" in detected_tools
-    include_liquibase = "liquibase" in targets and "liquibase" in detected_tools
+    _, _, enabled_modes, _ = resolve_migration_runtime_modes(cfg, Path.cwd())
+    include_flyway = "flyway" in enabled_modes
+    include_liquibase = "liquibase" in enabled_modes
     generated_schema_sql = render_sql(ir)
     package_path = base_package.replace(".", "/")
 
@@ -3447,6 +3472,9 @@ def cmd_generate(args: argparse.Namespace) -> int:
     sync_example_project(root, cfg)
 
     gradle_messages: List[str] = []
+    requested_migrations, detected_migrations, enabled_migrations, migration_warnings = resolve_migration_runtime_modes(
+        cfg, root
+    )
     if args.wire_gradle:
         gradle_messages = wire_gradle_multi_module(root, cfg)
 
@@ -3455,6 +3483,18 @@ def cmd_generate(args: argparse.Namespace) -> int:
         print(f"- {rel}")
     print("- .prophet/ir/current.ir.json")
     print("- examples/java/prophet_example_spring (synced if present)")
+    print("")
+    print("Migration auto-detection:")
+    requested_label = ", ".join(sorted(requested_migrations)) if requested_migrations else "none"
+    detected_label = ", ".join(sorted(detected_migrations)) if detected_migrations else "none"
+    enabled_label = ", ".join(sorted(enabled_migrations)) if enabled_migrations else "none"
+    print(f"- requested targets: {requested_label}")
+    print(f"- detected in host Gradle: {detected_label}")
+    print(f"- Spring runtime wiring enabled: {enabled_label}")
+    if migration_warnings:
+        print("- warnings:")
+        for warning in migration_warnings:
+            print(f"  - {warning}")
     if gradle_messages:
         print("")
         print("Gradle wiring:")
