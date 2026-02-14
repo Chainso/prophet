@@ -1,0 +1,10 @@
+# Root local tooling/runtime artifacts
+/.venv/
+/__pycache__/
+/.prophet/
+/gen/
+/prophet.yaml
+
+# Python bytecode
+*.py[cod]
+*$py.class

@@ -1,0 +1,6 @@
+prophet:
+  ontology-id: ont_commerce_local
+  compatibility-profile:
+    strict-enums: false
+  actions:
+    base-path: /actions

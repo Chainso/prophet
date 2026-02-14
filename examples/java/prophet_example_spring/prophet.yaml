@@ -1,0 +1,21 @@
+schema_version: 1
+project:
+  name: commerce-local
+  ontology_file: ontology/local/main.prophet
+  version_source: ontology
+generation:
+  targets:
+    - sql
+    - openapi
+    - spring_boot
+  out_dir: gen
+  spring_boot:
+    base_package: com.example.prophet
+    java_version: 21
+    boot_version: 3.3
+compatibility:
+  baseline_ir: .prophet/baselines/main.ir.json
+  strict_enums: false
+determinism:
+  canonical_sort: true
+  include_timestamps: false

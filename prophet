@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+from pathlib import Path
+import sys
+
+REPO_ROOT = Path(__file__).resolve().parent
+CLI_SRC = REPO_ROOT / "prophet-cli" / "src"
+
+if str(CLI_SRC) not in sys.path:
+    sys.path.insert(0, str(CLI_SRC))
+
+from prophet_cli.cli import main
+
+if __name__ == "__main__":
+    raise SystemExit(main())

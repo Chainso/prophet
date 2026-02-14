@@ -1,0 +1,216 @@
+openapi: 3.1.0
+info:
+  title: CommerceLocal API
+  version: 0.1.0
+servers:
+- url: https://api.example.com
+paths:
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Order found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Not found
+  /users/{userId}:
+    get:
+      operationId: getUser
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Not found
+  /actions/approveOrder:
+    post:
+      operationId: approveOrderAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveOrderCommand'
+      responses:
+        '200':
+          description: Action response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApproveOrderResult'
+  /actions/shipOrder:
+    post:
+      operationId: shipOrderAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipOrderCommand'
+      responses:
+        '200':
+          description: Action response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipOrderResult'
+components:
+  schemas:
+    UserRef:
+      type: object
+      required:
+      - userId
+      properties:
+        userId:
+          type: string
+    Address:
+      type: object
+      required:
+      - city
+      - countryCode
+      - line1
+      properties:
+        city:
+          type: string
+        countryCode:
+          type: string
+        line1:
+          type: string
+    ApprovalContext:
+      type: object
+      required:
+      - approver
+      properties:
+        approver:
+          $ref: '#/components/schemas/UserRef'
+        reason:
+          type: string
+        watchers:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRef'
+    Order:
+      type: object
+      required:
+      - customer
+      - orderId
+      - totalAmount
+      - currentState
+      properties:
+        customer:
+          $ref: '#/components/schemas/UserRef'
+        discountCode:
+          type: string
+        orderId:
+          type: string
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        tags:
+          type: array
+          items:
+            type: string
+        totalAmount:
+          type: string
+          description: Decimal encoded as string
+        currentState:
+          type: string
+          enum:
+          - APPROVED
+          - CREATED
+          - SHIPPED
+    User:
+      type: object
+      required:
+      - email
+      - userId
+      properties:
+        email:
+          type: string
+        userId:
+          type: string
+    ApproveOrderCommand:
+      type: object
+      required:
+      - orderId
+      properties:
+        approvedBy:
+          type: string
+        context:
+          $ref: '#/components/schemas/ApprovalContext'
+        notes:
+          type: array
+          items:
+            type: string
+        orderId:
+          type: string
+    ShipOrderCommand:
+      type: object
+      required:
+      - carrier
+      - orderId
+      - packageIds
+      - trackingNumber
+      properties:
+        carrier:
+          type: string
+        orderId:
+          type: string
+        packageIds:
+          type: array
+          items:
+            type: string
+        trackingNumber:
+          type: string
+    ApproveOrderResult:
+      type: object
+      required:
+      - decision
+      - orderId
+      properties:
+        decision:
+          type: string
+        orderId:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+    ShipOrderResult:
+      type: object
+      required:
+      - orderId
+      - shipmentStatus
+      properties:
+        labelBatches:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+        labels:
+          type: array
+          items:
+            type: string
+        orderId:
+          type: string
+        shipmentStatus:
+          type: string

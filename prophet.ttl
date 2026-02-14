@@ -1,0 +1,1051 @@
+@prefix prophet: <http://prophet.platform/ontology#> .
+@prefix std:  <http://prophet.platform/standard-types#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh:   <http://www.w3.org/ns/shacl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+prophet:ProphetOntology a owl:Ontology ;
+  rdfs:label "Prophet Base Metamodel Ontology" ;
+  rdfs:comment "Strict metamodel for the Prophet platform including Types, PropertyContainers, strict typing, and validation constraints." .
+
+# ============================================================================
+# 1. ROOT CONCEPTS & CONTAINERS
+# ============================================================================
+
+prophet:ProphetConcept a owl:Class ;
+  rdfs:label "Prophet Concept" ;
+  rdfs:comment "Abstract root. All core definitions inherit Name, Description, and optional Documentation." .
+
+prophet:PropertyContainer a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "Property Container" ;
+  rdfs:comment "Abstract class for any entity that defines a schema of properties (ObjectModels, StructTypes, Inputs, Outputs, Signals, Transitions, Triggers, etc)." .
+
+# --- Common Metadata ---
+
+prophet:name a owl:DatatypeProperty ;
+  rdfs:domain prophet:ProphetConcept ;
+  rdfs:range xsd:string .
+
+prophet:description a owl:DatatypeProperty ;
+  rdfs:domain prophet:ProphetConcept ;
+  rdfs:range xsd:string .
+
+prophet:documentation a owl:DatatypeProperty ;
+  rdfs:domain prophet:ProphetConcept ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Optional long-form documentation in addition to description." .
+
+# ============================================================================
+# 2. TYPE SYSTEM (Base, Custom, StructType, & ListType)
+# ============================================================================
+
+prophet:Type a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "Type" ;
+  rdfs:comment "Root for all data types." .
+
+prophet:BaseType a owl:Class ;
+  rdfs:subClassOf prophet:Type ;
+  rdfs:label "Base Type" ;
+  rdfs:comment "Primitives. Only Prophet standard BaseTypes are allowed." .
+
+prophet:CustomType a owl:Class ;
+  rdfs:subClassOf prophet:Type ;
+  rdfs:label "Custom Type" ;
+  rdfs:comment "Constrained primitives (e.g. Email is String + Regex)." .
+
+prophet:StructType a owl:Class ;
+  rdfs:subClassOf prophet:Type, prophet:PropertyContainer ;
+  rdfs:label "Struct Type" ;
+  rdfs:comment "A nested complex type that holds its own set of properties." .
+
+prophet:ListType a owl:Class ;
+  rdfs:subClassOf prophet:Type ;
+  rdfs:label "List Type" ;
+  rdfs:comment "A collection type. Must define the type of items it contains." .
+
+prophet:ObjectReference a owl:Class ;
+  rdfs:subClassOf prophet:Type ;
+  rdfs:label "Object Reference" ;
+  rdfs:comment "A typed reference to an ObjectModel instance." .
+
+# --- Type Properties ---
+
+prophet:mapsToXSD a owl:ObjectProperty ;
+  rdfs:domain prophet:BaseType ;
+  rdfs:range rdfs:Datatype ;
+  rdfs:comment "Maps a Prophet BaseType to an XSD datatype IRI (e.g., xsd:string)." .
+
+prophet:derivedFrom a owl:ObjectProperty ;
+  rdfs:domain prophet:CustomType ;
+  rdfs:range prophet:BaseType .
+
+prophet:hasConstraint a owl:ObjectProperty ;
+  rdfs:domain prophet:CustomType ;
+  rdfs:range sh:NodeShape ;
+  rdfs:comment "Optional SHACL NodeShape that constrains values of this type." .
+
+prophet:itemType a owl:ObjectProperty ;
+  rdfs:label "item type" ;
+  rdfs:domain prophet:ListType ;
+  rdfs:range prophet:Type ;
+  rdfs:comment "Defines the type of items contained in the list." .
+
+prophet:referencesObjectModel a owl:ObjectProperty ;
+  rdfs:label "references object model" ;
+  rdfs:domain prophet:ObjectReference ;
+  rdfs:range prophet:ObjectModel ;
+  rdfs:comment "Specifies which ObjectModel this reference points to." .
+
+# ============================================================================
+# 2a. STANDARD BASE TYPES (ONLY SUPPORTED SET)
+# ============================================================================
+
+# --- Text ---
+std:String a prophet:BaseType ;
+  prophet:name "String" ;
+  prophet:description "A sequence of characters." ;
+  prophet:mapsToXSD xsd:string .
+
+# --- Integers ---
+std:Int a prophet:BaseType ;
+  prophet:name "Int" ;
+  prophet:description "A 32-bit signed integer." ;
+  prophet:mapsToXSD xsd:int .
+
+std:Long a prophet:BaseType ;
+  prophet:name "Long" ;
+  prophet:description "A 64-bit signed integer." ;
+  prophet:mapsToXSD xsd:long .
+
+std:Short a prophet:BaseType ;
+  prophet:name "Short" ;
+  prophet:description "A 16-bit signed integer." ;
+  prophet:mapsToXSD xsd:short .
+
+std:Byte a prophet:BaseType ;
+  prophet:name "Byte" ;
+  prophet:description "A 8-bit signed integer." ;
+  prophet:mapsToXSD xsd:byte .
+
+# --- Floating Point ---
+std:Double a prophet:BaseType ;
+  prophet:name "Double" ;
+  prophet:description "A 64-bit floating point number (IEEE 754)." ;
+  prophet:mapsToXSD xsd:double .
+
+std:Float a prophet:BaseType ;
+  prophet:name "Float" ;
+  prophet:description "A 32-bit floating point number (IEEE 754)." ;
+  prophet:mapsToXSD xsd:float .
+
+std:Decimal a prophet:BaseType ;
+  prophet:name "Decimal" ;
+  prophet:description "A decimal number with arbitrary precision." ;
+  prophet:mapsToXSD xsd:decimal .
+
+# --- Logical ---
+std:Boolean a prophet:BaseType ;
+  prophet:name "Boolean" ;
+  prophet:description "True or False." ;
+  prophet:mapsToXSD xsd:boolean .
+
+# --- Temporal ---
+std:DateTime a prophet:BaseType ;
+  prophet:name "Date Time" ;
+  prophet:description "A specific instant of time (YYYY-MM-DDThh:mm:ss)." ;
+  prophet:mapsToXSD xsd:dateTime .
+
+std:Date a prophet:BaseType ;
+  prophet:name "Date" ;
+  prophet:description "A calendar date (YYYY-MM-DD)." ;
+  prophet:mapsToXSD xsd:date .
+
+std:Duration a prophet:BaseType ;
+  prophet:name "Duration" ;
+  prophet:description "A duration of time (e.g., P1Y2M)." ;
+  prophet:mapsToXSD xsd:duration .
+
+prophet:StandardBaseTypesAllDifferent a owl:AllDifferent ;
+  owl:distinctMembers (
+    std:String
+    std:Int
+    std:Long
+    std:Short
+    std:Byte
+    std:Double
+    std:Float
+    std:Decimal
+    std:Boolean
+    std:DateTime
+    std:Date
+    std:Duration
+  ) .
+
+# ============================================================================
+# 3. PROPERTY DEFINITION SYSTEM
+# ============================================================================
+
+prophet:PropertyDefinition a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "Property Definition" ;
+  rdfs:comment "Defines one field in a PropertyContainer schema." .
+
+prophet:hasProperty a owl:ObjectProperty ;
+  rdfs:label "has property" ;
+  rdfs:domain prophet:PropertyContainer ;
+  rdfs:range prophet:PropertyDefinition .
+
+prophet:valueType a owl:ObjectProperty ;
+  rdfs:label "value type" ;
+  rdfs:domain prophet:PropertyDefinition ;
+  rdfs:range prophet:Type ;
+  rdfs:comment "References exactly one Type (BaseType, CustomType, StructType, or ListType)." .
+
+prophet:fieldKey a owl:DatatypeProperty ;
+  rdfs:label "field key" ;
+  rdfs:domain prophet:PropertyDefinition ;
+  rdfs:range xsd:string ;
+  rdfs:comment "Stable field identifier used for storage/serialization (distinct from prophet:name which can be human-facing)." .
+
+prophet:minCardinality a owl:DatatypeProperty ;
+  rdfs:label "min cardinality" ;
+  rdfs:domain prophet:PropertyDefinition ;
+  rdfs:range xsd:integer ;
+  rdfs:comment "If absent, defaults to 0." .
+
+prophet:maxCardinality a owl:DatatypeProperty ;
+  rdfs:label "max cardinality" ;
+  rdfs:domain prophet:PropertyDefinition ;
+  rdfs:range xsd:integer ;
+  rdfs:comment "If absent, defaults to 1 (so default cardinality is 0..1)." .
+
+# ============================================================================
+# 4. LOCAL ONTOLOGY MODULES (Taxonomies / Domain Modules)
+# ============================================================================
+
+prophet:LocalOntology a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "Local Ontology" ;
+  rdfs:comment "A tenant/module-scoped ontology document defining Prophet concepts (taxonomies, domain modules, etc)." .
+
+prophet:definesConcept a owl:ObjectProperty ;
+  rdfs:domain prophet:LocalOntology ;
+  rdfs:range prophet:ProphetConcept ;
+  owl:inverseOf prophet:inLocalOntology .
+
+prophet:inLocalOntology a owl:ObjectProperty ;
+  rdfs:domain prophet:ProphetConcept ;
+  rdfs:range prophet:LocalOntology .
+
+prophet:importsLocalOntology a owl:ObjectProperty ;
+  rdfs:domain prophet:LocalOntology ;
+  rdfs:range prophet:LocalOntology ;
+  rdfs:comment "Optional dependency relation between LocalOntology modules." .
+
+# ============================================================================
+# 5. ACTION SYSTEM
+# ============================================================================
+
+prophet:Action a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "Action" .
+
+prophet:Process a owl:Class ;
+  rdfs:subClassOf prophet:Action ;
+  rdfs:label "Process" .
+
+prophet:Workflow a owl:Class ;
+  rdfs:subClassOf prophet:Action ;
+  rdfs:label "Workflow" .
+
+prophet:ActionInput a owl:Class ;
+  rdfs:subClassOf prophet:PropertyContainer ;
+  rdfs:label "Action Input" .
+
+prophet:ActionOutput a owl:Class ;
+  rdfs:subClassOf prophet:Event, prophet:PropertyContainer ;
+  rdfs:label "Action Output" .
+
+prophet:acceptsInput a owl:ObjectProperty, owl:FunctionalProperty ;
+  rdfs:domain prophet:Action ;
+  rdfs:range prophet:ActionInput .
+
+prophet:producesOutput a owl:ObjectProperty, owl:FunctionalProperty ;
+  rdfs:domain prophet:Action ;
+  rdfs:range prophet:ActionOutput .
+
+# ============================================================================
+# 6. OBJECT MODEL & KEYS (Ordered only)
+# ============================================================================
+
+prophet:ObjectModel a owl:Class ;
+  rdfs:subClassOf prophet:PropertyContainer ;
+  rdfs:label "Object Model" .
+
+prophet:KeyDefinition a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "Key Definition" ;
+  rdfs:comment "An ordered composite key composed of one or more KeyParts." .
+
+prophet:KeyPart a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "Key Part" ;
+  rdfs:comment "An ordered component of a KeyDefinition." .
+
+prophet:hasKeyPart a owl:ObjectProperty ;
+  rdfs:domain prophet:KeyDefinition ;
+  rdfs:range prophet:KeyPart .
+
+prophet:partProperty a owl:ObjectProperty ;
+  rdfs:domain prophet:KeyPart ;
+  rdfs:range prophet:PropertyDefinition .
+
+prophet:partIndex a owl:DatatypeProperty ;
+  rdfs:domain prophet:KeyPart ;
+  rdfs:range xsd:integer ;
+  rdfs:comment "Index must be unique within a KeyDefinition." .
+
+prophet:hasPrimaryKey a owl:ObjectProperty ;
+  rdfs:label "has primary key" ;
+  rdfs:domain prophet:ObjectModel ;
+  rdfs:range prophet:KeyDefinition .
+
+prophet:hasDisplayKey a owl:ObjectProperty ;
+  rdfs:label "has display key" ;
+  rdfs:domain prophet:ObjectModel ;
+  rdfs:range prophet:KeyDefinition .
+
+# ============================================================================
+# 7. STATE & EVENT SYSTEM
+# ============================================================================
+
+prophet:State a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "State" ;
+  rdfs:comment "A lifecycle state scoped to exactly one ObjectModel." .
+
+prophet:stateOf a owl:ObjectProperty ;
+  rdfs:domain prophet:State ;
+  rdfs:range prophet:ObjectModel ;
+  owl:inverseOf prophet:hasPossibleState .
+
+prophet:hasPossibleState a owl:ObjectProperty ;
+  rdfs:domain prophet:ObjectModel ;
+  rdfs:range prophet:State .
+
+prophet:initialState a owl:ObjectProperty ;
+  rdfs:domain prophet:ObjectModel ;
+  rdfs:range prophet:State ;
+  rdfs:comment "Marks the initial State for an ObjectModel lifecycle." .
+
+prophet:Event a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept ;
+  rdfs:label "Event" .
+
+prophet:Signal a owl:Class ;
+  rdfs:subClassOf prophet:Event, prophet:PropertyContainer ;
+  rdfs:label "Signal" .
+
+prophet:Transition a owl:Class ;
+  rdfs:subClassOf prophet:Event, prophet:PropertyContainer ;
+  rdfs:label "Transition" ;
+  rdfs:comment "A state transition for an ObjectModel with an explicit start and end State." .
+
+prophet:transitionOf a owl:ObjectProperty ;
+  rdfs:domain prophet:Transition ;
+  rdfs:range prophet:ObjectModel .
+
+prophet:fromState a owl:ObjectProperty ;
+  rdfs:domain prophet:Transition ;
+  rdfs:range prophet:State .
+
+prophet:toState a owl:ObjectProperty ;
+  rdfs:domain prophet:Transition ;
+  rdfs:range prophet:State .
+
+prophet:triggers a owl:ObjectProperty, owl:InverseFunctionalProperty ;
+  rdfs:domain prophet:Event ;
+  rdfs:range prophet:EventTrigger ;
+  rdfs:comment "Inverse edge of listensTo; inverse-functional for easier querying." .
+
+# ============================================================================
+# 8. TRIGGER SYSTEM
+# ============================================================================
+
+prophet:EventTrigger a owl:Class ;
+  rdfs:subClassOf prophet:ProphetConcept, prophet:PropertyContainer ;
+  rdfs:label "Event Trigger" .
+
+prophet:listensTo a owl:ObjectProperty, owl:FunctionalProperty ;
+  rdfs:domain prophet:EventTrigger ;
+  rdfs:range prophet:Event ;
+  owl:inverseOf prophet:triggers .
+
+prophet:invokes a owl:ObjectProperty ;
+  rdfs:domain prophet:EventTrigger ;
+  rdfs:range prophet:Action .
+
+# ============================================================================
+# OWL AXIOMS (DISJOINTNESS / PARTITIONS)
+# ============================================================================
+
+prophet:Process owl:disjointWith prophet:Workflow .
+prophet:Signal owl:disjointWith prophet:Transition, prophet:ActionOutput .
+prophet:Transition owl:disjointWith prophet:ActionOutput .
+
+prophet:Action owl:disjointUnionOf (prophet:Process prophet:Workflow) .
+prophet:Event  owl:disjointUnionOf (prophet:Signal prophet:Transition prophet:ActionOutput) .
+prophet:Type   owl:disjointUnionOf (prophet:BaseType prophet:CustomType prophet:StructType prophet:ListType prophet:ObjectReference) .
+
+# ============================================================================
+# SHACL VALIDATION SHAPES
+# ============================================================================
+
+# --- 0. Core naming strictness (name must exist exactly once) ---
+
+prophet:ProphetConceptNameShape a sh:NodeShape ;
+  sh:targetClass prophet:ProphetConcept ;
+  sh:property [
+    sh:path prophet:name ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "prophet:name must be present exactly once on every ProphetConcept." ;
+  ] .
+
+# --- 1. Exact Variants (xone partitions) ---
+
+prophet:ActionAbstractShape a sh:NodeShape ;
+  sh:targetClass prophet:Action ;
+  sh:xone (
+    [ sh:class prophet:Process ]
+    [ sh:class prophet:Workflow ]
+  ) ;
+  sh:message "An Action must be exactly one of: Process or Workflow." .
+
+prophet:EventAbstractShape a sh:NodeShape ;
+  sh:targetClass prophet:Event ;
+  sh:xone (
+    [ sh:class prophet:Signal ]
+    [ sh:class prophet:Transition ]
+    [ sh:class prophet:ActionOutput ]
+  ) ;
+  sh:message "An Event must be exactly one of: Signal, Transition, or ActionOutput." .
+
+prophet:TypeAbstractShape a sh:NodeShape ;
+  sh:targetClass prophet:Type ;
+  sh:xone (
+    [ sh:class prophet:BaseType ]
+    [ sh:class prophet:CustomType ]
+    [ sh:class prophet:StructType ]
+    [ sh:class prophet:ListType ]
+    [ sh:class prophet:ObjectReference ]
+  ) ;
+  sh:message "A Type must be exactly one of: BaseType, CustomType, StructType, ListType, ObjectReference." .
+
+# --- 2. BaseType restrictions (enumeration + exact mapping) ---
+
+prophet:BaseTypeEnumerationShape a sh:NodeShape ;
+  sh:targetClass prophet:BaseType ;
+  sh:in (
+    std:String
+    std:Int
+    std:Long
+    std:Short
+    std:Byte
+    std:Double
+    std:Float
+    std:Decimal
+    std:Boolean
+    std:DateTime
+    std:Date
+    std:Duration
+  ) ;
+  sh:message "Only the Prophet standard BaseTypes are allowed." .
+
+prophet:BaseTypeShape a sh:NodeShape ;
+  sh:targetClass prophet:BaseType ;
+  sh:property [
+    sh:path prophet:mapsToXSD ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+    sh:in (
+      xsd:string
+      xsd:int xsd:long xsd:short xsd:byte
+      xsd:double xsd:float xsd:decimal
+      xsd:boolean
+      xsd:dateTime xsd:date xsd:duration
+    ) ;
+    sh:message "BaseType must map to exactly one allowed XSD datatype IRI." ;
+  ] .
+
+prophet:CustomTypeShape a sh:NodeShape ;
+  sh:targetClass prophet:CustomType ;
+  sh:property [
+    sh:path prophet:derivedFrom ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:BaseType ;
+    sh:message "CustomType must be derivedFrom exactly one BaseType." ;
+  ] ;
+  sh:property [
+    sh:path prophet:hasConstraint ;
+    sh:maxCount 1 ;
+    sh:class sh:NodeShape ;
+    sh:message "CustomType may have at most one constraint NodeShape." ;
+  ] .
+
+prophet:ListTypeShape a sh:NodeShape ;
+  sh:targetClass prophet:ListType ;
+  sh:property [
+    sh:path prophet:itemType ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:Type ;
+    sh:message "A ListType must specify exactly one itemType." ;
+  ] .
+
+prophet:StructTypeShape a sh:NodeShape ;
+  sh:targetClass prophet:StructType ;
+  sh:property [
+    sh:path prophet:hasProperty ;
+    sh:minCount 1 ;
+    sh:class prophet:PropertyDefinition ;
+    sh:message "A StructType must define at least one property." ;
+  ] .
+
+prophet:ObjectReferenceShape a sh:NodeShape ;
+  sh:targetClass prophet:ObjectReference ;
+  sh:property [
+    sh:path prophet:referencesObjectModel ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:ObjectModel ;
+    sh:message "ObjectReference must reference exactly one ObjectModel." ;
+  ] .
+
+# --- 3. PropertyDefinition integrity (0..1 default + constraints) ---
+
+prophet:PropertyDefinitionShape a sh:NodeShape ;
+  sh:targetClass prophet:PropertyDefinition ;
+
+  sh:property [
+    sh:path prophet:valueType ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:Type ;
+    sh:message "PropertyDefinition must reference exactly one valid Type." ;
+  ] ;
+
+  sh:property [
+    sh:path prophet:fieldKey ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:message "PropertyDefinition must specify exactly one fieldKey." ;
+  ] ;
+
+  sh:property [
+    sh:path prophet:documentation ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+  ] ;
+
+  sh:property [
+    sh:path prophet:minCardinality ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:minInclusive 0 ;
+  ] ;
+
+  sh:property [
+    sh:path prophet:maxCardinality ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:integer ;
+    sh:minInclusive 0 ;
+  ] ;
+
+  sh:sparql [
+    sh:message "minCardinality cannot exceed maxCardinality." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:minCardinality ?min ;
+              prophet:maxCardinality ?max .
+        FILTER (?min > ?max)
+      }
+    """ ;
+  ] ;
+
+  sh:sparql [
+    sh:message "If maxCardinality is specified, it must be >= 1." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:maxCardinality ?max .
+        FILTER (?max < 1)
+      }
+    """ ;
+  ] .
+
+# PropertyDefinition must belong to exactly one PropertyContainer (no reuse)
+prophet:PropertyDefinitionOwnershipShape a sh:NodeShape ;
+  sh:targetClass prophet:PropertyDefinition ;
+  sh:property [
+    sh:path [ sh:inversePath prophet:hasProperty ] ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:PropertyContainer ;
+    sh:message "Each PropertyDefinition must belong to exactly one PropertyContainer." ;
+  ] .
+
+# --- 4. PropertyContainer constraints: fieldKey uniqueness ---
+
+prophet:PropertyContainerFieldKeyUniqueShape a sh:NodeShape ;
+  sh:targetClass prophet:PropertyContainer ;
+  sh:sparql [
+    sh:message "fieldKey must be unique within a PropertyContainer." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:hasProperty ?p1, ?p2 .
+        ?p1 prophet:fieldKey ?k .
+        ?p2 prophet:fieldKey ?k .
+        FILTER (?p1 != ?p2)
+      }
+    """ ;
+  ] .
+
+# --- 5. State validation ---
+
+prophet:StateShape a sh:NodeShape ;
+  sh:targetClass prophet:State ;
+  sh:property [
+    sh:path prophet:stateOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:ObjectModel ;
+    sh:message "A State must belong to exactly one ObjectModel." ;
+  ] .
+
+# Ensure State appears in hasPossibleState of its model (bidirectional consistency)
+prophet:ObjectModelStateMembershipShape a sh:NodeShape ;
+  sh:targetClass prophet:ObjectModel ;
+  sh:sparql [
+    sh:message "All States whose stateOf is this ObjectModel must appear in hasPossibleState." ;
+    sh:select """
+      SELECT $this WHERE {
+        ?s prophet:stateOf $this .
+        FILTER NOT EXISTS { $this prophet:hasPossibleState ?s }
+      }
+    """ ;
+  ] .
+
+# Require initialState when at least one state exists
+prophet:ObjectModelInitialStateRequiredShape a sh:NodeShape ;
+  sh:targetClass prophet:ObjectModel ;
+  sh:sparql [
+    sh:message "ObjectModel with states must declare exactly one initialState." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:hasPossibleState ?s .
+        FILTER NOT EXISTS { $this prophet:initialState ?init }
+      }
+    """ ;
+  ] .
+
+prophet:ObjectModelInitialStateMembershipShape a sh:NodeShape ;
+  sh:targetClass prophet:ObjectModel ;
+  sh:sparql [
+    sh:message "initialState must be one of the ObjectModel hasPossibleState values." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:initialState ?s .
+        FILTER NOT EXISTS { $this prophet:hasPossibleState ?s }
+      }
+    """ ;
+  ] .
+
+# --- 6. Transition validation (start/end state + same ObjectModel) ---
+
+prophet:TransitionShape a sh:NodeShape ;
+  sh:targetClass prophet:Transition ;
+
+  sh:property [
+    sh:path prophet:transitionOf ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:ObjectModel ;
+    sh:message "A Transition must reference exactly one ObjectModel via transitionOf." ;
+  ] ;
+
+  sh:property [
+    sh:path prophet:fromState ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:State ;
+    sh:message "A Transition must specify exactly one fromState." ;
+  ] ;
+
+  sh:property [
+    sh:path prophet:toState ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:State ;
+    sh:message "A Transition must specify exactly one toState." ;
+  ] ;
+
+  sh:sparql [
+    sh:message "fromState and toState must belong to the same ObjectModel as transitionOf." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:transitionOf ?m ;
+              prophet:fromState ?fs ;
+              prophet:toState ?ts .
+        ?fs prophet:stateOf ?mfs .
+        ?ts prophet:stateOf ?mts .
+        FILTER (?mfs != ?m || ?mts != ?m)
+      }
+    """ ;
+  ] ;
+
+  sh:sparql [
+    sh:message "fromState and toState must not be the same State." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:fromState ?s ;
+              prophet:toState ?s .
+      }
+    """ ;
+  ] .
+
+# --- 7. Trigger validation ---
+
+prophet:EventTriggerShape a sh:NodeShape ;
+  sh:targetClass prophet:EventTrigger ;
+  sh:property [
+    sh:path prophet:listensTo ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:Event ;
+    sh:message "An EventTrigger must listenTo exactly one Event." ;
+  ] ;
+  sh:property [
+    sh:path prophet:invokes ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:Action ;
+    sh:message "An EventTrigger must invoke exactly one Action." ;
+  ] .
+
+# --- 8. Action I/O constraints (exactly one input/output + inverse ownership) ---
+
+prophet:ActionShape a sh:NodeShape ;
+  sh:targetClass prophet:Action ;
+  sh:property [
+    sh:path prophet:acceptsInput ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:ActionInput ;
+    sh:message "An Action must accept exactly one ActionInput." ;
+  ] ;
+  sh:property [
+    sh:path prophet:producesOutput ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:ActionOutput ;
+    sh:message "An Action must produce exactly one ActionOutput." ;
+  ] .
+
+prophet:ActionInputOwnershipShape a sh:NodeShape ;
+  sh:targetClass prophet:ActionInput ;
+  sh:property [
+    sh:path [ sh:inversePath prophet:acceptsInput ] ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:Action ;
+    sh:message "Each ActionInput must be referenced by exactly one Action via acceptsInput." ;
+  ] .
+
+prophet:ActionOutputOwnershipShape a sh:NodeShape ;
+  sh:targetClass prophet:ActionOutput ;
+  sh:property [
+    sh:path [ sh:inversePath prophet:producesOutput ] ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:Action ;
+    sh:message "Each ActionOutput must be referenced by exactly one Action via producesOutput." ;
+  ] .
+
+# --- 9. KeyDefinition validation (ordered only) ---
+
+prophet:KeyPartShape a sh:NodeShape ;
+  sh:targetClass prophet:KeyPart ;
+  sh:property [
+    sh:path prophet:partProperty ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:PropertyDefinition ;
+    sh:message "KeyPart must reference exactly one PropertyDefinition via partProperty." ;
+  ] ;
+  sh:property [
+    sh:path prophet:partIndex ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:nonNegativeInteger ;
+    sh:minInclusive 0 ;
+    sh:message "KeyPart must specify exactly one non-negative partIndex." ;
+  ] .
+
+prophet:KeyDefinitionShape a sh:NodeShape ;
+  sh:targetClass prophet:KeyDefinition ;
+  sh:property [
+    sh:path prophet:hasKeyPart ;
+    sh:minCount 1 ;
+    sh:class prophet:KeyPart ;
+    sh:message "KeyDefinition must have at least one KeyPart." ;
+  ] ;
+
+  sh:sparql [
+    sh:message "KeyDefinition must not repeat the same partProperty across KeyParts." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:hasKeyPart ?a, ?b .
+        ?a prophet:partProperty ?p .
+        ?b prophet:partProperty ?p .
+        FILTER (?a != ?b)
+      }
+    """ ;
+  ] ;
+
+  sh:sparql [
+    sh:message "KeyDefinition must not repeat the same partIndex across KeyParts." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this prophet:hasKeyPart ?a, ?b .
+        ?a prophet:partIndex ?i .
+        ?b prophet:partIndex ?i .
+        FILTER (?a != ?b)
+      }
+    """ ;
+  ] .
+
+prophet:ObjectModelKeyShape a sh:NodeShape ;
+  sh:targetClass prophet:ObjectModel ;
+
+  sh:property [
+    sh:path prophet:hasPrimaryKey ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:KeyDefinition ;
+    sh:message "ObjectModel must specify exactly one Primary Key definition." ;
+  ] ;
+
+  sh:property [
+    sh:path prophet:hasDisplayKey ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class prophet:KeyDefinition ;
+    sh:message "ObjectModel must specify exactly one Display Key definition." ;
+  ] ;
+
+  sh:sparql [
+    sh:message "All KeyDefinition properties (primary/display) must be declared on the ObjectModel via hasProperty." ;
+    sh:select """
+      SELECT $this WHERE {
+        $this (prophet:hasPrimaryKey|prophet:hasDisplayKey) ?k .
+        ?k prophet:hasKeyPart ?part .
+        ?part prophet:partProperty ?kp .
+        FILTER NOT EXISTS { $this prophet:hasProperty ?kp }
+      }
+    """ ;
+  ] .
+
+# ============================================================================
+# STRICT SCHEMA CLOSURE (Concrete schema nodes only)
+# ============================================================================
+
+prophet:ObjectModelClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:ObjectModel ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:hasProperty ; sh:class prophet:PropertyDefinition ] ;
+  sh:property [ sh:path prophet:hasPrimaryKey ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:KeyDefinition ] ;
+  sh:property [ sh:path prophet:hasDisplayKey ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:KeyDefinition ] ;
+  sh:property [ sh:path prophet:hasPossibleState ; sh:class prophet:State ] ;
+  sh:property [ sh:path prophet:initialState ; sh:maxCount 1 ; sh:class prophet:State ] ;
+  sh:message "ObjectModel is closed: only declared schema predicates are permitted." .
+
+prophet:StructTypeClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:StructType ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:hasProperty ; sh:minCount 1 ; sh:class prophet:PropertyDefinition ] ;
+  sh:message "StructType is closed: only declared schema predicates are permitted." .
+
+prophet:ListTypeClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:ListType ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:itemType ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:Type ] ;
+  sh:message "ListType is closed: only declared schema predicates are permitted." .
+
+prophet:BaseTypeClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:BaseType ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [
+    sh:path prophet:mapsToXSD ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:nodeKind sh:IRI ;
+  ] ;
+  sh:message "BaseType is closed: only declared schema predicates are permitted." .
+
+prophet:CustomTypeClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:CustomType ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:derivedFrom ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:BaseType ] ;
+  sh:property [ sh:path prophet:hasConstraint ; sh:maxCount 1 ; sh:class sh:NodeShape ] ;
+  sh:message "CustomType is closed: only declared schema predicates are permitted." .
+
+prophet:ObjectReferenceClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:ObjectReference ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:referencesObjectModel ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:ObjectModel ] ;
+  sh:message "ObjectReference is closed: only declared schema predicates are permitted." .
+
+prophet:StateClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:State ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:stateOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:ObjectModel ] ;
+  sh:message "State is closed: only declared schema predicates are permitted." .
+
+prophet:TransitionClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:Transition ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:hasProperty ; sh:class prophet:PropertyDefinition ] ;
+  sh:property [ sh:path prophet:triggers ; sh:class prophet:EventTrigger ] ;
+  sh:property [ sh:path prophet:transitionOf ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:ObjectModel ] ;
+  sh:property [ sh:path prophet:fromState ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:State ] ;
+  sh:property [ sh:path prophet:toState ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:State ] ;
+  sh:message "Transition is closed: only declared schema predicates are permitted." .
+
+prophet:ActionInputClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:ActionInput ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:hasProperty ; sh:class prophet:PropertyDefinition ] ;
+  sh:message "ActionInput is closed: only declared schema predicates are permitted." .
+
+prophet:ActionOutputClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:ActionOutput ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:hasProperty ; sh:class prophet:PropertyDefinition ] ;
+  sh:message "ActionOutput is closed: only declared schema predicates are permitted." .
+
+prophet:SignalClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:Signal ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:hasProperty ; sh:class prophet:PropertyDefinition ] ;
+  sh:property [ sh:path prophet:triggers ; sh:class prophet:EventTrigger ] ;
+  sh:message "Signal is closed: only declared schema predicates are permitted." .
+
+prophet:EventTriggerClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:EventTrigger ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:hasProperty ; sh:class prophet:PropertyDefinition ] ;
+  sh:property [ sh:path prophet:listensTo ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:Event ] ;
+  sh:property [ sh:path prophet:invokes ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:Action ] ;
+  sh:message "EventTrigger is closed: only declared schema predicates are permitted." .
+
+prophet:KeyDefinitionClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:KeyDefinition ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:hasKeyPart ; sh:minCount 1 ; sh:class prophet:KeyPart ] ;
+  sh:message "KeyDefinition is closed: only declared schema predicates are permitted." .
+
+prophet:KeyPartClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:KeyPart ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
+  sh:property [ sh:path prophet:partProperty ; sh:minCount 1 ; sh:maxCount 1 ; sh:class prophet:PropertyDefinition ] ;
+  sh:property [ sh:path prophet:partIndex ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:nonNegativeInteger ; sh:minInclusive 0 ] ;
+  sh:message "KeyPart is closed: only declared schema predicates are permitted." .
+
+prophet:LocalOntologyClosedShape a sh:NodeShape ;
+  sh:targetClass prophet:LocalOntology ;
+  sh:closed true ;
+  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
+  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
+  sh:property [ sh:path prophet:definesConcept ; sh:class prophet:ProphetConcept ] ;
+  sh:property [ sh:path prophet:importsLocalOntology ; sh:class prophet:LocalOntology ] ;
+  sh:message "LocalOntology is closed: only declared schema predicates are permitted." .

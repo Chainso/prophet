@@ -1,0 +1,138 @@
+# prophet-cli
+
+`prophet-cli` is the tooling package for Prophet's ontology workflow:
+
+1. Parse DSL (`ontology/local/main.prophet`)
+2. Validate model semantics
+3. Build canonical IR (`.prophet/ir/current.ir.json`)
+4. Generate deterministic artifacts (`gen/sql`, `gen/openapi`, `gen/spring-boot`)
+5. Check compatibility against baseline IR
+
+## Install (editable)
+
+From repo root:
+
+```bash
+python3 -m venv .venv --system-site-packages
+.venv/bin/pip install --no-build-isolation -e ./prophet-cli
+```
+
+Run via venv script:
+
+```bash
+.venv/bin/prophet --help
+```
+
+## Commands
+
+### `prophet init`
+Creates starter `prophet.yaml` and `ontology/local/main.prophet`.
+
+```bash
+prophet init
+```
+
+### `prophet validate`
+Parses + validates ontology references, IDs, states/transitions, action contracts, list types, and action/event/trigger links.
+
+```bash
+prophet validate
+```
+
+### `prophet plan`
+Computes deterministic file changes without writing files.
+
+```bash
+prophet plan
+prophet plan --show-reasons
+```
+
+### `prophet generate` / `prophet gen`
+Writes generated artifacts and current IR.
+
+```bash
+prophet generate
+prophet gen
+```
+
+Also syncs generated Spring artifacts into `examples/java/prophet_example_spring` when present.
+
+### `prophet gen --wire-gradle`
+Auto-wires the current Gradle project as a multi-module setup:
+- adds `:prophet_generated` in `settings.gradle.kts`/`settings.gradle`
+- maps it to `gen/spring-boot`
+- adds app dependency `implementation(project(\":prophet_generated\"))` in `build.gradle.kts`
+
+```bash
+prophet gen --wire-gradle
+```
+
+Wiring is idempotent (safe to run repeatedly).
+
+### `prophet generate --verify-clean`
+CI mode. Fails if committed generated files differ from current generation.
+
+```bash
+prophet generate --verify-clean
+```
+
+### `prophet clean`
+Removes generated artifacts from current project.
+
+Default removals:
+- `gen/`
+- `.prophet/ir/current.ir.json`
+- `src/main/java/<base_package>/generated`
+- `src/main/resources/application-prophet.yml`
+- `src/main/resources/schema.sql` (only if it looks generated)
+- Gradle multi-module wiring for `:prophet_generated` in `settings.gradle(.kts)` and `build.gradle(.kts)`
+
+```bash
+prophet clean
+prophet clean --verbose
+prophet clean --remove-baseline
+prophet clean --keep-gradle-wire
+```
+
+### `prophet version check`
+Compares current IR against baseline and reports compatibility + required bump.
+
+```bash
+prophet version check --against .prophet/baselines/main.ir.json
+```
+
+## Expected Project Files
+
+- `prophet.yaml`
+- `ontology/local/main.prophet`
+- `.prophet/baselines/main.ir.json`
+- `.prophet/ir/current.ir.json` (generated)
+- `gen/` (generated)
+
+## DSL Notes
+
+- Field types support scalars, custom types, object refs (`ref(User)`), lists (`string[]`, `list(string)`), and reusable `struct` types.
+
+## Config (`prophet.yaml`)
+
+Required keys currently used by CLI:
+
+```yaml
+project:
+  ontology_file: ontology/local/main.prophet
+generation:
+  out_dir: gen
+  targets: [sql, openapi, spring_boot]
+  spring_boot:
+    base_package: com.example.prophet
+    boot_version: 3.3
+compatibility:
+  baseline_ir: .prophet/baselines/main.ir.json
+  strict_enums: false
+```
+
+## Development Notes
+
+- Entry point module: `src/prophet_cli/cli.py`
+- Console script: `prophet`
+- Root `./prophet` is a launcher wrapper for local repo usage.
