@@ -16,6 +16,8 @@ from typing import Any, Dict, List, Optional, Tuple
 import yaml
 
 from prophet_cli.core.errors import ProphetError
+from prophet_cli.core.config import cfg_get as _core_cfg_get
+from prophet_cli.core.config import load_config as _core_load_config
 from prophet_cli.core.ir import build_ir as _core_build_ir
 from prophet_cli.core.parser import parse_ontology as _core_parse_ontology
 from prophet_cli.core.parser import resolve_type_descriptor as _core_resolve_type_descriptor
@@ -189,26 +191,8 @@ def pluralize(value: str) -> str:
     return value + "s"
 
 
-def load_config(path: Path) -> Dict[str, Any]:
-    if not path.exists():
-        raise ProphetError(f"prophet.yaml not found in current directory: {path.parent}")
-    try:
-        with path.open("r", encoding="utf-8") as f:
-            cfg = yaml.safe_load(f)
-    except OSError as exc:
-        raise ProphetError(f"Failed to read config {path}: {exc}") from exc
-    if not isinstance(cfg, dict):
-        raise ProphetError(f"Invalid config format in {path}")
-    return cfg
-
-
-def cfg_get(cfg: Dict[str, Any], keys: List[str], default: Any = None) -> Any:
-    cur: Any = cfg
-    for k in keys:
-        if not isinstance(cur, dict) or k not in cur:
-            return default
-        cur = cur[k]
-    return cur
+load_config = _core_load_config
+cfg_get = _core_cfg_get
 
 
 class Parser:

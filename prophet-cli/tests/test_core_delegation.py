@@ -9,6 +9,7 @@ PROJECT_ROOT = THIS_FILE.parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "prophet-cli" / "src"))
 
 from prophet_cli import cli
+from prophet_cli.core import config as core_config
 from prophet_cli.core import compatibility as core_compat
 from prophet_cli.core import ir as core_ir
 from prophet_cli.core import parser as core_parser
@@ -23,6 +24,8 @@ class CoreDelegationTests(unittest.TestCase):
         self.assertIs(cli.validate_ontology, core_validation.validate_ontology)
         self.assertIs(cli.compare_irs, core_compat.compare_irs)
         self.assertIs(cli.required_level_to_bump, core_compat.required_level_to_bump)
+        self.assertIs(cli.load_config, core_config.load_config)
+        self.assertIs(cli.cfg_get, core_config.cfg_get)
 
     def test_cli_build_ir_matches_core_build_ir(self) -> None:
         cfg = cli.load_config(EXAMPLE_ROOT / "prophet.yaml")
@@ -41,4 +44,3 @@ class CoreDelegationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

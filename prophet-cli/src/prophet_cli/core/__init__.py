@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .config import cfg_get
+from .config import load_config
 from .compatibility import bump_rank
 from .compatibility import classify_type_change
 from .compatibility import compare_irs
@@ -21,11 +23,13 @@ __all__ = [
     "bump_rank",
     "classify_type_change",
     "compare_irs",
+    "cfg_get",
     "declared_bump",
     "describe_type_descriptor",
     "Ontology",
     "parse_semver",
     "ProphetError",
+    "load_config",
     "parse_ontology",
     "required_level_to_bump",
     "resolve_type_descriptor",
