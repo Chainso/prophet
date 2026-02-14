@@ -14,6 +14,7 @@ Completed so far:
 4. Added explicit stack matrix and capability metadata with CLI validation.
 5. Added `prophet stacks` command for contributor/operator visibility.
 6. Added generated artifact ownership manifest (`gen/manifest/generated-files.json`) and integrated manifest-aware managed file detection.
+7. Added explicit code generation pipeline contract layer (`GenerationContext` + stack generator routing).
 
 In progress:
 

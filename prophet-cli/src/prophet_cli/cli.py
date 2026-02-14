@@ -31,6 +31,8 @@ from prophet_cli.core.validation import validate_ontology as _core_validate_onto
 from prophet_cli.core.validation import validate_type_expr as _core_validate_type_expr
 from prophet_cli.codegen.stacks import resolve_stack_spec
 from prophet_cli.codegen.stacks import supported_stack_table
+from prophet_cli.codegen.contracts import GenerationContext
+from prophet_cli.codegen.pipeline import run_generation_pipeline
 
 
 TOOLCHAIN_VERSION = "0.3.0"
@@ -3848,17 +3850,14 @@ def compute_delta_from_baseline(
     )
 
 
-def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optional[Path] = None) -> Dict[str, str]:
+def _generate_outputs_for_java_spring_jpa(context: GenerationContext) -> Dict[str, str]:
+    ir = context.ir
+    cfg = context.cfg
+    work_root = context.root
     outputs: Dict[str, str] = {}
     out_dir = cfg_get(cfg, ["generation", "out_dir"], "gen")
     stack = resolve_stack_spec(cfg)
-    if stack.id != "java_spring_jpa":
-        raise ProphetError(
-            f"Stack '{stack.id}' is declared but not yet implemented for generation output. "
-            "Current generator implementation supports only 'java_spring_jpa'."
-        )
     targets = cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"])
-    work_root = root if root is not None else Path.cwd()
     schema_sql = render_sql(ir)
     delta_sql, delta_warnings, baseline_path, baseline_hash, delta_meta = compute_delta_from_baseline(work_root, cfg, ir)
 
@@ -3926,6 +3925,23 @@ def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optio
     outputs[manifest_rel] = json.dumps(manifest_payload, indent=2, sort_keys=False) + "\n"
 
     return outputs
+
+
+def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optional[Path] = None) -> Dict[str, str]:
+    stack = resolve_stack_spec(cfg)
+    work_root = root if root is not None else Path.cwd()
+    context = GenerationContext(
+        stack_id=stack.id,
+        ir=ir,
+        cfg=cfg,
+        root=work_root,
+    )
+    return run_generation_pipeline(
+        context,
+        generators={
+            "java_spring_jpa": _generate_outputs_for_java_spring_jpa,
+        },
+    )
 
 
 def write_outputs(outputs: Dict[str, str], root: Path) -> None:
