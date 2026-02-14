@@ -4,6 +4,12 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-02-14
+
+### Changed
+- Patch release to validate trusted-publisher PyPI release flow from GitHub Actions.
+- Version and generated example manifests updated to toolchain `0.6.1`.
+
 ## [0.6.0] - 2026-02-14
 
 ### Added
