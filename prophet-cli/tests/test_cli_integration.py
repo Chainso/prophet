@@ -48,6 +48,11 @@ class CliIntegrationTests(unittest.TestCase):
             self.assertIn("[implemented]", result.stdout)
             self.assertIn("[planned]", result.stdout)
 
+            json_result = run_cli(root, "stacks", "--json")
+            payload = json.loads(json_result.stdout)
+            self.assertIn("stacks", payload)
+            self.assertTrue(any(item.get("id") == "java_spring_jpa" for item in payload["stacks"]))
+
     def test_end_to_end_cli_flow(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-cli-it-") as tmp:
             root = Path(tmp)

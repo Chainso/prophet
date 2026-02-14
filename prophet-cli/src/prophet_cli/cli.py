@@ -35,6 +35,7 @@ from prophet_cli.core.validation import validate_type_expr as _core_validate_typ
 from prophet_cli.codegen.stacks import resolve_stack_spec
 from prophet_cli.codegen.stacks import supported_stack_table
 from prophet_cli.codegen.contracts import GenerationContext
+from prophet_cli.codegen.contracts import StackGenerator
 from prophet_cli.codegen.pipeline import run_generation_pipeline
 from prophet_cli.codegen.artifacts import managed_existing_files as _managed_existing_files
 from prophet_cli.codegen.artifacts import remove_stale_outputs as _remove_stale_outputs
@@ -3865,6 +3866,12 @@ def _generate_outputs_for_java_spring_jpa(context: GenerationContext) -> Dict[st
     return generate_java_spring_jpa_outputs(context, deps)
 
 
+def registered_generators() -> Dict[str, StackGenerator]:
+    return {
+        "java_spring_jpa": _generate_outputs_for_java_spring_jpa,
+    }
+
+
 def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optional[Path] = None) -> Dict[str, str]:
     stack = resolve_stack_spec(cfg)
     work_root = root if root is not None else Path.cwd()
@@ -3878,9 +3885,7 @@ def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optio
     )
     return run_generation_pipeline(
         context,
-        generators={
-            "java_spring_jpa": _generate_outputs_for_java_spring_jpa,
-        },
+        generators=registered_generators(),
     )
 
 
@@ -4738,6 +4743,10 @@ def cmd_clean(args: argparse.Namespace) -> int:
 
 def cmd_stacks(args: argparse.Namespace) -> int:
     rows = supported_stack_table()
+    if args.json:
+        print(json.dumps({"stacks": rows}, indent=2, sort_keys=False))
+        return 0
+
     print("Supported stacks:")
     for row in rows:
         status = str(row.get("status", "planned"))
@@ -5062,6 +5071,11 @@ def build_cli() -> argparse.ArgumentParser:
         formatter_class=HelpFormatter,
         help="List supported generation stack ids and capabilities",
         description="Display supported framework/ORM stack combinations and capability metadata.",
+    )
+    p_stacks.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit structured JSON stack matrix output",
     )
     p_stacks.set_defaults(func=cmd_stacks)
 

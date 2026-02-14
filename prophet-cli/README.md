@@ -69,6 +69,7 @@ Entries come from a schema-validated stack manifest.
 
 ```bash
 prophet stacks
+prophet stacks --json
 ```
 
 ### `prophet generate` / `prophet gen`

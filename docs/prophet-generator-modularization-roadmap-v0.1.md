@@ -23,6 +23,7 @@ Completed so far:
 13. Added extension hook manifest generation (`gen/manifest/extension-hooks.json`) for action handler surfaces.
 14. Added deterministic no-op generation cache support via `prophet gen --skip-unchanged`.
 15. Introduced a schema-validated stack manifest layer for stack matrix governance.
+16. Added explicit generator registry checks to ensure implemented stacks map to concrete generators.
 
 In progress:
 
