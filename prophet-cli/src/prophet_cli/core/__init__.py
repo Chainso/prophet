@@ -11,7 +11,10 @@ from .compatibility import parse_semver
 from .compatibility import required_level_to_bump
 from .errors import ProphetError
 from .ir import build_ir
+from .ir_reader import ActionContractView
 from .ir_reader import IRReader
+from .ir_reader import QueryContractView
+from .ir_reader import QueryFilterView
 from .models import Ontology
 from .parser import parse_ontology
 from .parser import resolve_type_descriptor
@@ -27,8 +30,11 @@ __all__ = [
     "cfg_get",
     "declared_bump",
     "describe_type_descriptor",
+    "ActionContractView",
     "IRReader",
     "Ontology",
+    "QueryContractView",
+    "QueryFilterView",
     "parse_semver",
     "ProphetError",
     "load_config",

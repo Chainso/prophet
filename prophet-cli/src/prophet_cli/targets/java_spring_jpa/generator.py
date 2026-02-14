@@ -84,9 +84,9 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
 
     base_package = str(deps.cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet"))
     extension_hooks = []
-    for action in sorted(context.ir_reader.actions(), key=lambda item: str(item.get("name", ""))):
-        action_name = str(action.get("name", ""))
-        action_id = str(action.get("id", ""))
+    for action in sorted(context.ir_reader.action_contracts(), key=lambda item: item.name):
+        action_name = action.name
+        action_id = action.id
         interface_name = f"{_pascal_case(action_name)}ActionHandler"
         extension_hooks.append(
             {

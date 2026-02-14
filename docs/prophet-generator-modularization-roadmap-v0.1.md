@@ -31,10 +31,11 @@ Completed so far:
 21. Expanded stack manifest validation to a full document schema (`schema_version`, capability catalog, stack metadata, default targets).
 22. Added regeneration-safety extension policy docs and integration tests to confirm user extension files are not overwritten.
 23. Added a reproducible no-op generation benchmark script and published baseline performance report.
+24. Added typed IR view models for action/query contracts and routed extension-hook generation through IR views.
 
 In progress:
 
-1. Advancing Milestone 3 view coverage with stronger conformance tests.
+None. Milestone work packages in this roadmap phase are complete.
 
 ## 1. Purpose
 

@@ -22,6 +22,34 @@ REQUIRED_TOP_LEVEL_KEYS = (
 
 
 @dataclass(frozen=True)
+class ActionContractView:
+    id: str
+    name: str
+    kind: str
+    input_shape_id: str
+    output_shape_id: str
+
+
+@dataclass(frozen=True)
+class QueryFilterView:
+    field_id: str
+    field_name: str
+    operators: List[str]
+
+
+@dataclass(frozen=True)
+class QueryContractView:
+    object_id: str
+    object_name: str
+    list_path: str
+    get_by_id_path: str
+    typed_query_path: str
+    pageable_supported: bool
+    default_page_size: int
+    filters: List[QueryFilterView]
+
+
+@dataclass(frozen=True)
 class IRReader:
     _ir: Dict[str, Any]
 
@@ -99,6 +127,53 @@ class IRReader:
     def query_contracts(self) -> List[Dict[str, Any]]:
         return list(self._ir.get("query_contracts", []))
 
+    def action_contracts(self) -> List[ActionContractView]:
+        contracts: List[ActionContractView] = []
+        for action in self.actions():
+            contracts.append(
+                ActionContractView(
+                    id=str(action.get("id", "")),
+                    name=str(action.get("name", "")),
+                    kind=str(action.get("kind", "")),
+                    input_shape_id=str(action.get("input_shape_id", "")),
+                    output_shape_id=str(action.get("output_shape_id", "")),
+                )
+            )
+        return contracts
+
+    def query_contract_views(self) -> List[QueryContractView]:
+        views: List[QueryContractView] = []
+        for contract in self.query_contracts():
+            paths = contract.get("paths", {}) if isinstance(contract.get("paths"), dict) else {}
+            pageable = contract.get("pageable", {}) if isinstance(contract.get("pageable"), dict) else {}
+            filters: List[QueryFilterView] = []
+            for item in contract.get("filters", []):
+                if not isinstance(item, dict):
+                    continue
+                operators_raw = item.get("operators", [])
+                operators = [str(op) for op in operators_raw] if isinstance(operators_raw, list) else []
+                filters.append(
+                    QueryFilterView(
+                        field_id=str(item.get("field_id", "")),
+                        field_name=str(item.get("field_name", "")),
+                        operators=operators,
+                    )
+                )
+
+            views.append(
+                QueryContractView(
+                    object_id=str(contract.get("object_id", "")),
+                    object_name=str(contract.get("object_name", "")),
+                    list_path=str(paths.get("list", "")),
+                    get_by_id_path=str(paths.get("get_by_id", "")),
+                    typed_query_path=str(paths.get("typed_query", "")),
+                    pageable_supported=bool(pageable.get("supported", False)),
+                    default_page_size=int(pageable.get("default_size", 0)),
+                    filters=filters,
+                )
+            )
+        return views
+
     @staticmethod
     def index_by_id(items: Iterable[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
         return {
@@ -115,4 +190,3 @@ class IRReader:
 
     def action_by_id(self) -> Dict[str, Dict[str, Any]]:
         return self.index_by_id(self.actions())
-
