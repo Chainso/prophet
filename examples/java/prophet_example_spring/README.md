@@ -36,6 +36,8 @@ export SPRING_DATASOURCE_PASSWORD=
 - `GET /orders?page=0&size=20&currentState=CREATED&customerUserId=u_123`
 - `GET /users/{userId}`
 - `GET /users?page=0&size=20`
+- `POST /orders/query` (typed filter DSL)
+- `POST /users/query` (typed filter DSL)
 - `POST /actions/createOrder`
 - `POST /actions/approveOrder`
 - `POST /actions/shipOrder`
@@ -57,3 +59,15 @@ List endpoint response shape:
   - Spring runtime resources under `gen/spring-boot/src/main/resources/db/**` are auto-detected from existing app dependencies/plugins.
 - Generated classes live under `gen/spring-boot/src/main/java/com/example/prophet/generated`.
 - Event ingestion/dispatch is external; this app only exposes action endpoints.
+
+## Tests
+
+```bash
+cd examples/java/prophet_example_spring
+./gradlew test
+```
+
+Notable test coverage:
+- `ActionHttpFlowIntegrationTest`: end-to-end HTTP flow (`createOrder -> approveOrder -> shipOrder -> query/get`)
+- `H2ProfileContextTest`: H2 profile boot sanity
+- `PostgresProfileContextTest`: real Postgres profile boot sanity via Testcontainers
