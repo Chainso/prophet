@@ -12,6 +12,7 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 1. Read `README.md` for repo entry points.
 2. Read `docs/prophet-compatibility-policy-v0.2.md` before touching version logic.
 3. Use `examples/java/prophet_example_spring` as the canonical validation app.
+4. Review modularization status in `docs/prophet-modularization-closeout-v0.1.md`.
 
 ## Critical Rules
 
@@ -19,6 +20,7 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 - Implement generator/template changes in source modules (`prophet_cli/core`, `prophet_cli/codegen`, `prophet_cli/targets/*`), then regenerate.
 - Preserve deterministic output ordering.
 - Keep ontology `id` values as immutable compatibility anchors.
+- Spring generated Java package root is ontology-scoped: `<base_package>.<ontology_name>`.
 - When behavior changes, update docs and tests in the same change.
 
 ## Commands

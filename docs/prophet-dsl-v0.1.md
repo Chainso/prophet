@@ -39,7 +39,7 @@ Compatibility aliases also supported:
 
 ```text
 ontology      := "ontology" NAME "{" ontology_body "}"
-ontology_body := id_line version_line top_block*
+ontology_body := id_line version_line description_line? top_block*
 
 id_line       := "id" STRING
 version_line  := "version" STRING
@@ -54,54 +54,57 @@ top_block     := type_block
                | trigger_block
 
 type_block    := "type" NAME "{" type_body "}"
-type_body     := id_line base_line constraint_line*
+type_body     := id_line base_line constraint_line* description_line?
 base_line     := "base" BASE_TYPE
 constraint_line := "constraint" NAME STRING
 
 object_block  := "object" NAME "{" object_body "}"
-object_body   := id_line (field_block | state_block | transition_block)*
+object_body   := id_line description_line? (field_block | key_decl | state_block | transition_block | description_line)*
+key_decl      := "key" ("primary" | "display") "(" name_csv ")"
+name_csv      := NAME ("," NAME)*
 
 struct_block  := "struct" NAME "{" struct_body "}"
-struct_body   := id_line field_block*
+struct_body   := id_line description_line? field_block* description_line?
 
 action_input_block  := ("actionInput" | "action_input") NAME "{" action_shape_body "}"
 action_output_block := ("actionOutput" | "action_output") NAME "{" action_shape_body "}"
-action_shape_body   := id_line field_block*
+action_shape_body   := id_line description_line? field_block* description_line?
 
 field_block   := "field" NAME "{" field_body "}"
-field_body    := id_line type_line required_line key_line?
+field_body    := id_line type_line required_line key_line? description_line?
 type_line     := "type" type_expr
 type_expr     := scalar_type | list_type
 list_type     := type_expr "[]" | "list(" type_expr ")"
 scalar_type   := BASE_TYPE | NAME | "ref(" NAME ")"
 required_line := "required" | "optional"
-key_line      := "key" "primary"
+key_line      := "key" ("primary" | "display")
 
 state_block   := "state" NAME "{" state_body "}"
-state_body    := id_line initial_line?
+state_body    := id_line initial_line? description_line?
 initial_line  := "initial"
 
 transition_block := "transition" NAME "{" transition_body "}"
-transition_body  := id_line from_line to_line
+transition_body  := id_line from_line to_line description_line?
 from_line        := "from" NAME
 to_line          := "to" NAME
 
 action_block  := "action" NAME "{" action_body "}"
-action_body   := id_line kind_line input_line output_line
+action_body   := id_line kind_line input_line output_line description_line?
 kind_line     := "kind" ("process" | "workflow")
 input_line    := "input" NAME         # actionInput/action_input name
 output_line   := "output" NAME        # actionOutput/action_output name
 
 event_block   := "event" NAME "{" event_body "}"
-event_body    := id_line kind_event_line object_line action_line? from_line? to_line?
+event_body    := id_line kind_event_line object_line action_line? from_line? to_line? description_line?
 kind_event_line := "kind" ("action_output" | "signal" | "transition")
 object_line   := "object" NAME
 action_line   := "action" NAME
 
 trigger_block := "trigger" NAME "{" trigger_body "}"
-trigger_body  := id_line when_line invoke_line
+trigger_body  := id_line when_line invoke_line description_line?
 when_line     := "when" "event" NAME
 invoke_line   := "invoke" NAME
+description_line := ("description" | "documentation") STRING
 
 BASE_TYPE     := string | int | long | short | byte | double | float | decimal | boolean | datetime | date | duration
 ```
@@ -113,7 +116,12 @@ BASE_TYPE     := string | int | long | short | byte | double | float | decimal |
 - All entities must define `id`; IDs are globally unique.
 - `type.base` must be supported base type.
 - `object` fields must use known base/custom/ref types.
-- Each `object` must define exactly one `key primary` field.
+- Each `object` must define at least one primary key field.
+  - You can declare keys either at field-level (`key primary`) or object-level (`key primary (a, b)`).
+  - Composite keys are supported.
+  - `key display (...)` is an optional marker (metadata-only for now).
+- Primary-key fields must be `required`.
+- Primary-key fields must be scalar (`base` or `custom`) types.
 - Stateful `object` definitions must define exactly one `initial` state.
 - `object` transitions must reference valid object states.
 - `struct` fields must use known base/custom/ref/struct types and must not declare `key`.
@@ -144,26 +152,33 @@ Actions now use explicit input/output contracts:
 - In OpenAPI/domain contracts, refs map to `<ObjectName>Ref` payloads.
 - For object persistence, scalar `ref(...)` maps to JPA `@ManyToOne`.
 - For list refs (`ref(User)[]` / `list(ref(User))`), values are stored as JSON in a generated converter-backed column.
+- Current constraint: refs must target objects with single-field primary keys.
 
-## 7. Field Order Semantics
+## 7. Description Metadata
+
+- `description "..."` and `documentation "..."` are synonyms.
+- Supported on ontology, type, object, struct, field, action shapes, actions, events, triggers, states, transitions.
+- Description metadata is emitted into IR and used for generated JavaDoc/OpenAPI descriptions where applicable.
+
+## 8. Field Order Semantics
 
 - Field declaration order is preserved in generated Java record component order.
 - This applies to object records, structs, `actionInput`, and `actionOutput` records.
 - Reordering fields in DSL can require corresponding constructor argument order updates in user code.
 
-## 8. Full Example
+## 9. Full Example
 
 See:
 - `examples/java/prophet_example_spring/ontology/local/main.prophet`
 
 This file is the source of truth for the current supported syntax.
 
-## 9. Current Limitations (v0.1)
+## 10. Current Limitations (v0.1)
 
 - Cross-file imports/namespaces are not yet supported.
 - Advanced trigger filter expressions are not yet supported.
 
-## 10. Generation Targets (Config)
+## 11. Generation Targets (Config)
 
 Typical `prophet.yaml` target configuration:
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from .constants import BASE_TYPES
 from .models import FieldDef
@@ -10,6 +10,30 @@ from .models import StructDef
 from .models import TypeDef
 from .parser import resolve_type_descriptor
 from .errors import ProphetError
+
+
+def _effective_key_field_names(
+    obj: ObjectDef,
+    kind: str,
+    errors: List[str],
+) -> Optional[List[str]]:
+    object_level = [k for k in obj.keys if k.kind == kind]
+    field_level = [f.name for f in obj.fields if f.key == kind]
+    if len(object_level) > 1:
+        dup_lines = ", ".join(str(k.line) for k in object_level)
+        errors.append(
+            f"line {obj.line}: object {obj.name} declares key {kind} multiple times (lines: {dup_lines})"
+        )
+    if object_level:
+        names = list(object_level[0].field_names)
+        if field_level and set(field_level) != set(names):
+            errors.append(
+                f"line {obj.line}: object {obj.name} mixes object-level and field-level key {kind} declarations with different fields"
+            )
+        return names
+    if field_level:
+        return field_level
+    return None
 
 
 def validate_type_expr(
@@ -84,9 +108,45 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
             errors.append(f"line {t.line}: type {t.name} base '{t.base}' is not a supported base type")
 
     for o in ont.objects:
-        primary_fields = [f for f in o.fields if f.key == "primary"]
-        if len(primary_fields) != 1:
-            errors.append(f"line {o.line}: object {o.name} must declare exactly one primary key field")
+        for key_def in o.keys:
+            if key_def.kind not in {"primary", "display"}:
+                errors.append(
+                    f"line {key_def.line}: object {o.name} key kind '{key_def.kind}' is invalid; expected primary or display"
+                )
+        for f in o.fields:
+            if f.key is not None and f.key not in {"primary", "display"}:
+                errors.append(
+                    f"line {f.line}: field {o.name}.{f.name} key kind '{f.key}' is invalid; expected primary or display"
+                )
+
+        field_by_name = {f.name: f for f in o.fields}
+        primary_field_names = _effective_key_field_names(o, "primary", errors)
+        if not primary_field_names:
+            errors.append(f"line {o.line}: object {o.name} must declare at least one primary key field")
+        else:
+            if len(set(primary_field_names)) != len(primary_field_names):
+                errors.append(f"line {o.line}: object {o.name} primary key must not repeat fields")
+            for field_name in primary_field_names:
+                if field_name not in field_by_name:
+                    errors.append(
+                        f"line {o.line}: object {o.name} key primary references unknown field '{field_name}'"
+                    )
+                    continue
+                primary_field = field_by_name[field_name]
+                if not primary_field.required:
+                    errors.append(
+                        f"line {primary_field.line}: object {o.name} primary key field {field_name} must be required"
+                    )
+
+        display_field_names = _effective_key_field_names(o, "display", errors)
+        if display_field_names is not None:
+            if len(set(display_field_names)) != len(display_field_names):
+                errors.append(f"line {o.line}: object {o.name} display key must not repeat fields")
+            for field_name in display_field_names:
+                if field_name not in field_by_name:
+                    errors.append(
+                        f"line {o.line}: object {o.name} key display references unknown field '{field_name}'"
+                    )
 
         state_names = {s.name: s for s in o.states}
         if o.states:
@@ -104,6 +164,18 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
             type_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
             if type_error:
                 errors.append(f"line {f.line}: field {o.name}.{f.name} {type_error}")
+                continue
+            if primary_field_names and f.name in set(primary_field_names):
+                descriptor = resolve_type_descriptor(
+                    f.type_raw,
+                    {t.name: t.id for t in type_names.values()},
+                    {obj.name: obj.id for obj in object_names.values()},
+                    {s.name: s.id for s in struct_names.values()},
+                )
+                if descriptor.get("kind") not in {"base", "custom"}:
+                    errors.append(
+                        f"line {f.line}: field {o.name}.{f.name} cannot be used in a primary key (only base/custom scalar types are supported)"
+                    )
 
     for s in ont.structs:
         for f in s.fields:
@@ -167,10 +239,35 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         if tr.action_name not in action_names:
             errors.append(f"line {tr.line}: trigger {tr.name} references unknown action '{tr.action_name}'")
 
+    object_primary_counts: Dict[str, int] = {}
+    for o in ont.objects:
+        primary_field_names = _effective_key_field_names(o, "primary", [])
+        object_primary_counts[o.name] = len(primary_field_names or [])
+    for o in ont.objects:
+        for f in o.fields:
+            descriptor_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
+            if descriptor_error:
+                continue
+            descriptor = resolve_type_descriptor(
+                f.type_raw,
+                {t.name: t.id for t in type_names.values()},
+                {obj.name: obj.id for obj in object_names.values()},
+                {s.name: s.id for s in struct_names.values()},
+            )
+            if descriptor.get("kind") != "object_ref":
+                continue
+            target_object_id = descriptor.get("target_object_id")
+            target_name = next((obj.name for obj in ont.objects if obj.id == target_object_id), None)
+            if target_name is None:
+                continue
+            if object_primary_counts.get(target_name, 0) != 1:
+                errors.append(
+                    f"line {f.line}: field {o.name}.{f.name} references object {target_name} which does not have exactly one primary key field (object refs currently require single-field primary keys)"
+                )
+
     if strict_enums:
         for o in ont.objects:
             if len({s.name for s in o.states}) != len(o.states):
                 errors.append(f"line {o.line}: object {o.name} has duplicate state names")
 
     return errors
-

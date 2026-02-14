@@ -18,7 +18,7 @@ from prophet_cli.codegen.cache import write_generation_cache
 class CodegenCacheTests(unittest.TestCase):
     def test_signature_is_deterministic_for_same_inputs(self) -> None:
         one = compute_generation_signature(
-            toolchain_version="0.3.0",
+            toolchain_version="0.4.0",
             stack_id="java_spring_jpa",
             ir_hash="abc",
             out_dir="gen",
@@ -26,7 +26,7 @@ class CodegenCacheTests(unittest.TestCase):
             baseline_ir=".prophet/baselines/main.ir.json",
         )
         two = compute_generation_signature(
-            toolchain_version="0.3.0",
+            toolchain_version="0.4.0",
             stack_id="java_spring_jpa",
             ir_hash="abc",
             out_dir="gen",
@@ -37,7 +37,7 @@ class CodegenCacheTests(unittest.TestCase):
 
     def test_signature_changes_when_ir_hash_changes(self) -> None:
         one = compute_generation_signature(
-            toolchain_version="0.3.0",
+            toolchain_version="0.4.0",
             stack_id="java_spring_jpa",
             ir_hash="abc",
             out_dir="gen",
@@ -45,7 +45,7 @@ class CodegenCacheTests(unittest.TestCase):
             baseline_ir=".prophet/baselines/main.ir.json",
         )
         two = compute_generation_signature(
-            toolchain_version="0.3.0",
+            toolchain_version="0.4.0",
             stack_id="java_spring_jpa",
             ir_hash="def",
             out_dir="gen",

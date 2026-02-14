@@ -318,7 +318,7 @@ Minimum generated Spring integration surface:
 - Action endpoint controllers (one endpoint per action under `/actions/*`)
 - Default action handler stubs (throwing unsupported operation until overridden)
 - Repository interfaces for generated entities
-- Paginated/filterable query controllers (`GET /<objects>` + `GET /<objects>/{id}`)
+- Paginated/filterable query controllers (`GET /<objects>` + `GET /<objects>/{id}` for single keys or `GET /<objects>/{k1}/{k2}/...` for composite keys)
 - Configuration properties for generated API behavior
 - Deterministic JPA mappings (tables, columns, FK relations, optimistic locking, state history)
 - Generated migration resources in Spring module (`src/main/resources/db/**`) auto-detected from host app migration stack

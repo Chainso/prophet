@@ -15,7 +15,7 @@ from prophet_cli.core.ir_reader import IRReader
 def minimal_ir() -> dict:
     return {
         "ir_version": "0.1",
-        "toolchain_version": "0.3.0",
+        "toolchain_version": "0.4.0",
         "ontology": {"id": "ont", "name": "Ont", "version": "0.1.0"},
         "types": [{"id": "t1", "name": "Money"}],
         "objects": [{"id": "o1", "name": "Order"}],

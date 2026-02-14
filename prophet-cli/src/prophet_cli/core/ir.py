@@ -10,6 +10,21 @@ from .models import Ontology
 from .parser import resolve_type_descriptor
 
 
+def _effective_object_key_field_names(
+    field_names_in_order: List[str],
+    key_declarations: List[Any],
+    field_level_keys: Dict[str, List[str]],
+    kind: str,
+) -> List[str]:
+    object_level = [k for k in key_declarations if k.kind == kind]
+    if object_level:
+        return [name for name in object_level[0].field_names if name in field_names_in_order]
+    names = [name for name in field_level_keys.get(kind, []) if name in field_names_in_order]
+    if kind == "primary" and not names and field_names_in_order:
+        return [field_names_in_order[0]]
+    return names
+
+
 def cfg_get(cfg: Dict[str, Any], keys: List[str], default: Any = None) -> Any:
     cur: Any = cfg
     for k in keys:
@@ -46,18 +61,28 @@ def build_ir(
 
     types = []
     for t in sorted_by_id(ont.types):
-        types.append(
-            {
-                "id": t.id,
-                "name": t.name,
-                "kind": "custom",
-                "base": t.base,
-                "constraints": dict(sorted(t.constraints.items())),
-            }
-        )
+        entry = {
+            "id": t.id,
+            "name": t.name,
+            "kind": "custom",
+            "base": t.base,
+            "constraints": dict(sorted(t.constraints.items())),
+        }
+        if t.description:
+            entry["description"] = t.description
+        types.append(entry)
 
     objects = []
     for o in sorted_by_id(ont.objects):
+        field_names = [f.name for f in o.fields]
+        field_id_by_name = {f.name: f.id for f in o.fields}
+        field_level_keys: Dict[str, List[str]] = {}
+        for f in o.fields:
+            if f.key:
+                field_level_keys.setdefault(f.key, []).append(f.name)
+        primary_key_field_names = _effective_object_key_field_names(field_names, o.keys, field_level_keys, "primary")
+        display_key_field_names = _effective_object_key_field_names(field_names, o.keys, field_level_keys, "display")
+
         obj_fields = []
         for f in o.fields:
             resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
@@ -71,30 +96,43 @@ def build_ir(
             }
             if f.key:
                 f_entry["key"] = f.key
+            if f.description:
+                f_entry["description"] = f.description
             obj_fields.append(f_entry)
 
         state_name_to_id = {s.name: s.id for s in o.states}
-        obj_states = [{"id": s.id, "name": s.name, "initial": s.initial} for s in o.states]
+        obj_states = []
+        for s in o.states:
+            state_entry = {"id": s.id, "name": s.name, "initial": s.initial}
+            if s.description:
+                state_entry["description"] = s.description
+            obj_states.append(state_entry)
         obj_transitions = []
         for t in o.transitions:
-            obj_transitions.append(
-                {
-                    "id": t.id,
-                    "name": t.name,
-                    "from_state_id": state_name_to_id[t.from_state],
-                    "to_state_id": state_name_to_id[t.to_state],
-                }
-            )
-
-        objects.append(
-            {
-                "id": o.id,
-                "name": o.name,
-                "fields": obj_fields,
-                "states": obj_states,
-                "transitions": obj_transitions,
+            transition_entry = {
+                "id": t.id,
+                "name": t.name,
+                "from_state_id": state_name_to_id[t.from_state],
+                "to_state_id": state_name_to_id[t.to_state],
             }
-        )
+            if t.description:
+                transition_entry["description"] = t.description
+            obj_transitions.append(transition_entry)
+
+        obj_entry = {
+            "id": o.id,
+            "name": o.name,
+            "fields": obj_fields,
+            "keys": {
+                "primary": {"field_ids": [field_id_by_name[name] for name in primary_key_field_names if name in field_id_by_name]},
+                "display": {"field_ids": [field_id_by_name[name] for name in display_key_field_names if name in field_id_by_name]},
+            },
+            "states": obj_states,
+            "transitions": obj_transitions,
+        }
+        if o.description:
+            obj_entry["description"] = o.description
+        objects.append(obj_entry)
 
     structs = []
     for s in sorted_by_id(ont.structs):
@@ -110,13 +148,16 @@ def build_ir(
                     "cardinality": {"min": 1 if f.required else 0, "max": max_cardinality},
                 }
             )
-        structs.append(
-            {
-                "id": s.id,
-                "name": s.name,
-                "fields": struct_fields,
-            }
-        )
+            if f.description:
+                struct_fields[-1]["description"] = f.description
+        struct_entry = {
+            "id": s.id,
+            "name": s.name,
+            "fields": struct_fields,
+        }
+        if s.description:
+            struct_entry["description"] = s.description
+        structs.append(struct_entry)
 
     action_inputs = []
     for shape in sorted_by_id(ont.action_inputs):
@@ -132,13 +173,16 @@ def build_ir(
                     "cardinality": {"min": 1 if f.required else 0, "max": max_cardinality},
                 }
             )
-        action_inputs.append(
-            {
-                "id": shape.id,
-                "name": shape.name,
-                "fields": shape_fields,
-            }
-        )
+            if f.description:
+                shape_fields[-1]["description"] = f.description
+        action_input_entry = {
+            "id": shape.id,
+            "name": shape.name,
+            "fields": shape_fields,
+        }
+        if shape.description:
+            action_input_entry["description"] = shape.description
+        action_inputs.append(action_input_entry)
 
     action_outputs = []
     for shape in sorted_by_id(ont.action_outputs):
@@ -154,27 +198,31 @@ def build_ir(
                     "cardinality": {"min": 1 if f.required else 0, "max": max_cardinality},
                 }
             )
-        action_outputs.append(
-            {
-                "id": shape.id,
-                "name": shape.name,
-                "fields": shape_fields,
-            }
-        )
+            if f.description:
+                shape_fields[-1]["description"] = f.description
+        action_output_entry = {
+            "id": shape.id,
+            "name": shape.name,
+            "fields": shape_fields,
+        }
+        if shape.description:
+            action_output_entry["description"] = shape.description
+        action_outputs.append(action_output_entry)
 
     event_name_to_id = {e.name: e.id for e in ont.events}
 
     actions = []
     for a in sorted_by_id(ont.actions):
-        actions.append(
-            {
-                "id": a.id,
-                "name": a.name,
-                "kind": a.kind,
-                "input_shape_id": action_input_name_to_id[a.input_shape],
-                "output_shape_id": action_output_name_to_id[a.output_shape],
-            }
-        )
+        action_entry = {
+            "id": a.id,
+            "name": a.name,
+            "kind": a.kind,
+            "input_shape_id": action_input_name_to_id[a.input_shape],
+            "output_shape_id": action_output_name_to_id[a.output_shape],
+        }
+        if a.description:
+            action_entry["description"] = a.description
+        actions.append(action_entry)
 
     obj_name_to_states = {o.name: {s.name: s.id for s in o.states} for o in ont.objects}
 
@@ -186,6 +234,8 @@ def build_ir(
             "kind": e.kind,
             "object_id": object_name_to_id[e.object_name],
         }
+        if e.description:
+            entry["description"] = e.description
         if e.action:
             entry["action_id"] = action_name_to_id[e.action]
         if e.from_state:
@@ -196,14 +246,15 @@ def build_ir(
 
     triggers = []
     for t in sorted_by_id(ont.triggers):
-        triggers.append(
-            {
-                "id": t.id,
-                "name": t.name,
-                "event_id": event_name_to_id[t.event_name],
-                "action_id": action_name_to_id[t.action_name],
-            }
-        )
+        trigger_entry = {
+            "id": t.id,
+            "name": t.name,
+            "event_id": event_name_to_id[t.event_name],
+            "action_id": action_name_to_id[t.action_name],
+        }
+        if t.description:
+            trigger_entry["description"] = t.description
+        triggers.append(trigger_entry)
 
     ir = {
         "ir_version": ir_version,
@@ -234,6 +285,8 @@ def build_ir(
             "custom_type_constraint_changes_are_breaking": True,
         },
     }
+    if ont.description:
+        ir["ontology"]["description"] = ont.description
 
     ir["query_contracts"] = build_query_contracts(ir)
     contract_canonical = json.dumps(ir["query_contracts"], sort_keys=True, separators=(",", ":")).encode("utf-8")
@@ -241,4 +294,3 @@ def build_ir(
     canonical = json.dumps(ir, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ir["ir_hash"] = hashlib.sha256(canonical).hexdigest()
     return ir
-

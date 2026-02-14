@@ -2,11 +2,11 @@
 
 Date: February 14, 2026
 
-This document is the formal closeout artifact for the roadmap in `docs/prophet-generator-modularization-roadmap-v0.1.md`.
+This document is the formal closeout artifact for Prophet's modularization phase.
 
 ## Phase Status
 
-Roadmap phase status: **Complete**
+Phase status: **Complete**
 
 ## Milestone Summary
 

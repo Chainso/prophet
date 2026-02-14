@@ -5,7 +5,7 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
 
 ## Status
 
-- Toolchain release: `0.3.0`
+- Toolchain release: `0.4.0`
 - Golden runtime target: Spring Boot
 - Example app: `examples/java/prophet_example_spring`
 
@@ -17,6 +17,7 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
   - OpenAPI
   - Flyway/Liquibase migrations (init + baseline-aware delta)
   - Spring Boot module (domain DTOs, JPA layer, action/query APIs)
+  - Java package namespace scoped by ontology: `<basePackage>.<ontologyName>`
 - Compatibility/version checks against a baseline IR
 - CI-ready `prophet check` command
 
@@ -27,7 +28,6 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
 - `prophet-cli/src/prophet_cli/codegen/stack_manifest.py`: canonical stack matrix + schema validation
 - `prophet-cli/src/prophet_cli/targets/java_spring_jpa/`: reference stack generation module
 - `docs/`: DSL, architecture, JPA mapping, compatibility policy
-- `docs/prophet-generator-modularization-roadmap-v0.1.md`: modularization strategy and contributor-ready execution roadmap
 - `docs/prophet-stack-manifest-schema-v0.1.md`: validated stack-manifest schema and capability governance contract
 - `docs/prophet-extension-hooks-safety-v0.1.md`: regeneration-safety contract for user extension code
 - `docs/prophet-noop-generation-benchmark-v0.1.md`: no-op generation performance baseline and methodology
@@ -88,6 +88,7 @@ From `prophet gen`:
   - `gen/migrations/delta/report.json`
   - report includes `summary` counts and structured `findings` (including rename hints for manual review)
 - `gen/spring-boot/**` (generated integration module)
+  - package root is `<generation.spring_boot.base_package>.<ontology_name>`
 
 ## Query and Action Surface
 
@@ -95,9 +96,17 @@ From `prophet gen`:
 - Controllers delegate to generated action services (`generated.actions.services.*`)
 - Object APIs include:
   - `GET /<objects>`
-  - `GET /<objects>/{id}`
+  - `GET /<objects>/{id}` for single-field keys, or `GET /<objects>/{k1}/{k2}/...` for composite keys
   - `POST /<objects>/query` with typed filter DSL (`eq`, `in`, `gte`, `lte`, `contains`)
 - Query layer maps entities via generated mappers (`generated.mapping.*DomainMapper`)
+
+## DSL Notes
+
+- `description "..."` and `documentation "..."` are supported metadata lines across ontology/type/object/field/action blocks.
+- Object keys support both:
+  - field-level `key primary`
+  - object-level `key primary (fieldA, fieldB)` and `key display (...)`
+- Composite primary keys are supported in generated SQL/JPA and query/OpenAPI paths.
 
 ## Compatibility Policy
 

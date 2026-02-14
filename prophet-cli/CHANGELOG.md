@@ -4,6 +4,8 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-02-14
+
 ### Added
 - Standardized `IRReader` boundary for target generation and target-level IRReader contract tests.
 - Typed IR contract views (`ActionContractView`, `QueryContractView`) and reference-target adoption for extension hook generation.
@@ -15,7 +17,7 @@ All notable changes to `prophet-cli` are documented in this file.
 - Dedicated cache module (`prophet_cli.codegen.cache`) with deterministic signature and cache IO tests.
 - Regeneration safety integration tests and extension policy documentation.
 - Reproducible no-op benchmark script and published baseline benchmark report.
-- Formal roadmap closeout artifact documenting milestone completion and validation evidence.
+- Formal modularization phase closeout artifact documenting milestone completion and validation evidence.
 
 ### Changed
 - `prophet gen --skip-unchanged` now uses modular cache helpers and `prophet clean` removes generation cache metadata.

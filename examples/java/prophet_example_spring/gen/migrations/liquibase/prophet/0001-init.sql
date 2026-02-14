@@ -32,7 +32,7 @@ values
 on conflict do nothing;
 
 create table if not exists orders (
-  order_id text primary key,
+  order_id text not null,
   customer_user_id text not null,
   total_amount numeric(18,2) not null check (total_amount >= 0),
   discount_code text,
@@ -42,7 +42,8 @@ create table if not exists orders (
   row_version bigint not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint fk_orders_customer_user_id foreign key (customer_user_id) references users(user_id)
+  constraint fk_orders_customer_user_id foreign key (customer_user_id) references users(user_id),
+  primary key (order_id)
 );
 
 create index if not exists idx_orders_customer_user_id on orders (customer_user_id);
@@ -56,15 +57,16 @@ create table if not exists order_state_history (
   to_state text not null,
   changed_at timestamptz not null default now(),
   changed_by text,
-  constraint fk_order_state_history_order_id foreign key (order_id) references orders(order_id)
+  constraint fk_order_state_history_entity foreign key (order_id) references orders(order_id)
 );
-create index if not exists idx_order_state_history_order_id on order_state_history (order_id);
+create index if not exists idx_order_state_history_entity on order_state_history (order_id);
 create index if not exists idx_order_state_history_changed_at on order_state_history (changed_at);
 
 create table if not exists users (
-  user_id text primary key,
+  user_id text not null,
   email text not null,
   row_version bigint not null default 0,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  primary key (user_id)
 );

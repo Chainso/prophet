@@ -192,6 +192,7 @@ paths:
   /actions/approveOrder:
     post:
       operationId: approveOrderAction
+      summary: Approves an existing order.
       requestBody:
         required: true
         content:
@@ -208,6 +209,7 @@ paths:
   /actions/createOrder:
     post:
       operationId: createOrderAction
+      summary: Creates a new order.
       requestBody:
         required: true
         content:
@@ -224,6 +226,7 @@ paths:
   /actions/shipOrder:
     post:
       operationId: shipOrderAction
+      summary: Ships an approved order.
       requestBody:
         required: true
         content:
@@ -301,6 +304,7 @@ components:
           - CREATED
           - APPROVED
           - SHIPPED
+      description: Customer order aggregate.
     OrderListResponse:
       type: object
       required:
@@ -332,6 +336,7 @@ components:
           type: string
         email:
           type: string
+      description: Platform user who can place or approve orders.
     UserListResponse:
       type: object
       required:
@@ -368,6 +373,7 @@ components:
             type: string
         context:
           $ref: '#/components/schemas/ApprovalContext'
+      description: Input payload for approving an order.
     CreateOrderCommand:
       type: object
       required:
@@ -422,6 +428,7 @@ components:
           type: array
           items:
             type: string
+      description: Approval result contract.
     CreateOrderResult:
       type: object
       required:

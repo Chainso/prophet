@@ -10,6 +10,7 @@ class TypeDef:
     id: str
     base: str
     constraints: Dict[str, str]
+    description: Optional[str]
     line: int
 
 
@@ -20,6 +21,7 @@ class FieldDef:
     type_raw: str
     required: bool
     key: Optional[str]
+    description: Optional[str]
     line: int
 
 
@@ -28,6 +30,7 @@ class StateDef:
     name: str
     id: str
     initial: bool
+    description: Optional[str]
     line: int
 
 
@@ -37,6 +40,14 @@ class TransitionDef:
     id: str
     from_state: str
     to_state: str
+    description: Optional[str]
+    line: int
+
+
+@dataclass
+class KeyDef:
+    kind: str
+    field_names: List[str]
     line: int
 
 
@@ -45,8 +56,10 @@ class ObjectDef:
     name: str
     id: str
     fields: List[FieldDef]
+    keys: List[KeyDef]
     states: List[StateDef]
     transitions: List[TransitionDef]
+    description: Optional[str]
     line: int
 
 
@@ -55,6 +68,7 @@ class StructDef:
     name: str
     id: str
     fields: List[FieldDef]
+    description: Optional[str]
     line: int
 
 
@@ -65,6 +79,7 @@ class ActionDef:
     kind: str
     input_shape: str
     output_shape: str
+    description: Optional[str]
     line: int
 
 
@@ -73,6 +88,7 @@ class ActionShapeDef:
     name: str
     id: str
     fields: List[FieldDef]
+    description: Optional[str]
     line: int
 
 
@@ -85,6 +101,7 @@ class EventDef:
     object_name: str
     from_state: Optional[str]
     to_state: Optional[str]
+    description: Optional[str]
     line: int
 
 
@@ -94,6 +111,7 @@ class TriggerDef:
     id: str
     event_name: str
     action_name: str
+    description: Optional[str]
     line: int
 
 
@@ -102,6 +120,7 @@ class Ontology:
     name: str
     id: str
     version: str
+    description: Optional[str] = None
     types: List[TypeDef] = field(default_factory=list)
     objects: List[ObjectDef] = field(default_factory=list)
     structs: List[StructDef] = field(default_factory=list)
@@ -110,4 +129,3 @@ class Ontology:
     actions: List[ActionDef] = field(default_factory=list)
     events: List[EventDef] = field(default_factory=list)
     triggers: List[TriggerDef] = field(default_factory=list)
-

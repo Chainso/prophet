@@ -34,7 +34,7 @@ Provide a first-class Spring Boot integration where Prophet ontology contracts g
 - Action controller endpoints (`POST /actions/<actionName>`) delegating to handler beans
 
 4. Query API
-- Object query controllers (`GET /<objects>/{id}`) over generated repositories
+- Object query controllers (`GET /<objects>/{id}` for single keys, `GET /<objects>/{k1}/{k2}/...` for composite keys) over generated repositories
 - Paginated/filterable object query controllers (`GET /<objects>`) backed by JPA Specifications
 - List endpoints return generated DTO envelopes (never raw JPA entities or raw Spring `Page` payloads)
 - Filter query params are generated for scalar/object-ref/state fields plus paging params (`page`, `size`, `sort`);

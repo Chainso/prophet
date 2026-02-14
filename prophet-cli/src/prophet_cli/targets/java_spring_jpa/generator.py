@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -14,6 +15,30 @@ from prophet_cli.core.ir_reader import IRReader
 def _pascal_case(value: str) -> str:
     chunks = [part for part in value.replace("-", "_").split("_") if part]
     return "".join(chunk[:1].upper() + chunk[1:] for chunk in chunks)
+
+
+def _snake_case(value: str) -> str:
+    s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", value)
+    s2 = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s1)
+    return s2.replace("-", "_").lower()
+
+
+def _java_package_segment(value: str) -> str:
+    raw = _snake_case(value).strip("_")
+    if not raw:
+        return "ontology"
+    normalized = re.sub(r"[^a-z0-9_]", "_", raw)
+    if normalized[:1].isdigit():
+        return f"o_{normalized}"
+    return normalized
+
+
+def _effective_base_package(base_package: str, ontology_name: str) -> str:
+    segment = _java_package_segment(ontology_name)
+    suffix = f".{segment}"
+    if base_package.endswith(suffix):
+        return base_package
+    return f"{base_package}{suffix}"
 
 
 @dataclass(frozen=True)
@@ -82,7 +107,9 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
         for rel_path, content in spring_files.items():
             outputs[f"{out_dir}/spring-boot/{rel_path}"] = content
 
-    base_package = str(deps.cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet"))
+    configured_base_package = str(deps.cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet"))
+    ontology_name = str(context.ir_reader.get("ontology", {}).get("name", "prophet"))
+    base_package = _effective_base_package(configured_base_package, ontology_name)
     extension_hooks = []
     for action in sorted(context.ir_reader.action_contracts(), key=lambda item: item.name):
         action_name = action.name

@@ -1,6 +1,7 @@
 ontology commerce_local {
   id "ont_commerce_local"
   version "0.1.0"
+  description "Commerce ontology for order creation, approval, and shipping."
 
   type Money {
     id "type_money"
@@ -10,12 +11,14 @@ ontology commerce_local {
 
   object User {
     id "obj_user"
+    description "Platform user who can place or approve orders."
 
     field user_id {
       id "fld_user_user_id"
       type string
       required
       key primary
+      description "Stable user identifier."
     }
 
     field email {
@@ -27,12 +30,14 @@ ontology commerce_local {
 
   object Order {
     id "obj_order"
+    description "Customer order aggregate."
 
     field order_id {
       id "fld_order_order_id"
       type string
       required
       key primary
+      description "Stable order identifier."
     }
 
     field customer {
@@ -137,6 +142,7 @@ ontology commerce_local {
 
   actionInput ApproveOrderCommand {
     id "ain_approve_order"
+    description "Input payload for approving an order."
 
     field orderId {
       id "fld_ain_approve_order_order_id"
@@ -165,6 +171,7 @@ ontology commerce_local {
 
   actionOutput ApproveOrderResult {
     id "aout_approve_order"
+    description "Approval result contract."
 
     field orderId {
       id "fld_aout_approve_order_order_id"
@@ -302,6 +309,7 @@ ontology commerce_local {
     kind process
     input CreateOrderCommand
     output CreateOrderResult
+    description "Creates a new order."
   }
 
   action approveOrder {
@@ -309,6 +317,7 @@ ontology commerce_local {
     kind process
     input ApproveOrderCommand
     output ApproveOrderResult
+    description "Approves an existing order."
   }
 
   action shipOrder {
@@ -316,6 +325,7 @@ ontology commerce_local {
     kind workflow
     input ShipOrderCommand
     output ShipOrderResult
+    description "Ships an approved order."
   }
 
   event OrderApprovedEvent {

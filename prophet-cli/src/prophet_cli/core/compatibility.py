@@ -22,6 +22,15 @@ def pluralize(value: str) -> str:
     return value + "s"
 
 
+def camel_case(value: str) -> str:
+    parts = [part for part in re.split(r"[_\-\s]+", value) if part]
+    if not parts:
+        return value
+    head = parts[0][:1].lower() + parts[0][1:]
+    tail = [p[:1].upper() + p[1:] for p in parts[1:]]
+    return "".join([head] + tail)
+
+
 def parse_semver(version: str) -> Tuple[int, int, int]:
     m = re.match(r"^(\d+)\.(\d+)\.(\d+)$", version)
     if not m:
@@ -131,6 +140,25 @@ def build_query_contracts(ir: Dict[str, Any]) -> List[Dict[str, Any]]:
 
     for obj in sorted(ir.get("objects", []), key=lambda item: item.get("id", "")):
         path_table = pluralize(snake_case(obj["name"]))
+        fields_by_id = {f.get("id"): f for f in obj.get("fields", []) if isinstance(f, dict)}
+        key_field_ids = (
+            obj.get("keys", {})
+            .get("primary", {})
+            .get("field_ids", [])
+            if isinstance(obj.get("keys"), dict)
+            else []
+        )
+        key_path_parts: List[str] = []
+        if isinstance(key_field_ids, list):
+            for field_id in key_field_ids:
+                field = fields_by_id.get(field_id)
+                if isinstance(field, dict):
+                    key_path_parts.append("{" + camel_case(str(field.get("name", "id"))) + "}")
+        if len(key_path_parts) <= 1:
+            get_by_id_path = f"/{path_table}/{{id}}"
+        else:
+            get_by_id_path = f"/{path_table}/" + "/".join(key_path_parts)
+
         filters: List[Dict[str, Any]] = []
         for field in sorted(obj.get("fields", []), key=lambda item: item.get("id", "")):
             ops = query_filter_operators_for_field(field, type_by_id)
@@ -158,7 +186,7 @@ def build_query_contracts(ir: Dict[str, Any]) -> List[Dict[str, Any]]:
             "object_name": obj["name"],
             "paths": {
                 "list": f"/{path_table}",
-                "get_by_id": f"/{path_table}/{{id}}",
+                "get_by_id": get_by_id_path,
                 "typed_query": f"/{path_table}/query",
             },
             "pageable": {
@@ -283,6 +311,18 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
             add("additive", f"transition added: object={oid} transition_id={tid}")
 
     def compare_named_list(kind: str, old_list: List[Dict[str, Any]], new_list: List[Dict[str, Any]]) -> None:
+        def comparable_payload(item: Dict[str, Any]) -> Dict[str, Any]:
+            if kind == "action":
+                keep = ("id", "name", "kind", "input_shape_id", "output_shape_id")
+                return {k: item.get(k) for k in keep}
+            if kind == "event":
+                keep = ("id", "name", "kind", "object_id", "action_id", "from_state_id", "to_state_id")
+                return {k: item.get(k) for k in keep}
+            if kind == "trigger":
+                keep = ("id", "name", "event_id", "action_id")
+                return {k: item.get(k) for k in keep}
+            return dict(item)
+
         old_map = {i["id"]: i for i in old_list}
         new_map = {i["id"]: i for i in new_list}
         for xid in sorted(set(old_map) - set(new_map)):
@@ -290,7 +330,7 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
         for xid in sorted(set(new_map) - set(old_map)):
             add("additive", f"{kind} added: {xid}")
         for xid in sorted(set(old_map) & set(new_map)):
-            if old_map[xid] != new_map[xid]:
+            if comparable_payload(old_map[xid]) != comparable_payload(new_map[xid]):
                 add("breaking", f"{kind} changed: {xid}")
 
     def compare_action_shape_list(kind: str, old_list: List[Dict[str, Any]], new_list: List[Dict[str, Any]]) -> None:
@@ -366,4 +406,3 @@ def declared_bump(old_ver: str, new_ver: str) -> str:
     if new[0] == old[0] and new[1] > old[1]:
         return "minor"
     return "patch"
-

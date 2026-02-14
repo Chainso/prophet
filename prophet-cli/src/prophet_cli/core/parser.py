@@ -9,6 +9,7 @@ from .models import ActionDef
 from .models import ActionShapeDef
 from .models import EventDef
 from .models import FieldDef
+from .models import KeyDef
 from .models import ObjectDef
 from .models import Ontology
 from .models import StateDef
@@ -53,6 +54,26 @@ class Parser:
         return m
 
 
+def _parse_optional_description_line(line: str) -> Optional[str]:
+    m = re.match(r'^description\s+\"(.*)\"$', line)
+    if m:
+        return m.group(1)
+    m = re.match(r'^documentation\s+\"(.*)\"$', line)
+    if m:
+        return m.group(1)
+    return None
+
+
+def _parse_key_fields_csv(raw: str, line: int) -> List[str]:
+    fields = [item.strip() for item in raw.split(",")]
+    if not fields or any(not item for item in fields):
+        raise ProphetError(f"line {line}: key declaration must include one or more field names")
+    invalid = [name for name in fields if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", name)]
+    if invalid:
+        raise ProphetError(f"line {line}: key declaration contains invalid field names: {', '.join(invalid)}")
+    return fields
+
+
 def parse_ontology(text: str) -> Ontology:
     p = Parser(text)
     start = p.expect(r"^ontology\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", "Expected ontology header")
@@ -60,6 +81,7 @@ def parse_ontology(text: str) -> Ontology:
 
     ont_id: Optional[str] = None
     ont_version: Optional[str] = None
+    ont_description: Optional[str] = None
     types: List[TypeDef] = []
     objects: List[ObjectDef] = []
     structs: List[StructDef] = []
@@ -83,6 +105,12 @@ def parse_ontology(text: str) -> Ontology:
         if re.match(r"^version\s+\".*\"$", line):
             _, row = p.pop()
             ont_version = re.match(r'^version\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            continue
+
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            ont_description = parsed_description
             continue
 
         m = re.match(r"^type\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
@@ -156,6 +184,7 @@ def parse_ontology(text: str) -> Ontology:
         name=ont_name,
         id=ont_id,
         version=ont_version,
+        description=ont_description,
         types=types,
         objects=objects,
         structs=structs,
@@ -171,6 +200,7 @@ def parse_type_block(p: Parser, name: str, block_line: int) -> TypeDef:
     t_id: Optional[str] = None
     base: Optional[str] = None
     constraints: Dict[str, str] = {}
+    description: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -194,20 +224,28 @@ def parse_type_block(p: Parser, name: str, block_line: int) -> TypeDef:
             constraints[m.group(1)] = m.group(2)
             continue
 
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
+
         raise ProphetError(f"Unexpected type line {ln}: {line}")
 
     if t_id is None:
         raise ProphetError(f"Type {name} missing id (line {block_line})")
     if base is None:
         raise ProphetError(f"Type {name} missing base (line {block_line})")
-    return TypeDef(name=name, id=t_id, base=base, constraints=constraints, line=block_line)
+    return TypeDef(name=name, id=t_id, base=base, constraints=constraints, description=description, line=block_line)
 
 
 def parse_object_block(p: Parser, name: str, block_line: int) -> ObjectDef:
     o_id: Optional[str] = None
     fields: List[FieldDef] = []
+    keys: List[KeyDef] = []
     states: List[StateDef] = []
     transitions: List[TransitionDef] = []
+    description: Optional[str] = None
 
     while not p.eof():
         ln, line = p.peek()
@@ -226,6 +264,12 @@ def parse_object_block(p: Parser, name: str, block_line: int) -> ObjectDef:
             fields.append(parse_field_block(p, m.group(1), ln))
             continue
 
+        m = re.match(r"^key\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)$", line)
+        if m:
+            p.pop()
+            keys.append(KeyDef(kind=m.group(1), field_names=_parse_key_fields_csv(m.group(2), ln), line=ln))
+            continue
+
         m = re.match(r"^state\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
@@ -238,16 +282,32 @@ def parse_object_block(p: Parser, name: str, block_line: int) -> ObjectDef:
             transitions.append(parse_transition_block(p, m.group(1), ln))
             continue
 
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
+
         raise ProphetError(f"Unexpected object line {ln}: {line}")
 
     if o_id is None:
         raise ProphetError(f"Object {name} missing id (line {block_line})")
-    return ObjectDef(name=name, id=o_id, fields=fields, states=states, transitions=transitions, line=block_line)
+    return ObjectDef(
+        name=name,
+        id=o_id,
+        fields=fields,
+        keys=keys,
+        states=states,
+        transitions=transitions,
+        description=description,
+        line=block_line,
+    )
 
 
 def parse_struct_block(p: Parser, name: str, block_line: int) -> StructDef:
     s_id: Optional[str] = None
     fields: List[FieldDef] = []
+    description: Optional[str] = None
 
     while not p.eof():
         ln, line = p.peek()
@@ -266,11 +326,17 @@ def parse_struct_block(p: Parser, name: str, block_line: int) -> StructDef:
             fields.append(parse_field_block(p, m.group(1), ln))
             continue
 
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
+
         raise ProphetError(f"Unexpected struct line {ln}: {line}")
 
     if s_id is None:
         raise ProphetError(f"Struct {name} missing id (line {block_line})")
-    return StructDef(name=name, id=s_id, fields=fields, line=block_line)
+    return StructDef(name=name, id=s_id, fields=fields, description=description, line=block_line)
 
 
 def parse_field_block(p: Parser, name: str, block_line: int) -> FieldDef:
@@ -278,6 +344,7 @@ def parse_field_block(p: Parser, name: str, block_line: int) -> FieldDef:
     type_raw: Optional[str] = None
     required: Optional[bool] = None
     key: Optional[str] = None
+    description: Optional[str] = None
 
     while not p.eof():
         ln, line = p.peek()
@@ -312,6 +379,12 @@ def parse_field_block(p: Parser, name: str, block_line: int) -> FieldDef:
             key = m.group(1)
             continue
 
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
+
         raise ProphetError(f"Unexpected field line {ln}: {line}")
 
     if f_id is None:
@@ -321,12 +394,21 @@ def parse_field_block(p: Parser, name: str, block_line: int) -> FieldDef:
     if required is None:
         raise ProphetError(f"Field {name} missing required/optional (line {block_line})")
 
-    return FieldDef(name=name, id=f_id, type_raw=type_raw, required=required, key=key, line=block_line)
+    return FieldDef(
+        name=name,
+        id=f_id,
+        type_raw=type_raw,
+        required=required,
+        key=key,
+        description=description,
+        line=block_line,
+    )
 
 
 def parse_state_block(p: Parser, name: str, block_line: int) -> StateDef:
     s_id: Optional[str] = None
     initial = False
+    description: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -340,17 +422,23 @@ def parse_state_block(p: Parser, name: str, block_line: int) -> StateDef:
             p.pop()
             initial = True
             continue
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
         raise ProphetError(f"Unexpected state line {ln}: {line}")
 
     if s_id is None:
         raise ProphetError(f"State {name} missing id (line {block_line})")
-    return StateDef(name=name, id=s_id, initial=initial, line=block_line)
+    return StateDef(name=name, id=s_id, initial=initial, description=description, line=block_line)
 
 
 def parse_transition_block(p: Parser, name: str, block_line: int) -> TransitionDef:
     t_id: Optional[str] = None
     from_state: Optional[str] = None
     to_state: Optional[str] = None
+    description: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -370,16 +458,29 @@ def parse_transition_block(p: Parser, name: str, block_line: int) -> TransitionD
             p.pop()
             to_state = m.group(1)
             continue
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
         raise ProphetError(f"Unexpected transition line {ln}: {line}")
 
     if t_id is None or from_state is None or to_state is None:
         raise ProphetError(f"Transition {name} missing id/from/to (line {block_line})")
-    return TransitionDef(name=name, id=t_id, from_state=from_state, to_state=to_state, line=block_line)
+    return TransitionDef(
+        name=name,
+        id=t_id,
+        from_state=from_state,
+        to_state=to_state,
+        description=description,
+        line=block_line,
+    )
 
 
 def parse_action_shape_block(p: Parser, name: str, block_line: int, block_kind: str) -> ActionShapeDef:
     shape_id: Optional[str] = None
     fields: List[FieldDef] = []
+    description: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -394,11 +495,16 @@ def parse_action_shape_block(p: Parser, name: str, block_line: int, block_kind: 
             p.pop()
             fields.append(parse_field_block(p, m.group(1), ln))
             continue
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
         raise ProphetError(f"Unexpected {block_kind} line {ln}: {line}")
 
     if shape_id is None:
         raise ProphetError(f"{block_kind} {name} missing id (line {block_line})")
-    return ActionShapeDef(name=name, id=shape_id, fields=fields, line=block_line)
+    return ActionShapeDef(name=name, id=shape_id, fields=fields, description=description, line=block_line)
 
 
 def parse_action_block(p: Parser, name: str, block_line: int) -> ActionDef:
@@ -406,6 +512,7 @@ def parse_action_block(p: Parser, name: str, block_line: int) -> ActionDef:
     kind: Optional[str] = None
     input_shape: Optional[str] = None
     output_shape: Optional[str] = None
+    description: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -430,11 +537,24 @@ def parse_action_block(p: Parser, name: str, block_line: int) -> ActionDef:
             p.pop()
             output_shape = m.group(1)
             continue
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
         raise ProphetError(f"Unexpected action line {ln}: {line}")
 
     if a_id is None or kind is None or input_shape is None or output_shape is None:
         raise ProphetError(f"Action {name} missing id/kind/input/output (line {block_line})")
-    return ActionDef(name=name, id=a_id, kind=kind, input_shape=input_shape, output_shape=output_shape, line=block_line)
+    return ActionDef(
+        name=name,
+        id=a_id,
+        kind=kind,
+        input_shape=input_shape,
+        output_shape=output_shape,
+        description=description,
+        line=block_line,
+    )
 
 
 def parse_event_block(p: Parser, name: str, block_line: int) -> EventDef:
@@ -444,6 +564,7 @@ def parse_event_block(p: Parser, name: str, block_line: int) -> EventDef:
     object_name: Optional[str] = None
     from_state: Optional[str] = None
     to_state: Optional[str] = None
+    description: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -478,6 +599,11 @@ def parse_event_block(p: Parser, name: str, block_line: int) -> EventDef:
             p.pop()
             to_state = m.group(1)
             continue
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
         raise ProphetError(f"Unexpected event line {ln}: {line}")
 
     if e_id is None or kind is None or object_name is None:
@@ -490,6 +616,7 @@ def parse_event_block(p: Parser, name: str, block_line: int) -> EventDef:
         object_name=object_name,
         from_state=from_state,
         to_state=to_state,
+        description=description,
         line=block_line,
     )
 
@@ -498,6 +625,7 @@ def parse_trigger_block(p: Parser, name: str, block_line: int) -> TriggerDef:
     t_id: Optional[str] = None
     event_name: Optional[str] = None
     action_name: Optional[str] = None
+    description: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -517,11 +645,23 @@ def parse_trigger_block(p: Parser, name: str, block_line: int) -> TriggerDef:
             p.pop()
             action_name = m.group(1)
             continue
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
         raise ProphetError(f"Unexpected trigger line {ln}: {line}")
 
     if t_id is None or event_name is None or action_name is None:
         raise ProphetError(f"Trigger {name} missing id/when/invoke (line {block_line})")
-    return TriggerDef(name=name, id=t_id, event_name=event_name, action_name=action_name, line=block_line)
+    return TriggerDef(
+        name=name,
+        id=t_id,
+        event_name=event_name,
+        action_name=action_name,
+        description=description,
+        line=block_line,
+    )
 
 
 def unwrap_list_type_once(type_raw: str) -> Optional[str]:
@@ -585,4 +725,3 @@ def resolve_type_descriptor(
         return {"kind": "custom", "target_type_id": type_name_to_id[raw]}
 
     raise ProphetError(f"uses unknown type '{raw}'")
-

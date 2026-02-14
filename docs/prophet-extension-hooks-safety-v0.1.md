@@ -17,7 +17,7 @@ and exposes it via:
 
 1. Prophet owns generated files under `gen/**`.
 2. Prophet-managed sync in the Spring example owns:
-   - `src/main/java/<base_package>/generated/**`
+   - `src/main/java/<base_package>/<ontology_name>/generated/**`
    - `src/main/resources/application-prophet.yml`
    - generated migration resource files when present
 3. User extension code is expected to live outside generated ownership paths (for example `src/main/java/.../extensions/**`).

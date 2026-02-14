@@ -49,7 +49,7 @@ from prophet_cli.targets.java_spring_jpa import JavaSpringJpaDeps
 from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_java_spring_jpa_outputs
 
 
-TOOLCHAIN_VERSION = "0.3.0"
+TOOLCHAIN_VERSION = "0.4.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/prophet-compatibility-policy-v0.2.md"
 
@@ -191,6 +191,24 @@ def pascal_case(value: str) -> str:
 def camel_case(value: str) -> str:
     p = pascal_case(value)
     return p[:1].lower() + p[1:] if p else p
+
+
+def java_package_segment(value: str) -> str:
+    raw = snake_case(value).strip("_")
+    if not raw:
+        return "ontology"
+    normalized = re.sub(r"[^a-z0-9_]", "_", raw)
+    if normalized[:1].isdigit():
+        return f"o_{normalized}"
+    return normalized
+
+
+def effective_base_package(base_package: str, ontology_name: str) -> str:
+    segment = java_package_segment(ontology_name)
+    suffix = f".{segment}"
+    if base_package.endswith(suffix):
+        return base_package
+    return f"{base_package}{suffix}"
 
 
 def pluralize(value: str) -> str:
@@ -1620,18 +1638,44 @@ def add_java_imports_for_type(java_type: str, imports: set[str]) -> None:
         imports.add("import java.time.Duration;")
 
 
+def _sanitize_javadoc_text(text: str) -> str:
+    return text.replace("*/", "*&#47;").strip()
+
+
+def render_javadoc_block(text: Optional[str], indent: str = "") -> str:
+    if text is None:
+        return ""
+    cleaned = _sanitize_javadoc_text(text)
+    if not cleaned:
+        return ""
+    lines = cleaned.splitlines() or [cleaned]
+    rendered = [f"{indent}/**"]
+    for line in lines:
+        rendered.append(f"{indent} * {line.strip()}")
+    rendered.append(f"{indent} */")
+    return "\n".join(rendered) + "\n"
+
+
 def render_java_record_with_builder(
     package_name: str,
     imports: set[str],
     record_name: str,
     fields: List[Tuple[str, str, bool]],
+    record_description: Optional[str] = None,
+    field_descriptions: Optional[Dict[str, str]] = None,
 ) -> str:
     record_components: List[str] = []
+    component_docs = field_descriptions or {}
     for java_t, field_name, required in fields:
         ann = "@NotNull " if required else ""
         if required:
             imports.add("import jakarta.validation.constraints.NotNull;")
-        record_components.append(f"    {ann}{java_t} {field_name}")
+        field_doc = render_javadoc_block(component_docs.get(field_name), indent="    ")
+        component_line = f"    {ann}{java_t} {field_name}"
+        if field_doc:
+            record_components.append(field_doc + component_line)
+        else:
+            record_components.append(component_line)
 
     builder_field_lines = [f"        private {java_t} {field_name};" for java_t, field_name, _ in fields]
     builder_setter_lines: List[str] = []
@@ -1664,6 +1708,7 @@ def render_java_record_with_builder(
     source = (
         f"package {package_name};\n\n"
         + (f"{import_block}\n\n" if import_block else "")
+        + render_javadoc_block(record_description)
         + f"public record {record_name}(\n"
         + ",\n".join(record_components)
         + "\n) {\n\n"
@@ -1832,8 +1877,9 @@ def render_sql(ir: Dict[str, Any]) -> str:
     for obj in objects:
         table = pluralize(snake_case(obj["name"]))
         fields = obj.get("fields", [])
-        pk = next((f for f in fields if f.get("key") == "primary"), fields[0])
-        pk_col = snake_case(pk["name"])
+        pk_fields = primary_key_fields_for_object(obj)
+        pk_field_ids = {f.get("id") for f in pk_fields}
+        pk_column_by_field_id: Dict[str, str] = {}
 
         column_lines: List[str] = []
         fk_lines: List[str] = []
@@ -1845,8 +1891,7 @@ def render_sql(ir: Dict[str, Any]) -> str:
             sql_type = sql_type_for_field(field, type_by_id)
             if field["type"]["kind"] == "object_ref":
                 target_obj = object_by_id[field["type"]["target_object_id"]]
-                target_fields = target_obj.get("fields", [])
-                target_pk = next((f for f in target_fields if f.get("key") == "primary"), target_fields[0])
+                target_pk = primary_key_field_for_object(target_obj)
                 target_table = pluralize(snake_case(target_obj["name"]))
                 target_pk_col = snake_case(target_pk["name"])
                 col_name = f"{col_name}_{target_pk_col}"
@@ -1856,13 +1901,17 @@ def render_sql(ir: Dict[str, Any]) -> str:
                     f"  constraint {fk_name} foreign key ({col_name}) references {target_table}({target_pk_col})"
                 )
 
-            if field["id"] == pk["id"]:
-                column_lines.append(f"  {col_name} {sql_type} primary key")
-            else:
-                extra = ""
-                if sql_type.startswith("numeric"):
-                    extra = " check ({0} >= 0)".format(col_name)
-                column_lines.append(f"  {col_name} {sql_type}{not_null}{extra}")
+            if field.get("id") in pk_field_ids:
+                pk_column_by_field_id[str(field.get("id"))] = col_name
+            extra = ""
+            if sql_type.startswith("numeric"):
+                extra = " check ({0} >= 0)".format(col_name)
+            column_lines.append(f"  {col_name} {sql_type}{not_null}{extra}")
+
+        pk_columns = [pk_column_by_field_id.get(str(f.get("id"))) for f in pk_fields]
+        pk_columns = [col for col in pk_columns if col]
+        if pk_columns:
+            fk_lines.append(f"  primary key ({', '.join(pk_columns)})")
 
         if obj.get("states"):
             enum_vals = ", ".join(f"'{s['name'].upper()}'" for s in obj["states"])
@@ -1887,8 +1936,7 @@ def render_sql(ir: Dict[str, Any]) -> str:
         for field in fields:
             if field["type"]["kind"] == "object_ref":
                 target_obj = object_by_id[field["type"]["target_object_id"]]
-                target_fields = target_obj.get("fields", [])
-                target_pk = next((f for f in target_fields if f.get("key") == "primary"), target_fields[0])
+                target_pk = primary_key_field_for_object(target_obj)
                 idx_col = f"{snake_case(field['name'])}_{snake_case(target_pk['name'])}"
                 idx_name = f"idx_{table}_{idx_col}"
                 lines.append(f"create index if not exists {idx_name} on {table} ({idx_col});")
@@ -1898,20 +1946,27 @@ def render_sql(ir: Dict[str, Any]) -> str:
             lines.append(f"create index if not exists {idx_state} on {table} (current_state);")
 
             history_table = f"{snake_case(obj['name'])}_state_history"
+            history_pk_columns: List[str] = []
+            history_fk_cols: List[str] = []
+            for pk_field in pk_fields:
+                pk_col_name, pk_sql_type, _, _ = field_sql_column_details(pk_field, type_by_id, object_by_id)
+                history_pk_columns.append(f"  {pk_col_name} {pk_sql_type} not null,")
+                history_fk_cols.append(pk_col_name)
+            fk_columns_clause = ", ".join(history_fk_cols)
             lines.extend(
                 [
                     "",
                     f"create table if not exists {history_table} (",
                     "  history_id bigserial primary key,",
-                    f"  {pk_col} text not null,",
+                    *history_pk_columns,
                     "  transition_id text not null,",
                     "  from_state text not null,",
                     "  to_state text not null,",
                     "  changed_at timestamptz not null default now(),",
                     "  changed_by text,",
-                    f"  constraint fk_{history_table}_{pk_col} foreign key ({pk_col}) references {table}({pk_col})",
+                    f"  constraint fk_{history_table}_entity foreign key ({fk_columns_clause}) references {table}({fk_columns_clause})",
                     ");",
-                    f"create index if not exists idx_{history_table}_{pk_col} on {history_table} ({pk_col});",
+                    f"create index if not exists idx_{history_table}_entity on {history_table} ({fk_columns_clause});",
                     f"create index if not exists idx_{history_table}_changed_at on {history_table} (changed_at);",
                 ]
             )
@@ -1925,9 +1980,35 @@ def table_name_for_object(obj: Dict[str, Any]) -> str:
     return pluralize(snake_case(obj["name"]))
 
 
+def primary_key_fields_for_object(obj: Dict[str, Any]) -> List[Dict[str, Any]]:
+    fields = list(obj.get("fields", []))
+    if not fields:
+        return []
+    field_by_id = {f.get("id"): f for f in fields}
+    key_field_ids = (
+        obj.get("keys", {})
+        .get("primary", {})
+        .get("field_ids", [])
+        if isinstance(obj.get("keys"), dict)
+        else []
+    )
+    if isinstance(key_field_ids, list) and key_field_ids:
+        resolved = [field_by_id[fid] for fid in key_field_ids if fid in field_by_id]
+        if resolved:
+            return resolved
+    legacy = [f for f in fields if f.get("key") == "primary"]
+    if legacy:
+        return legacy
+    return [fields[0]]
+
+
 def primary_key_field_for_object(obj: Dict[str, Any]) -> Dict[str, Any]:
-    fields = obj.get("fields", [])
-    return next((f for f in fields if f.get("key") == "primary"), fields[0])
+    fields = primary_key_fields_for_object(obj)
+    return fields[0]
+
+
+def object_has_composite_primary_key(obj: Dict[str, Any]) -> bool:
+    return len(primary_key_fields_for_object(obj)) > 1
 
 
 def field_sql_column_details(
@@ -1958,8 +2039,9 @@ def render_create_table_statements_for_object(
 ) -> List[str]:
     table = table_name_for_object(obj)
     fields = obj.get("fields", [])
-    pk = primary_key_field_for_object(obj)
-    pk_col = snake_case(pk["name"])
+    pk_fields = primary_key_fields_for_object(obj)
+    pk_field_ids = {f.get("id") for f in pk_fields}
+    pk_column_by_field_id: Dict[str, str] = {}
 
     column_lines: List[str] = []
     fk_lines: List[str] = []
@@ -1968,13 +2050,12 @@ def render_create_table_statements_for_object(
         col_name, sql_type, fk_ref, idx_col = field_sql_column_details(field, type_by_id, object_by_id)
         required = field.get("cardinality", {}).get("min", 0) > 0
         not_null = " not null" if required else ""
-        if field["id"] == pk["id"]:
-            column_lines.append(f"  {col_name} {sql_type} primary key")
-        else:
-            extra = ""
-            if sql_type.startswith("numeric"):
-                extra = f" check ({col_name} >= 0)"
-            column_lines.append(f"  {col_name} {sql_type}{not_null}{extra}")
+        if field.get("id") in pk_field_ids:
+            pk_column_by_field_id[str(field.get("id"))] = col_name
+        extra = ""
+        if sql_type.startswith("numeric"):
+            extra = f" check ({col_name} >= 0)"
+        column_lines.append(f"  {col_name} {sql_type}{not_null}{extra}")
         if fk_ref is not None:
             fk_name = f"fk_{table}_{col_name}"
             fk_lines.append(
@@ -1995,6 +2076,10 @@ def render_create_table_statements_for_object(
             "  updated_at timestamptz not null default now()",
         ]
     )
+    pk_columns = [pk_column_by_field_id.get(str(f.get("id"))) for f in pk_fields]
+    pk_columns = [col for col in pk_columns if col]
+    if pk_columns:
+        fk_lines.append(f"  primary key ({', '.join(pk_columns)})")
 
     statements: List[str] = []
     statements.append(f"create table if not exists {table} (")
@@ -2007,19 +2092,26 @@ def render_create_table_statements_for_object(
         idx_state = f"idx_{table}_current_state"
         statements.append(f"create index if not exists {idx_state} on {table} (current_state);")
         history_table = f"{snake_case(obj['name'])}_state_history"
+        history_pk_columns: List[str] = []
+        history_fk_cols: List[str] = []
+        for pk_field in pk_fields:
+            pk_col_name, pk_sql_type, _, _ = field_sql_column_details(pk_field, type_by_id, object_by_id)
+            history_pk_columns.append(f"  {pk_col_name} {pk_sql_type} not null,")
+            history_fk_cols.append(pk_col_name)
+        fk_columns_clause = ", ".join(history_fk_cols)
         statements.extend(
             [
                 f"create table if not exists {history_table} (",
                 "  history_id bigserial primary key,",
-                f"  {pk_col} text not null,",
+                *history_pk_columns,
                 "  transition_id text not null,",
                 "  from_state text not null,",
                 "  to_state text not null,",
                 "  changed_at timestamptz not null default now(),",
                 "  changed_by text,",
-                f"  constraint fk_{history_table}_{pk_col} foreign key ({pk_col}) references {table}({pk_col})",
+                f"  constraint fk_{history_table}_entity foreign key ({fk_columns_clause}) references {table}({fk_columns_clause})",
                 ");",
-                f"create index if not exists idx_{history_table}_{pk_col} on {history_table} ({pk_col});",
+                f"create index if not exists idx_{history_table}_entity on {history_table} ({fk_columns_clause});",
                 f"create index if not exists idx_{history_table}_changed_at on {history_table} (changed_at);",
             ]
         )
@@ -2301,8 +2393,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         for f in source.get("fields", []):
             for target_id in object_ref_target_ids_for_type(f["type"]):
                 target = object_by_id[target_id]
-                target_fields = target.get("fields", [])
-                target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
+                target_pk = primary_key_field_for_object(target)
                 ref_name = f"{target['name']}Ref"
                 components_schemas[ref_name] = {
                     "type": "object",
@@ -2330,6 +2421,8 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        if struct.get("description"):
+            components_schemas[struct["name"]]["description"] = struct["description"]
 
     for obj in objects:
         required_props: List[str] = []
@@ -2351,6 +2444,8 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        if obj.get("description"):
+            components_schemas[obj["name"]]["description"] = obj["description"]
         components_schemas[f"{obj['name']}ListResponse"] = {
             "type": "object",
             "required": ["items", "page", "size", "totalElements", "totalPages"],
@@ -2379,6 +2474,8 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        if shape.get("description"):
+            components_schemas[shape["name"]]["description"] = shape["description"]
 
     for shape in action_outputs:
         required_props = []
@@ -2393,12 +2490,15 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        if shape.get("description"):
+            components_schemas[shape["name"]]["description"] = shape["description"]
 
     paths: Dict[str, Any] = {}
 
     for obj in objects:
         fields = obj.get("fields", [])
-        pk = next((f for f in fields if f.get("key") == "primary"), fields[0])
+        pk_fields = primary_key_fields_for_object(obj)
+        pk = pk_fields[0]
         table = pluralize(snake_case(obj["name"]))
         pk_param = camel_case(pk["name"])
         query_filter_props: Dict[str, Any] = {}
@@ -2438,8 +2538,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
 
             if kind == "object_ref":
                 target = object_by_id[f["type"]["target_object_id"]]
-                target_fields = target.get("fields", [])
-                target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
+                target_pk = primary_key_field_for_object(target)
                 param_name = f"{camel_case(f['name'])}{pascal_case(camel_case(target_pk['name']))}"
                 param_schema = json_schema_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
             else:
@@ -2541,10 +2640,24 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                 },
             }
         }
-        paths[f"/{table}/{{{pk_param}}}"] = {
+        pk_path_parts: List[str] = []
+        pk_params: List[Dict[str, Any]] = []
+        for key_field in pk_fields:
+            key_name = camel_case(key_field["name"])
+            pk_path_parts.append(f"{{{key_name}}}")
+            pk_params.append(
+                {
+                    "name": key_name,
+                    "in": "path",
+                    "required": True,
+                    "schema": json_schema_for_field(key_field, type_by_id, object_by_id, struct_by_id),
+                }
+            )
+        pk_path = "/".join(pk_path_parts) if pk_path_parts else f"{{{pk_param}}}"
+        paths[f"/{table}/{pk_path}"] = {
             "get": {
                 "operationId": f"get{obj['name']}",
-                "parameters": [
+                "parameters": pk_params or [
                     {
                         "name": pk_param,
                         "in": "path",
@@ -2573,6 +2686,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         paths[f"/actions/{action['name']}"] = {
             "post": {
                 "operationId": op_id,
+                **({"summary": action["description"]} if action.get("description") else {}),
                 "requestBody": {
                     "required": True,
                     "content": {
@@ -2777,7 +2891,8 @@ def render_spring_files(
 ) -> Dict[str, str]:
     files: Dict[str, str] = {}
 
-    base_package = cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet")
+    configured_base_package = str(cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet"))
+    base_package = effective_base_package(configured_base_package, str(ir.get("ontology", {}).get("name", "prophet")))
     fallback_boot_version = str(cfg_get(cfg, ["generation", "spring_boot", "boot_version"], "3.3.2"))
     fallback_dep_mgmt_version = str(
         cfg_get(cfg, ["generation", "spring_boot", "dependency_management_version"], "1.1.6")
@@ -2844,8 +2959,7 @@ def render_spring_files(
                 ref_types[target["id"]] = target
 
     for target in sorted(ref_types.values(), key=lambda x: x["id"]):
-        target_fields = target.get("fields", [])
-        target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
+        target_pk = primary_key_field_for_object(target)
         pk_java = java_type_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
         cls = f"{target['name']}Ref"
         ref_fields = [(pk_java, camel_case(target_pk["name"]), True)]
@@ -2854,12 +2968,15 @@ def render_spring_files(
             set(),
             cls,
             ref_fields,
+            record_description=f"Reference to {target['name']} by primary key.",
+            field_descriptions={camel_case(target_pk["name"]): f"Primary key for referenced {target['name']}."},
         )
 
     # struct domain records
     for struct in structs:
         imports: set[str] = set()
         struct_fields: List[Tuple[str, str, bool]] = []
+        struct_field_descriptions: Dict[str, str] = {}
         for f in struct.get("fields", []):
             java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(java_t, imports)
@@ -2872,12 +2989,16 @@ def render_spring_files(
                     imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
             required = f.get("cardinality", {}).get("min", 0) > 0
             struct_fields.append((java_t, camel_case(f["name"]), required))
+            if f.get("description"):
+                struct_field_descriptions[camel_case(f["name"])] = str(f["description"])
 
         files[f"src/main/java/{package_path}/generated/domain/{struct['name']}.java"] = render_java_record_with_builder(
             f"{base_package}.generated.domain",
             imports,
             struct["name"],
             struct_fields,
+            record_description=str(struct.get("description", "")) or None,
+            field_descriptions=struct_field_descriptions,
         )
 
     # state enums + domain records
@@ -2894,6 +3015,7 @@ def render_spring_files(
 
         imports: set[str] = set()
         object_fields: List[Tuple[str, str, bool]] = []
+        object_field_descriptions: Dict[str, str] = {}
 
         for f in obj.get("fields", []):
             java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
@@ -2904,6 +3026,8 @@ def render_spring_files(
 
             required = f.get("cardinality", {}).get("min", 0) > 0
             object_fields.append((java_t, camel_case(f["name"]), required))
+            if f.get("description"):
+                object_field_descriptions[camel_case(f["name"])] = str(f["description"])
 
         if obj.get("states"):
             object_fields.append((f"{obj['name']}State", "currentState", True))
@@ -2914,12 +3038,16 @@ def render_spring_files(
             imports,
             obj["name"],
             object_fields,
+            record_description=str(obj.get("description", "")) or None,
+            field_descriptions=object_field_descriptions,
         )
 
     # persistence entities and repositories
     for obj in objects:
         fields = obj.get("fields", [])
-        pk = next((f for f in fields if f.get("key") == "primary"), fields[0])
+        pk_fields = primary_key_fields_for_object(obj)
+        pk = pk_fields[0]
+        composite_pk = len(pk_fields) > 1
         entity_name = f"{obj['name']}Entity"
         table_name = pluralize(snake_case(obj["name"]))
 
@@ -2934,6 +3062,8 @@ def render_spring_files(
             "import jakarta.persistence.Version;",
             "import java.time.OffsetDateTime;",
         }
+        if composite_pk:
+            imports.add("import jakarta.persistence.IdClass;")
 
         lines: List[str] = []
         json_converter_sources: List[Tuple[str, str]] = []
@@ -2942,6 +3072,7 @@ def render_spring_files(
             col_name = snake_case(f["name"])
             required = f.get("cardinality", {}).get("min", 0) > 0
             nullable = "false" if required else "true"
+            field_doc = render_javadoc_block(str(f.get("description", "")) or None, indent="    ").rstrip("\n")
             java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(java_t, imports)
             for target_struct_id in struct_target_ids_for_type(f["type"]):
@@ -2974,6 +3105,8 @@ def render_spring_files(
                         struct_by_id,
                     )
                     element_type = converter_target_type
+                if field_doc:
+                    lines.append(field_doc)
                 lines.append(f"    @Convert(converter = {converter_name}.class)")
                 lines.append(f"    @Column(name = \"{col_name}\", nullable = {nullable}, columnDefinition = \"text\")")
                 lines.append(f"    private {java_t} {camel_case(f['name'])};")
@@ -3067,6 +3200,8 @@ def render_spring_files(
                     )
                 json_converter_sources.append((converter_name, converter_src))
             elif f["type"]["kind"] == "object_ref":
+                if field_doc:
+                    lines.append(field_doc)
                 imports.update(
                     {
                         "import jakarta.persistence.FetchType;",
@@ -3076,17 +3211,16 @@ def render_spring_files(
                 )
                 target = object_by_id[f["type"]["target_object_id"]]
                 target_entity = f"{target['name']}Entity"
-                target_fields = target.get("fields", [])
-                target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
+                target_pk = primary_key_field_for_object(target)
                 col_name = f"{col_name}_{snake_case(target_pk['name'])}"
                 lines.append(f"    @ManyToOne(fetch = FetchType.LAZY, optional = {nullable})")
                 lines.append(f"    @JoinColumn(name = \"{col_name}\", nullable = {nullable})")
                 lines.append(f"    private {target_entity} {camel_case(f['name'])};")
                 lines.append("")
             else:
-                if obj.get("states") and f["id"] == pk["id"]:
-                    pass
-                if f["id"] == pk["id"]:
+                if field_doc:
+                    lines.append(field_doc)
+                if any(f["id"] == key_field["id"] for key_field in pk_fields):
                     lines.append("    @Id")
                 lines.append(f"    @Column(name = \"{col_name}\", nullable = {nullable})")
                 lines.append(f"    private {java_t} {camel_case(f['name'])};")
@@ -3156,12 +3290,15 @@ def render_spring_files(
             lines.append("")
 
         imports_block = "\n".join(sorted(imports))
+        id_class_annotation = f"@IdClass({obj['name']}Key.class)\n" if composite_pk else ""
         entity_src = (
             f"package {base_package}.generated.persistence;\n\n"
             f"{imports_block}\n\n"
-            "@Entity\n"
-            f"@Table(name = \"{table_name}\")\n"
-            f"public class {entity_name} {{\n\n"
+            + render_javadoc_block(str(obj.get("description", "")) or None)
+            + "@Entity\n"
+            + f"@Table(name = \"{table_name}\")\n"
+            + id_class_annotation
+            + f"public class {entity_name} {{\n\n"
             + "\n".join(lines)
             + "}\n"
         )
@@ -3170,7 +3307,70 @@ def render_spring_files(
         for converter_name, converter_src in json_converter_sources:
             files[f"src/main/java/{package_path}/generated/persistence/{converter_name}.java"] = converter_src
 
-        pk_java = java_type_for_field(pk, type_by_id, object_by_id, struct_by_id)
+        if composite_pk:
+            key_imports: set[str] = {
+                "import java.io.Serializable;",
+                "import java.util.Objects;",
+            }
+            key_fields: List[Tuple[str, str, bool]] = []
+            key_member_lines: List[str] = []
+            for key_field in pk_fields:
+                key_java = java_type_for_field(key_field, type_by_id, object_by_id, struct_by_id)
+                key_name = camel_case(key_field["name"])
+                add_java_imports_for_type(key_java, key_imports)
+                key_fields.append((key_java, key_name, True))
+                key_member_lines.append(f"    private {key_java} {key_name};")
+            ctor_args = ", ".join(f"{java_t} {name}" for java_t, name, _ in key_fields)
+            ctor_assigns = "\n".join(f"        this.{name} = {name};" for _, name, _ in key_fields)
+            equals_checks = " && ".join(f"Objects.equals({name}, that.{name})" for _, name, _ in key_fields) or "true"
+            hash_args = ", ".join(name for _, name, _ in key_fields)
+            accessor_lines: List[str] = []
+            for java_t, name, _ in key_fields:
+                method = name[:1].upper() + name[1:]
+                accessor_lines.extend(
+                    [
+                        f"    public {java_t} get{method}() {{",
+                        f"        return {name};",
+                        "    }",
+                        "",
+                        f"    public void set{method}({java_t} {name}) {{",
+                        f"        this.{name} = {name};",
+                        "    }",
+                        "",
+                    ]
+                )
+            key_src = (
+                f"package {base_package}.generated.persistence;\n\n"
+                + "\n".join(sorted(key_imports))
+                + "\n\n"
+                + f"public class {obj['name']}Key implements Serializable {{\n\n"
+                + ("\n".join(key_member_lines) + "\n\n" if key_member_lines else "")
+                + f"    public {obj['name']}Key() {{\n"
+                + "    }\n\n"
+                + f"    public {obj['name']}Key({ctor_args}) {{\n"
+                + (ctor_assigns + "\n" if ctor_assigns else "")
+                + "    }\n\n"
+                + "\n".join(accessor_lines)
+                + "    @Override\n"
+                + "    public boolean equals(Object o) {\n"
+                + "        if (this == o) {\n"
+                + "            return true;\n"
+                + "        }\n"
+                + f"        if (!(o instanceof {obj['name']}Key that)) {{\n"
+                + "            return false;\n"
+                + "        }\n"
+                + f"        return {equals_checks};\n"
+                + "    }\n\n"
+                + "    @Override\n"
+                + "    public int hashCode() {\n"
+                + f"        return Objects.hash({hash_args});\n"
+                + "    }\n"
+                + "}\n"
+            )
+            files[f"src/main/java/{package_path}/generated/persistence/{obj['name']}Key.java"] = key_src
+            pk_java = f"{obj['name']}Key"
+        else:
+            pk_java = java_type_for_field(pk, type_by_id, object_by_id, struct_by_id)
         repo_src = (
             f"package {base_package}.generated.persistence;\n\n"
             "import org.springframework.data.jpa.repository.JpaRepository;\n\n"
@@ -3180,7 +3380,7 @@ def render_spring_files(
         )
         files[f"src/main/java/{package_path}/generated/persistence/{obj['name']}Repository.java"] = repo_src
 
-        if obj.get("states"):
+        if obj.get("states") and not composite_pk:
             history_entity_name = f"{obj['name']}StateHistoryEntity"
             history_repo_name = f"{obj['name']}StateHistoryRepository"
             pk_col = snake_case(pk["name"])
@@ -3268,6 +3468,7 @@ def render_spring_files(
     for shape in action_shapes:
         imports: set[str] = set()
         shape_fields: List[Tuple[str, str, bool]] = []
+        shape_field_descriptions: Dict[str, str] = {}
         for f in shape.get("fields", []):
             java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(java_t, imports)
@@ -3279,12 +3480,16 @@ def render_spring_files(
                 imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
             required = f.get("cardinality", {}).get("min", 0) > 0
             shape_fields.append((java_t, camel_case(f["name"]), required))
+            if f.get("description"):
+                shape_field_descriptions[camel_case(f["name"])] = str(f["description"])
 
         record_src = render_java_record_with_builder(
             f"{base_package}.generated.actions",
             imports,
             shape["name"],
             shape_fields,
+            record_description=str(shape.get("description", "")) or None,
+            field_descriptions=shape_field_descriptions,
         )
         files[f"src/main/java/{package_path}/generated/actions/{shape['name']}.java"] = record_src
 
@@ -3294,13 +3499,15 @@ def render_spring_files(
         res_name = action_output_by_id[action["output_shape_id"]]["name"]
         handler_name = f"{pascal_case(action['name'])}ActionHandler"
         service_name = f"{pascal_case(action['name'])}ActionService"
+        action_description = str(action.get("description", "")) or None
         handler_src = (
             f"package {base_package}.generated.actions.handlers;\n\n"
             f"import {base_package}.generated.actions.{req_name};\n"
             f"import {base_package}.generated.actions.{res_name};\n\n"
-            f"public interface {handler_name} {{\n"
-            f"    {res_name} handle({req_name} request);\n"
-            "}\n"
+            + render_javadoc_block(action_description)
+            + f"public interface {handler_name} {{\n"
+            + f"    {res_name} handle({req_name} request);\n"
+            + "}\n"
         )
         files[f"src/main/java/{package_path}/generated/actions/handlers/{handler_name}.java"] = handler_src
 
@@ -3327,9 +3534,10 @@ def render_spring_files(
             f"package {base_package}.generated.actions.services;\n\n"
             f"import {base_package}.generated.actions.{req_name};\n"
             f"import {base_package}.generated.actions.{res_name};\n\n"
-            f"public interface {service_name} {{\n"
-            f"    {res_name} execute({req_name} request);\n"
-            "}\n"
+            + render_javadoc_block(action_description)
+            + f"public interface {service_name} {{\n"
+            + f"    {res_name} execute({req_name} request);\n"
+            + "}\n"
         )
         files[f"src/main/java/{package_path}/generated/actions/services/{service_name}.java"] = service_src
 
@@ -3389,7 +3597,11 @@ def render_spring_files(
         controller_fields.append(f"    private final {service_name} {service_var};")
         ctor_args.append(f"        {service_name} {service_var}")
         ctor_assigns.append(f"        this.{service_var} = {service_var};")
-        controller_methods.extend(
+        method_lines: List[str] = []
+        method_doc = render_javadoc_block(str(action.get("description", "")) or None, indent="    ").rstrip("\n")
+        if method_doc:
+            method_lines.append(method_doc)
+        method_lines.extend(
             [
                 f"    @PostMapping(\"/{action['name']}\")",
                 f"    public ResponseEntity<{res_name}> {method_name}(@Valid @RequestBody {req_name} request) {{",
@@ -3402,6 +3614,7 @@ def render_spring_files(
                 "",
             ]
         )
+        controller_methods.extend(method_lines)
 
     ctor_signature = ",\n".join(ctor_args)
     action_controller_src = (
@@ -3425,7 +3638,9 @@ def render_spring_files(
     # object query controllers
     for obj in objects:
         fields = obj.get("fields", [])
-        pk = next((f for f in fields if f.get("key") == "primary"), fields[0])
+        pk_fields = primary_key_fields_for_object(obj)
+        pk = pk_fields[0]
+        composite_pk = len(pk_fields) > 1
         repo_name = f"{obj['name']}Repository"
         entity_name = f"{obj['name']}Entity"
         domain_name = obj["name"]
@@ -3453,6 +3668,8 @@ def render_spring_files(
             f"import {base_package}.generated.persistence.{entity_name};",
             f"import {base_package}.generated.persistence.{repo_name};",
         }
+        if composite_pk:
+            imports.add(f"import {base_package}.generated.persistence.{obj['name']}Key;")
         add_java_imports_for_type(pk_java, imports)
 
         ref_imports: set[str] = set()
@@ -3462,8 +3679,7 @@ def render_spring_files(
             getter = "get" + prop[:1].upper() + prop[1:] + "()"
             if f["type"]["kind"] == "object_ref":
                 target = object_by_id[f["type"]["target_object_id"]]
-                target_fields = target.get("fields", [])
-                target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
+                target_pk = primary_key_field_for_object(target)
                 target_pk_prop = camel_case(target_pk["name"])
                 target_get = "get" + target_pk_prop[:1].upper() + target_pk_prop[1:] + "()"
                 ref_cls = f"{target['name']}Ref"
@@ -3528,8 +3744,7 @@ def render_spring_files(
             filter_record_name = f"{obj['name']}{pascal_case(entity_prop)}Filter"
             if kind == "object_ref":
                 target = object_by_id[field_type["target_object_id"]]
-                target_fields = target.get("fields", [])
-                target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
+                target_pk = primary_key_field_for_object(target)
                 target_pk_prop = camel_case(target_pk["name"])
                 param_name = f"{entity_prop}{pascal_case(target_pk_prop)}"
                 param_java = java_type_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
@@ -3772,6 +3987,46 @@ def render_spring_files(
             + "    }\n\n"
         )
 
+        get_by_id_method = ""
+        if composite_pk:
+            key_path_parts: List[str] = []
+            key_param_decls: List[str] = []
+            key_ctor_args: List[str] = []
+            for key_field in pk_fields:
+                key_name = camel_case(key_field["name"])
+                key_java = java_type_for_field(key_field, type_by_id, object_by_id, struct_by_id)
+                add_java_imports_for_type(key_java, imports)
+                key_path_parts.append(f"{{{key_name}}}")
+                key_param_decls.append(f"@PathVariable(\"{key_name}\") {key_java} {key_name}")
+                key_ctor_args.append(key_name)
+            key_path = "/".join(key_path_parts)
+            key_params = ", ".join(key_param_decls)
+            key_ctor = ", ".join(key_ctor_args)
+            get_by_id_method = (
+                f"    @GetMapping(\"/{key_path}\")\n"
+                f"    public ResponseEntity<{domain_name}> getById({key_params}) {{\n"
+                f"        {obj['name']}Key key = new {obj['name']}Key({key_ctor});\n"
+                f"        Optional<{entity_name}> maybeEntity = repository.findById(key);\n"
+                "        if (maybeEntity.isEmpty()) {\n"
+                "            return ResponseEntity.notFound().build();\n"
+                "        }\n\n"
+                f"        {domain_name} domain = mapper.toDomain(maybeEntity.get());\n"
+                "        return ResponseEntity.ok(domain);\n"
+                "    }\n"
+            )
+        else:
+            get_by_id_method = (
+                f"    @GetMapping(\"/{{{pk_prop}}}\")\n"
+                f"    public ResponseEntity<{domain_name}> getById(@PathVariable(\"{pk_prop}\") {pk_java} {pk_prop}) {{\n"
+                f"        Optional<{entity_name}> maybeEntity = repository.findById({pk_prop});\n"
+                "        if (maybeEntity.isEmpty()) {\n"
+                "            return ResponseEntity.notFound().build();\n"
+                "        }\n\n"
+                f"        {domain_name} domain = mapper.toDomain(maybeEntity.get());\n"
+                "        return ResponseEntity.ok(domain);\n"
+                "    }\n"
+            )
+
         imports_block = "\n".join(sorted(imports))
         query_src = (
             f"package {base_package}.generated.api;\n\n"
@@ -3803,15 +4058,7 @@ def render_spring_files(
             + "        return ResponseEntity.ok(result);\n"
             + "    }\n\n"
             + typed_query_method
-            + f"    @GetMapping(\"/{{{pk_prop}}}\")\n"
-            f"    public ResponseEntity<{domain_name}> getById(@PathVariable(\"{pk_prop}\") {pk_java} {pk_prop}) {{\n"
-            f"        Optional<{entity_name}> maybeEntity = repository.findById({pk_prop});\n"
-            "        if (maybeEntity.isEmpty()) {\n"
-            "            return ResponseEntity.notFound().build();\n"
-            "        }\n\n"
-            f"        {domain_name} domain = mapper.toDomain(maybeEntity.get());\n"
-            "        return ResponseEntity.ok(domain);\n"
-            "    }\n"
+            + get_by_id_method
             + "}\n"
         )
 
@@ -4657,7 +4904,25 @@ def cmd_clean(args: argparse.Namespace) -> int:
         else:
             skipped.append(str(baseline_path.relative_to(root)))
 
-    base_package = str(cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet"))
+    configured_base_package = str(cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet"))
+    ontology_name = "prophet"
+    if current_ir_path.exists():
+        try:
+            ir_payload = json.loads(current_ir_path.read_text(encoding="utf-8"))
+            if isinstance(ir_payload, dict):
+                ontology_name = str(ir_payload.get("ontology", {}).get("name", ontology_name))
+        except Exception:
+            pass
+    else:
+        ontology_rel = str(cfg_get(cfg, ["project", "ontology_file"], "ontology/local/main.prophet"))
+        ontology_path = root / ontology_rel
+        if ontology_path.exists():
+            try:
+                ontology = parse_ontology(ontology_path.read_text(encoding="utf-8"))
+                ontology_name = ontology.name
+            except Exception:
+                pass
+    base_package = effective_base_package(configured_base_package, ontology_name)
     generated_java_dir = root / "src" / "main" / "java" / Path(base_package.replace(".", "/")) / "generated"
     if generated_java_dir.exists():
         shutil.rmtree(generated_java_dir)

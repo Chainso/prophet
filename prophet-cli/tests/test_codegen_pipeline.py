@@ -22,7 +22,7 @@ class CodegenPipelineTests(unittest.TestCase):
             ir_reader=IRReader.from_dict(
                 {
                     "ir_version": "0.1",
-                    "toolchain_version": "0.3.0",
+                    "toolchain_version": "0.4.0",
                     "ontology": {"id": "o", "name": "O", "version": "0.1.0"},
                     "types": [],
                     "objects": [],
@@ -51,7 +51,7 @@ class CodegenPipelineTests(unittest.TestCase):
             stack_id="python_fastapi_sqlalchemy",
             ir={
                 "ir_version": "0.1",
-                "toolchain_version": "0.3.0",
+                "toolchain_version": "0.4.0",
                 "ontology": {"id": "o", "name": "O", "version": "0.1.0"},
                 "types": [],
                 "objects": [],
@@ -65,7 +65,7 @@ class CodegenPipelineTests(unittest.TestCase):
             ir_reader=IRReader.from_dict(
                 {
                     "ir_version": "0.1",
-                    "toolchain_version": "0.3.0",
+                    "toolchain_version": "0.4.0",
                     "ontology": {"id": "o", "name": "O", "version": "0.1.0"},
                     "types": [],
                     "objects": [],

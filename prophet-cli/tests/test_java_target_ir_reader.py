@@ -18,7 +18,7 @@ from prophet_cli.targets.java_spring_jpa.generator import generate_outputs
 def minimal_ir() -> dict:
     return {
         "ir_version": "0.1",
-        "toolchain_version": "0.3.0",
+        "toolchain_version": "0.4.0",
         "ontology": {"id": "ont", "name": "Ont", "version": "0.1.0"},
         "types": [],
         "objects": [],
@@ -64,7 +64,7 @@ class JavaTargetIRReaderTests(unittest.TestCase):
             render_liquibase_prophet_changelog=lambda has_delta: "prophet",
             render_openapi=lambda r: _count_and_return(calls, "render_openapi", r, "openapi: 3.0.3\n"),
             render_spring_files=lambda r, cfg, root, schema_sql, delta_sql: _count_and_spring(calls, "render_spring", r),
-            toolchain_version="0.3.0",
+            toolchain_version="0.4.0",
         )
 
         outputs = generate_outputs(context, deps)
