@@ -4,6 +4,15 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.5.3] - 2026-02-14
+
+### Changed
+- Updated the Spring example README to reflect current generated API behavior:
+  - `GET /<objects>` as pagination/sort only.
+  - typed filtering centralized on `POST /<objects>/query`.
+  - ontology-scoped generated package path examples.
+- Synced generated example manifest/module metadata to toolchain version `0.5.3`.
+
 ## [0.5.2] - 2026-02-14
 
 ### Changed

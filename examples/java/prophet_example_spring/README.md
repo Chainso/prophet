@@ -33,11 +33,11 @@ export SPRING_DATASOURCE_PASSWORD=
 ## Endpoints
 
 - `GET /orders/{orderId}`
-- `GET /orders?page=0&size=20&currentState=CREATED&customerUserId=u_123`
+- `GET /orders?page=0&size=20&sort=orderId,asc` (pagination/sort only)
 - `GET /users/{userId}`
-- `GET /users?page=0&size=20`
-- `POST /orders/query` (typed filter DSL)
-- `POST /users/query` (typed filter DSL)
+- `GET /users?page=0&size=20&sort=userId,asc` (pagination/sort only)
+- `POST /orders/query` (typed filter DSL with pagination/sort)
+- `POST /users/query` (typed filter DSL with pagination/sort)
 - `POST /actions/createOrder`
 - `POST /actions/approveOrder`
 - `POST /actions/shipOrder`
@@ -50,6 +50,24 @@ List endpoint response shape:
   - `totalElements`
   - `totalPages`
 
+`/orders/query` example body:
+
+```json
+{
+  "customer": { "eq": "u_123" },
+  "currentState": { "in": ["CREATED", "APPROVED"] },
+  "totalAmount": { "gte": 50, "lte": 500 }
+}
+```
+
+`/users/query` example body:
+
+```json
+{
+  "email": { "contains": "@example.com" }
+}
+```
+
 ## Notes
 
 - Hibernate generates schema from JPA entities at startup (`ddl-auto=update`) in this example.
@@ -57,7 +75,7 @@ List endpoint response shape:
   - Flyway: `gen/migrations/flyway/V1__prophet_init.sql`
   - Liquibase: `gen/migrations/liquibase/**`
   - Spring runtime resources under `gen/spring-boot/src/main/resources/db/**` are auto-detected from existing app dependencies/plugins.
-- Generated classes live under `gen/spring-boot/src/main/java/com/example/prophet/generated`.
+- Generated classes live under `gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated` for this example.
 - Event ingestion/dispatch is external; this app only exposes action endpoints.
 
 ## Tests
