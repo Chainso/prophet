@@ -33,8 +33,8 @@ Example app generation + checks:
 
 ```bash
 cd examples/java/prophet_example_spring
-../../../.venv/bin/prophet gen --wire-gradle
-../../../.venv/bin/prophet check --show-reasons
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew :prophet_generated:compileJava compileJava
 ./gradlew test
 ```

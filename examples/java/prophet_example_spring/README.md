@@ -6,7 +6,7 @@ This app was generated via Spring Initializr and then wired with Prophet-generat
 
 ```bash
 cd examples/java/prophet_example_spring
-../../../.venv/bin/prophet gen --wire-gradle
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
 ```
 
 ## Run

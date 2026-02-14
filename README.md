@@ -35,10 +35,10 @@ python3 -m venv .venv --system-site-packages
 .venv/bin/pip install --no-build-isolation -e ./prophet-cli
 
 cd examples/java/prophet_example_spring
-../../../.venv/bin/prophet validate
-../../../.venv/bin/prophet plan --show-reasons
-../../../.venv/bin/prophet gen --wire-gradle
-../../../.venv/bin/prophet check --show-reasons
+$(git rev-parse --show-toplevel)/.venv/bin/prophet validate
+$(git rev-parse --show-toplevel)/.venv/bin/prophet plan --show-reasons
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew :prophet_generated:compileJava compileJava
 ./gradlew test
 ./gradlew bootRun

@@ -20,8 +20,8 @@ python3 -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
 From `examples/java/prophet_example_spring`:
 
 ```bash
-../../../.venv/bin/prophet gen --wire-gradle
-../../../.venv/bin/prophet check --show-reasons
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew :prophet_generated:compileJava compileJava
 ./gradlew test
 ```

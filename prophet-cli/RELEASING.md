@@ -16,8 +16,8 @@ From repository root:
 ```bash
 python3 -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
 cd examples/java/prophet_example_spring
-../../../.venv/bin/prophet gen --wire-gradle
-../../../.venv/bin/prophet check --show-reasons
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew :prophet_generated:compileJava compileJava
 ./gradlew test
 ```
