@@ -190,6 +190,53 @@ dependencies {
             self.assertEqual(payload["stack"]["id"], "java_spring_jpa")
             self.assertIn("change_count", payload["summary"])
 
+    def test_version_check_succeeds_after_generation(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-version-check-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_dst = root / "domain" / "main.prophet"
+            ontology_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(EXAMPLE_ONTOLOGY, ontology_dst)
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            run_cli(root, "gen")
+            result = run_cli(root, "version", "check")
+            self.assertIn("Compatibility result", result.stdout)
+            self.assertIn("Required version bump", result.stdout)
+
+    def test_tuple_stack_config_works_without_stack_id(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-stack-tuple-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_dst = root / "domain" / "main.prophet"
+            ontology_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(EXAMPLE_ONTOLOGY, ontology_dst)
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_text = cfg_text.replace(
+                "  stack:\n    id: java_spring_jpa",
+                "  stack:\n    language: java\n    framework: spring_boot\n    orm: jpa",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            result = run_cli(root, "plan", "--json")
+            payload = json.loads(result.stdout)
+            self.assertEqual(payload["stack"]["id"], "java_spring_jpa")
+
 
 if __name__ == "__main__":
     unittest.main()
