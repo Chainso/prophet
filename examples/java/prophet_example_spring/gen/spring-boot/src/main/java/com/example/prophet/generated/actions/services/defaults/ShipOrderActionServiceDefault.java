@@ -6,11 +6,9 @@ import com.example.prophet.generated.actions.ShipOrderResult;
 import com.example.prophet.generated.actions.handlers.ShipOrderActionHandler;
 import com.example.prophet.generated.actions.services.ShipOrderActionService;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnMissingBean(ShipOrderActionService.class)
 @Generated("prophet-cli")
 public class ShipOrderActionServiceDefault implements ShipOrderActionService {
     private final ObjectProvider<ShipOrderActionHandler> handlerProvider;

@@ -6,11 +6,9 @@ import com.example.prophet.generated.actions.CreateOrderResult;
 import com.example.prophet.generated.actions.handlers.CreateOrderActionHandler;
 import com.example.prophet.generated.actions.services.CreateOrderActionService;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnMissingBean(CreateOrderActionService.class)
 @Generated("prophet-cli")
 public class CreateOrderActionServiceDefault implements CreateOrderActionService {
     private final ObjectProvider<CreateOrderActionHandler> handlerProvider;

@@ -30,6 +30,17 @@ cd examples/java/prophet_example_spring
 ./gradlew bootRun
 ```
 
+Example runtime profiles:
+- `h2` (default): embedded local development profile
+- `postgres`: production-style profile (`SPRING_DATASOURCE_*` env vars)
+
+Run example profile tests:
+
+```bash
+cd examples/java/prophet_example_spring
+./gradlew test
+```
+
 ## What `prophet gen` Produces
 
 - Canonical IR: `.prophet/ir/current.ir.json`

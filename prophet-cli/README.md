@@ -192,3 +192,4 @@ compatibility:
   - `POST /<objects>/query` with typed filter DSL (`eq`, `in`, `gte`, `lte`, `contains`)
   - list responses returned as generated `*ListResponse` DTOs (no raw Spring `Page` payload)
 - Generated Spring query layer now uses dedicated `generated.mapping.*DomainMapper` classes for entity-to-domain mapping.
+- Example Spring app includes both `h2` (default) and `postgres` runtime profiles with context tests for both.
