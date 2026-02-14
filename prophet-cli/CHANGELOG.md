@@ -4,6 +4,21 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-02-14
+
+### Added
+- Generated event contracts for ontology events under `generated.events.*`:
+  - `action_output` event payload wrappers,
+  - `signal` event contracts,
+  - `transition` event contracts including `fromState`/`toState`.
+- Generated `GeneratedEventEmitter` interface with one typed emit method per event.
+- Generated default `GeneratedEventEmitterNoOp` Spring component for zero-config event emission wiring.
+
+### Changed
+- Generated action service defaults now emit their corresponding `action_output` events automatically after handler execution.
+- Event model generation now includes object reference records required by event payload contracts.
+- Toolchain/package version advanced to `0.7.0`.
+
 ## [0.6.2] - 2026-02-14
 
 ### Changed

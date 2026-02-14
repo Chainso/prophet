@@ -5,6 +5,8 @@ import com.example.prophet.commerce_local.generated.actions.ShipOrderCommand;
 import com.example.prophet.commerce_local.generated.actions.ShipOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.ShipOrderActionHandler;
 import com.example.prophet.commerce_local.generated.actions.services.ShipOrderActionService;
+import com.example.prophet.commerce_local.generated.events.GeneratedEventEmitter;
+import com.example.prophet.commerce_local.generated.events.OrderShippedEvent;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -12,9 +14,14 @@ import org.springframework.stereotype.Component;
 @Generated("prophet-cli")
 public class ShipOrderActionServiceDefault implements ShipOrderActionService {
     private final ObjectProvider<ShipOrderActionHandler> handlerProvider;
+    private final GeneratedEventEmitter eventEmitter;
 
-    public ShipOrderActionServiceDefault(ObjectProvider<ShipOrderActionHandler> handlerProvider) {
+    public ShipOrderActionServiceDefault(
+        ObjectProvider<ShipOrderActionHandler> handlerProvider,
+        GeneratedEventEmitter eventEmitter
+    ) {
         this.handlerProvider = handlerProvider;
+        this.eventEmitter = eventEmitter;
     }
 
     @Override
@@ -23,6 +30,12 @@ public class ShipOrderActionServiceDefault implements ShipOrderActionService {
         if (handler == null) {
             throw new UnsupportedOperationException("No handler bean provided for action 'shipOrder'");
         }
-        return handler.handle(request);
+        ShipOrderResult result = handler.handle(request);
+        eventEmitter.emitOrderShippedEvent(
+            OrderShippedEvent.builder()
+                .payload(result)
+                .build()
+        );
+        return result;
     }
 }

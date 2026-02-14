@@ -49,7 +49,7 @@ from prophet_cli.targets.java_spring_jpa import JavaSpringJpaDeps
 from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_java_spring_jpa_outputs
 
 
-TOOLCHAIN_VERSION = "0.6.2"
+TOOLCHAIN_VERSION = "0.7.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
@@ -2895,11 +2895,20 @@ def render_spring_files(
     actions = ir.get("actions", [])
     action_inputs = ir.get("action_inputs", [])
     action_outputs = ir.get("action_outputs", [])
+    events = ir.get("events", [])
     type_by_id = {t["id"]: t for t in ir.get("types", [])}
     object_by_id = {o["id"]: o for o in objects}
     struct_by_id = {s["id"]: s for s in structs}
+    action_by_id = {a["id"]: a for a in actions}
     action_input_by_id = {s["id"]: s for s in action_inputs}
     action_output_by_id = {s["id"]: s for s in action_outputs}
+    events_by_action_id: Dict[str, List[Dict[str, Any]]] = {}
+    for event in events:
+        action_id = event.get("action_id")
+        if event.get("kind") == "action_output" and action_id:
+            events_by_action_id.setdefault(str(action_id), []).append(event)
+    for action_events in events_by_action_id.values():
+        action_events.sort(key=lambda item: item["id"])
 
     files["build.gradle.kts"] = render_gradle_file(boot_version, dep_mgmt_version)
     application_prophet_yml = (
@@ -2938,6 +2947,9 @@ def render_spring_files(
             for target_id in object_ref_target_ids_for_type(f["type"]):
                 target = object_by_id[target_id]
                 ref_types[target["id"]] = target
+    for event in events:
+        target = object_by_id[event["object_id"]]
+        ref_types[target["id"]] = target
 
     for target in sorted(ref_types.values(), key=lambda x: x["id"]):
         target_pk = primary_key_field_for_object(target)
@@ -3474,6 +3486,114 @@ def render_spring_files(
         )
         files[f"src/main/java/{package_path}/generated/actions/{shape['name']}.java"] = record_src
 
+    # event contract records and emitter contract
+    for event in sorted(events, key=lambda x: x["id"]):
+        event_kind = str(event.get("kind", "signal"))
+        event_name = str(event["name"])
+        event_fields: List[Tuple[str, str, bool]] = []
+        event_imports: set[str] = set()
+        event_field_descriptions: Dict[str, str] = {}
+        event_description = str(event.get("description", "")).strip()
+        object_model = object_by_id[event["object_id"]]
+        object_ref_name = f"{object_model['name']}Ref"
+        event_imports.add(f"import {base_package}.generated.domain.{object_ref_name};")
+        event_fields.append((object_ref_name, "objectRef", False))
+        event_field_descriptions["objectRef"] = f"Reference to the {object_model['name']} instance associated with this event."
+
+        if event_kind == "action_output":
+            action_id = str(event.get("action_id", ""))
+            action = action_by_id.get(action_id)
+            if action is not None:
+                output_shape = action_output_by_id[action["output_shape_id"]]
+                output_name = output_shape["name"]
+                event_imports.add(f"import {base_package}.generated.actions.{output_name};")
+                event_fields.append((output_name, "payload", True))
+                event_field_descriptions["payload"] = (
+                    f"Action output payload emitted by action '{action['name']}'."
+                )
+            if not event_description:
+                event_description = f"Action output event emitted for '{event_name}'."
+        elif event_kind == "transition":
+            states_by_id = {state["id"]: state for state in object_model.get("states", [])}
+            from_state = states_by_id.get(event.get("from_state_id"))
+            to_state = states_by_id.get(event.get("to_state_id"))
+            enum_name = f"{object_model['name']}State"
+            event_imports.add(f"import {base_package}.generated.domain.{enum_name};")
+            event_fields.append((enum_name, "fromState", True))
+            event_fields.append((enum_name, "toState", True))
+            event_field_descriptions["fromState"] = (
+                f"State before transition ({str(from_state.get('name')) if from_state else 'unknown'})."
+            )
+            event_field_descriptions["toState"] = (
+                f"State after transition ({str(to_state.get('name')) if to_state else 'unknown'})."
+            )
+            if not event_description:
+                event_description = f"Transition event emitted for '{event_name}'."
+        else:
+            if not event_description:
+                event_description = f"Signal event emitted for '{event_name}'."
+
+        event_record_src = render_java_record_with_builder(
+            f"{base_package}.generated.events",
+            event_imports,
+            event_name,
+            event_fields,
+            record_description=event_description or None,
+            field_descriptions=event_field_descriptions,
+        )
+        files[f"src/main/java/{package_path}/generated/events/{event_name}.java"] = event_record_src
+
+    emitter_imports = [
+        f"import {base_package}.generated.events.{event['name']};"
+        for event in sorted(events, key=lambda x: x["id"])
+    ]
+    emitter_methods: List[str] = []
+    for event in sorted(events, key=lambda x: x["id"]):
+        event_name = str(event["name"])
+        method_name = f"emit{pascal_case(event_name)}"
+        method_description = str(event.get("description", "")).strip() or f"Emit '{event_name}'."
+        method_doc = render_javadoc_block(method_description, indent="    ").rstrip("\n")
+        if method_doc:
+            emitter_methods.append(method_doc)
+        emitter_methods.append(f"    void {method_name}({event_name} event);")
+        emitter_methods.append("")
+    emitter_src = (
+        f"package {base_package}.generated.events;\n\n"
+        + ("".join(f"{line}\n" for line in sorted(set(emitter_imports))) + "\n" if emitter_imports else "")
+        + "public interface GeneratedEventEmitter {\n"
+        + ("".join(f"{line}\n" for line in emitter_methods) if emitter_methods else "")
+        + "}\n"
+    )
+    files[f"src/main/java/{package_path}/generated/events/GeneratedEventEmitter.java"] = emitter_src
+
+    no_op_imports = {
+        "import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;",
+        "import org.springframework.stereotype.Component;",
+    }
+    no_op_methods: List[str] = []
+    for event in sorted(events, key=lambda x: x["id"]):
+        event_name = str(event["name"])
+        method_name = f"emit{pascal_case(event_name)}"
+        no_op_methods.extend(
+            [
+                "    @Override",
+                f"    public void {method_name}({event_name} event) {{",
+                "    }",
+                "",
+            ]
+        )
+    no_op_src = (
+        f"package {base_package}.generated.events;\n\n"
+        + "\n".join(sorted(no_op_imports))
+        + "\n\n"
+        + "@Component\n"
+        + "@ConditionalOnMissingBean(value = GeneratedEventEmitter.class, ignored = GeneratedEventEmitterNoOp.class)\n"
+        + "public class GeneratedEventEmitterNoOp implements GeneratedEventEmitter {\n"
+        + "".join(f"{line}\n" for line in no_op_methods)
+        + "}\n"
+    )
+    files[f"src/main/java/{package_path}/generated/events/GeneratedEventEmitterNoOp.java"] = no_op_src
+
     # action handler interfaces
     for action in sorted(actions, key=lambda x: x["id"]):
         req_name = action_input_by_id[action["input_shape_id"]]["name"]
@@ -3523,19 +3643,47 @@ def render_spring_files(
         files[f"src/main/java/{package_path}/generated/actions/services/{service_name}.java"] = service_src
 
         default_service_name = f"{service_name}Default"
+        action_output_events = events_by_action_id.get(action["id"], [])
+        service_default_imports = {
+            f"import {base_package}.generated.actions.{req_name};",
+            f"import {base_package}.generated.actions.{res_name};",
+            f"import {base_package}.generated.actions.handlers.{handler_name};",
+            f"import {base_package}.generated.actions.services.{service_name};",
+            f"import {base_package}.generated.events.GeneratedEventEmitter;",
+            "import org.springframework.beans.factory.ObjectProvider;",
+            "import org.springframework.stereotype.Component;",
+        }
+        for event in action_output_events:
+            service_default_imports.add(f"import {base_package}.generated.events.{event['name']};")
+        emit_lines: List[str] = []
+        for event in action_output_events:
+            emit_method = f"emit{pascal_case(event['name'])}"
+            emit_lines.extend(
+                [
+                    f"        eventEmitter.{emit_method}(",
+                    f"            {event['name']}.builder()",
+                    "                .payload(result)",
+                    "                .build()",
+                    "        );",
+                ]
+            )
+        emit_section = "\n".join(emit_lines)
+        if emit_section:
+            emit_section = emit_section + "\n"
         default_service_src = (
             f"package {base_package}.generated.actions.services.defaults;\n\n"
-            f"import {base_package}.generated.actions.{req_name};\n"
-            f"import {base_package}.generated.actions.{res_name};\n"
-            f"import {base_package}.generated.actions.handlers.{handler_name};\n"
-            f"import {base_package}.generated.actions.services.{service_name};\n"
-            "import org.springframework.beans.factory.ObjectProvider;\n"
-            "import org.springframework.stereotype.Component;\n\n"
+            + "\n".join(sorted(service_default_imports))
+            + "\n\n"
             "@Component\n"
             f"public class {default_service_name} implements {service_name} {{\n"
-            f"    private final ObjectProvider<{handler_name}> handlerProvider;\n\n"
-            f"    public {default_service_name}(ObjectProvider<{handler_name}> handlerProvider) {{\n"
+            f"    private final ObjectProvider<{handler_name}> handlerProvider;\n"
+            "    private final GeneratedEventEmitter eventEmitter;\n\n"
+            f"    public {default_service_name}(\n"
+            f"        ObjectProvider<{handler_name}> handlerProvider,\n"
+            "        GeneratedEventEmitter eventEmitter\n"
+            "    ) {\n"
             "        this.handlerProvider = handlerProvider;\n"
+            "        this.eventEmitter = eventEmitter;\n"
             "    }\n\n"
             "    @Override\n"
             f"    public {res_name} execute({req_name} request) {{\n"
@@ -3543,7 +3691,9 @@ def render_spring_files(
             "        if (handler == null) {\n"
             f"            throw new UnsupportedOperationException(\"No handler bean provided for action '{action['name']}'\");\n"
             "        }\n"
-            "        return handler.handle(request);\n"
+            f"        {res_name} result = handler.handle(request);\n"
+            + emit_section
+            + "        return result;\n"
             "    }\n"
             "}\n"
         )
