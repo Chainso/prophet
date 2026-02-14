@@ -1,0 +1,113 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional
+
+
+@dataclass
+class TypeDef:
+    name: str
+    id: str
+    base: str
+    constraints: Dict[str, str]
+    line: int
+
+
+@dataclass
+class FieldDef:
+    name: str
+    id: str
+    type_raw: str
+    required: bool
+    key: Optional[str]
+    line: int
+
+
+@dataclass
+class StateDef:
+    name: str
+    id: str
+    initial: bool
+    line: int
+
+
+@dataclass
+class TransitionDef:
+    name: str
+    id: str
+    from_state: str
+    to_state: str
+    line: int
+
+
+@dataclass
+class ObjectDef:
+    name: str
+    id: str
+    fields: List[FieldDef]
+    states: List[StateDef]
+    transitions: List[TransitionDef]
+    line: int
+
+
+@dataclass
+class StructDef:
+    name: str
+    id: str
+    fields: List[FieldDef]
+    line: int
+
+
+@dataclass
+class ActionDef:
+    name: str
+    id: str
+    kind: str
+    input_shape: str
+    output_shape: str
+    line: int
+
+
+@dataclass
+class ActionShapeDef:
+    name: str
+    id: str
+    fields: List[FieldDef]
+    line: int
+
+
+@dataclass
+class EventDef:
+    name: str
+    id: str
+    kind: str
+    action: Optional[str]
+    object_name: str
+    from_state: Optional[str]
+    to_state: Optional[str]
+    line: int
+
+
+@dataclass
+class TriggerDef:
+    name: str
+    id: str
+    event_name: str
+    action_name: str
+    line: int
+
+
+@dataclass
+class Ontology:
+    name: str
+    id: str
+    version: str
+    types: List[TypeDef] = field(default_factory=list)
+    objects: List[ObjectDef] = field(default_factory=list)
+    structs: List[StructDef] = field(default_factory=list)
+    action_inputs: List[ActionShapeDef] = field(default_factory=list)
+    action_outputs: List[ActionShapeDef] = field(default_factory=list)
+    actions: List[ActionDef] = field(default_factory=list)
+    events: List[EventDef] = field(default_factory=list)
+    triggers: List[TriggerDef] = field(default_factory=list)
+

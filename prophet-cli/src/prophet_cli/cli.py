@@ -15,6 +15,21 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+from prophet_cli.core.errors import ProphetError
+from prophet_cli.core.ir import build_ir as _core_build_ir
+from prophet_cli.core.parser import parse_ontology as _core_parse_ontology
+from prophet_cli.core.parser import resolve_type_descriptor as _core_resolve_type_descriptor
+from prophet_cli.core.parser import unwrap_list_type_once as _core_unwrap_list_type_once
+from prophet_cli.core.compatibility import bump_rank as _core_bump_rank
+from prophet_cli.core.compatibility import classify_type_change as _core_classify_type_change
+from prophet_cli.core.compatibility import compare_irs as _core_compare_irs
+from prophet_cli.core.compatibility import declared_bump as _core_declared_bump
+from prophet_cli.core.compatibility import describe_type_descriptor as _core_describe_type_descriptor
+from prophet_cli.core.compatibility import parse_semver as _core_parse_semver
+from prophet_cli.core.compatibility import required_level_to_bump as _core_required_level_to_bump
+from prophet_cli.core.validation import validate_ontology as _core_validate_ontology
+from prophet_cli.core.validation import validate_type_expr as _core_validate_type_expr
+
 
 TOOLCHAIN_VERSION = "0.3.0"
 IR_VERSION = "0.1"
@@ -34,10 +49,6 @@ BASE_TYPES = {
     "date",
     "duration",
 }
-
-
-class ProphetError(Exception):
-    pass
 
 
 @dataclass
@@ -926,6 +937,15 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
     return errors
 
 
+# Canonical core delegation boundary (Milestone 2):
+# keep CLI surface stable while routing parser/validation through dedicated core modules.
+parse_ontology = _core_parse_ontology
+unwrap_list_type_once = _core_unwrap_list_type_once
+resolve_type_descriptor = _core_resolve_type_descriptor
+validate_type_expr = _core_validate_type_expr
+validate_ontology = _core_validate_ontology
+
+
 def resolve_field_type(
     field: FieldDef,
     type_name_to_id: Dict[str, str],
@@ -1479,6 +1499,21 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
 
     messages = [msg for _, msg in findings]
     return level, messages
+
+
+# Canonical core delegation boundary (Milestone 2/3):
+# route IR and compatibility functions through dedicated core modules.
+def _build_ir_delegate(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
+    return _core_build_ir(ont, cfg, toolchain_version=TOOLCHAIN_VERSION, ir_version=IR_VERSION)
+
+
+build_ir = _build_ir_delegate
+parse_semver = _core_parse_semver
+required_level_to_bump = _core_required_level_to_bump
+bump_rank = _core_bump_rank
+classify_type_change = _core_classify_type_change
+describe_type_descriptor = _core_describe_type_descriptor
+compare_irs = _core_compare_irs
 
 
 def sql_type_for_field(field: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
@@ -4282,15 +4317,7 @@ def ensure_baseline_exists(root: Path, cfg: Dict[str, Any], ir: Dict[str, Any]) 
 
 
 def declared_bump(old_ver: str, new_ver: str) -> str:
-    old = parse_semver(old_ver)
-    new = parse_semver(new_ver)
-    if new[0] > old[0]:
-        return "major"
-    if new[0] == old[0] and new[1] > old[1]:
-        return "minor"
-    if new[0] == old[0] and new[1] == old[1] and new[2] > old[2]:
-        return "patch"
-    return "patch"
+    return _core_declared_bump(old_ver, new_ver)
 
 
 def cmd_init(args: argparse.Namespace) -> int:

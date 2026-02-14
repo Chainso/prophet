@@ -1,5 +1,22 @@
 # Prophet Generator Modularization Strategy and Roadmap v0.1
 
+## Status Snapshot (2026-02-14)
+
+Completed so far:
+
+1. Introduced `prophet_cli.core` package boundaries for:
+   - parser
+   - validation
+   - IR construction
+   - compatibility logic
+2. Wired CLI delegation to core modules while preserving existing command behavior.
+3. Added delegation regression tests to lock the modularization seam.
+
+In progress:
+
+1. Reducing duplicated legacy logic in `cli.py` now that core delegation is active.
+2. Advancing Milestone 2 and Milestone 3 work packages with no behavior drift.
+
 ## 1. Purpose
 
 This document defines the strategy, execution plan, and roadmap for modularizing Prophet's generator so it can support multiple language/framework stacks while preserving a single canonical semantics model.
