@@ -4705,16 +4705,100 @@ def cmd_check(args: argparse.Namespace) -> int:
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
     errors = validate_ontology(ont, strict_enums=strict_enums)
     if errors:
+        if args.json:
+            report = {
+                "ok": False,
+                "validation": {
+                    "passed": False,
+                    "ontology_file": str(ontology_path),
+                    "errors": errors,
+                },
+            }
+            print(json.dumps(report, indent=2, sort_keys=False))
+            return 1
         print_validation_failure(errors, ontology_path)
         return 1
 
-    print("Validation passed.")
     ir = build_ir(ont, cfg)
     delta_sql, delta_warnings, _, _, delta_meta = compute_delta_from_baseline(root, cfg, ir)
     outputs = build_generated_outputs(ir, cfg, root=root)
     dirty = collect_dirty_generated_files(root, cfg, outputs)
     status = 0
+    dirty_clean = not dirty
+    if not dirty_clean:
+        status = 1
 
+    baseline_rel = args.against or str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
+    baseline_path = root / baseline_rel
+    compatibility_level = "unknown"
+    required_bump = "unknown"
+    declared = "unknown"
+    changes: List[str] = []
+    old_ver = "0.0.0"
+    new_ver = str(ir.get("ontology", {}).get("version", "0.0.0"))
+    compatibility_passed = False
+    baseline_found = baseline_path.exists()
+
+    if not baseline_path.exists():
+        status = 1
+    else:
+        baseline_ir = json.loads(baseline_path.read_text(encoding="utf-8"))
+        compatibility_level, changes = compare_irs(baseline_ir, ir)
+        required_bump = required_level_to_bump(compatibility_level)
+        old_ver = str(baseline_ir.get("ontology", {}).get("version", "0.0.0"))
+        declared = declared_bump(old_ver, new_ver)
+        compatibility_passed = bump_rank(declared) >= bump_rank(required_bump)
+        if not compatibility_passed:
+            status = 1
+    requested_migrations, detected_migrations, enabled_migrations, migration_warnings = resolve_migration_runtime_modes(
+        cfg, root
+    )
+
+    if args.json:
+        report = {
+            "ok": status == 0,
+            "validation": {
+                "passed": True,
+                "ontology_file": str(ontology_path),
+                "errors": [],
+            },
+            "generation": {
+                "clean": dirty_clean,
+                "dirty_files": dirty,
+            },
+            "compatibility": {
+                "baseline_found": baseline_found,
+                "baseline_path": str(baseline_path),
+                "level": compatibility_level,
+                "required_bump": required_bump,
+                "declared_bump": declared,
+                "from_version": old_ver,
+                "to_version": new_ver,
+                "policy_reference": COMPATIBILITY_POLICY_DOC,
+                "passed": compatibility_passed,
+                "changes": changes if args.show_reasons else [],
+            },
+            "delta_migration": {
+                "generated": bool(delta_sql),
+                "warnings": delta_warnings,
+                "summary": {
+                    "safe_auto_apply_count": delta_meta.get("safe_auto_apply_count", 0),
+                    "manual_review_count": delta_meta.get("manual_review_count", 0),
+                    "destructive_count": delta_meta.get("destructive_count", 0),
+                },
+                "findings": delta_meta.get("findings", []),
+            },
+            "migrations": {
+                "requested": sorted(requested_migrations),
+                "detected": sorted(detected_migrations),
+                "enabled_runtime_wiring": sorted(enabled_migrations),
+                "warnings": migration_warnings,
+            },
+        }
+        print(json.dumps(report, indent=2, sort_keys=False))
+        return status
+
+    print("Validation passed.")
     if dirty:
         print("")
         print_dirty_generated_files(dirty)
@@ -4722,24 +4806,14 @@ def cmd_check(args: argparse.Namespace) -> int:
     else:
         print("Generated outputs are clean.")
 
-    baseline_rel = args.against or str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
-    baseline_path = root / baseline_rel
     print("")
-    if not baseline_path.exists():
+    if not baseline_found:
         print(f"Version check failed: baseline IR not found: {baseline_path}")
         print("How to fix:")
         print("- Run `prophet gen` once to create a baseline IR.")
         print("- Or set `compatibility.baseline_ir` to the correct baseline path.")
-        status = 1
     else:
-        baseline_ir = json.loads(baseline_path.read_text(encoding="utf-8"))
-        compatibility, changes = compare_irs(baseline_ir, ir)
-        required_bump = required_level_to_bump(compatibility)
-        old_ver = str(baseline_ir.get("ontology", {}).get("version", "0.0.0"))
-        new_ver = str(ir.get("ontology", {}).get("version", "0.0.0"))
-        declared = declared_bump(old_ver, new_ver)
-
-        print(f"Compatibility result: {compatibility}")
+        print(f"Compatibility result: {compatibility_level}")
         print(f"Required version bump: {required_bump}")
         print(f"Declared version bump: {declared} ({old_ver} -> {new_ver})")
         print(f"Policy reference: {COMPATIBILITY_POLICY_DOC}")
@@ -4747,11 +4821,9 @@ def cmd_check(args: argparse.Namespace) -> int:
             print("Detected compatibility changes:")
             for item in changes:
                 print(f"- {item}")
-        if bump_rank(declared) < bump_rank(required_bump):
+        if not compatibility_passed:
             print("Version check failed: declared bump is lower than required bump.")
             print(f"See compatibility policy table: {COMPATIBILITY_POLICY_DOC}")
-            status = 1
-
     if delta_sql:
         print("")
         print("Delta migration summary:")
@@ -4859,6 +4931,11 @@ def build_cli() -> argparse.ArgumentParser:
         "--show-reasons",
         action="store_true",
         help="Include compatibility change reasons from baseline comparison",
+    )
+    p_check.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit structured JSON diagnostics instead of human-readable text",
     )
     p_check.set_defaults(func=cmd_check)
 

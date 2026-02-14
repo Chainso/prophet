@@ -56,8 +56,11 @@ Runs a CI-style gate in one command:
 ```bash
 prophet check
 prophet check --show-reasons
+prophet check --json
 prophet check --against .prophet/baselines/main.ir.json
 ```
+
+`--json` emits structured diagnostics for CI bots and automation.
 
 ### `prophet generate` / `prophet gen`
 Writes generated artifacts and current IR.

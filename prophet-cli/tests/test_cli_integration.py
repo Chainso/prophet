@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import shutil
 import subprocess
 import sys
@@ -117,6 +118,42 @@ dependencies {
             result = run_cli(root, "validate", expect_code=1)
             self.assertIn("prophet.yaml not found", result.stderr)
             self.assertIn("Run `prophet init`", result.stderr)
+
+    def test_check_json_outputs_structured_diagnostics(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-check-json-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_dst = root / "domain" / "main.prophet"
+            ontology_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(EXAMPLE_ONTOLOGY, ontology_dst)
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            run_cli(root, "gen")
+            clean_result = run_cli(root, "check", "--json", "--show-reasons")
+            clean_payload = json.loads(clean_result.stdout)
+            self.assertTrue(clean_payload["ok"])
+            self.assertTrue(clean_payload["validation"]["passed"])
+            self.assertTrue(clean_payload["generation"]["clean"])
+            self.assertTrue(clean_payload["compatibility"]["baseline_found"])
+            self.assertTrue(clean_payload["compatibility"]["passed"])
+            self.assertIn("delta_migration", clean_payload)
+            self.assertIn("migrations", clean_payload)
+
+            schema_path = root / "gen" / "sql" / "schema.sql"
+            schema_path.write_text(schema_path.read_text(encoding="utf-8") + "\n-- dirty\n", encoding="utf-8")
+            dirty_result = run_cli(root, "check", "--json", expect_code=1)
+            dirty_payload = json.loads(dirty_result.stdout)
+            self.assertFalse(dirty_payload["ok"])
+            self.assertFalse(dirty_payload["generation"]["clean"])
+            self.assertGreaterEqual(len(dirty_payload["generation"]["dirty_files"]), 1)
 
 
 if __name__ == "__main__":
