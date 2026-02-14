@@ -11,6 +11,7 @@ This repository currently contains:
 - `docs/prophet-spring-boot-golden-stack-v0.1.md` (deep integration contract)
 - `docs/prophet-jpa-mapping-v0.1.md` (ontology-to-database/JPA translation rules)
 - `prophet-cli/` Python package for the CLI (`prophet_cli`)
+- `prophet-cli/RELEASING.md` + `prophet-cli/CHANGELOG.md` (release process + history)
 - `./prophet` root launcher script (local convenience wrapper)
 - `examples/java/prophet_example_spring` standalone Spring Boot + H2 example app
 

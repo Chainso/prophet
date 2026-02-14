@@ -149,6 +149,14 @@ compatibility:
   strict_enums: false
 ```
 
+## Release Prep
+
+- Release process: `prophet-cli/RELEASING.md`
+- Changelog: `prophet-cli/CHANGELOG.md`
+- Version sync is test-enforced between:
+  - `prophet-cli/pyproject.toml` `[project].version`
+  - `prophet-cli/src/prophet_cli/cli.py` `TOOLCHAIN_VERSION`
+
 ## Development Notes
 
 - Entry point module: `src/prophet_cli/cli.py`
