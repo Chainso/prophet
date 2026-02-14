@@ -193,3 +193,8 @@ compatibility:
   - list responses returned as generated `*ListResponse` DTOs (no raw Spring `Page` payload)
 - Generated Spring query layer now uses dedicated `generated.mapping.*DomainMapper` classes for entity-to-domain mapping.
 - Example Spring app includes both `h2` (default) and `postgres` runtime profiles with context tests for both.
+
+## Contributing
+
+- See root contribution guide: `CONTRIBUTING.md`
+- Open contributor backlog: `CONTRIBUTING.md` (`Open Items`)
