@@ -7,6 +7,7 @@ Thanks for contributing.
 ```bash
 python3 -m venv .venv --system-site-packages
 .venv/bin/pip install --no-build-isolation -e ./prophet-cli
+.venv/bin/pip install build twine
 ```
 
 ## Core Validation Commands
@@ -15,6 +16,8 @@ From repo root:
 
 ```bash
 python3 -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
+python3 -m build prophet-cli
+python3 -m twine check prophet-cli/dist/*
 ```
 
 From `examples/java/prophet_example_spring`:

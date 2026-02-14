@@ -6,9 +6,57 @@ on:
   pull_request:
     branches: ["main"]
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 jobs:
-  validate:
+  python-package:
     runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tooling and prophet-cli (editable)
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
+          python -m pip install -e ./prophet-cli
+
+      - name: Run prophet-cli unit tests
+        run: python -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
+
+      - name: Build package artifacts
+        run: python -m build prophet-cli
+
+      - name: Validate package metadata
+        run: python -m twine check prophet-cli/dist/*
+
+      - name: Smoke-test wheel install in clean venv
+        run: |
+          python -m venv /tmp/prophet-wheel-smoke
+          /tmp/prophet-wheel-smoke/bin/pip install --upgrade pip
+          /tmp/prophet-wheel-smoke/bin/pip install prophet-cli/dist/*.whl
+          /tmp/prophet-wheel-smoke/bin/prophet --help
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prophet-cli-dist
+          path: prophet-cli/dist/*
+
+  spring-example:
+    runs-on: ubuntu-latest
+    needs: python-package
 
     steps:
       - name: Checkout
@@ -25,17 +73,25 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Install prophet-cli (editable)
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: prophet-cli-dist
+          path: dist-artifacts
+
+      - name: Install prophet-cli wheel in venv
         run: |
           python -m venv .venv
-          .venv/bin/pip install -e ./prophet-cli
-
-      - name: Run prophet-cli unit tests
-        run: .venv/bin/python -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install dist-artifacts/*.whl
 
       - name: Generate artifacts for Spring example
         working-directory: examples/java/prophet_example_spring
         run: ../../../.venv/bin/prophet gen --wire-gradle
+
+      - name: Verify generated outputs are committed
+        working-directory: examples/java/prophet_example_spring
+        run: ../../../.venv/bin/prophet generate --verify-clean
 
       - name: Run consolidated Prophet check
         working-directory: examples/java/prophet_example_spring
@@ -48,3 +104,6 @@ jobs:
       - name: Run Spring profile tests
         working-directory: examples/java/prophet_example_spring
         run: ./gradlew test
+
+      - name: Ensure repo has no tracked-file drift
+        run: git diff --exit-code

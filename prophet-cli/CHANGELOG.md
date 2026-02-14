@@ -4,6 +4,15 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+### Added
+- Dedicated PyPI publish workflow (`.github/workflows/publish-pypi.yml`) triggered by release tags and manual dispatch.
+- Package build validation in CI (`python -m build`, `twine check`, wheel install smoke test).
+- Repository Apache-2.0 license (`LICENSE`) and package-distributed license file (`prophet-cli/LICENSE`).
+
+### Changed
+- Hardened CI into separate package and Spring integration jobs, with generated-output cleanliness verification and tracked-file drift checks.
+- Removed the repository root `./prophet` wrapper; CLI usage now relies on installed `prophet` console scripts from the package.
+
 ## [0.5.3] - 2026-02-14
 
 ### Changed

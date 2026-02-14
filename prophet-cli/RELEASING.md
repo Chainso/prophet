@@ -30,6 +30,7 @@ From repository root:
 
 ```bash
 python3 -m build prophet-cli
+python3 -m twine check prophet-cli/dist/*
 ```
 
 Artifacts are written under `prophet-cli/dist/`.
@@ -40,6 +41,11 @@ Add a new entry in `prophet-cli/CHANGELOG.md` for the release version and summar
 
 ## 5. Tag and Publish
 
-- Create annotated git tag: `vX.Y.Z`
-- Push commit + tag
-- Publish wheel/sdist to your package index workflow
+1. Create annotated git tag: `vX.Y.Z`
+2. Push commit + tag
+3. GitHub Actions publishes to PyPI via `.github/workflows/publish-pypi.yml`
+
+The publish workflow expects PyPI trusted publishing to be configured for:
+- Repository: `Chainso/prophet`
+- Workflow file: `.github/workflows/publish-pypi.yml`
+- Environment: `pypi`

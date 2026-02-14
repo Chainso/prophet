@@ -8,6 +8,7 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
 - Toolchain release: `0.5.3`
 - Golden runtime target: Spring Boot
 - Example app: `examples/java/prophet_example_spring`
+- PyPI package: `prophet-cli`
 
 ## What You Get
 
@@ -33,15 +34,29 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
 - `docs/prophet-noop-generation-benchmark-v0.1.md`: no-op generation performance baseline and methodology
 - `docs/prophet-modularization-closeout-v0.1.md`: milestone closeout summary and validation evidence
 - `examples/java/prophet_example_spring/`: runnable Spring example + profile tests
-- `.github/workflows/ci.yml`: CI gates for Python + Spring validation
+- `.github/workflows/ci.yml`: CI gates for packaging + Python + Spring validation
+- `.github/workflows/publish-pypi.yml`: release publish pipeline for PyPI
 - `prophet.ttl`: base ontology model
 
-## Quick Start
+## Install CLI
+
+From PyPI:
+
+```bash
+python3 -m pip install --upgrade prophet-cli
+prophet --help
+```
+
+From source (editable, for local development):
 
 ```bash
 python3 -m venv .venv --system-site-packages
 .venv/bin/pip install --no-build-isolation -e ./prophet-cli
+```
 
+## Quick Start
+
+```bash
 cd examples/java/prophet_example_spring
 $(git rev-parse --show-toplevel)/.venv/bin/prophet validate
 $(git rev-parse --show-toplevel)/.venv/bin/prophet plan --show-reasons
@@ -120,6 +135,11 @@ The CLI prints this path during `prophet plan`, `prophet version check`, and `pr
 
 - Release process: `prophet-cli/RELEASING.md`
 - Changelog: `prophet-cli/CHANGELOG.md`
+- Tagged releases (`vX.Y.Z`) trigger `.github/workflows/publish-pypi.yml`.
+
+## License
+
+Apache-2.0. See `LICENSE`.
 
 ## Contributing
 

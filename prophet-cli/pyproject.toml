@@ -1,15 +1,36 @@
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "prophet-cli"
 version = "0.5.3"
 description = "Prophet ontology tooling CLI"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.10"
+authors = [
+    {name = "Prophet Contributors"},
+]
+keywords = ["ontology", "codegen", "dsl", "spring", "openapi"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+    "Topic :: Software Development :: Code Generators",
+]
 dependencies = [
     "PyYAML>=6.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Chainso/prophet"
+Repository = "https://github.com/Chainso/prophet"
+Issues = "https://github.com/Chainso/prophet/issues"
+Changelog = "https://github.com/Chainso/prophet/blob/main/prophet-cli/CHANGELOG.md"
 
 [project.scripts]
 prophet = "prophet_cli.cli:main"
