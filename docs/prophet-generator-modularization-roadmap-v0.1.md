@@ -13,6 +13,7 @@ Completed so far:
 3. Added delegation regression tests to lock the modularization seam.
 4. Added explicit stack matrix and capability metadata with CLI validation.
 5. Added `prophet stacks` command for contributor/operator visibility.
+6. Added generated artifact ownership manifest (`gen/manifest/generated-files.json`) and integrated manifest-aware managed file detection.
 
 In progress:
 

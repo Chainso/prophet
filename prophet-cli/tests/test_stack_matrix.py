@@ -26,6 +26,32 @@ class StackMatrixTests(unittest.TestCase):
         self.assertIn("Unsupported generation stack", str(ctx.exception))
         self.assertIn("generation.stack.id", str(ctx.exception))
 
+    def test_tuple_based_stack_resolution_without_id(self) -> None:
+        cfg = {
+            "generation": {
+                "stack": {
+                    "language": "python",
+                    "framework": "fastapi",
+                    "orm": "sqlalchemy",
+                }
+            }
+        }
+        stack = resolve_stack_spec(cfg)
+        self.assertEqual(stack.id, "python_fastapi_sqlalchemy")
+
+    def test_id_and_tuple_mismatch_is_rejected(self) -> None:
+        cfg = {
+            "generation": {
+                "stack": {
+                    "id": "java_spring_jpa",
+                    "framework": "express",
+                }
+            }
+        }
+        with self.assertRaises(ProphetError) as ctx:
+            resolve_stack_spec(cfg)
+        self.assertIn("does not match stack id", str(ctx.exception))
+
     def test_supported_matrix_contains_planned_stacks(self) -> None:
         ids = {row["id"] for row in supported_stack_table()}
         self.assertIn("java_spring_jpa", ids)
@@ -39,4 +65,3 @@ class StackMatrixTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

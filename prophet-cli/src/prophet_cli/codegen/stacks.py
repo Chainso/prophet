@@ -86,17 +86,63 @@ def _cfg_get(cfg: Dict[str, Any], keys: List[str], default: Any = None) -> Any:
 
 
 def resolve_stack_spec(cfg: Dict[str, Any]) -> StackSpec:
-    stack_id = str(_cfg_get(cfg, ["generation", "stack", "id"], "java_spring_jpa")).strip()
-    if not stack_id:
-        stack_id = "java_spring_jpa"
+    stack_cfg = _cfg_get(cfg, ["generation", "stack"], {})
+    if stack_cfg is None:
+        stack_cfg = {}
+    if not isinstance(stack_cfg, dict):
+        raise ProphetError("Invalid config: generation.stack must be a mapping in prophet.yaml.")
 
-    if stack_id not in SUPPORTED_STACKS:
-        supported = ", ".join(sorted(SUPPORTED_STACKS.keys()))
+    stack_id = str(stack_cfg.get("id", "")).strip()
+    language = str(stack_cfg.get("language", "")).strip()
+    framework = str(stack_cfg.get("framework", "")).strip()
+    orm = str(stack_cfg.get("orm", "")).strip()
+
+    if not stack_id and not (language or framework or orm):
+        return SUPPORTED_STACKS["java_spring_jpa"]
+
+    if stack_id:
+        if stack_id not in SUPPORTED_STACKS:
+            supported = ", ".join(sorted(SUPPORTED_STACKS.keys()))
+            raise ProphetError(
+                f"Unsupported generation stack '{stack_id}'. Supported stack ids: {supported}. "
+                "Set generation.stack.id in prophet.yaml."
+            )
+        spec = SUPPORTED_STACKS[stack_id]
+        if language and language != spec.language:
+            raise ProphetError(
+                f"generation.stack.language='{language}' does not match stack id '{stack_id}' "
+                f"(expected '{spec.language}')."
+            )
+        if framework and framework != spec.framework:
+            raise ProphetError(
+                f"generation.stack.framework='{framework}' does not match stack id '{stack_id}' "
+                f"(expected '{spec.framework}')."
+            )
+        if orm and orm != spec.orm:
+            raise ProphetError(
+                f"generation.stack.orm='{orm}' does not match stack id '{stack_id}' "
+                f"(expected '{spec.orm}')."
+            )
+        return spec
+
+    if not (language and framework and orm):
         raise ProphetError(
-            f"Unsupported generation stack '{stack_id}'. Supported stack ids: {supported}. "
-            "Set generation.stack.id in prophet.yaml."
+            "generation.stack.id is missing. When id is omitted, generation.stack.language, "
+            "generation.stack.framework, and generation.stack.orm must all be provided."
         )
-    return SUPPORTED_STACKS[stack_id]
+
+    matches = [spec for spec in SUPPORTED_STACKS.values() if spec.language == language and spec.framework == framework and spec.orm == orm]
+    if not matches:
+        combos = ", ".join(
+            f"{spec.language}/{spec.framework}/{spec.orm}"
+            for spec in sorted(SUPPORTED_STACKS.values(), key=lambda item: item.id)
+        )
+        raise ProphetError(
+            "Unsupported generation stack combination "
+            f"language='{language}', framework='{framework}', orm='{orm}'. "
+            f"Supported combinations: {combos}."
+        )
+    return matches[0]
 
 
 def supported_stack_table() -> List[Dict[str, Any]]:
@@ -113,4 +159,3 @@ def supported_stack_table() -> List[Dict[str, Any]]:
             }
         )
     return rows
-

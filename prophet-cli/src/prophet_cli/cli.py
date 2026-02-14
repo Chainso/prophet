@@ -3903,6 +3903,28 @@ def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optio
         for rel_path, content in spring_files.items():
             outputs[f"{out_dir}/spring-boot/{rel_path}"] = content
 
+    manifest_rel = f"{out_dir}/manifest/generated-files.json"
+    hashed_outputs = {
+        rel: hashlib.sha256(content.encode("utf-8")).hexdigest()
+        for rel, content in sorted(outputs.items())
+    }
+    manifest_payload = {
+        "schema_version": 1,
+        "toolchain_version": TOOLCHAIN_VERSION,
+        "stack": {
+            "id": stack.id,
+            "language": stack.language,
+            "framework": stack.framework,
+            "orm": stack.orm,
+        },
+        "ir_hash": ir.get("ir_hash"),
+        "outputs": [
+            {"path": rel, "sha256": digest}
+            for rel, digest in sorted(hashed_outputs.items())
+        ],
+    }
+    outputs[manifest_rel] = json.dumps(manifest_payload, indent=2, sort_keys=False) + "\n"
+
     return outputs
 
 
@@ -3929,11 +3951,31 @@ def remove_stale_outputs(root: Path, cfg: Dict[str, Any], outputs: Dict[str, str
 
 def managed_existing_files(root: Path, cfg: Dict[str, Any]) -> List[str]:
     out_dir = cfg_get(cfg, ["generation", "out_dir"], "gen")
+    manifest_path = root / out_dir / "manifest" / "generated-files.json"
+    if manifest_path.exists():
+        try:
+            payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+            outputs = payload.get("outputs", [])
+            if isinstance(outputs, list):
+                managed_from_manifest = []
+                for entry in outputs:
+                    if isinstance(entry, dict):
+                        rel = entry.get("path")
+                        if isinstance(rel, str) and rel:
+                            managed_from_manifest.append(rel)
+                # include manifest itself for cleanliness checks and stale removal
+                managed_from_manifest.append(str(manifest_path.relative_to(root)))
+                return sorted(set(managed_from_manifest))
+        except Exception:
+            # Fall back to directory scan when manifest is malformed.
+            pass
+
     managed_paths = [
         root / out_dir / "sql",
         root / out_dir / "migrations",
         root / out_dir / "openapi",
         root / out_dir / "spring-boot",
+        root / out_dir / "manifest",
     ]
     ignored_parts = {"build", ".gradle", ".idea", ".settings", "bin", "out", "target"}
     result: List[str] = []
@@ -4707,8 +4749,6 @@ def cmd_version_check(args: argparse.Namespace) -> int:
         return 1
 
     current_ir = build_ir(ont, cfg)
-
-    delta_sql, delta_warnings, baseline_path, _, delta_meta = compute_delta_from_baseline(root, cfg, ir)
 
     baseline_rel = args.against or str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline_path = root / baseline_rel

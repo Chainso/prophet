@@ -67,6 +67,7 @@ From `prophet gen`:
   - includes `query_contracts` + `query_contracts_version` for explicit API/filter compatibility tracking
 - `gen/sql/schema.sql`
 - `gen/openapi/openapi.yaml`
+- `gen/manifest/generated-files.json`
 - `gen/migrations/flyway/V1__prophet_init.sql`
 - `gen/migrations/liquibase/prophet/0001-init.sql`
 - Baseline-aware delta outputs when baseline differs:

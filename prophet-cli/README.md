@@ -90,12 +90,23 @@ generation:
 Current generator implementation supports artifact generation for `java_spring_jpa`.
 Other declared stacks are validated and reserved for upcoming target implementations.
 
+Equivalent tuple form is also supported:
+
+```yaml
+generation:
+  stack:
+    language: java
+    framework: spring_boot
+    orm: jpa
+```
+
 Default generated targets:
 - `sql`
 - `openapi`
 - `spring_boot`
 - `flyway`
 - `liquibase`
+- `manifest` (generated file ownership + hashes)
 
 When baseline IR differs from current IR, Prophet also emits delta migration artifacts:
 - `gen/migrations/flyway/V2__prophet_delta.sql`
@@ -107,6 +118,10 @@ Delta report JSON includes:
 - `summary` counts (`safe_auto_apply_count`, `manual_review_count`, `destructive_count`)
 - structured `findings` entries with classification and optional suggestions
 - heuristic rename hints (`object_rename_hint`, `column_rename_hint`) for manual migration planning
+
+Generated ownership manifest:
+- `gen/manifest/generated-files.json`
+- includes stack metadata and deterministic hashes for generated outputs
 
 Spring runtime migration wiring is auto-detected from the host Gradle project:
 - if Flyway dependency/plugin is present, Prophet syncs Flyway resources

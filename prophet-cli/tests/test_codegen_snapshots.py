@@ -80,6 +80,7 @@ class CodegenSnapshotTests(unittest.TestCase):
         self.assertNotIn("gen/migrations/flyway/V2__prophet_delta.sql", outputs)
         self.assertNotIn("gen/migrations/liquibase/prophet/0002-delta.sql", outputs)
         self.assertNotIn("gen/migrations/delta/report.json", outputs)
+        self.assertIn("gen/manifest/generated-files.json", outputs)
 
         spring_db_keys = [
             key for key in outputs if key.startswith("gen/spring-boot/src/main/resources/db/")
@@ -155,11 +156,21 @@ dependencies {
         self.assertIn("gen/migrations/flyway/V2__prophet_delta.sql", outputs)
         self.assertIn("gen/migrations/liquibase/prophet/0002-delta.sql", outputs)
         self.assertIn("gen/migrations/delta/report.json", outputs)
+        self.assertIn("gen/manifest/generated-files.json", outputs)
         self.assertIn("0002-delta.sql", outputs["gen/migrations/liquibase/prophet/changelog-master.yaml"])
 
         delta_sql = outputs["gen/migrations/flyway/V2__prophet_delta.sql"]
         self.assertIn("SAFETY: backfill_required=true", delta_sql)
         self.assertIn("alter table orders add column if not exists total_amount", delta_sql)
+
+    def test_generated_manifest_contains_output_hashes(self) -> None:
+        outputs, _ = build_outputs_from_example()
+        manifest = json.loads(outputs["gen/manifest/generated-files.json"])
+        self.assertEqual(manifest["schema_version"], 1)
+        self.assertEqual(manifest["stack"]["id"], "java_spring_jpa")
+        listed_paths = {entry["path"] for entry in manifest["outputs"]}
+        self.assertIn("gen/sql/schema.sql", listed_paths)
+        self.assertIn("gen/openapi/openapi.yaml", listed_paths)
 
     def test_delta_report_summary_and_rename_hints(self) -> None:
         cfg = load_config(EXAMPLE_ROOT / "prophet.yaml")
