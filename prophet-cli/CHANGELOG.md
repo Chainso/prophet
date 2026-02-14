@@ -2,6 +2,21 @@
 
 All notable changes to `prophet-cli` are documented in this file.
 
+## [Unreleased]
+
+### Added
+- Standardized `IRReader` boundary for target generation and target-level IRReader contract tests.
+- Extension hook manifest output (`gen/manifest/extension-hooks.json`) and `prophet hooks` / `prophet hooks --json` command.
+- Schema-validated stack manifest governance (`prophet_cli.codegen.stack_manifest`) with stricter stack matrix validation.
+- `prophet stacks --json` output for automation and CI tooling.
+- Generator registry contract test to enforce mapping between implemented stacks and concrete generators.
+- Semantic conformance tests for canonical IR action/query/struct/object-ref contracts independent of file snapshots.
+- Dedicated cache module (`prophet_cli.codegen.cache`) with deterministic signature and cache IO tests.
+
+### Changed
+- `prophet gen --skip-unchanged` now uses modular cache helpers and `prophet clean` removes generation cache metadata.
+- Plan/check JSON stack payloads now include explicit `status` and `implemented` fields.
+
 ## [0.3.0] - 2026-02-14
 
 ### Added
