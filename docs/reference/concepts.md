@@ -37,4 +37,4 @@ Version checks compare current IR with baseline IR:
 - additive -> minor
 - non-functional -> patch
 
-Details: `docs/reference/compatibility.md`.
+Details: [Compatibility](compatibility.md).

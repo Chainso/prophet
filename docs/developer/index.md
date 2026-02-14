@@ -4,17 +4,17 @@ This section is for contributors and maintainers of Prophet.
 
 ## Core Docs
 
-- Architecture: `docs/developer/architecture.md`
-- IR contract: `docs/developer/ir-contract.md`
-- Codegen architecture: `docs/developer/codegen-architecture.md`
+- Architecture: [Architecture](architecture.md)
+- IR contract: [IR Contract](ir-contract.md)
+- Codegen architecture: [Codegen Architecture](codegen-architecture.md)
 
 ## Engineering Workflow
 
-- Testing strategy: `docs/developer/testing.md`
-- CI/CD: `docs/developer/ci-cd.md`
-- Releasing: `docs/developer/releasing.md`
-- Contributing: `docs/developer/contributing.md`
+- Testing strategy: [Testing](testing.md)
+- CI/CD: [CI/CD](ci-cd.md)
+- Releasing: [Releasing](releasing.md)
+- Contributing: [Contributing](contributing.md)
 
 ## Decisions
 
-- ADR index: `docs/developer/adrs/README.md`
+- ADR index: [ADR README](adrs/README.md)

@@ -6,8 +6,8 @@ This document defines the release-prep flow for `prophet-cli`.
 
 Update both version anchors to the same value:
 
-- `prophet-cli/pyproject.toml` -> `[project].version`
-- `prophet-cli/src/prophet_cli/cli.py` -> `TOOLCHAIN_VERSION`
+- [prophet-cli/pyproject.toml](pyproject.toml) -> `[project].version`
+- [prophet-cli/src/prophet_cli/cli.py](src/prophet_cli/cli.py) -> `TOOLCHAIN_VERSION`
 
 ## 2. Run Validation
 
@@ -22,7 +22,7 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew test
 ```
 
-The GitHub Actions workflow (`.github/workflows/ci.yml`) should also be green before tagging.
+The GitHub Actions workflow ([.github/workflows/ci.yml](../.github/workflows/ci.yml)) should also be green before tagging.
 
 ## 3. Build Artifacts
 
@@ -33,19 +33,19 @@ python3 -m build prophet-cli
 python3 -m twine check prophet-cli/dist/*
 ```
 
-Artifacts are written under `prophet-cli/dist/`.
+Artifacts are written under [prophet-cli/dist/](dist/).
 
 ## 4. Update Changelog
 
-Add a new entry in `prophet-cli/CHANGELOG.md` for the release version and summarize notable changes.
+Add a new entry in [prophet-cli/CHANGELOG.md](CHANGELOG.md) for the release version and summarize notable changes.
 
 ## 5. Tag and Publish
 
 1. Create annotated git tag: `vX.Y.Z`
 2. Push commit + tag
-3. GitHub Actions publishes to PyPI via `.github/workflows/publish-pypi.yml`
+3. GitHub Actions publishes to PyPI via [.github/workflows/publish-pypi.yml](../.github/workflows/publish-pypi.yml)
 
 The publish workflow expects PyPI trusted publishing to be configured for:
 - Repository: `Chainso/prophet`
-- Workflow file: `.github/workflows/publish-pypi.yml`
+- Workflow file: [.github/workflows/publish-pypi.yml](../.github/workflows/publish-pypi.yml)
 - Environment: `pypi`

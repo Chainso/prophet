@@ -3,8 +3,8 @@
 ## Version Anchors
 
 Update both:
-- `prophet-cli/pyproject.toml` -> `[project].version`
-- `prophet-cli/src/prophet_cli/cli.py` -> `TOOLCHAIN_VERSION`
+- [prophet-cli/pyproject.toml](../../prophet-cli/pyproject.toml) -> `[project].version`
+- [prophet-cli/src/prophet_cli/cli.py](../../prophet-cli/src/prophet_cli/cli.py) -> `TOOLCHAIN_VERSION`
 
 ## Validation Before Tag
 
@@ -34,4 +34,4 @@ Tag push triggers PyPI publish workflow.
 
 ## Detailed Runbook
 
-- `prophet-cli/RELEASING.md`
+- [prophet-cli/RELEASING.md](../../prophet-cli/RELEASING.md)

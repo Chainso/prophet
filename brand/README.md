@@ -4,36 +4,36 @@ This folder contains working Prophet logo assets.
 
 ## Folder Layout
 
-- `brand/exports/`: processed logo variants.
-- `brand/exports/icons/`: icon size exports and favicons.
+- [brand/exports/](exports/): processed logo variants.
+- [brand/exports/icons/](exports/icons/): icon size exports and favicons.
 
 ## Logo Variants
 
 Primary:
-- `brand/exports/logo-horizontal-color.png`
-- `brand/exports/logo-icon-color.png`
+- [brand/exports/logo-horizontal-color.png](exports/logo-horizontal-color.png)
+- [brand/exports/logo-icon-color.png](exports/logo-icon-color.png)
 
 Secondary:
-- `brand/exports/logo-horizontal-color-compact.png`
+- [brand/exports/logo-horizontal-color-compact.png](exports/logo-horizontal-color-compact.png)
 
 Monochrome:
-- `brand/exports/logo-horizontal-mono-black.png`
-- `brand/exports/logo-horizontal-mono-white-transparent.png`
-- `brand/exports/logo-horizontal-mono-white.png`
+- [brand/exports/logo-horizontal-mono-black.png](exports/logo-horizontal-mono-black.png)
+- [brand/exports/logo-horizontal-mono-white-transparent.png](exports/logo-horizontal-mono-white-transparent.png)
+- [brand/exports/logo-horizontal-mono-white.png](exports/logo-horizontal-mono-white.png)
 
 Preview backgrounds:
-- `brand/exports/logo-horizontal-mono-black-on-light.png`
-- `brand/exports/logo-horizontal-mono-white-on-dark.png`
+- [brand/exports/logo-horizontal-mono-black-on-light.png](exports/logo-horizontal-mono-black-on-light.png)
+- [brand/exports/logo-horizontal-mono-white-on-dark.png](exports/logo-horizontal-mono-white-on-dark.png)
 
 Icons:
-- `brand/exports/icons/logo-icon-1024.png`
-- `brand/exports/icons/logo-icon-512.png`
-- `brand/exports/icons/logo-icon-256.png`
-- `brand/exports/icons/logo-icon-128.png`
-- `brand/exports/icons/logo-icon-64.png`
-- `brand/exports/icons/logo-icon-32.png`
-- `brand/exports/icons/favicon-32.png`
-- `brand/exports/icons/favicon-16.png`
+- [brand/exports/icons/logo-icon-1024.png](exports/icons/logo-icon-1024.png)
+- [brand/exports/icons/logo-icon-512.png](exports/icons/logo-icon-512.png)
+- [brand/exports/icons/logo-icon-256.png](exports/icons/logo-icon-256.png)
+- [brand/exports/icons/logo-icon-128.png](exports/icons/logo-icon-128.png)
+- [brand/exports/icons/logo-icon-64.png](exports/icons/logo-icon-64.png)
+- [brand/exports/icons/logo-icon-32.png](exports/icons/logo-icon-32.png)
+- [brand/exports/icons/favicon-32.png](exports/icons/favicon-32.png)
+- [brand/exports/icons/favicon-16.png](exports/icons/favicon-16.png)
 
 ## Color Tokens
 

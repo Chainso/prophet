@@ -1,5 +1,3 @@
-# Prophet
-
 <p align="center">
   <img src="brand/exports/logo-horizontal-color.png" alt="Prophet logo" />
 </p>
@@ -65,16 +63,16 @@ python3 -m venv .venv --system-site-packages
 
 ## Get Started
 
-- First run guide: `docs/quickstart/quickstart.md`
-- Full user reference: `docs/reference/index.md`
-- Developer docs: `docs/developer/index.md`
+- First run guide: [Quickstart](docs/quickstart/quickstart.md)
+- Full user reference: [Reference Index](docs/reference/index.md)
+- Developer docs: [Developer Index](docs/developer/index.md)
 
 ## Current Supported Golden Path
 
 The primary production path today is:
 - `java` + `spring_boot` + `jpa`
-- Example project: `examples/java/prophet_example_spring`
+- Example project: [Spring Example](examples/java/prophet_example_spring)
 
 ## License
 
-Apache-2.0. See `LICENSE`.
+Apache-2.0. See [LICENSE](LICENSE).

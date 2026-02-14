@@ -9,6 +9,17 @@ Current implemented stack:
 
 Planned stacks can exist in manifest as non-implemented entries for roadmap visibility and validation.
 
+Manifest contract requirements include:
+- top-level schema version
+- capability catalog
+- stack tuple identity (`id`, `language`, `framework`, `orm`)
+- status (`implemented` or `planned`)
+- capability declarations per stack
+- default generation targets
+
+Code location:
+- [prophet-cli/src/prophet_cli/codegen/stack_manifest.py](../../prophet-cli/src/prophet_cli/codegen/stack_manifest.py)
+
 ## Generation Pipeline
 
 1. Resolve stack specification

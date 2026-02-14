@@ -73,7 +73,7 @@ Action APIs:
 
 ## Next Reads
 
-- Full CLI reference: `docs/reference/cli.md`
-- DSL reference: `docs/reference/dsl.md`
-- Spring integration details: `docs/reference/spring-boot.md`
-- Troubleshooting: `docs/reference/troubleshooting.md`
+- Full CLI reference: [CLI](../reference/cli.md)
+- DSL reference: [DSL](../reference/dsl.md)
+- Spring integration details: [Spring Boot](../reference/spring-boot.md)
+- Troubleshooting: [Troubleshooting](../reference/troubleshooting.md)

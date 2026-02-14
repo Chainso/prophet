@@ -14,6 +14,13 @@
 - `gen/manifest/generated-files.json`
 - `gen/manifest/extension-hooks.json`
 
+## Extension Hook Safety
+
+- Generate hooks with `prophet gen`.
+- Inspect hooks with `prophet hooks` or `prophet hooks --json`.
+- Implement extension code outside generated ownership paths.
+- Re-running generation refreshes hook metadata but must not overwrite user-owned extension implementations.
+
 ## Spring Stack Outputs
 
 - `gen/spring-boot/build.gradle.kts`

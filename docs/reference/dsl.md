@@ -21,6 +21,13 @@ ontology CommerceLocal {
 - `event`
 - `trigger`
 
+## Lexical Rules
+
+- Identifier names: `[A-Za-z_][A-Za-z0-9_]*`
+- Strings use double quotes
+- `#` starts a line comment
+- Empty lines are ignored
+
 ## Field Types
 
 Supported field type forms:
@@ -83,11 +90,15 @@ action createOrder {
 - key constraints
 - action/event/trigger link integrity
 - object-ref target constraints (currently single-field PK targets)
+- valid `actionInput`/`actionOutput` references in action definitions
+- valid event kind semantics (`action_output`, `signal`, `transition`)
+- valid trigger references to existing events/actions
 
 ## Canonical Example
 
-- `examples/java/prophet_example_spring/ontology/local/main.prophet`
+- [examples/java/prophet_example_spring/ontology/local/main.prophet](../../examples/java/prophet_example_spring/ontology/local/main.prophet)
 
-## Historical Grammar Notes
+## Current Limitations
 
-- `docs/prophet-dsl-v0.1.md`
+- Cross-file imports and namespaces are not yet supported.
+- Advanced trigger filter expressions are not yet supported.

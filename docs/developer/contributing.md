@@ -26,4 +26,4 @@ python3 -m venv .venv --system-site-packages
 ## Open Items
 
 Source of truth backlog:
-- `CONTRIBUTING.md`
+- [CONTRIBUTING.md](../../CONTRIBUTING.md)

@@ -3,11 +3,11 @@
 Thanks for contributing.
 
 Primary contributor docs now live under:
-- `docs/developer/index.md`
-- `docs/developer/contributing.md`
-- `docs/developer/testing.md`
-- `docs/developer/ci-cd.md`
-- `docs/developer/releasing.md`
+- [docs/developer/index.md](docs/developer/index.md)
+- [docs/developer/contributing.md](docs/developer/contributing.md)
+- [docs/developer/testing.md](docs/developer/testing.md)
+- [docs/developer/ci-cd.md](docs/developer/ci-cd.md)
+- [docs/developer/releasing.md](docs/developer/releasing.md)
 
 ## Quick Setup
 
@@ -27,7 +27,7 @@ python3 -m build prophet-cli
 python3 -m twine check prophet-cli/dist/*
 ```
 
-From `examples/java/prophet_example_spring`:
+From [examples/java/prophet_example_spring](examples/java/prophet_example_spring):
 
 ```bash
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle

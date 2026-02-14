@@ -39,6 +39,15 @@ This policy is used by:
 | Transition removed | `breaking` |
 | Transition added | `additive` |
 
+## Type Rules
+
+| Change | Classification |
+|---|---|
+| Type removed | `breaking` |
+| Type added | `additive` |
+| Type base changed incompatibly | `breaking` |
+| Type constraints changed | `breaking` |
+
 ## Action/Event/Trigger Rules
 
 | Change | Classification |
@@ -65,7 +74,3 @@ Delta migrations include safety flags:
 - `destructive_changes=true`
 - `backfill_required=true`
 - `manual_review_required=true`
-
-## Historical Policy Details
-
-- `docs/prophet-compatibility-policy-v0.2.md`

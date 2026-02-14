@@ -9,10 +9,10 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 
 ## First Steps
 
-1. Read `README.md` for repo entry points.
-2. Read `docs/quickstart/quickstart.md` and `docs/reference/index.md` for user-facing behavior.
-3. Use `examples/java/prophet_example_spring` as the canonical validation app.
-4. Read `docs/developer/index.md` before changing internal architecture.
+1. Read [README.md](README.md) for repo entry points.
+2. Read [Quickstart](docs/quickstart/quickstart.md) and [Reference Index](docs/reference/index.md) for user-facing behavior.
+3. Use [examples/java/prophet_example_spring](examples/java/prophet_example_spring) as the canonical validation app.
+4. Read [Developer Index](docs/developer/index.md) before changing internal architecture.
 
 ## Critical Rules
 
@@ -43,19 +43,19 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 
 ## Where to Edit
 
-- CLI command orchestration: `prophet-cli/src/prophet_cli/cli.py`
-- Core compiler modules: `prophet-cli/src/prophet_cli/core/`
-- Codegen contracts/pipeline/artifacts: `prophet-cli/src/prophet_cli/codegen/`
-- Stack generators: `prophet-cli/src/prophet_cli/targets/`
-- CLI package docs: `prophet-cli/README.md`
-- User docs: `docs/quickstart/`, `docs/reference/`
-- Developer docs: `docs/developer/`
-- Contributor guidance/backlog: `CONTRIBUTING.md`, `docs/developer/contributing.md`
+- CLI command orchestration: [prophet-cli/src/prophet_cli/cli.py](prophet-cli/src/prophet_cli/cli.py)
+- Core compiler modules: [prophet-cli/src/prophet_cli/core/](prophet-cli/src/prophet_cli/core/)
+- Codegen contracts/pipeline/artifacts: [prophet-cli/src/prophet_cli/codegen/](prophet-cli/src/prophet_cli/codegen/)
+- Stack generators: [prophet-cli/src/prophet_cli/targets/](prophet-cli/src/prophet_cli/targets/)
+- CLI package docs: [prophet-cli/README.md](prophet-cli/README.md)
+- User docs: [docs/quickstart/](docs/quickstart/) and [docs/reference/](docs/reference/)
+- Developer docs: [docs/developer/](docs/developer/)
+- Contributor guidance/backlog: [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/developer/contributing.md](docs/developer/contributing.md)
 
 ## Release Notes
 
 - Toolchain version lives in:
-  - `prophet-cli/pyproject.toml`
-  - `prophet-cli/src/prophet_cli/cli.py` (`TOOLCHAIN_VERSION`)
+  - [prophet-cli/pyproject.toml](prophet-cli/pyproject.toml)
+  - [prophet-cli/src/prophet_cli/cli.py](prophet-cli/src/prophet_cli/cli.py) (`TOOLCHAIN_VERSION`)
 - Keep them in sync (enforced by tests).
-- See `prophet-cli/RELEASING.md` and `prophet-cli/CHANGELOG.md`.
+- See [prophet-cli/RELEASING.md](prophet-cli/RELEASING.md) and [prophet-cli/CHANGELOG.md](prophet-cli/CHANGELOG.md).

@@ -1,6 +1,6 @@
 # CI/CD
 
-## CI Workflow (`.github/workflows/ci.yml`)
+## CI Workflow ([.github/workflows/ci.yml](../../.github/workflows/ci.yml))
 
 Main jobs:
 - package validation (tests, build, twine check, wheel smoke install)
@@ -11,7 +11,7 @@ Guardrails:
 - generated file cleanliness checks
 - tracked-file drift checks
 
-## Publish Workflow (`.github/workflows/publish-pypi.yml`)
+## Publish Workflow ([.github/workflows/publish-pypi.yml](../../.github/workflows/publish-pypi.yml))
 
 Triggers:
 - tag pushes matching `v*.*.*`

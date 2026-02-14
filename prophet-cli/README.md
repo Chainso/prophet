@@ -76,8 +76,8 @@ prophet check --against .prophet/baselines/main.ir.json
 Lists supported stack ids, framework/ORM pairings, implementation status, and capability metadata.
 Entries come from a schema-validated stack manifest.
 Schema reference:
-- user-facing: `docs/reference/generation.md`
-- developer-facing: `docs/developer/codegen-architecture.md`
+- user-facing: [docs/reference/generation.md](../docs/reference/generation.md)
+- developer-facing: [docs/developer/codegen-architecture.md](../docs/developer/codegen-architecture.md)
 
 ```bash
 prophet stacks
@@ -88,8 +88,7 @@ prophet stacks --json
 Lists generated extension hook surfaces from `gen/manifest/extension-hooks.json`.
 Useful for wiring user-owned implementations against generated interfaces.
 Safety/reference docs:
-- `docs/reference/generation.md`
-- `docs/prophet-extension-hooks-safety-v0.1.md` (detailed legacy note)
+- [docs/reference/generation.md](../docs/reference/generation.md)
 
 ```bash
 prophet hooks
@@ -105,7 +104,7 @@ prophet gen
 prophet gen --skip-unchanged
 ```
 
-Also syncs generated Spring artifacts into `examples/java/prophet_example_spring` when present.
+Also syncs generated Spring artifacts into [examples/java/prophet_example_spring](../examples/java/prophet_example_spring) when present.
 
 Stack selection is configured in `prophet.yaml`:
 
@@ -221,7 +220,7 @@ prophet version check --against .prophet/baselines/main.ir.json
 ```
 
 Compatibility rules used by CLI are documented in:
-- `docs/reference/compatibility.md`
+- [docs/reference/compatibility.md](../docs/reference/compatibility.md)
 
 ## Expected Project Files
 
@@ -267,11 +266,11 @@ Note: generated Spring package root is `<base_package>.<ontology_name>`.
 
 ## Release Prep
 
-- Release process: `prophet-cli/RELEASING.md`
-- Changelog: `prophet-cli/CHANGELOG.md`
+- Release process: [prophet-cli/RELEASING.md](RELEASING.md)
+- Changelog: [prophet-cli/CHANGELOG.md](CHANGELOG.md)
 - Version sync is test-enforced between:
-  - `prophet-cli/pyproject.toml` `[project].version`
-  - `prophet-cli/src/prophet_cli/cli.py` `TOOLCHAIN_VERSION`
+  - [prophet-cli/pyproject.toml](pyproject.toml) `[project].version`
+  - [prophet-cli/src/prophet_cli/cli.py](src/prophet_cli/cli.py) `TOOLCHAIN_VERSION`
 
 ## Development Notes
 
@@ -289,9 +288,9 @@ Note: generated Spring package root is `<base_package>.<ontology_name>`.
 
 ## Contributing
 
-- See root contribution guide: `CONTRIBUTING.md`
-- Open contributor backlog: `CONTRIBUTING.md` (`Open Items`)
+- See root contribution guide: [CONTRIBUTING.md](../CONTRIBUTING.md)
+- Open contributor backlog: [CONTRIBUTING.md](../CONTRIBUTING.md) (`Open Items`)
 
 ## License
 
-Apache-2.0. See `LICENSE`.
+Apache-2.0. See [LICENSE](../LICENSE).
