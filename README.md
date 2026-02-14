@@ -57,5 +57,7 @@ cd examples/java/prophet_example_spring
 - Event ingestion/dispatch remains an external runtime concern, not Spring codegen output.
 - Generated query APIs include:
 `GET /<objects>/{id}` and paginated/filterable `GET /<objects>` backed by JPA specifications.
+- Generated typed query DSL endpoint:
+`POST /<objects>/query` with filter contracts supporting `eq`, `in`, `gte`, `lte`, `contains` (by type).
 - List endpoints return generated DTO envelopes (`*ListResponse`) instead of raw Spring `Page` serialization.
 - Generated query controllers use generated mapping components (`generated.mapping.*DomainMapper`) for entity-to-domain conversion boundaries.

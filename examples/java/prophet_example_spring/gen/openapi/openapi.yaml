@@ -9,21 +9,24 @@ paths:
     get:
       operationId: listOrder
       parameters:
-      - name: page
+      - &id001
+        name: page
         in: query
         required: false
         schema:
           type: integer
           minimum: 0
           default: 0
-      - name: size
+      - &id002
+        name: size
         in: query
         required: false
         schema:
           type: integer
           minimum: 1
           default: 20
-      - name: sort
+      - &id003
+        name: sort
         in: query
         required: false
         schema:
@@ -32,23 +35,23 @@ paths:
       - name: orderId
         in: query
         required: false
-        schema:
+        schema: &id007
           type: string
       - name: customerUserId
         in: query
         required: false
-        schema:
+        schema: &id008
           type: string
       - name: totalAmount
         in: query
         required: false
-        schema:
+        schema: &id009
           type: string
           description: Decimal encoded as string
       - name: discountCode
         in: query
         required: false
-        schema:
+        schema: &id010
           type: string
       - name: currentState
         in: query
@@ -59,6 +62,26 @@ paths:
           - CREATED
           - APPROVED
           - SHIPPED
+      responses:
+        '200':
+          description: Paginated Order list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+  /orders/query:
+    post:
+      operationId: queryOrder
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderQueryFilter'
       responses:
         '200':
           description: Paginated Order list response
@@ -88,21 +111,24 @@ paths:
     get:
       operationId: listUser
       parameters:
-      - name: page
+      - &id004
+        name: page
         in: query
         required: false
         schema:
           type: integer
           minimum: 0
           default: 0
-      - name: size
+      - &id005
+        name: size
         in: query
         required: false
         schema:
           type: integer
           minimum: 1
           default: 20
-      - name: sort
+      - &id006
+        name: sort
         in: query
         required: false
         schema:
@@ -111,13 +137,33 @@ paths:
       - name: userId
         in: query
         required: false
-        schema:
+        schema: &id012
           type: string
       - name: email
         in: query
         required: false
-        schema:
+        schema: &id013
           type: string
+      responses:
+        '200':
+          description: Paginated User list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+  /users/query:
+    post:
+      operationId: queryUser
+      parameters:
+      - *id004
+      - *id005
+      - *id006
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserQueryFilter'
       responses:
         '200':
           description: Paginated User list response
@@ -406,3 +452,87 @@ components:
             type: array
             items:
               type: string
+    OrderOrderIdFilter:
+      type: object
+      properties:
+        eq: *id007
+        in:
+          type: array
+          items: *id007
+        contains:
+          type: string
+    OrderCustomerUserIdFilter:
+      type: object
+      properties:
+        eq: *id008
+        in:
+          type: array
+          items: *id008
+    OrderTotalAmountFilter:
+      type: object
+      properties:
+        eq: *id009
+        in:
+          type: array
+          items: *id009
+        gte: *id009
+        lte: *id009
+    OrderDiscountCodeFilter:
+      type: object
+      properties:
+        eq: *id010
+        in:
+          type: array
+          items: *id010
+        contains:
+          type: string
+    OrderCurrentStateFilter:
+      type: object
+      properties:
+        eq: &id011
+          type: string
+          enum:
+          - CREATED
+          - APPROVED
+          - SHIPPED
+        in:
+          type: array
+          items: *id011
+    OrderQueryFilter:
+      type: object
+      properties:
+        orderId:
+          $ref: '#/components/schemas/OrderOrderIdFilter'
+        customerUserId:
+          $ref: '#/components/schemas/OrderCustomerUserIdFilter'
+        totalAmount:
+          $ref: '#/components/schemas/OrderTotalAmountFilter'
+        discountCode:
+          $ref: '#/components/schemas/OrderDiscountCodeFilter'
+        currentState:
+          $ref: '#/components/schemas/OrderCurrentStateFilter'
+    UserUserIdFilter:
+      type: object
+      properties:
+        eq: *id012
+        in:
+          type: array
+          items: *id012
+        contains:
+          type: string
+    UserEmailFilter:
+      type: object
+      properties:
+        eq: *id013
+        in:
+          type: array
+          items: *id013
+        contains:
+          type: string
+    UserQueryFilter:
+      type: object
+      properties:
+        userId:
+          $ref: '#/components/schemas/UserUserIdFilter'
+        email:
+          $ref: '#/components/schemas/UserEmailFilter'

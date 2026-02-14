@@ -2090,6 +2090,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         pk = next((f for f in fields if f.get("key") == "primary"), fields[0])
         table = pluralize(snake_case(obj["name"]))
         pk_param = camel_case(pk["name"])
+        query_filter_props: Dict[str, Any] = {}
         list_parameters: List[Dict[str, Any]] = [
             {
                 "name": "page",
@@ -2111,6 +2112,13 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                 "description": "Sort expression, for example field,asc",
             },
         ]
+
+        def field_base_type(field_type: Dict[str, Any]) -> Optional[str]:
+            if field_type["kind"] == "base":
+                return str(field_type["name"])
+            if field_type["kind"] == "custom":
+                return str(type_by_id[field_type["target_type_id"]]["base"])
+            return None
 
         for f in fields:
             kind = f["type"]["kind"]
@@ -2135,6 +2143,23 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                     "schema": param_schema,
                 }
             )
+            filter_name = f"{obj['name']}{pascal_case(param_name)}Filter"
+            filter_props: Dict[str, Any] = {"eq": param_schema}
+            if kind == "object_ref":
+                filter_props["in"] = {"type": "array", "items": param_schema}
+            else:
+                base_t = field_base_type(f["type"])
+                if base_t in {"string", "duration"}:
+                    filter_props["in"] = {"type": "array", "items": param_schema}
+                    filter_props["contains"] = {"type": "string"}
+                elif base_t in {"int", "long", "short", "byte", "double", "float", "decimal", "date", "datetime"}:
+                    filter_props["in"] = {"type": "array", "items": param_schema}
+                    filter_props["gte"] = param_schema
+                    filter_props["lte"] = param_schema
+                elif base_t != "boolean":
+                    filter_props["in"] = {"type": "array", "items": param_schema}
+            components_schemas[filter_name] = {"type": "object", "properties": filter_props}
+            query_filter_props[param_name] = {"$ref": f"#/components/schemas/{filter_name}"}
 
         if obj.get("states"):
             list_parameters.append(
@@ -2148,11 +2173,51 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                     },
                 }
             )
+            state_filter_name = f"{obj['name']}CurrentStateFilter"
+            enum_schema = {
+                "type": "string",
+                "enum": [s["name"].upper() for s in obj["states"]],
+            }
+            components_schemas[state_filter_name] = {
+                "type": "object",
+                "properties": {
+                    "eq": enum_schema,
+                    "in": {"type": "array", "items": enum_schema},
+                },
+            }
+            query_filter_props["currentState"] = {"$ref": f"#/components/schemas/{state_filter_name}"}
+
+        query_filter_name = f"{obj['name']}QueryFilter"
+        components_schemas[query_filter_name] = {"type": "object", "properties": query_filter_props}
 
         paths[f"/{table}"] = {
             "get": {
                 "operationId": f"list{obj['name']}",
                 "parameters": list_parameters,
+                "responses": {
+                    "200": {
+                        "description": f"Paginated {obj['name']} list response",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": f"#/components/schemas/{obj['name']}ListResponse"}
+                            }
+                        },
+                    }
+                },
+            }
+        }
+        paths[f"/{table}/query"] = {
+            "post": {
+                "operationId": f"query{obj['name']}",
+                "parameters": list_parameters[:3],
+                "requestBody": {
+                    "required": False,
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": f"#/components/schemas/{query_filter_name}"}
+                        }
+                    },
+                },
                 "responses": {
                     "200": {
                         "description": f"Paginated {obj['name']} list response",
@@ -3131,6 +3196,9 @@ def render_spring_files(
 
         list_method_params: List[str] = []
         filter_conditions: List[str] = []
+        typed_filter_conditions: List[str] = []
+        typed_query_fields: List[Tuple[str, str, bool]] = []
+        typed_query_imports: set[str] = set()
         needs_join_type_import = False
         needs_date_time_format_import = False
 
@@ -3148,6 +3216,7 @@ def render_spring_files(
                 continue
 
             entity_prop = camel_case(f["name"])
+            filter_record_name = f"{obj['name']}{pascal_case(entity_prop)}Filter"
             if kind == "object_ref":
                 target = object_by_id[field_type["target_object_id"]]
                 target_fields = target.get("fields", [])
@@ -3167,6 +3236,37 @@ def render_spring_files(
                     ]
                 )
                 needs_join_type_import = True
+
+                filter_imports: set[str] = set()
+                add_java_imports_for_type(param_java, filter_imports)
+                filter_imports.add("import java.util.List;")
+                filter_fields = [
+                    (param_java, "eq", False),
+                    (f"List<{param_java}>", "in", False),
+                ]
+                files[
+                    f"src/main/java/{package_path}/generated/api/filters/{filter_record_name}.java"
+                ] = render_java_record_with_builder(
+                    f"{base_package}.generated.api.filters",
+                    filter_imports,
+                    filter_record_name,
+                    filter_fields,
+                )
+                typed_query_fields.append((filter_record_name, entity_prop, False))
+                typed_query_imports.add(f"import {base_package}.generated.api.filters.{filter_record_name};")
+                typed_filter_conditions.extend(
+                    [
+                        f"            if (filter.{entity_prop}() != null) {{",
+                        f"                {filter_record_name} {entity_prop}Filter = filter.{entity_prop}();",
+                        f"                if ({entity_prop}Filter.eq() != null) {{",
+                        f"                    spec = spec.and((root, query, cb) -> cb.equal(root.join(\"{entity_prop}\", JoinType.LEFT).get(\"{target_pk_prop}\"), {entity_prop}Filter.eq()));",
+                        "                }",
+                        f"                if ({entity_prop}Filter.in() != null && !{entity_prop}Filter.in().isEmpty()) {{",
+                        f"                    spec = spec.and((root, query, cb) -> root.join(\"{entity_prop}\", JoinType.LEFT).get(\"{target_pk_prop}\").in({entity_prop}Filter.in()));",
+                        "                }",
+                        "            }",
+                    ]
+                )
                 continue
 
             param_name = entity_prop
@@ -3192,6 +3292,73 @@ def render_spring_files(
                 ]
             )
 
+            filter_imports: set[str] = set()
+            add_java_imports_for_type(param_java, filter_imports)
+            filter_fields: List[Tuple[str, str, bool]] = [(param_java, "eq", False)]
+            typed_condition_lines = [
+                f"            if (filter.{entity_prop}() != null) {{",
+                f"                {filter_record_name} {entity_prop}Filter = filter.{entity_prop}();",
+                f"                if ({entity_prop}Filter.eq() != null) {{",
+                f"                    spec = spec.and((root, query, cb) -> cb.equal(root.get(\"{entity_prop}\"), {entity_prop}Filter.eq()));",
+                "                }",
+            ]
+
+            if base_type in {"string", "duration"}:
+                filter_imports.add("import java.util.List;")
+                filter_fields.append((f"List<{param_java}>", "in", False))
+                filter_fields.append(("String", "contains", False))
+                typed_condition_lines.extend(
+                    [
+                        f"                if ({entity_prop}Filter.in() != null && !{entity_prop}Filter.in().isEmpty()) {{",
+                        f"                    spec = spec.and((root, query, cb) -> root.get(\"{entity_prop}\").in({entity_prop}Filter.in()));",
+                        "                }",
+                        f"                if ({entity_prop}Filter.contains() != null && !{entity_prop}Filter.contains().isBlank()) {{",
+                        f"                    spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.<String>get(\"{entity_prop}\")), \"%\" + {entity_prop}Filter.contains().toLowerCase() + \"%\"));",
+                        "                }",
+                    ]
+                )
+            elif base_type in {"int", "long", "short", "byte", "double", "float", "decimal", "date", "datetime"}:
+                filter_imports.add("import java.util.List;")
+                filter_fields.append((f"List<{param_java}>", "in", False))
+                filter_fields.append((param_java, "gte", False))
+                filter_fields.append((param_java, "lte", False))
+                typed_condition_lines.extend(
+                    [
+                        f"                if ({entity_prop}Filter.in() != null && !{entity_prop}Filter.in().isEmpty()) {{",
+                        f"                    spec = spec.and((root, query, cb) -> root.get(\"{entity_prop}\").in({entity_prop}Filter.in()));",
+                        "                }",
+                        f"                if ({entity_prop}Filter.gte() != null) {{",
+                        f"                    spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.<{param_java}>get(\"{entity_prop}\"), {entity_prop}Filter.gte()));",
+                        "                }",
+                        f"                if ({entity_prop}Filter.lte() != null) {{",
+                        f"                    spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.<{param_java}>get(\"{entity_prop}\"), {entity_prop}Filter.lte()));",
+                        "                }",
+                    ]
+                )
+            elif base_type != "boolean":
+                filter_imports.add("import java.util.List;")
+                filter_fields.append((f"List<{param_java}>", "in", False))
+                typed_condition_lines.extend(
+                    [
+                        f"                if ({entity_prop}Filter.in() != null && !{entity_prop}Filter.in().isEmpty()) {{",
+                        f"                    spec = spec.and((root, query, cb) -> root.get(\"{entity_prop}\").in({entity_prop}Filter.in()));",
+                        "                }",
+                    ]
+                )
+
+            typed_condition_lines.extend(["            }"])
+            files[
+                f"src/main/java/{package_path}/generated/api/filters/{filter_record_name}.java"
+            ] = render_java_record_with_builder(
+                f"{base_package}.generated.api.filters",
+                filter_imports,
+                filter_record_name,
+                filter_fields,
+            )
+            typed_query_fields.append((filter_record_name, entity_prop, False))
+            typed_query_imports.add(f"import {base_package}.generated.api.filters.{filter_record_name};")
+            typed_filter_conditions.extend(typed_condition_lines)
+
         if obj.get("states"):
             enum_cls = f"{obj['name']}State"
             list_method_params.append(
@@ -3204,6 +3371,47 @@ def render_spring_files(
                     "        }",
                 ]
             )
+            state_filter_name = f"{obj['name']}CurrentStateFilter"
+            files[
+                f"src/main/java/{package_path}/generated/api/filters/{state_filter_name}.java"
+            ] = render_java_record_with_builder(
+                f"{base_package}.generated.api.filters",
+                {
+                    "import java.util.List;",
+                    f"import {base_package}.generated.domain.{enum_cls};",
+                },
+                state_filter_name,
+                [(enum_cls, "eq", False), (f"List<{enum_cls}>", "in", False)],
+            )
+            typed_query_fields.append((state_filter_name, "currentState", False))
+            typed_query_imports.add(f"import {base_package}.generated.api.filters.{state_filter_name};")
+            typed_filter_conditions.extend(
+                [
+                    "            if (filter.currentState() != null) {",
+                    f"                {state_filter_name} currentStateFilter = filter.currentState();",
+                    "                if (currentStateFilter.eq() != null) {",
+                    "                    spec = spec.and((root, query, cb) -> cb.equal(root.get(\"currentState\"), currentStateFilter.eq()));",
+                    "                }",
+                    "                if (currentStateFilter.in() != null && !currentStateFilter.in().isEmpty()) {",
+                    "                    spec = spec.and((root, query, cb) -> root.get(\"currentState\").in(currentStateFilter.in()));",
+                    "                }",
+                    "            }",
+                ]
+            )
+
+        typed_query_name = f"{obj['name']}QueryFilter"
+        files[
+            f"src/main/java/{package_path}/generated/api/filters/{typed_query_name}.java"
+        ] = render_java_record_with_builder(
+            f"{base_package}.generated.api.filters",
+            typed_query_imports,
+            typed_query_name,
+            typed_query_fields,
+        )
+        imports = imports.union(typed_query_imports)
+        imports.add("import org.springframework.web.bind.annotation.PostMapping;")
+        imports.add("import org.springframework.web.bind.annotation.RequestBody;")
+        imports.add(f"import {base_package}.generated.api.filters.{typed_query_name};")
 
         list_method_params.append("        @PageableDefault(size = 20) Pageable pageable")
         list_method_signature = ",\n".join(list_method_params)
@@ -3230,6 +3438,30 @@ def render_spring_files(
             ],
         )
         files[f"src/main/java/{package_path}/generated/api/{list_response_name}.java"] = list_response_src
+
+        typed_filter_block = "\n".join(typed_filter_conditions)
+        typed_query_method = (
+            "    @PostMapping(\"/query\")\n"
+            f"    public ResponseEntity<{list_response_name}> query(\n"
+            f"        @RequestBody(required = false) {typed_query_name} filter,\n"
+            "        @PageableDefault(size = 20) Pageable pageable\n"
+            "    ) {\n"
+            f"        Specification<{entity_name}> spec = (root, query, cb) -> cb.conjunction();\n"
+            "        if (filter != null) {\n"
+            + (typed_filter_block + "\n" if typed_filter_block else "")
+            + "        }\n"
+            + f"        Page<{entity_name}> entityPage = repository.findAll(spec, pageable);\n"
+            + f"        List<{domain_name}> items = entityPage.stream().map(mapper::toDomain).toList();\n"
+            + f"        {list_response_name} result = {list_response_name}.builder()\n"
+            + "            .items(items)\n"
+            + "            .page(entityPage.getNumber())\n"
+            + "            .size(entityPage.getSize())\n"
+            + "            .totalElements(entityPage.getTotalElements())\n"
+            + "            .totalPages(entityPage.getTotalPages())\n"
+            + "            .build();\n"
+            + "        return ResponseEntity.ok(result);\n"
+            + "    }\n\n"
+        )
 
         imports_block = "\n".join(sorted(imports))
         query_src = (
@@ -3260,8 +3492,9 @@ def render_spring_files(
             + "            .totalPages(entityPage.getTotalPages())\n"
             + "            .build();\n"
             + "        return ResponseEntity.ok(result);\n"
-            "    }\n\n"
-            f"    @GetMapping(\"/{{{pk_prop}}}\")\n"
+            + "    }\n\n"
+            + typed_query_method
+            + f"    @GetMapping(\"/{{{pk_prop}}}\")\n"
             f"    public ResponseEntity<{domain_name}> getById(@PathVariable(\"{pk_prop}\") {pk_java} {pk_prop}) {{\n"
             f"        Optional<{entity_name}> maybeEntity = repository.findById({pk_prop});\n"
             "        if (maybeEntity.isEmpty()) {\n"
