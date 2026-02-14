@@ -3844,13 +3844,17 @@ def _generate_outputs_for_java_spring_jpa(context: GenerationContext) -> Dict[st
     deps = JavaSpringJpaDeps(
         cfg_get=cfg_get,
         resolve_stack_spec=resolve_stack_spec,
-        render_sql=render_sql,
-        compute_delta_from_baseline=compute_delta_from_baseline,
+        render_sql=lambda reader: render_sql(reader.as_dict()),
+        compute_delta_from_baseline=lambda root, cfg, reader: compute_delta_from_baseline(
+            root,
+            cfg,
+            reader.as_dict(),
+        ),
         render_liquibase_root_changelog=render_liquibase_root_changelog,
         render_liquibase_prophet_changelog=render_liquibase_prophet_changelog,
-        render_openapi=render_openapi,
-        render_spring_files=lambda ir, cfg, root, schema_sql, delta_sql: render_spring_files(
-            ir,
+        render_openapi=lambda reader: render_openapi(reader.as_dict()),
+        render_spring_files=lambda reader, cfg, root, schema_sql, delta_sql: render_spring_files(
+            reader.as_dict(),
             cfg,
             root=root,
             generated_schema_sql=schema_sql,

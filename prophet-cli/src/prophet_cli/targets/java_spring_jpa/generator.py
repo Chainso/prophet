@@ -8,6 +8,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.stacks import StackSpec
+from prophet_cli.core.ir_reader import IRReader
 
 
 def _pascal_case(value: str) -> str:
@@ -19,25 +20,26 @@ def _pascal_case(value: str) -> str:
 class JavaSpringJpaDeps:
     cfg_get: Callable[[Dict[str, Any], List[str], Any], Any]
     resolve_stack_spec: Callable[[Dict[str, Any]], StackSpec]
-    render_sql: Callable[[Dict[str, Any]], str]
-    compute_delta_from_baseline: Callable[[Path, Dict[str, Any], Dict[str, Any]], Tuple[Optional[str], List[str], Optional[Path], Optional[str], Dict[str, Any]]]
+    render_sql: Callable[[IRReader], str]
+    compute_delta_from_baseline: Callable[[Path, Dict[str, Any], IRReader], Tuple[Optional[str], List[str], Optional[Path], Optional[str], Dict[str, Any]]]
     render_liquibase_root_changelog: Callable[[], str]
     render_liquibase_prophet_changelog: Callable[[bool], str]
-    render_openapi: Callable[[Dict[str, Any]], str]
-    render_spring_files: Callable[[Dict[str, Any], Dict[str, Any], Path, str, Optional[str]], Dict[str, str]]
+    render_openapi: Callable[[IRReader], str]
+    render_spring_files: Callable[[IRReader, Dict[str, Any], Path, str, Optional[str]], Dict[str, str]]
     toolchain_version: str
 
 
 def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dict[str, str]:
-    ir = context.ir_reader.as_dict()
     cfg = context.cfg
     work_root = context.root
     outputs: Dict[str, str] = {}
     out_dir = deps.cfg_get(cfg, ["generation", "out_dir"], "gen")
     stack = deps.resolve_stack_spec(cfg)
     targets = deps.cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"])
-    schema_sql = deps.render_sql(ir)
-    delta_sql, delta_warnings, baseline_path, baseline_hash, delta_meta = deps.compute_delta_from_baseline(work_root, cfg, ir)
+    schema_sql = deps.render_sql(context.ir_reader)
+    delta_sql, delta_warnings, baseline_path, baseline_hash, delta_meta = deps.compute_delta_from_baseline(
+        work_root, cfg, context.ir_reader
+    )
 
     if "sql" in targets:
         outputs[f"{out_dir}/sql/schema.sql"] = schema_sql
@@ -68,10 +70,10 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
         }
         outputs[f"{out_dir}/migrations/delta/report.json"] = json.dumps(report, indent=2, sort_keys=False) + "\n"
     if "openapi" in targets:
-        outputs[f"{out_dir}/openapi/openapi.yaml"] = deps.render_openapi(ir)
+        outputs[f"{out_dir}/openapi/openapi.yaml"] = deps.render_openapi(context.ir_reader)
     if "spring_boot" in targets:
         spring_files = deps.render_spring_files(
-            ir,
+            context.ir_reader,
             cfg,
             work_root,
             schema_sql,
