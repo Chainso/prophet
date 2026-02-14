@@ -1,5 +1,6 @@
 package com.example.prophet.generated.persistence;
 
+import javax.annotation.processing.Generated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -12,6 +13,7 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "users")
+@Generated("prophet-cli")
 public class UserEntity {
 
     @Column(name = "email", nullable = false)

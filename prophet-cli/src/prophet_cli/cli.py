@@ -1447,6 +1447,48 @@ def yaml_dump_stable(value: Any) -> str:
     return yaml.safe_dump(value, sort_keys=False, default_flow_style=False).rstrip() + "\n"
 
 
+def add_generated_annotation(source: str) -> str:
+    if "@Generated(" in source:
+        return source
+
+    lines = source.splitlines()
+    package_idx = next((i for i, line in enumerate(lines) if line.startswith("package ")), -1)
+    if package_idx == -1:
+        return source
+
+    generated_import = "import javax.annotation.processing.Generated;"
+    if generated_import not in lines:
+        first_import = next(
+            (i for i, line in enumerate(lines[package_idx + 1 :], start=package_idx + 1) if line.startswith("import ")),
+            -1,
+        )
+        if first_import != -1:
+            lines.insert(first_import, generated_import)
+        else:
+            lines = lines[: package_idx + 1] + ["", generated_import, ""] + lines[package_idx + 1 :]
+
+    type_idx = next(
+        (
+            i
+            for i, line in enumerate(lines)
+            if re.match(r"^public\s+(class|interface|record|enum)\s+[A-Za-z_][A-Za-z0-9_]*", line)
+        ),
+        -1,
+    )
+    if type_idx == -1:
+        return source
+
+    lines.insert(type_idx, '@Generated("prophet-cli")')
+    result = "\n".join(lines)
+    return result + ("\n" if source.endswith("\n") else "")
+
+
+def annotate_generated_java_files(files: Dict[str, str]) -> None:
+    for rel_path, content in list(files.items()):
+        if rel_path.endswith(".java"):
+            files[rel_path] = add_generated_annotation(content)
+
+
 def render_sql(ir: Dict[str, Any]) -> str:
     lines: List[str] = []
     lines.append("-- GENERATED FILE: do not edit directly.")
@@ -2489,6 +2531,7 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
 
         files[f"src/main/java/{package_path}/generated/api/{obj['name']}QueryController.java"] = query_src
 
+    annotate_generated_java_files(files)
     return files
 
 

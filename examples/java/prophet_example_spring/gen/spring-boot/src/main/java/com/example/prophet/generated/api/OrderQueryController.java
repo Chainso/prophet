@@ -1,5 +1,6 @@
 package com.example.prophet.generated.api;
 
+import javax.annotation.processing.Generated;
 import com.example.prophet.generated.domain.Order;
 import com.example.prophet.generated.domain.OrderState;
 import com.example.prophet.generated.domain.UserRef;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/orders")
+@Generated("prophet-cli")
 public class OrderQueryController {
 
     private final OrderRepository repository;

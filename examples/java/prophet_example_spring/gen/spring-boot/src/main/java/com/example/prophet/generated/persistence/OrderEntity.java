@@ -1,5 +1,6 @@
 package com.example.prophet.generated.persistence;
 
+import javax.annotation.processing.Generated;
 import com.example.prophet.generated.domain.Address;
 import com.example.prophet.generated.domain.OrderState;
 import jakarta.persistence.Column;
@@ -21,6 +22,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "orders")
+@Generated("prophet-cli")
 public class OrderEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

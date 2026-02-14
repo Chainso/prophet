@@ -1,15 +1,11 @@
 package com.example.prophet.generated.actions;
 
 import javax.annotation.processing.Generated;
-import com.example.prophet.generated.domain.ApprovalContext;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 
 @Generated("prophet-cli")
-public record ApproveOrderCommand(
-    String approvedBy,
-    ApprovalContext context,
-    List<String> notes,
+public record CreateOrderResult(
+    @NotNull String currentState,
     @NotNull String orderId
 ) {
 }

@@ -1,5 +1,6 @@
 package com.example.prophet.generated.api;
 
+import javax.annotation.processing.Generated;
 import com.example.prophet.generated.domain.User;
 import com.example.prophet.generated.persistence.UserEntity;
 import com.example.prophet.generated.persistence.UserRepository;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/users")
+@Generated("prophet-cli")
 public class UserQueryController {
 
     private final UserRepository repository;

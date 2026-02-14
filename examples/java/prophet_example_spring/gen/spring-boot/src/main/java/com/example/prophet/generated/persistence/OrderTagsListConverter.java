@@ -1,5 +1,6 @@
 package com.example.prophet.generated.persistence;
 
+import javax.annotation.processing.Generated;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Converter
+@Generated("prophet-cli")
 public class OrderTagsListConverter implements AttributeConverter<List<String>, String> {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().findAndRegisterModules();

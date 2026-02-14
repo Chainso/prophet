@@ -57,6 +57,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApproveOrderResult'
+  /actions/createOrder:
+    post:
+      operationId: createOrderAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderCommand'
+      responses:
+        '200':
+          description: Action response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResult'
   /actions/shipOrder:
     post:
       operationId: shipOrderAction
@@ -162,6 +178,28 @@ components:
             type: string
         orderId:
           type: string
+    CreateOrderCommand:
+      type: object
+      required:
+      - customer
+      - orderId
+      - totalAmount
+      properties:
+        customer:
+          $ref: '#/components/schemas/UserRef'
+        discountCode:
+          type: string
+        orderId:
+          type: string
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        tags:
+          type: array
+          items:
+            type: string
+        totalAmount:
+          type: string
+          description: Decimal encoded as string
     ShipOrderCommand:
       type: object
       required:
@@ -194,6 +232,16 @@ components:
           type: array
           items:
             type: string
+    CreateOrderResult:
+      type: object
+      required:
+      - currentState
+      - orderId
+      properties:
+        currentState:
+          type: string
+        orderId:
+          type: string
     ShipOrderResult:
       type: object
       required:

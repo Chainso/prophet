@@ -1,5 +1,6 @@
 package com.example.prophet.generated.persistence;
 
+import javax.annotation.processing.Generated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -14,6 +15,7 @@ import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "order_state_history")
+@Generated("prophet-cli")
 public class OrderStateHistoryEntity {
 
     @Id

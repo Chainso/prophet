@@ -241,6 +241,69 @@ ontology commerce_local {
     }
   }
 
+  actionInput CreateOrderCommand {
+    id "ain_create_order"
+
+    field orderId {
+      id "fld_ain_create_order_order_id"
+      type string
+      required
+    }
+
+    field customer {
+      id "fld_ain_create_order_customer"
+      type ref(User)
+      required
+    }
+
+    field totalAmount {
+      id "fld_ain_create_order_total_amount"
+      type Money
+      required
+    }
+
+    field discountCode {
+      id "fld_ain_create_order_discount_code"
+      type string
+      optional
+    }
+
+    field tags {
+      id "fld_ain_create_order_tags"
+      type string[]
+      optional
+    }
+
+    field shippingAddress {
+      id "fld_ain_create_order_shipping_address"
+      type Address
+      optional
+    }
+  }
+
+  actionOutput CreateOrderResult {
+    id "aout_create_order"
+
+    field orderId {
+      id "fld_aout_create_order_order_id"
+      type string
+      required
+    }
+
+    field currentState {
+      id "fld_aout_create_order_current_state"
+      type string
+      required
+    }
+  }
+
+  action createOrder {
+    id "act_create_order"
+    kind process
+    input CreateOrderCommand
+    output CreateOrderResult
+  }
+
   action approveOrder {
     id "act_approve_order"
     kind process
@@ -266,6 +329,13 @@ ontology commerce_local {
     id "evt_order_shipped_output"
     kind action_output
     action shipOrder
+    object Order
+  }
+
+  event OrderCreatedEvent {
+    id "evt_order_created_output"
+    kind action_output
+    action createOrder
     object Order
   }
 

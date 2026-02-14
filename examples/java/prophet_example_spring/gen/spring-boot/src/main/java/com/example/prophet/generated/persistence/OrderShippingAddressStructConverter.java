@@ -1,5 +1,6 @@
 package com.example.prophet.generated.persistence;
 
+import javax.annotation.processing.Generated;
 import com.example.prophet.generated.domain.Address;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,6 +8,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 @Converter
+@Generated("prophet-cli")
 public class OrderShippingAddressStructConverter implements AttributeConverter<Address, String> {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().findAndRegisterModules();
