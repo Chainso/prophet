@@ -15,6 +15,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "prophet-cli" / "src"))
 
 from prophet_cli.cli import build_generated_outputs
 from prophet_cli.cli import build_ir
+from prophet_cli.cli import compare_irs
 from prophet_cli.cli import load_config
 from prophet_cli.cli import parse_ontology
 from prophet_cli.cli import resolve_migration_runtime_modes
@@ -192,6 +193,38 @@ dependencies {
         findings = report.get("findings", [])
         self.assertTrue(any(item.get("kind") == "object_rename_hint" for item in findings))
         self.assertTrue(any(item.get("kind") == "column_rename_hint" for item in findings))
+
+    def test_query_contract_path_change_is_breaking(self) -> None:
+        cfg = load_config(EXAMPLE_ROOT / "prophet.yaml")
+        ontology = parse_ontology((EXAMPLE_ROOT / "ontology" / "local" / "main.prophet").read_text(encoding="utf-8"))
+        old_ir = build_ir(ontology, cfg)
+        new_ir = copy.deepcopy(old_ir)
+        for obj in new_ir.get("objects", []):
+            if obj.get("id") == "obj_order":
+                obj["name"] = "Purchase"
+                break
+        new_ir["query_contracts"] = []
+        new_ir["query_contracts_version"] = "outdated"
+
+        level, reasons = compare_irs(old_ir, new_ir)
+        self.assertEqual(level, "breaking")
+        self.assertTrue(any("query path changed: object=obj_order" in reason for reason in reasons))
+
+    def test_field_order_only_change_is_non_functional(self) -> None:
+        cfg = load_config(EXAMPLE_ROOT / "prophet.yaml")
+        ontology = parse_ontology((EXAMPLE_ROOT / "ontology" / "local" / "main.prophet").read_text(encoding="utf-8"))
+        old_ir = build_ir(ontology, cfg)
+        new_ir = copy.deepcopy(old_ir)
+        for obj in new_ir.get("objects", []):
+            if obj.get("id") == "obj_order":
+                obj["fields"] = list(reversed(obj.get("fields", [])))
+                break
+        new_ir["query_contracts"] = []
+        new_ir["query_contracts_version"] = "outdated"
+
+        level, reasons = compare_irs(old_ir, new_ir)
+        self.assertEqual(level, "non_functional")
+        self.assertFalse(any("query operator" in reason for reason in reasons))
 
 
 if __name__ == "__main__":

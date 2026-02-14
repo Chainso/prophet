@@ -61,6 +61,7 @@ cd examples/java/prophet_example_spring
 From `prophet gen`:
 
 - `.prophet/ir/current.ir.json`
+  - includes `query_contracts` + `query_contracts_version` for explicit API/filter compatibility tracking
 - `gen/sql/schema.sql`
 - `gen/openapi/openapi.yaml`
 - `gen/migrations/flyway/V1__prophet_init.sql`

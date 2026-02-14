@@ -1124,6 +1124,7 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
         "actions": actions,
         "events": events,
         "triggers": triggers,
+        "query_contracts": [],
         "generation_profile": {
             "golden_stack": "spring_boot",
         },
@@ -1136,6 +1137,9 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
         },
     }
 
+    ir["query_contracts"] = build_query_contracts(ir)
+    contract_canonical = json.dumps(ir["query_contracts"], sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ir["query_contracts_version"] = hashlib.sha256(contract_canonical).hexdigest()
     canonical = json.dumps(ir, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ir["ir_hash"] = hashlib.sha256(canonical).hexdigest()
     return ir
@@ -1207,6 +1211,98 @@ def describe_type_descriptor(t: Dict[str, Any]) -> str:
     if kind == "list":
         return f"list({describe_type_descriptor(t.get('element', {}))})"
     return "unknown"
+
+
+def base_type_for_descriptor(
+    type_desc: Dict[str, Any],
+    type_by_id: Dict[str, Dict[str, Any]],
+) -> Optional[str]:
+    kind = type_desc.get("kind")
+    if kind == "base":
+        return str(type_desc.get("name"))
+    if kind == "custom":
+        target_type_id = type_desc.get("target_type_id")
+        if target_type_id in type_by_id:
+            return str(type_by_id[target_type_id].get("base"))
+    return None
+
+
+def query_filter_operators_for_field(
+    field: Dict[str, Any],
+    type_by_id: Dict[str, Dict[str, Any]],
+) -> List[str]:
+    field_type = field.get("type", {})
+    kind = field_type.get("kind")
+    if kind in {"list", "struct"}:
+        return []
+    if kind == "object_ref":
+        return ["eq", "in"]
+
+    base = base_type_for_descriptor(field_type, type_by_id)
+    if base in {"string", "duration"}:
+        return ["eq", "in", "contains"]
+    if base in {"int", "long", "short", "byte", "double", "float", "decimal", "date", "datetime"}:
+        return ["eq", "in", "gte", "lte"]
+    if base == "boolean":
+        return ["eq"]
+    return ["eq", "in"]
+
+
+def build_query_contracts(ir: Dict[str, Any]) -> List[Dict[str, Any]]:
+    type_by_id = {t["id"]: t for t in ir.get("types", [])}
+    contracts: List[Dict[str, Any]] = []
+
+    for obj in sorted(ir.get("objects", []), key=lambda item: item.get("id", "")):
+        path_table = pluralize(snake_case(obj["name"]))
+        filters: List[Dict[str, Any]] = []
+        for field in sorted(obj.get("fields", []), key=lambda item: item.get("id", "")):
+            ops = query_filter_operators_for_field(field, type_by_id)
+            if not ops:
+                continue
+            filters.append(
+                {
+                    "field_id": field["id"],
+                    "field_name": field["name"],
+                    "operators": ops,
+                }
+            )
+
+        if obj.get("states"):
+            filters.append(
+                {
+                    "field_id": "__current_state__",
+                    "field_name": "currentState",
+                    "operators": ["eq", "in"],
+                }
+            )
+
+        contract = {
+            "object_id": obj["id"],
+            "object_name": obj["name"],
+            "paths": {
+                "list": f"/{path_table}",
+                "get_by_id": f"/{path_table}/{{id}}",
+                "typed_query": f"/{path_table}/query",
+            },
+            "pageable": {
+                "supported": True,
+                "default_size": 20,
+            },
+            "filters": filters,
+        }
+        canonical = json.dumps(contract, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        contract["contract_hash"] = hashlib.sha256(canonical).hexdigest()
+        contracts.append(contract)
+
+    return contracts
+
+
+def query_contract_map(ir: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    contracts = ir.get("query_contracts")
+    if isinstance(contracts, list) and contracts:
+        return {c["object_id"]: c for c in contracts if isinstance(c, dict) and c.get("object_id")}
+    generated = build_query_contracts(ir)
+    return {c["object_id"]: c for c in generated}
 
 
 def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, List[str]]:
@@ -1336,6 +1432,43 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
     compare_named_list("action", old_ir.get("actions", []), new_ir.get("actions", []))
     compare_named_list("event", old_ir.get("events", []), new_ir.get("events", []))
     compare_named_list("trigger", old_ir.get("triggers", []), new_ir.get("triggers", []))
+
+    old_query_contracts = query_contract_map(old_ir)
+    new_query_contracts = query_contract_map(new_ir)
+    for oid in sorted(set(old_query_contracts) - set(new_query_contracts)):
+        add("breaking", f"query contract removed: object={oid}")
+    for oid in sorted(set(new_query_contracts) - set(old_query_contracts)):
+        add("additive", f"query contract added: object={oid}")
+    for oid in sorted(set(old_query_contracts) & set(new_query_contracts)):
+        old_c = old_query_contracts[oid]
+        new_c = new_query_contracts[oid]
+        old_paths = old_c.get("paths", {})
+        new_paths = new_c.get("paths", {})
+        for path_key in sorted(set(old_paths) | set(new_paths)):
+            old_path = old_paths.get(path_key)
+            new_path = new_paths.get(path_key)
+            if old_path == new_path:
+                continue
+            if old_path and new_path:
+                add("breaking", f"query path changed: object={oid} {path_key} {old_path} -> {new_path}")
+            elif old_path and not new_path:
+                add("breaking", f"query path removed: object={oid} {path_key} {old_path}")
+            elif new_path and not old_path:
+                add("additive", f"query path added: object={oid} {path_key} {new_path}")
+
+        old_filters = {f["field_id"]: f for f in old_c.get("filters", []) if f.get("field_id")}
+        new_filters = {f["field_id"]: f for f in new_c.get("filters", []) if f.get("field_id")}
+        for fid in sorted(set(old_filters) - set(new_filters)):
+            add("breaking", f"query filter removed: object={oid} field_id={fid}")
+        for fid in sorted(set(new_filters) - set(old_filters)):
+            add("additive", f"query filter added: object={oid} field_id={fid}")
+        for fid in sorted(set(old_filters) & set(new_filters)):
+            old_ops = set(old_filters[fid].get("operators", []))
+            new_ops = set(new_filters[fid].get("operators", []))
+            for op in sorted(old_ops - new_ops):
+                add("breaking", f"query operator removed: object={oid} field_id={fid} op={op}")
+            for op in sorted(new_ops - old_ops):
+                add("additive", f"query operator added: object={oid} field_id={fid} op={op}")
 
     if any(level == "breaking" for level, _ in findings):
         level = "breaking"

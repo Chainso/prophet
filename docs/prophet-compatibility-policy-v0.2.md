@@ -53,6 +53,18 @@ This document defines the semantic compatibility contract used by `prophet plan`
 | Definition added | `additive` | New capability |
 | Definition modified | `breaking` | Treated as behavior contract change |
 
+## Query Contract Rules
+
+| Change | Classification | Notes |
+|---|---|---|
+| Query contract removed | `breaking` | Generated query API surface removed |
+| Query contract added | `additive` | New query API surface added |
+| Query path changed (`list`, `query`, `get_by_id`) | `breaking` | HTTP contract path changed for existing object |
+| Query filter removed | `breaking` | Existing filter capability removed |
+| Query filter added | `additive` | New filter capability added |
+| Query operator removed (`eq`, `in`, `gte`, `lte`, `contains`) | `breaking` | Existing filter semantics removed |
+| Query operator added | `additive` | Backward-compatible filter extension |
+
 ## Migration Safety Flags
 
 Delta migrations include flags in generated SQL:

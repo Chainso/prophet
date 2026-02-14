@@ -4,7 +4,7 @@
 
 1. Parse DSL (path configured via `project.ontology_file`)
 2. Validate model semantics
-3. Build canonical IR (`.prophet/ir/current.ir.json`)
+3. Build canonical IR (`.prophet/ir/current.ir.json`) including versioned `query_contracts`
 4. Generate deterministic artifacts (`gen/sql`, `gen/openapi`, `gen/migrations`, `gen/spring-boot`)
 5. Check compatibility against baseline IR
 
