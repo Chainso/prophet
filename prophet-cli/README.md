@@ -82,6 +82,10 @@ When baseline IR differs from current IR, Prophet also emits delta migration art
 - `gen/migrations/delta/report.json`
 
 Delta SQL includes safety flags and warnings (`destructive`, `backfill_required`, `manual_review`) as comments.
+Delta report JSON includes:
+- `summary` counts (`safe_auto_apply_count`, `manual_review_count`, `destructive_count`)
+- structured `findings` entries with classification and optional suggestions
+- heuristic rename hints (`object_rename_hint`, `column_rename_hint`) for manual migration planning
 
 Spring runtime migration wiring is auto-detected from the host Gradle project:
 - if Flyway dependency/plugin is present, Prophet syncs Flyway resources

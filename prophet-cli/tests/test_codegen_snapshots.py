@@ -160,6 +160,39 @@ dependencies {
         self.assertIn("SAFETY: backfill_required=true", delta_sql)
         self.assertIn("alter table orders add column if not exists total_amount", delta_sql)
 
+    def test_delta_report_summary_and_rename_hints(self) -> None:
+        cfg = load_config(EXAMPLE_ROOT / "prophet.yaml")
+        ontology = parse_ontology((EXAMPLE_ROOT / "ontology" / "local" / "main.prophet").read_text(encoding="utf-8"))
+        ir = build_ir(ontology, cfg)
+
+        baseline_ir = copy.deepcopy(ir)
+        for obj in baseline_ir.get("objects", []):
+            if obj.get("name") == "Order":
+                for field in obj.get("fields", []):
+                    if field.get("name") == "discount_code":
+                        field["id"] = "fld_order_coupon_code"
+                        field["name"] = "coupon_code"
+                        break
+            if obj.get("name") == "User":
+                obj["id"] = "obj_customer_legacy"
+        baseline_ir["ir_hash"] = "baseline-rename-hints-test"
+
+        with tempfile.TemporaryDirectory(prefix="prophet-delta-rename-") as tmp:
+            root = Path(tmp)
+            baseline_path = root / ".prophet" / "baselines" / "main.ir.json"
+            baseline_path.parent.mkdir(parents=True, exist_ok=True)
+            baseline_path.write_text(json.dumps(baseline_ir, indent=2) + "\n", encoding="utf-8")
+            outputs = build_generated_outputs(ir, cfg, root=root)
+
+        report = json.loads(outputs["gen/migrations/delta/report.json"])
+        summary = report.get("summary", {})
+        self.assertGreaterEqual(summary.get("manual_review_count", 0), 1)
+        self.assertGreaterEqual(summary.get("destructive_count", 0), 1)
+        self.assertIn("safe_auto_apply_count", summary)
+        findings = report.get("findings", [])
+        self.assertTrue(any(item.get("kind") == "object_rename_hint" for item in findings))
+        self.assertTrue(any(item.get("kind") == "column_rename_hint" for item in findings))
+
 
 if __name__ == "__main__":
     unittest.main()

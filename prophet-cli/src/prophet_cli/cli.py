@@ -1858,7 +1858,9 @@ def render_create_table_statements_for_object(
     return statements
 
 
-def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, List[str], bool]:
+def render_delta_migration(
+    old_ir: Dict[str, Any], new_ir: Dict[str, Any]
+) -> Tuple[str, List[str], bool, Dict[str, Any]]:
     old_objects = {o["id"]: o for o in old_ir.get("objects", [])}
     new_objects = {o["id"]: o for o in new_ir.get("objects", [])}
     type_by_id = {t["id"]: t for t in new_ir.get("types", [])}
@@ -1866,20 +1868,84 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
 
     statements: List[str] = []
     warnings: List[str] = []
+    findings: List[Dict[str, Any]] = []
     destructive_changes = False
     backfill_required = False
+    safe_auto_apply_count = 0
+    manual_review_count = 0
+    destructive_count = 0
 
-    for oid in sorted(set(new_objects) - set(old_objects)):
+    def add_finding(kind: str, classification: str, message: str, suggestion: Optional[str] = None) -> None:
+        nonlocal safe_auto_apply_count, manual_review_count, destructive_count
+        entry: Dict[str, Any] = {
+            "kind": kind,
+            "classification": classification,
+            "message": message,
+        }
+        if suggestion:
+            entry["suggestion"] = suggestion
+        findings.append(entry)
+        if classification == "safe_auto_apply":
+            safe_auto_apply_count += 1
+        elif classification == "destructive":
+            destructive_count += 1
+        else:
+            manual_review_count += 1
+
+    new_only_ids = sorted(set(new_objects) - set(old_objects))
+    old_only_ids = sorted(set(old_objects) - set(new_objects))
+
+    for oid in new_only_ids:
         obj = new_objects[oid]
         statements.append(f"-- object added: {obj['name']} ({oid})")
         statements.extend(render_create_table_statements_for_object(obj, type_by_id, object_by_id))
         statements.append("")
+        add_finding(
+            "object_added",
+            "safe_auto_apply",
+            f"object added: {obj['name']} ({oid})",
+        )
 
-    for oid in sorted(set(old_objects) - set(new_objects)):
+    for oid in old_only_ids:
         obj = old_objects[oid]
         table = table_name_for_object(obj)
         warnings.append(f"destructive: object removed ({obj['name']}); manual drop for table '{table}' required.")
         destructive_changes = True
+        add_finding(
+            "object_removed",
+            "destructive",
+            f"object removed: {obj['name']} ({oid})",
+            f"manual drop for table '{table}' required",
+        )
+
+    # Heuristic object rename hints: removed+added objects with same PK SQL type and overlapping field names.
+    for old_oid in old_only_ids:
+        old_obj = old_objects[old_oid]
+        old_pk = primary_key_field_for_object(old_obj)
+        old_pk_sql = sql_type_for_field(old_pk, type_by_id)
+        old_field_names = {f["name"] for f in old_obj.get("fields", [])}
+        best: Optional[Tuple[float, Dict[str, Any]]] = None
+        for new_oid in new_only_ids:
+            new_obj = new_objects[new_oid]
+            new_pk = primary_key_field_for_object(new_obj)
+            new_pk_sql = sql_type_for_field(new_pk, type_by_id)
+            if old_pk_sql != new_pk_sql:
+                continue
+            new_field_names = {f["name"] for f in new_obj.get("fields", [])}
+            union = old_field_names.union(new_field_names)
+            if not union:
+                continue
+            score = len(old_field_names.intersection(new_field_names)) / len(union)
+            if best is None or score > best[0]:
+                best = (score, new_obj)
+        if best is not None and best[0] >= 0.5:
+            target = best[1]
+            hint = (
+                f"rename_hint: object '{old_obj['name']}' may have been renamed to '{target['name']}' "
+                "(high field overlap, matching PK type)"
+            )
+            warnings.append(hint)
+            add_finding("object_rename_hint", "manual_review", hint)
 
     for oid in sorted(set(old_objects).intersection(new_objects)):
         old_obj = old_objects[oid]
@@ -1887,14 +1953,29 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
         table = table_name_for_object(new_obj)
         old_fields = {f["id"]: f for f in old_obj.get("fields", [])}
         new_fields = {f["id"]: f for f in new_obj.get("fields", [])}
+        added_field_ids = sorted(set(new_fields) - set(old_fields))
+        removed_field_ids = sorted(set(old_fields) - set(new_fields))
 
-        for fid in sorted(set(new_fields) - set(old_fields)):
+        for fid in added_field_ids:
             new_field = new_fields[fid]
             col_name, sql_type, fk_ref, idx_col = field_sql_column_details(new_field, type_by_id, object_by_id)
             required = new_field.get("cardinality", {}).get("min", 0) > 0
             not_null = "" if required else ""
             extra = f" check ({col_name} >= 0)" if sql_type.startswith("numeric") else ""
             statements.append(f"alter table {table} add column if not exists {col_name} {sql_type}{not_null}{extra};")
+            if required:
+                add_finding(
+                    "column_added_required",
+                    "manual_review",
+                    f"required field added: {new_obj['name']}.{new_field['name']}",
+                    f"populate '{table}.{col_name}' then enforce NOT NULL manually",
+                )
+            else:
+                add_finding(
+                    "column_added_optional",
+                    "safe_auto_apply",
+                    f"optional field added: {new_obj['name']}.{new_field['name']}",
+                )
             if fk_ref is not None:
                 fk_name = f"fk_{table}_{col_name}"
                 statements.append(
@@ -1910,13 +1991,37 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
                 )
                 backfill_required = True
 
-        for fid in sorted(set(old_fields) - set(new_fields)):
+        for fid in removed_field_ids:
             old_field = old_fields[fid]
             col_name, _, _, _ = field_sql_column_details(old_field, type_by_id, object_by_id)
             warnings.append(
                 f"destructive: field removed ({old_obj['name']}.{old_field['name']}); manual drop for '{table}.{col_name}' required."
             )
             destructive_changes = True
+            add_finding(
+                "column_removed",
+                "destructive",
+                f"field removed: {old_obj['name']}.{old_field['name']}",
+                f"manual drop for '{table}.{col_name}' required",
+            )
+
+        # Heuristic column rename hints within same object by SQL type.
+        for old_fid in removed_field_ids:
+            old_field = old_fields[old_fid]
+            old_col, old_sql, _, _ = field_sql_column_details(old_field, type_by_id, object_by_id)
+            old_min = int(old_field.get("cardinality", {}).get("min", 0))
+            for new_fid in added_field_ids:
+                new_field = new_fields[new_fid]
+                new_col, new_sql, _, _ = field_sql_column_details(new_field, type_by_id, object_by_id)
+                new_min = int(new_field.get("cardinality", {}).get("min", 0))
+                if old_sql == new_sql and old_min == new_min:
+                    hint = (
+                        f"rename_hint: column '{table}.{old_col}' may map to '{table}.{new_col}' "
+                        f"({old_obj['name']}.{old_field['name']} -> {new_obj['name']}.{new_field['name']})"
+                    )
+                    warnings.append(hint)
+                    add_finding("column_rename_hint", "manual_review", hint)
+                    break
 
         for fid in sorted(set(old_fields).intersection(new_fields)):
             old_field = old_fields[fid]
@@ -1930,6 +2035,12 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
                     f"({new_obj['name']}.{new_field['name']}: {describe_type_descriptor(old_type)} -> {describe_type_descriptor(new_type)})."
                 )
                 destructive_changes = True
+                add_finding(
+                    "column_type_change_incompatible",
+                    "destructive",
+                    f"type changed incompatibly: {new_obj['name']}.{new_field['name']}",
+                    f"{describe_type_descriptor(old_type)} -> {describe_type_descriptor(new_type)}",
+                )
             old_min = int(old_field.get("cardinality", {}).get("min", 0))
             new_min = int(new_field.get("cardinality", {}).get("min", 0))
             if new_min > old_min:
@@ -1937,6 +2048,11 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
                     f"backfill_required: cardinality tightened for {new_obj['name']}.{new_field['name']} ({old_min} -> {new_min})."
                 )
                 backfill_required = True
+                add_finding(
+                    "cardinality_tightened_min",
+                    "manual_review",
+                    f"cardinality tightened: {new_obj['name']}.{new_field['name']} min {old_min} -> {new_min}",
+                )
             old_max = old_field.get("cardinality", {}).get("max", 1)
             new_max = new_field.get("cardinality", {}).get("max", 1)
             if (old_max == 1 and new_max != 1) or (old_max != 1 and new_max == 1):
@@ -1944,6 +2060,11 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
                     f"destructive: scalar/list wire shape changed for {new_obj['name']}.{new_field['name']} ({old_max} -> {new_max})."
                 )
                 destructive_changes = True
+                add_finding(
+                    "wire_shape_change",
+                    "destructive",
+                    f"wire shape changed: {new_obj['name']}.{new_field['name']} ({old_max} -> {new_max})",
+                )
 
         old_state_names = sorted(s["name"] for s in old_obj.get("states", []))
         new_state_names = sorted(s["name"] for s in new_obj.get("states", []))
@@ -1951,10 +2072,22 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
             warnings.append(
                 f"manual_review: state set changed for {new_obj['name']} (current_state constraint may require manual adjustment)."
             )
+            add_finding(
+                "state_set_changed",
+                "manual_review",
+                f"state set changed for {new_obj['name']}",
+                "current_state constraint may require manual adjustment",
+            )
 
     has_changes = bool(statements or warnings)
     if not has_changes:
-        return "", [], False
+        empty_meta = {
+            "safe_auto_apply_count": 0,
+            "manual_review_count": 0,
+            "destructive_count": 0,
+            "findings": [],
+        }
+        return "", [], False, empty_meta
 
     lines: List[str] = [
         "-- GENERATED FILE: do not edit directly.",
@@ -1962,6 +2095,9 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
         f"-- SAFETY: destructive_changes={'true' if destructive_changes else 'false'}",
         f"-- SAFETY: backfill_required={'true' if backfill_required else 'false'}",
         f"-- SAFETY: manual_review_required={'true' if warnings else 'false'}",
+        f"-- SAFETY: safe_auto_apply_count={safe_auto_apply_count}",
+        f"-- SAFETY: manual_review_count={manual_review_count}",
+        f"-- SAFETY: destructive_count={destructive_count}",
         "",
     ]
     if warnings:
@@ -1970,7 +2106,13 @@ def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tu
             lines.append(f"-- - {warning}")
         lines.append("")
     lines.extend(statements)
-    return "\n".join(lines).rstrip() + "\n", warnings, True
+    meta = {
+        "safe_auto_apply_count": safe_auto_apply_count,
+        "manual_review_count": manual_review_count,
+        "destructive_count": destructive_count,
+        "findings": findings,
+    }
+    return "\n".join(lines).rstrip() + "\n", warnings, True, meta
 
 
 def render_openapi(ir: Dict[str, Any]) -> str:
@@ -3512,20 +3654,27 @@ def render_spring_files(
 
 def compute_delta_from_baseline(
     root: Path, cfg: Dict[str, Any], ir: Dict[str, Any]
-) -> Tuple[Optional[str], List[str], Optional[Path], Optional[str]]:
+) -> Tuple[Optional[str], List[str], Optional[Path], Optional[str], Dict[str, Any]]:
     baseline_rel = str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline_path = root / baseline_rel
     if not baseline_path.exists():
-        return None, [], None, None
+        return None, [], None, None, {"safe_auto_apply_count": 0, "manual_review_count": 0, "destructive_count": 0, "findings": []}
     baseline_ir = json.loads(baseline_path.read_text(encoding="utf-8"))
-    delta_sql, delta_warnings, has_delta = render_delta_migration(baseline_ir, ir)
+    delta_sql, delta_warnings, has_delta, delta_meta = render_delta_migration(baseline_ir, ir)
     if not has_delta:
-        return None, [], baseline_path, str(baseline_ir.get("ir_hash")) if baseline_ir.get("ir_hash") else None
+        return (
+            None,
+            [],
+            baseline_path,
+            str(baseline_ir.get("ir_hash")) if baseline_ir.get("ir_hash") else None,
+            delta_meta,
+        )
     return (
         delta_sql,
         delta_warnings,
         baseline_path,
         str(baseline_ir.get("ir_hash")) if baseline_ir.get("ir_hash") else None,
+        delta_meta,
     )
 
 
@@ -3535,7 +3684,7 @@ def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optio
     targets = cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"])
     work_root = root if root is not None else Path.cwd()
     schema_sql = render_sql(ir)
-    delta_sql, delta_warnings, baseline_path, baseline_hash = compute_delta_from_baseline(work_root, cfg, ir)
+    delta_sql, delta_warnings, baseline_path, baseline_hash, delta_meta = compute_delta_from_baseline(work_root, cfg, ir)
 
     if "sql" in targets:
         outputs[f"{out_dir}/sql/schema.sql"] = schema_sql
@@ -3557,6 +3706,12 @@ def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optio
             "from_ir_hash": baseline_hash,
             "to_ir_hash": ir.get("ir_hash"),
             "warnings": delta_warnings,
+            "summary": {
+                "safe_auto_apply_count": delta_meta.get("safe_auto_apply_count", 0),
+                "manual_review_count": delta_meta.get("manual_review_count", 0),
+                "destructive_count": delta_meta.get("destructive_count", 0),
+            },
+            "findings": delta_meta.get("findings", []),
         }
         outputs[f"{out_dir}/migrations/delta/report.json"] = json.dumps(report, indent=2, sort_keys=False) + "\n"
     if "openapi" in targets:
@@ -4084,7 +4239,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
         return 1
 
     ir = build_ir(ont, cfg)
-    delta_sql, delta_warnings, baseline_path, _ = compute_delta_from_baseline(root, cfg, ir)
+    delta_sql, delta_warnings, baseline_path, _, _ = compute_delta_from_baseline(root, cfg, ir)
     outputs = build_generated_outputs(ir, cfg, root=root)
 
     existing = set(managed_existing_files(root, cfg))
@@ -4156,7 +4311,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
         return 1
 
     ir = build_ir(ont, cfg)
-    delta_sql, delta_warnings, baseline_path, _ = compute_delta_from_baseline(root, cfg, ir)
+    delta_sql, delta_warnings, baseline_path, _, _ = compute_delta_from_baseline(root, cfg, ir)
     outputs = build_generated_outputs(ir, cfg, root=root)
 
     if args.verify_clean and args.wire_gradle:
@@ -4368,6 +4523,8 @@ def cmd_version_check(args: argparse.Namespace) -> int:
 
     current_ir = build_ir(ont, cfg)
 
+    delta_sql, delta_warnings, baseline_path, _, delta_meta = compute_delta_from_baseline(root, cfg, ir)
+
     baseline_rel = args.against or str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline_path = root / baseline_rel
     if not baseline_path.exists():
@@ -4420,6 +4577,7 @@ def cmd_check(args: argparse.Namespace) -> int:
 
     print("Validation passed.")
     ir = build_ir(ont, cfg)
+    delta_sql, delta_warnings, _, _, delta_meta = compute_delta_from_baseline(root, cfg, ir)
     outputs = build_generated_outputs(ir, cfg, root=root)
     dirty = collect_dirty_generated_files(root, cfg, outputs)
     status = 0
@@ -4460,6 +4618,18 @@ def cmd_check(args: argparse.Namespace) -> int:
             print("Version check failed: declared bump is lower than required bump.")
             print(f"See compatibility policy table: {COMPATIBILITY_POLICY_DOC}")
             status = 1
+
+    if delta_sql:
+        print("")
+        print("Delta migration summary:")
+        print("- generated: yes")
+        print(f"- safe auto-apply findings: {delta_meta.get('safe_auto_apply_count', 0)}")
+        print(f"- manual review findings: {delta_meta.get('manual_review_count', 0)}")
+        print(f"- destructive findings: {delta_meta.get('destructive_count', 0)}")
+        if delta_warnings:
+            print("- warnings:")
+            for warning in delta_warnings:
+                print(f"  - {warning}")
 
     print("")
     if status == 0:

@@ -69,6 +69,7 @@ From `prophet gen`:
   - `gen/migrations/flyway/V2__prophet_delta.sql`
   - `gen/migrations/liquibase/prophet/0002-delta.sql`
   - `gen/migrations/delta/report.json`
+  - report includes `summary` counts and structured `findings` (including rename hints for manual review)
 - `gen/spring-boot/**` (generated integration module)
 
 ## Query and Action Surface
