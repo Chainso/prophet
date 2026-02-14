@@ -2,6 +2,27 @@
 
 All notable changes to `prophet-cli` are documented in this file.
 
+## [0.2.0] - 2026-02-14
+
+### Added
+- Baseline-aware delta migration generation for Flyway/Liquibase:
+  - `V2__prophet_delta.sql`
+  - `0002-delta.sql`
+  - `gen/migrations/delta/report.json`
+- Delta safety flags and warnings (`destructive_changes`, `backfill_required`, `manual_review_required`).
+- Generated action service boundary (`generated.actions.services.*`) with controller delegation.
+- Typed filter DSL generation for object queries:
+  - generated filter DTOs
+  - `POST /<objects>/query` endpoints
+  - OpenAPI schemas and paths for typed query contracts.
+- Compatibility policy reference output in CLI (`plan`, `version check`, `check`).
+- Example runtime profile coverage for `h2` and `postgres` with Spring context tests.
+- CI release discipline workflow for Python + Spring validation gates.
+
+### Changed
+- Toolchain version bumped to `0.2.0`.
+- Generated Spring module version now tracks CLI toolchain version.
+
 ## [0.1.0] - 2026-02-14
 
 ### Added

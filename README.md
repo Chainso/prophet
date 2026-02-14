@@ -13,6 +13,7 @@ This repository currently contains:
 - `docs/prophet-compatibility-policy-v0.2.md` (semantic compatibility policy tables)
 - `prophet-cli/` Python package for the CLI (`prophet_cli`)
 - `prophet-cli/RELEASING.md` + `prophet-cli/CHANGELOG.md` (release process + history)
+- `.github/workflows/ci.yml` (Python + Spring validation gates for PRs)
 - `./prophet` root launcher script (local convenience wrapper)
 - `examples/java/prophet_example_spring` standalone Spring Boot + H2 example app
 

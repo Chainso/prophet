@@ -17,8 +17,12 @@ From repository root:
 python3 -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
 cd examples/java/prophet_example_spring
 ../../../.venv/bin/prophet gen --wire-gradle
+../../../.venv/bin/prophet check --show-reasons
 ./gradlew :prophet_generated:compileJava compileJava
+./gradlew test
 ```
+
+The GitHub Actions workflow (`.github/workflows/ci.yml`) should also be green before tagging.
 
 ## 3. Build Artifacts
 

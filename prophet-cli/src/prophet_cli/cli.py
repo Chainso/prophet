@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import yaml
 
 
-TOOLCHAIN_VERSION = "0.1.0"
+TOOLCHAIN_VERSION = "0.2.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/prophet-compatibility-policy-v0.2.md"
 
@@ -2305,7 +2305,7 @@ def render_gradle_file(boot_version: str, dependency_management_version: str) ->
 }}
 
 group = \"com.example\"
-version = \"0.1.0\"
+version = \"{TOOLCHAIN_VERSION}\"
 
 java {{
     toolchain {{

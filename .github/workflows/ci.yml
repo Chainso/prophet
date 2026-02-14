@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install prophet-cli (editable)
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -e ./prophet-cli
+
+      - name: Run prophet-cli unit tests
+        run: .venv/bin/python -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
+
+      - name: Generate artifacts for Spring example
+        working-directory: examples/java/prophet_example_spring
+        run: ../../../.venv/bin/prophet gen --wire-gradle
+
+      - name: Run consolidated Prophet check
+        working-directory: examples/java/prophet_example_spring
+        run: ../../../.venv/bin/prophet check --show-reasons
+
+      - name: Compile generated Spring code
+        working-directory: examples/java/prophet_example_spring
+        run: ./gradlew :prophet_generated:compileJava compileJava
+
+      - name: Run Spring profile tests
+        working-directory: examples/java/prophet_example_spring
+        run: ./gradlew test
