@@ -1,0 +1,29 @@
+# Codegen Architecture
+
+## Stack Manifest
+
+Supported stacks are declared in a schema-validated manifest contract.
+
+Current implemented stack:
+- `java_spring_jpa`
+
+Planned stacks can exist in manifest as non-implemented entries for roadmap visibility and validation.
+
+## Generation Pipeline
+
+1. Resolve stack specification
+2. Build generation context
+3. Route to stack generator
+4. Aggregate outputs
+5. Write outputs + managed-file manifest
+6. Remove stale managed files
+
+## Ownership and Safety
+
+- Generated files are tracked in `gen/manifest/generated-files.json`
+- Extension points are tracked in `gen/manifest/extension-hooks.json`
+- Regeneration must not overwrite user-owned extension implementations
+
+## Performance
+
+No-op generation can be skipped via cache signature (`prophet gen --skip-unchanged`).

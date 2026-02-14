@@ -51,7 +51,7 @@ from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_jav
 
 TOOLCHAIN_VERSION = "0.6.1"
 IR_VERSION = "0.1"
-COMPATIBILITY_POLICY_DOC = "docs/prophet-compatibility-policy-v0.2.md"
+COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
 BASE_TYPES = {
     "string",

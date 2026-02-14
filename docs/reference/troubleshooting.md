@@ -1,0 +1,65 @@
+# Troubleshooting
+
+## `ModuleNotFoundError: No module named 'yaml'`
+
+Cause:
+- CLI runtime missing `PyYAML` dependency.
+
+Fix:
+
+```bash
+python3 -m pip install --upgrade prophet-cli
+# or for local editable installs
+.venv/bin/pip install --no-build-isolation -e ./prophet-cli
+```
+
+## `prophet.yaml not found`
+
+Cause:
+- Command run outside initialized project root.
+
+Fix:
+
+```bash
+prophet init
+# then set project.ontology_file and rerun
+```
+
+## Spring compile errors for generated package imports
+
+Cause:
+- Ontology-scoped package root changed and app imports are stale.
+
+Fix:
+1. Re-run generation: `prophet gen --wire-gradle`
+2. Update user code imports to `<base_package>.<ontology_name>.generated...`
+
+## Query behavior confusion (`GET /objects` vs `/query`)
+
+Current contract:
+- `GET /<objects>` is pagination/sort only
+- `POST /<objects>/query` is typed filtering
+
+Fix:
+- Move filter payloads to `/query` endpoint.
+
+## JSON parse errors when calling APIs
+
+Cause:
+- Invalid JSON payload formatting.
+
+Fix:
+- Ensure keys/strings use double quotes in request body.
+
+## Regeneration drift in CI
+
+Cause:
+- Checked-in generated files differ from current toolchain outputs.
+
+Fix:
+
+```bash
+prophet gen --wire-gradle
+prophet generate --verify-clean
+git add -A
+```

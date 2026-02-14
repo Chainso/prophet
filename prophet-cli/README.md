@@ -75,7 +75,9 @@ prophet check --against .prophet/baselines/main.ir.json
 ### `prophet stacks`
 Lists supported stack ids, framework/ORM pairings, implementation status, and capability metadata.
 Entries come from a schema-validated stack manifest.
-Schema reference: `docs/prophet-stack-manifest-schema-v0.1.md`.
+Schema reference:
+- user-facing: `docs/reference/generation.md`
+- developer-facing: `docs/developer/codegen-architecture.md`
 
 ```bash
 prophet stacks
@@ -86,7 +88,8 @@ prophet stacks --json
 Lists generated extension hook surfaces from `gen/manifest/extension-hooks.json`.
 Useful for wiring user-owned implementations against generated interfaces.
 Safety/reference docs:
-- `docs/prophet-extension-hooks-safety-v0.1.md`
+- `docs/reference/generation.md`
+- `docs/prophet-extension-hooks-safety-v0.1.md` (detailed legacy note)
 
 ```bash
 prophet hooks
@@ -218,7 +221,7 @@ prophet version check --against .prophet/baselines/main.ir.json
 ```
 
 Compatibility rules used by CLI are documented in:
-- `docs/prophet-compatibility-policy-v0.2.md`
+- `docs/reference/compatibility.md`
 
 ## Expected Project Files
 

@@ -2,7 +2,14 @@
 
 Thanks for contributing.
 
-## Development Setup
+Primary contributor docs now live under:
+- `docs/developer/index.md`
+- `docs/developer/contributing.md`
+- `docs/developer/testing.md`
+- `docs/developer/ci-cd.md`
+- `docs/developer/releasing.md`
+
+## Quick Setup
 
 ```bash
 python3 -m venv .venv --system-site-packages
@@ -29,30 +36,12 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew test
 ```
 
-## Contribution Workflow
-
-1. Create a branch from `main`.
-2. Make focused changes with tests/docs.
-3. Ensure all validation commands pass.
-4. Commit with clear messages.
-5. Open a PR with:
-   - what changed
-   - why
-   - validation commands + results
-
-## Guidelines
-
-- Treat `id` values in ontology definitions as immutable compatibility anchors.
-- Prefer deterministic generation changes over ad hoc runtime behavior.
-- Do not hand-edit generated files under `gen/`; update templates/CLI and regenerate.
-- Update docs when behavior or contracts change.
-
 ## Open Items (Good First/Next Contributions)
 
 ### Migration and Schema Evolution
 
 - Improve delta migration diff quality for renames (table/column) with explicit rename hints.
-- Add optional “strict safety mode” that blocks generation when destructive flags are detected.
+- Add optional strict safety mode that blocks generation when destructive flags are detected.
 - Extend delta report with machine-readable remediation steps.
 
 ### Query and API Contracts
@@ -69,12 +58,11 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ### Compatibility and Versioning
 
 - Expand compatibility rules for enum value additions/removals with configurable strictness.
-- Add per-change “why” references in CLI output (rule IDs mapped to policy tables).
+- Add per-change rule references in CLI output.
 
 ### Tooling and DX
 
 - Add richer `prophet check --json` output for CI systems.
-- Add first-class upgrade docs from `0.1.x` to `0.2.x`.
 - Improve CLI diagnostics with field/state hyperlinks in terminal-friendly format.
 
 ### Runtime Coverage

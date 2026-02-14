@@ -10,9 +10,9 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 ## First Steps
 
 1. Read `README.md` for repo entry points.
-2. Read `docs/prophet-compatibility-policy-v0.2.md` before touching version logic.
+2. Read `docs/quickstart/quickstart.md` and `docs/reference/index.md` for user-facing behavior.
 3. Use `examples/java/prophet_example_spring` as the canonical validation app.
-4. Review modularization status in `docs/prophet-modularization-closeout-v0.1.md`.
+4. Read `docs/developer/index.md` before changing internal architecture.
 
 ## Critical Rules
 
@@ -48,8 +48,9 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 - Codegen contracts/pipeline/artifacts: `prophet-cli/src/prophet_cli/codegen/`
 - Stack generators: `prophet-cli/src/prophet_cli/targets/`
 - CLI package docs: `prophet-cli/README.md`
-- Root docs: `README.md`, `docs/*`
-- Contributor guidance/backlog: `CONTRIBUTING.md`
+- User docs: `docs/quickstart/`, `docs/reference/`
+- Developer docs: `docs/developer/`
+- Contributor guidance/backlog: `CONTRIBUTING.md`, `docs/developer/contributing.md`
 
 ## Release Notes
 
