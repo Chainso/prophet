@@ -16,6 +16,7 @@ Completed so far:
 6. Added generated artifact ownership manifest (`gen/manifest/generated-files.json`) and integrated manifest-aware managed file detection.
 7. Added explicit code generation pipeline contract layer (`GenerationContext` + stack generator routing).
 8. Added first dedicated target module boundary at `prophet_cli.targets.java_spring_jpa`.
+9. Added structured `prophet plan --json` diagnostics for CI and automation workflows.
 
 In progress:
 

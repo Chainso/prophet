@@ -163,6 +163,31 @@ dependencies {
             self.assertFalse(dirty_payload["generation"]["clean"])
             self.assertGreaterEqual(len(dirty_payload["generation"]["dirty_files"]), 1)
 
+    def test_plan_json_outputs_structured_changes(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-plan-json-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_dst = root / "domain" / "main.prophet"
+            ontology_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(EXAMPLE_ONTOLOGY, ontology_dst)
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            result = run_cli(root, "plan", "--json", "--show-reasons")
+            payload = json.loads(result.stdout)
+            self.assertIn("stack", payload)
+            self.assertIn("changes", payload)
+            self.assertIn("summary", payload)
+            self.assertEqual(payload["stack"]["id"], "java_spring_jpa")
+            self.assertIn("change_count", payload["summary"])
+
 
 if __name__ == "__main__":
     unittest.main()

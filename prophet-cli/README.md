@@ -45,6 +45,7 @@ Computes deterministic file changes without writing files.
 ```bash
 prophet plan
 prophet plan --show-reasons
+prophet plan --json
 ```
 
 ### `prophet check`

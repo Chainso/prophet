@@ -4444,23 +4444,48 @@ def cmd_plan(args: argparse.Namespace) -> int:
         compatibility, reasons = compare_irs(baseline, ir)
         required_bump = required_level_to_bump(compatibility)
 
+    change_items = []
+    for rel, status in changes:
+        if rel.endswith("schema.sql"):
+            reason = "SQL schema generated from object models and transitions"
+        elif "/migrations/flyway/" in rel:
+            reason = "Flyway migration generated from canonical SQL schema"
+        elif "/migrations/liquibase/" in rel:
+            reason = "Liquibase changelog generated from canonical SQL schema"
+        elif rel.endswith("openapi.yaml"):
+            reason = "OpenAPI generated from object/action contracts"
+        elif "/spring-boot/" in rel:
+            reason = "Spring Boot artifact generated from canonical IR"
+        else:
+            reason = "generated artifact changed"
+        change_items.append({"path": rel, "status": status, "reason": reason})
+
+    if args.json:
+        payload = {
+            "stack": {
+                "id": stack.id,
+                "language": stack.language,
+                "framework": stack.framework,
+                "orm": stack.orm,
+                "capabilities": sorted(stack.capabilities),
+            },
+            "changes": change_items,
+            "summary": {
+                "change_count": len(change_items),
+                "compatibility": compatibility,
+                "required_bump": required_bump,
+                "policy_reference": COMPATIBILITY_POLICY_DOC,
+            },
+            "compatibility_reasons": reasons if args.show_reasons else [],
+        }
+        print(json.dumps(payload, indent=2, sort_keys=False))
+        return 0
+
     print(f"Plan: {len(changes)} changes")
     print(f"Stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
-    for idx, (rel, status) in enumerate(changes, start=1):
-        print(f"{idx}) {rel} ({status})")
-        if rel.endswith("schema.sql"):
-            reason = "reason: SQL schema generated from object models and transitions"
-        elif "/migrations/flyway/" in rel:
-            reason = "reason: Flyway migration generated from canonical SQL schema"
-        elif "/migrations/liquibase/" in rel:
-            reason = "reason: Liquibase changelog generated from canonical SQL schema"
-        elif rel.endswith("openapi.yaml"):
-            reason = "reason: OpenAPI generated from object/action contracts"
-        elif "/spring-boot/" in rel:
-            reason = "reason: Spring Boot artifact generated from canonical IR"
-        else:
-            reason = "reason: generated artifact changed"
-        print(f"   {reason}")
+    for idx, item in enumerate(change_items, start=1):
+        print(f"{idx}) {item['path']} ({item['status']})")
+        print(f"   reason: {item['reason']}")
 
     print("")
     print(f"Compatibility: {compatibility}")
@@ -4971,6 +4996,11 @@ def build_cli() -> argparse.ArgumentParser:
         "--show-reasons",
         action="store_true",
         help="Include compatibility change reasons (field/state/transition level)",
+    )
+    p_plan.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit structured JSON plan output",
     )
     p_plan.set_defaults(func=cmd_plan)
 
