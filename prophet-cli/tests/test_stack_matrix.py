@@ -52,6 +52,19 @@ class StackMatrixTests(unittest.TestCase):
             resolve_stack_spec(cfg)
         self.assertIn("does not match stack id", str(ctx.exception))
 
+    def test_unknown_stack_keys_are_rejected(self) -> None:
+        cfg = {
+            "generation": {
+                "stack": {
+                    "id": "java_spring_jpa",
+                    "transport": "http",
+                }
+            }
+        }
+        with self.assertRaises(ProphetError) as ctx:
+            resolve_stack_spec(cfg)
+        self.assertIn("Invalid config keys under generation.stack", str(ctx.exception))
+
     def test_supported_matrix_contains_planned_stacks(self) -> None:
         rows = supported_stack_table()
         ids = {row["id"] for row in rows}

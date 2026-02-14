@@ -90,6 +90,7 @@ generation:
 
 Current generator implementation supports artifact generation for `java_spring_jpa`.
 Other declared stacks are validated and reserved for upcoming target implementations.
+Allowed `generation.stack` keys are: `id`, `language`, `framework`, `orm`.
 
 Equivalent tuple form is also supported:
 

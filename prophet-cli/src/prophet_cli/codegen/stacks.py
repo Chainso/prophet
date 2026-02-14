@@ -100,6 +100,15 @@ def resolve_stack_spec(cfg: Dict[str, Any]) -> StackSpec:
     if not isinstance(stack_cfg, dict):
         raise ProphetError("Invalid config: generation.stack must be a mapping in prophet.yaml.")
 
+    allowed_keys = {"id", "language", "framework", "orm"}
+    unknown_keys = sorted(str(k) for k in stack_cfg.keys() if k not in allowed_keys)
+    if unknown_keys:
+        allowed = ", ".join(sorted(allowed_keys))
+        raise ProphetError(
+            f"Invalid config keys under generation.stack: {', '.join(unknown_keys)}. "
+            f"Allowed keys: {allowed}."
+        )
+
     stack_id = str(stack_cfg.get("id", "")).strip()
     language = str(stack_cfg.get("language", "")).strip()
     framework = str(stack_cfg.get("framework", "")).strip()
