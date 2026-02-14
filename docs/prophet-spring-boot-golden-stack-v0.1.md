@@ -30,13 +30,17 @@ Provide a first-class Spring Boot integration where Prophet ontology contracts g
 3. Action API contracts
 - `actionInput`/`actionOutput` records generated as request/response DTOs
 - Action handler interfaces generated per action
+- Default action handler stubs generated per action (`@ConditionalOnMissingBean`) that throw `UnsupportedOperationException`
 - Action controller endpoints (`POST /actions/<actionName>`) delegating to handler beans
 
 4. Query API
 - Object query controllers (`GET /<objects>/{id}`) over generated repositories
+- Paginated/filterable object query controllers (`GET /<objects>`) backed by JPA Specifications
 
 5. Spring wiring
 - Generated config enabling entity/repository scanning for generated persistence package
+- Generated migration resources for Flyway and Liquibase under `src/main/resources/db/**`
+- Generated Spring Data page serialization mode set to `VIA_DTO` for stable paginated JSON output
 
 ## 4. Ownership Boundary
 
@@ -56,11 +60,11 @@ Rule:
 
 1. Caller invokes `POST /actions/<actionName>`.
 2. Controller validates payload against generated `actionInput` record.
-3. Controller resolves user-provided `<ActionName>ActionHandler` bean.
+3. Controller resolves `<ActionName>ActionHandler` bean (user bean if present, otherwise generated default stub).
 4. Handler executes business logic.
 5. Controller returns generated `actionOutput` record.
 
-If handler bean is absent, endpoint returns `501 Not Implemented`.
+If only the generated default stub exists, endpoint returns `501 Not Implemented`.
 
 ## 6. Determinism Requirements
 

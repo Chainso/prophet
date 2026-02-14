@@ -45,7 +45,11 @@ public class ActionEndpointController {
         if (handler == null) {
             throw new ResponseStatusException(NOT_IMPLEMENTED, "No handler bean provided for action 'approveOrder'");
         }
-        return ResponseEntity.ok(handler.handle(request));
+        try {
+            return ResponseEntity.ok(handler.handle(request));
+        } catch (UnsupportedOperationException ex) {
+            throw new ResponseStatusException(NOT_IMPLEMENTED, ex.getMessage(), ex);
+        }
     }
 
     @PostMapping("/createOrder")
@@ -54,7 +58,11 @@ public class ActionEndpointController {
         if (handler == null) {
             throw new ResponseStatusException(NOT_IMPLEMENTED, "No handler bean provided for action 'createOrder'");
         }
-        return ResponseEntity.ok(handler.handle(request));
+        try {
+            return ResponseEntity.ok(handler.handle(request));
+        } catch (UnsupportedOperationException ex) {
+            throw new ResponseStatusException(NOT_IMPLEMENTED, ex.getMessage(), ex);
+        }
     }
 
     @PostMapping("/shipOrder")
@@ -63,6 +71,10 @@ public class ActionEndpointController {
         if (handler == null) {
             throw new ResponseStatusException(NOT_IMPLEMENTED, "No handler bean provided for action 'shipOrder'");
         }
-        return ResponseEntity.ok(handler.handle(request));
+        try {
+            return ResponseEntity.ok(handler.handle(request));
+        } catch (UnsupportedOperationException ex) {
+            throw new ResponseStatusException(NOT_IMPLEMENTED, ex.getMessage(), ex);
+        }
     }
 }

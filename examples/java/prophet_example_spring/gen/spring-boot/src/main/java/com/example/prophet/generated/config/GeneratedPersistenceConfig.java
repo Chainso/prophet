@@ -3,9 +3,11 @@ package com.example.prophet.generated.config;
 import javax.annotation.processing.Generated;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @Configuration
+@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 @EntityScan(basePackages = "com.example.prophet.generated.persistence")
 @EnableJpaRepositories(basePackages = "com.example.prophet.generated.persistence")
 @Generated("prophet-cli")

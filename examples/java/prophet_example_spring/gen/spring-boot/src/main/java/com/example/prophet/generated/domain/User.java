@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Generated("prophet-cli")
 public record User(
-    @NotNull String email,
-    @NotNull String userId
+    @NotNull String userId,
+    @NotNull String email
 ) {
 }

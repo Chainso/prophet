@@ -9,11 +9,11 @@ import java.util.List;
 
 @Generated("prophet-cli")
 public record CreateOrderCommand(
-    @NotNull UserRef customer,
-    String discountCode,
     @NotNull String orderId,
-    Address shippingAddress,
+    @NotNull UserRef customer,
+    @NotNull BigDecimal totalAmount,
+    String discountCode,
     List<String> tags,
-    @NotNull BigDecimal totalAmount
+    Address shippingAddress
 ) {
 }

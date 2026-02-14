@@ -50,12 +50,12 @@ A field of `ref(TargetObject)` maps to:
 ### 3.4 Cardinality
 
 - `max=1` => scalar column/relation
-- `max>1` or unbounded => generated link table
+- `max>1` or unbounded => JSON-backed `text` column plus generated JPA `AttributeConverter`
 
-Link table pattern:
-- `<owner_table>_<field_name>_items`
-- columns: `owner_id`, `item_index`, `item_value` or `target_id`
-- composite PK `(owner_id, item_index)`
+List field converter behavior:
+- serialize list values as JSON on write
+- deserialize JSON back to typed `List<T>` on read
+- supports nested list element types (for example `List<List<String>>`)
 
 ### 3.5 States and Transitions
 
@@ -68,10 +68,10 @@ For object models with states:
 ### 3.6 Actions
 
 Each ontology action generates:
-- API endpoint: `POST /actions/<action_name>`
+- API endpoint: `POST /actions/<actionName>`
 - Request/response DTOs from ontology action contracts
-- Transactional action execution method
-- Transition validation against generated transition guard when state change applies
+- Action handler interface `<ActionName>ActionHandler`
+- Default action handler stub (`@ConditionalOnMissingBean`) that throws `UnsupportedOperationException`
 
 ### 3.7 Events in Codegen Scope
 
@@ -113,9 +113,9 @@ Per object model:
 - `<Object>StateHistoryRepository`
 
 Shared generated components:
-- Transition guard from transition catalog
 - Action endpoint controller
-- Transactional action execution service
+- Query controllers (`GET /<objects>/{id}` and paginated/filterable `GET /<objects>`)
+- Flyway and Liquibase migration resources (`db/migration`, `db/changelog`)
 
 ## 6. Canonical Type Map (v0.1)
 

@@ -45,7 +45,7 @@ public class CreateOrderHandler implements CreateOrderActionHandler {
         order.setCurrentState(OrderState.CREATED);
         orderRepository.save(order);
 
-        return new CreateOrderResult(order.getCurrentState().name().toLowerCase(), order.getOrderId());
+        return new CreateOrderResult(order.getOrderId(), order.getCurrentState().name().toLowerCase());
     }
 
     private UserEntity createDefaultUser(String userId) {

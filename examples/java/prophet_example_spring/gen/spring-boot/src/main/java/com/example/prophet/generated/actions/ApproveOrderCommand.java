@@ -7,9 +7,9 @@ import java.util.List;
 
 @Generated("prophet-cli")
 public record ApproveOrderCommand(
+    @NotNull String orderId,
     String approvedBy,
-    ApprovalContext context,
     List<String> notes,
-    @NotNull String orderId
+    ApprovalContext context
 ) {
 }

@@ -6,9 +6,9 @@ import java.util.List;
 
 @Generated("prophet-cli")
 public record ShipOrderResult(
-    List<List<String>> labelBatches,
-    List<String> labels,
     @NotNull String orderId,
-    @NotNull String shipmentStatus
+    @NotNull String shipmentStatus,
+    List<String> labels,
+    List<List<String>> labelBatches
 ) {
 }

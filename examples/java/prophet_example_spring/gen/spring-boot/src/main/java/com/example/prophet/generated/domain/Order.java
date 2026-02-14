@@ -8,12 +8,12 @@ import java.util.List;
 
 @Generated("prophet-cli")
 public record Order(
-    @NotNull UserRef customer,
-    String discountCode,
     @NotNull String orderId,
-    Address shippingAddress,
-    List<String> tags,
+    @NotNull UserRef customer,
     @NotNull BigDecimal totalAmount,
+    String discountCode,
+    List<String> tags,
+    Address shippingAddress,
     @NotNull OrderState currentState
 ) {
 }

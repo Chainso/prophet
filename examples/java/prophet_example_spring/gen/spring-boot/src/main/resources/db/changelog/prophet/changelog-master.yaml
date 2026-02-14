@@ -1,0 +1,11 @@
+# GENERATED FILE: do not edit directly.
+databaseChangeLog:
+  - changeSet:
+      id: prophet-0001-init
+      author: prophet-cli
+      changes:
+        - sqlFile:
+            path: 0001-init.sql
+            relativeToChangelogFile: true
+            splitStatements: true
+            stripComments: false

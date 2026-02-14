@@ -2,6 +2,13 @@
 
 This app was generated via Spring Initializr and then wired with Prophet-generated Spring/JPA artifacts.
 
+## Generate First
+
+```bash
+cd examples/java/prophet_example_spring
+../../../.venv/bin/prophet gen --wire-gradle
+```
+
 ## Run
 
 ```bash
@@ -26,11 +33,19 @@ export SPRING_DATASOURCE_PASSWORD=
 ## Endpoints
 
 - `GET /orders/{orderId}`
-- `POST /actions/approve_order`
-- `POST /actions/ship_order`
+- `GET /orders?page=0&size=20&currentState=CREATED&customerUserId=u_123`
+- `GET /users/{userId}`
+- `GET /users?page=0&size=20`
+- `POST /actions/createOrder`
+- `POST /actions/approveOrder`
+- `POST /actions/shipOrder`
 
 ## Notes
 
-- Hibernate generates schema from JPA entities at startup (`ddl-auto=update`).
-- Generated classes live under `src/main/java/com/example/prophet/generated`.
+- Hibernate generates schema from JPA entities at startup (`ddl-auto=update`) in this example.
+- Prophet also generates migration artifacts:
+  - Flyway: `gen/migrations/flyway/V1__prophet_init.sql`
+  - Liquibase: `gen/migrations/liquibase/**`
+  - Spring module resources: `gen/spring-boot/src/main/resources/db/**`
+- Generated classes live under `gen/spring-boot/src/main/java/com/example/prophet/generated`.
 - Seer owns event ingestion/dispatch; this app only exposes action endpoints.

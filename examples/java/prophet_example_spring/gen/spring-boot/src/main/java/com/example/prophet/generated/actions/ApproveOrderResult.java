@@ -6,8 +6,8 @@ import java.util.List;
 
 @Generated("prophet-cli")
 public record ApproveOrderResult(
-    @NotNull String decision,
     @NotNull String orderId,
+    @NotNull String decision,
     List<String> warnings
 ) {
 }

@@ -13,21 +13,32 @@ This repository currently contains:
 - `prophet-cli/` Python package for the CLI (`prophet_cli`)
 - `./prophet` root launcher script (local convenience wrapper)
 - `ontology/local/main.prophet` (reference DSL example)
-- `examples/java` standalone Spring Boot example app scaffold
+- `examples/java/prophet_example_spring` standalone Spring Boot + H2 example app
 
-## CLI Flow
+## Quick Start (Example Project)
 
 ```bash
 python3 -m venv .venv --system-site-packages
 .venv/bin/pip install --no-build-isolation -e ./prophet-cli
 
-./prophet init
-./prophet validate
-./prophet plan
-./prophet gen --wire-gradle
-./prophet clean
-./prophet version check --against .prophet/baselines/main.ir.json
+cd examples/java/prophet_example_spring
+../../../.venv/bin/prophet validate
+../../../.venv/bin/prophet plan --show-reasons
+../../../.venv/bin/prophet gen --wire-gradle
+./gradlew :prophet_generated:compileJava compileJava
+./gradlew bootRun
 ```
+
+## What `prophet gen` Produces
+
+- Canonical IR: `.prophet/ir/current.ir.json`
+- SQL schema: `gen/sql/schema.sql`
+- OpenAPI: `gen/openapi/openapi.yaml`
+- Flyway migration: `gen/migrations/flyway/V1__prophet_init.sql`
+- Liquibase changelog + SQL:
+`gen/migrations/liquibase/db.changelog-master.yaml`, `gen/migrations/liquibase/prophet/*`
+- Spring module: `gen/spring-boot`
+: includes generated domain records, JPA entities/repositories, action contracts, action controllers, query controllers, migration resources
 
 ## Notes
 
@@ -37,8 +48,9 @@ python3 -m venv .venv --system-site-packages
 - v0.1 golden runtime integration target is Spring Boot.
 - In v0.1 codegen, actions are generated as direct API endpoints (`/actions/*`).
 - Action API payloads come from DSL `actionInput`/`actionOutput` contracts.
-- Generated action endpoints delegate to user-provided Spring handler beans.
+- Generated action endpoints delegate to action handlers; generated default handler stubs throw `UnsupportedOperationException` and return `501` until replaced by user beans.
 - DSL fields support scalar and list types (for example `string[]` or `list(string)`).
-- DSL also supports reusable `struct` types for non-entity nested payloads.
+- DSL supports nested list types (for example `string[][]`) and reusable `struct` types for non-entity nested payloads.
 - Event ingestion/dispatch remains a Seer platform concern, not Spring codegen output.
-- `./prophet generate` also syncs generated artifacts into `examples/java/prophet_example_spring` when that project exists.
+- Generated query APIs include:
+`GET /<objects>/{id}` and paginated/filterable `GET /<objects>` backed by JPA specifications.

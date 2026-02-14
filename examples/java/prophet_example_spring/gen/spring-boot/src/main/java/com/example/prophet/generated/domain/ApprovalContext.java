@@ -8,7 +8,7 @@ import java.util.List;
 @Generated("prophet-cli")
 public record ApprovalContext(
     @NotNull UserRef approver,
-    String reason,
-    List<UserRef> watchers
+    List<UserRef> watchers,
+    String reason
 ) {
 }

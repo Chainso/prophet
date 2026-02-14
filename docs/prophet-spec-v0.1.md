@@ -14,6 +14,7 @@ Included:
 - Compatibility classification (`breaking`, `additive`, `non_functional`)
 - Deterministic artifact generation
 - Golden stack generator for Spring Boot
+- Deterministic Flyway + Liquibase migration artifact generation
 - Minimal CLI (`init`, `validate`, `plan`, `generate`, `version check`)
 
 Not included:
@@ -73,6 +74,12 @@ Legend:
 | Cardinality tighten (`min 0->1`, `max 10->5`) | B | Invalidates existing data |
 | Cardinality loosen (`min 1->0`, `max 1->n`) | A* | `B` if wire shape changes scalar<->list |
 | List <-> scalar shape change | B | Generated API/types contract break |
+| Nested list depth change (`T[]` -> `T[][]`) | B | Wire/API shape change |
+| Struct field add (optional) | A | Existing payloads remain valid |
+| Struct field add (required) | B | Existing payloads can fail validation |
+| Struct field remove | B | Existing payload readers/writers can break |
+| Struct field type/cardinality tighten | B | Contract invalidation |
+| Custom type constraint change | B | Conservatively treated as contract-tightening |
 | Add state | A | Usually safe |
 | Remove state | B | Existing instances/transitions invalid |
 | Add transition | A* | `B` if it changes trigger/action behavior for existing flows |
@@ -199,6 +206,8 @@ Example output:
 ```text
 Generated artifacts:
 - gen/sql/schema.sql
+- gen/migrations/flyway/V1__prophet_init.sql
+- gen/migrations/liquibase/db.changelog-master.yaml
 - gen/openapi/openapi.yaml
 - gen/spring-boot/build.gradle.kts
 - gen/spring-boot/src/main/java/com/example/prophet/generated/domain/Order.java
@@ -238,6 +247,9 @@ Detected breaking changes:
 │   └── baselines/
 │       └── main.ir.json
 └── gen/
+    ├── migrations/
+    │   ├── flyway/
+    │   └── liquibase/
     ├── sql/
     ├── openapi/
     └── spring-boot/
@@ -276,9 +288,12 @@ Minimum generated Spring integration surface:
 - Domain model classes (from object models and types)
 - State/transition guard helpers
 - Action endpoint controllers (one endpoint per action under `/actions/*`)
+- Default action handler stubs (throwing unsupported operation until overridden)
 - Repository interfaces for generated entities
+- Paginated/filterable query controllers (`GET /<objects>` + `GET /<objects>/{id}`)
 - Configuration properties for generated API behavior
 - Deterministic JPA mappings (tables, columns, FK relations, optimistic locking, state history)
+- Generated Flyway and Liquibase resources in Spring module (`src/main/resources/db/**`)
 
 Generation boundary:
 - `gen/spring-boot/.../generated` is tool-owned

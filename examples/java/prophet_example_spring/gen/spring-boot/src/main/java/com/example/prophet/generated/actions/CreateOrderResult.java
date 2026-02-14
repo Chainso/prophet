@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Generated("prophet-cli")
 public record CreateOrderResult(
-    @NotNull String currentState,
-    @NotNull String orderId
+    @NotNull String orderId,
+    @NotNull String currentState
 ) {
 }

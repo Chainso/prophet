@@ -16,12 +16,12 @@ import java.time.OffsetDateTime;
 @Generated("prophet-cli")
 public class UserEntity {
 
-    @Column(name = "email", nullable = false)
-    private String email;
-
     @Id
     @Column(name = "user_id", nullable = false)
     private String userId;
+
+    @Column(name = "email", nullable = false)
+    private String email;
 
     @Version
     @Column(name = "row_version", nullable = false)
@@ -45,19 +45,19 @@ public class UserEntity {
         updatedAt = OffsetDateTime.now();
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getUserId() {
         return userId;
     }
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

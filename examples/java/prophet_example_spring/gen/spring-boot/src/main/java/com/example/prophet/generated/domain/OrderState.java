@@ -5,7 +5,7 @@ import javax.annotation.processing.Generated;
 
 @Generated("prophet-cli")
 public enum OrderState {
-    APPROVED,
     CREATED,
+    APPROVED,
     SHIPPED
 }

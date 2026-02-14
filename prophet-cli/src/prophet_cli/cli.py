@@ -955,7 +955,7 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
     objects = []
     for o in sorted_by_id(ont.objects):
         obj_fields = []
-        for f in sorted(o.fields, key=lambda x: x.id):
+        for f in o.fields:
             resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality: Any = "many" if resolved_type.get("kind") == "list" else 1
             card = {"min": 1 if f.required else 0, "max": max_cardinality}
@@ -970,19 +970,17 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
             obj_fields.append(f_entry)
 
         state_name_to_id = {s.name: s.id for s in o.states}
-        obj_states = [
-            {"id": s.id, "name": s.name, "initial": s.initial}
-            for s in sorted(o.states, key=lambda x: x.id)
-        ]
-        obj_transitions = [
-            {
-                "id": t.id,
-                "name": t.name,
-                "from_state_id": state_name_to_id[t.from_state],
-                "to_state_id": state_name_to_id[t.to_state],
-            }
-            for t in sorted(o.transitions, key=lambda x: x.id)
-        ]
+        obj_states = [{"id": s.id, "name": s.name, "initial": s.initial} for s in o.states]
+        obj_transitions = []
+        for t in o.transitions:
+            obj_transitions.append(
+                {
+                    "id": t.id,
+                    "name": t.name,
+                    "from_state_id": state_name_to_id[t.from_state],
+                    "to_state_id": state_name_to_id[t.to_state],
+                }
+            )
 
         objects.append(
             {
@@ -997,7 +995,7 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
     structs = []
     for s in sorted_by_id(ont.structs):
         struct_fields = []
-        for f in sorted(s.fields, key=lambda x: x.id):
+        for f in s.fields:
             resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality: Any = "many" if resolved_type.get("kind") == "list" else 1
             struct_fields.append(
@@ -1019,7 +1017,7 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
     action_inputs = []
     for shape in sorted_by_id(ont.action_inputs):
         shape_fields = []
-        for f in sorted(shape.fields, key=lambda x: x.id):
+        for f in shape.fields:
             resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality = "many" if resolved_type.get("kind") == "list" else 1
             shape_fields.append(
@@ -1041,7 +1039,7 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
     action_outputs = []
     for shape in sorted_by_id(ont.action_outputs):
         shape_fields = []
-        for f in sorted(shape.fields, key=lambda x: x.id):
+        for f in shape.fields:
             resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality = "many" if resolved_type.get("kind") == "list" else 1
             shape_fields.append(
@@ -1125,6 +1123,9 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
         "compatibility_profile": {
             "strict_enums": bool(cfg_get(cfg, ["compatibility", "strict_enums"], False)),
             "list_scalar_shape_changes_are_breaking": True,
+            "nested_list_shape_changes_are_breaking": True,
+            "struct_field_contract_changes_are_breaking": True,
+            "custom_type_constraint_changes_are_breaking": True,
         },
     }
 
@@ -1186,6 +1187,21 @@ def classify_type_change(old_t: Dict[str, Any], new_t: Dict[str, Any]) -> str:
     return "non_functional"
 
 
+def describe_type_descriptor(t: Dict[str, Any]) -> str:
+    kind = t.get("kind")
+    if kind == "base":
+        return str(t.get("name", "unknown"))
+    if kind == "custom":
+        return f"custom({t.get('target_type_id', 'unknown')})"
+    if kind == "object_ref":
+        return f"ref({t.get('target_object_id', 'unknown')})"
+    if kind == "struct":
+        return f"struct({t.get('target_struct_id', 'unknown')})"
+    if kind == "list":
+        return f"list({describe_type_descriptor(t.get('element', {}))})"
+    return "unknown"
+
+
 def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, List[str]]:
     findings: List[Tuple[str, str]] = []
 
@@ -1209,9 +1225,13 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
             new_f = new_fields[fid]
             type_level = classify_type_change(old_f.get("type", {}), new_f.get("type", {}))
             if type_level == "breaking":
-                add("breaking", f"field type changed incompatibly: {context} field_id={fid}")
+                old_type = describe_type_descriptor(old_f.get("type", {}))
+                new_type = describe_type_descriptor(new_f.get("type", {}))
+                add("breaking", f"field type changed incompatibly: {context} field_id={fid} {old_type} -> {new_type}")
             elif type_level == "additive":
-                add("additive", f"field type widened: {context} field_id={fid}")
+                old_type = describe_type_descriptor(old_f.get("type", {}))
+                new_type = describe_type_descriptor(new_f.get("type", {}))
+                add("additive", f"field type widened: {context} field_id={fid} {old_type} -> {new_type}")
 
             old_card = old_f.get("cardinality", {})
             new_card = new_f.get("cardinality", {})
@@ -1235,6 +1255,28 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
 
     old_objects = {o["id"]: o for o in old_ir.get("objects", [])}
     new_objects = {o["id"]: o for o in new_ir.get("objects", [])}
+    old_types = {t["id"]: t for t in old_ir.get("types", [])}
+    new_types = {t["id"]: t for t in new_ir.get("types", [])}
+
+    for tid in sorted(set(old_types) - set(new_types)):
+        add("breaking", f"type removed: {tid}")
+    for tid in sorted(set(new_types) - set(old_types)):
+        add("additive", f"type added: {tid}")
+    for tid in sorted(set(old_types) & set(new_types)):
+        old_t = old_types[tid]
+        new_t = new_types[tid]
+        old_base = old_t.get("base")
+        new_base = new_t.get("base")
+        base_level = classify_type_change(
+            {"kind": "base", "name": old_base},
+            {"kind": "base", "name": new_base},
+        )
+        if base_level == "breaking":
+            add("breaking", f"type base changed incompatibly: type={tid} {old_base} -> {new_base}")
+        elif base_level == "additive":
+            add("additive", f"type base widened: type={tid} {old_base} -> {new_base}")
+        if old_t.get("constraints", {}) != new_t.get("constraints", {}):
+            add("breaking", f"type constraints changed: type={tid}")
 
     for oid in sorted(set(old_objects) - set(new_objects)):
         add("breaking", f"object removed: {oid}")
@@ -1711,6 +1753,19 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        components_schemas[f"{obj['name']}Page"] = {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "array",
+                    "items": {"$ref": f"#/components/schemas/{obj['name']}"},
+                },
+                "number": {"type": "integer"},
+                "size": {"type": "integer"},
+                "totalElements": {"type": "integer"},
+                "totalPages": {"type": "integer"},
+            },
+        }
 
     for shape in action_inputs:
         required_props: List[str] = []
@@ -1747,6 +1802,81 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         pk = next((f for f in fields if f.get("key") == "primary"), fields[0])
         table = pluralize(snake_case(obj["name"]))
         pk_param = camel_case(pk["name"])
+        list_parameters: List[Dict[str, Any]] = [
+            {
+                "name": "page",
+                "in": "query",
+                "required": False,
+                "schema": {"type": "integer", "minimum": 0, "default": 0},
+            },
+            {
+                "name": "size",
+                "in": "query",
+                "required": False,
+                "schema": {"type": "integer", "minimum": 1, "default": 20},
+            },
+            {
+                "name": "sort",
+                "in": "query",
+                "required": False,
+                "schema": {"type": "string"},
+                "description": "Sort expression, for example field,asc",
+            },
+        ]
+
+        for f in fields:
+            kind = f["type"]["kind"]
+            if kind in {"list", "struct"}:
+                continue
+
+            if kind == "object_ref":
+                target = object_by_id[f["type"]["target_object_id"]]
+                target_fields = target.get("fields", [])
+                target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
+                param_name = f"{camel_case(f['name'])}{pascal_case(camel_case(target_pk['name']))}"
+                param_schema = json_schema_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
+            else:
+                param_name = camel_case(f["name"])
+                param_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+
+            list_parameters.append(
+                {
+                    "name": param_name,
+                    "in": "query",
+                    "required": False,
+                    "schema": param_schema,
+                }
+            )
+
+        if obj.get("states"):
+            list_parameters.append(
+                {
+                    "name": "currentState",
+                    "in": "query",
+                    "required": False,
+                    "schema": {
+                        "type": "string",
+                        "enum": [s["name"].upper() for s in obj["states"]],
+                    },
+                }
+            )
+
+        paths[f"/{table}"] = {
+            "get": {
+                "operationId": f"list{obj['name']}",
+                "parameters": list_parameters,
+                "responses": {
+                    "200": {
+                        "description": f"Paginated {obj['name']} results",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": f"#/components/schemas/{obj['name']}Page"}
+                            }
+                        },
+                    }
+                },
+            }
+        }
         paths[f"/{table}/{{{pk_param}}}"] = {
             "get": {
                 "operationId": f"get{obj['name']}",
@@ -1883,6 +2013,32 @@ def detect_gradle_plugin_versions(
     return boot_version, dep_mgmt_version
 
 
+def render_liquibase_root_changelog() -> str:
+    return (
+        "# GENERATED FILE: do not edit directly.\n"
+        "databaseChangeLog:\n"
+        "  - include:\n"
+        "      file: prophet/changelog-master.yaml\n"
+        "      relativeToChangelogFile: true\n"
+    )
+
+
+def render_liquibase_prophet_changelog() -> str:
+    return (
+        "# GENERATED FILE: do not edit directly.\n"
+        "databaseChangeLog:\n"
+        "  - changeSet:\n"
+        "      id: prophet-0001-init\n"
+        "      author: prophet-cli\n"
+        "      changes:\n"
+        "        - sqlFile:\n"
+        "            path: 0001-init.sql\n"
+        "            relativeToChangelogFile: true\n"
+        "            splitStatements: true\n"
+        "            stripComments: false\n"
+    )
+
+
 def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, str]:
     files: Dict[str, str] = {}
 
@@ -1896,6 +2052,10 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         fallback_boot_version,
         fallback_dep_mgmt_version,
     )
+    targets = set(cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"]))
+    include_flyway = "flyway" in targets
+    include_liquibase = "liquibase" in targets
+    generated_schema_sql = render_sql(ir)
     package_path = base_package.replace(".", "/")
 
     objects = ir["objects"]
@@ -1910,7 +2070,7 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
     action_output_by_id = {s["id"]: s for s in action_outputs}
 
     files["build.gradle.kts"] = render_gradle_file(boot_version, dep_mgmt_version)
-    files["src/main/resources/application-prophet.yml"] = (
+    application_prophet_yml = (
         "prophet:\n"
         f"  ontology-id: {ir['ontology']['id']}\n"
         "  compatibility-profile:\n"
@@ -1918,6 +2078,20 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         "  actions:\n"
         "    base-path: /actions\n"
     )
+    if include_liquibase:
+        application_prophet_yml += (
+            "spring:\n"
+            "  liquibase:\n"
+            "    change-log: classpath:db/changelog/db.changelog-master.yaml\n"
+        )
+    files["src/main/resources/application-prophet.yml"] = application_prophet_yml
+
+    if include_flyway:
+        files["src/main/resources/db/migration/V1__prophet_init.sql"] = generated_schema_sql
+    if include_liquibase:
+        files["src/main/resources/db/changelog/db.changelog-master.yaml"] = render_liquibase_root_changelog()
+        files["src/main/resources/db/changelog/prophet/changelog-master.yaml"] = render_liquibase_prophet_changelog()
+        files["src/main/resources/db/changelog/prophet/0001-init.sql"] = generated_schema_sql
 
     # domain ref records
     ref_types: Dict[str, Dict[str, Any]] = {}
@@ -2265,7 +2439,8 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         repo_src = (
             f"package {base_package}.generated.persistence;\n\n"
             "import org.springframework.data.jpa.repository.JpaRepository;\n\n"
-            f"public interface {obj['name']}Repository extends JpaRepository<{entity_name}, {pk_java}> {{\n"
+            "import org.springframework.data.jpa.repository.JpaSpecificationExecutor;\n\n"
+            f"public interface {obj['name']}Repository extends JpaRepository<{entity_name}, {pk_java}>, JpaSpecificationExecutor<{entity_name}> {{\n"
             "}\n"
         )
         files[f"src/main/java/{package_path}/generated/persistence/{obj['name']}Repository.java"] = repo_src
@@ -2344,8 +2519,10 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         f"package {base_package}.generated.config;\n\n"
         "import org.springframework.boot.autoconfigure.domain.EntityScan;\n"
         "import org.springframework.context.annotation.Configuration;\n"
+        "import org.springframework.data.web.config.EnableSpringDataWebSupport;\n"
         "import org.springframework.data.jpa.repository.config.EnableJpaRepositories;\n\n"
         "@Configuration\n"
+        "@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)\n"
         f"@EntityScan(basePackages = \"{base_package}.generated.persistence\")\n"
         f"@EnableJpaRepositories(basePackages = \"{base_package}.generated.persistence\")\n"
         "public class GeneratedPersistenceConfig {\n"
@@ -2398,6 +2575,25 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         )
         files[f"src/main/java/{package_path}/generated/actions/handlers/{handler_name}.java"] = handler_src
 
+        default_cls = f"{handler_name}Default"
+        default_handler_src = (
+            f"package {base_package}.generated.actions.handlers.defaults;\n\n"
+            f"import {base_package}.generated.actions.{req_name};\n"
+            f"import {base_package}.generated.actions.{res_name};\n"
+            f"import {base_package}.generated.actions.handlers.{handler_name};\n"
+            "import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\n"
+            "import org.springframework.stereotype.Component;\n\n"
+            "@Component\n"
+            f"@ConditionalOnMissingBean({handler_name}.class)\n"
+            f"public class {default_cls} implements {handler_name} {{\n"
+            "    @Override\n"
+            f"    public {res_name} handle({req_name} request) {{\n"
+            f"        throw new UnsupportedOperationException(\"Action '{action['name']}' is not implemented\");\n"
+            "    }\n"
+            "}\n"
+        )
+        files[f"src/main/java/{package_path}/generated/actions/handlers/defaults/{default_cls}.java"] = default_handler_src
+
     # action controller delegates to user-provided handler beans
     controller_imports = {
         "import jakarta.validation.Valid;",
@@ -2434,7 +2630,11 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
                 "        if (handler == null) {",
                 f"            throw new ResponseStatusException(NOT_IMPLEMENTED, \"No handler bean provided for action '{action['name']}'\");",
                 "        }",
-                "        return ResponseEntity.ok(handler.handle(request));",
+                "        try {",
+                "            return ResponseEntity.ok(handler.handle(request));",
+                "        } catch (UnsupportedOperationException ex) {",
+                "            throw new ResponseStatusException(NOT_IMPLEMENTED, ex.getMessage(), ex);",
+                "        }",
                 "    }",
                 "",
             ]
@@ -2467,19 +2667,26 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         entity_name = f"{obj['name']}Entity"
         domain_name = obj["name"]
         pk_prop = camel_case(pk["name"])
+        pk_java = java_type_for_field(pk, type_by_id, object_by_id, struct_by_id)
         path_table = pluralize(snake_case(obj["name"]))
 
         imports = {
             "import java.util.Optional;",
+            "import org.springframework.data.domain.Page;",
+            "import org.springframework.data.domain.Pageable;",
+            "import org.springframework.data.jpa.domain.Specification;",
+            "import org.springframework.data.web.PageableDefault;",
             "import org.springframework.http.ResponseEntity;",
             "import org.springframework.web.bind.annotation.GetMapping;",
             "import org.springframework.web.bind.annotation.PathVariable;",
+            "import org.springframework.web.bind.annotation.RequestParam;",
             "import org.springframework.web.bind.annotation.RequestMapping;",
             "import org.springframework.web.bind.annotation.RestController;",
             f"import {base_package}.generated.domain.{domain_name};",
             f"import {base_package}.generated.persistence.{entity_name};",
             f"import {base_package}.generated.persistence.{repo_name};",
         }
+        add_java_imports_for_type(pk_java, imports)
 
         ref_imports: set[str] = set()
         domain_args: List[str] = []
@@ -2494,7 +2701,9 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
                 target_get = "get" + target_pk_prop[:1].upper() + target_pk_prop[1:] + "()"
                 ref_cls = f"{target['name']}Ref"
                 ref_imports.add(f"import {base_package}.generated.domain.{ref_cls};")
-                domain_args.append(f"            new {ref_cls}(entity.{getter}.{target_get})")
+                domain_args.append(
+                    f"            entity.{getter} == null ? null : new {ref_cls}(entity.{getter}.{target_get})"
+                )
             else:
                 domain_args.append(f"            entity.{getter}")
 
@@ -2502,6 +2711,99 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             enum_cls = f"{obj['name']}State"
             imports.add(f"import {base_package}.generated.domain.{enum_cls};")
             domain_args.append("            entity.getCurrentState()")
+
+        list_method_params: List[str] = []
+        filter_conditions: List[str] = []
+        needs_join_type_import = False
+        needs_date_time_format_import = False
+
+        def base_type_for_descriptor(type_desc: Dict[str, Any]) -> Optional[str]:
+            if type_desc["kind"] == "base":
+                return str(type_desc["name"])
+            if type_desc["kind"] == "custom":
+                return str(type_by_id[type_desc["target_type_id"]]["base"])
+            return None
+
+        for f in fields:
+            field_type = f["type"]
+            kind = field_type["kind"]
+            if kind in {"list", "struct"}:
+                continue
+
+            entity_prop = camel_case(f["name"])
+            if kind == "object_ref":
+                target = object_by_id[field_type["target_object_id"]]
+                target_fields = target.get("fields", [])
+                target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
+                target_pk_prop = camel_case(target_pk["name"])
+                param_name = f"{entity_prop}{pascal_case(target_pk_prop)}"
+                param_java = java_type_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
+                add_java_imports_for_type(param_java, imports)
+                list_method_params.append(
+                    f"        @RequestParam(name = \"{param_name}\", required = false) {param_java} {param_name}"
+                )
+                filter_conditions.extend(
+                    [
+                        f"        if ({param_name} != null) {{",
+                        f"            spec = spec.and((root, query, cb) -> cb.equal(root.join(\"{entity_prop}\", JoinType.LEFT).get(\"{target_pk_prop}\"), {param_name}));",
+                        "        }",
+                    ]
+                )
+                needs_join_type_import = True
+                continue
+
+            param_name = entity_prop
+            param_java = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
+            add_java_imports_for_type(param_java, imports)
+            base_type = base_type_for_descriptor(field_type)
+            annotation_suffix = ""
+            if base_type == "date":
+                annotation_suffix = " @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)"
+                needs_date_time_format_import = True
+            elif base_type == "datetime":
+                annotation_suffix = " @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)"
+                needs_date_time_format_import = True
+
+            list_method_params.append(
+                f"        @RequestParam(name = \"{param_name}\", required = false){annotation_suffix} {param_java} {param_name}"
+            )
+            filter_conditions.extend(
+                [
+                    f"        if ({param_name} != null) {{",
+                    f"            spec = spec.and((root, query, cb) -> cb.equal(root.get(\"{entity_prop}\"), {param_name}));",
+                    "        }",
+                ]
+            )
+
+        if obj.get("states"):
+            enum_cls = f"{obj['name']}State"
+            list_method_params.append(
+                f"        @RequestParam(name = \"currentState\", required = false) {enum_cls} currentState"
+            )
+            filter_conditions.extend(
+                [
+                    "        if (currentState != null) {",
+                    "            spec = spec.and((root, query, cb) -> cb.equal(root.get(\"currentState\"), currentState));",
+                    "        }",
+                ]
+            )
+
+        list_method_params.append("        @PageableDefault(size = 20) Pageable pageable")
+        list_method_signature = ",\n".join(list_method_params)
+        filter_block = "\n".join(filter_conditions)
+
+        if needs_join_type_import:
+            imports.add("import jakarta.persistence.criteria.JoinType;")
+        if needs_date_time_format_import:
+            imports.add("import org.springframework.format.annotation.DateTimeFormat;")
+
+        to_domain_method = (
+            f"    private {domain_name} toDomain({entity_name} entity) {{\n"
+            f"        return new {domain_name}(\n"
+            + ",\n".join(domain_args)
+            + "\n        );\n"
+            "    }\n\n"
+        )
 
         imports_block = "\n".join(sorted(imports.union(ref_imports)))
         query_src = (
@@ -2514,19 +2816,26 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             f"    public {obj['name']}QueryController({repo_name} repository) {{\n"
             "        this.repository = repository;\n"
             "    }\n\n"
+            "    @GetMapping\n"
+            f"    public ResponseEntity<Page<{domain_name}>> list(\n"
+            f"{list_method_signature}\n"
+            "    ) {\n"
+            f"        Specification<{entity_name}> spec = (root, query, cb) -> cb.conjunction();\n"
+            + (filter_block + "\n" if filter_block else "")
+            + f"        Page<{domain_name}> result = repository.findAll(spec, pageable).map(this::toDomain);\n"
+            "        return ResponseEntity.ok(result);\n"
+            "    }\n\n"
             f"    @GetMapping(\"/{{{pk_prop}}}\")\n"
-            f"    public ResponseEntity<{domain_name}> getById(@PathVariable(\"{pk_prop}\") String {pk_prop}) {{\n"
+            f"    public ResponseEntity<{domain_name}> getById(@PathVariable(\"{pk_prop}\") {pk_java} {pk_prop}) {{\n"
             f"        Optional<{entity_name}> maybeEntity = repository.findById({pk_prop});\n"
             "        if (maybeEntity.isEmpty()) {\n"
             "            return ResponseEntity.notFound().build();\n"
             "        }\n\n"
-            f"        {entity_name} entity = maybeEntity.get();\n"
-            f"        {domain_name} domain = new {domain_name}(\n"
-            + ",\n".join(domain_args)
-            + "\n        );\n"
+            f"        {domain_name} domain = toDomain(maybeEntity.get());\n"
             "        return ResponseEntity.ok(domain);\n"
             "    }\n"
-            "}\n"
+            + to_domain_method
+            + "}\n"
         )
 
         files[f"src/main/java/{package_path}/generated/api/{obj['name']}QueryController.java"] = query_src
@@ -2538,10 +2847,17 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
 def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, str]:
     outputs: Dict[str, str] = {}
     out_dir = cfg_get(cfg, ["generation", "out_dir"], "gen")
-    targets = cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot"])
+    targets = cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"])
+    schema_sql = render_sql(ir)
 
     if "sql" in targets:
-        outputs[f"{out_dir}/sql/schema.sql"] = render_sql(ir)
+        outputs[f"{out_dir}/sql/schema.sql"] = schema_sql
+    if "flyway" in targets:
+        outputs[f"{out_dir}/migrations/flyway/V1__prophet_init.sql"] = schema_sql
+    if "liquibase" in targets:
+        outputs[f"{out_dir}/migrations/liquibase/db.changelog-master.yaml"] = render_liquibase_root_changelog()
+        outputs[f"{out_dir}/migrations/liquibase/prophet/changelog-master.yaml"] = render_liquibase_prophet_changelog()
+        outputs[f"{out_dir}/migrations/liquibase/prophet/0001-init.sql"] = schema_sql
     if "openapi" in targets:
         outputs[f"{out_dir}/openapi/openapi.yaml"] = render_openapi(ir)
     if "spring_boot" in targets:
@@ -2563,15 +2879,22 @@ def managed_existing_files(root: Path, cfg: Dict[str, Any]) -> List[str]:
     out_dir = cfg_get(cfg, ["generation", "out_dir"], "gen")
     managed_paths = [
         root / out_dir / "sql",
+        root / out_dir / "migrations",
         root / out_dir / "openapi",
         root / out_dir / "spring-boot",
     ]
+    ignored_parts = {"build", ".gradle", ".idea", ".settings", "bin", "out", "target"}
     result: List[str] = []
     for p in managed_paths:
         if p.exists():
             for child in p.rglob("*"):
                 if child.is_file():
-                    result.append(str(child.relative_to(root)))
+                    rel = child.relative_to(root)
+                    if any(part in ignored_parts for part in rel.parts):
+                        continue
+                    if any(part.startswith(".") for part in rel.parts):
+                        continue
+                    result.append(str(rel))
     return sorted(result)
 
 
@@ -2587,6 +2910,42 @@ def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:
 
     spring_src = root / out_dir / "spring-boot" / "src" / "main" / "java" / "com" / "example" / "prophet" / "generated"
     spring_res = root / out_dir / "spring-boot" / "src" / "main" / "resources" / "application-prophet.yml"
+    spring_flyway_src = root / out_dir / "spring-boot" / "src" / "main" / "resources" / "db" / "migration" / "V1__prophet_init.sql"
+    spring_liquibase_root_src = (
+        root
+        / out_dir
+        / "spring-boot"
+        / "src"
+        / "main"
+        / "resources"
+        / "db"
+        / "changelog"
+        / "db.changelog-master.yaml"
+    )
+    spring_liquibase_prophet_changelog_src = (
+        root
+        / out_dir
+        / "spring-boot"
+        / "src"
+        / "main"
+        / "resources"
+        / "db"
+        / "changelog"
+        / "prophet"
+        / "changelog-master.yaml"
+    )
+    spring_liquibase_sql_src = (
+        root
+        / out_dir
+        / "spring-boot"
+        / "src"
+        / "main"
+        / "resources"
+        / "db"
+        / "changelog"
+        / "prophet"
+        / "0001-init.sql"
+    )
     schema_src = root / out_dir / "sql" / "schema.sql"
 
     if spring_src.exists():
@@ -2603,6 +2962,26 @@ def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:
     if schema_src.exists():
         (example / "src" / "main" / "resources").mkdir(parents=True, exist_ok=True)
         shutil.copy2(schema_src, example / "src" / "main" / "resources" / "schema.sql")
+
+    if spring_flyway_src.exists():
+        flyway_dst = example / "src" / "main" / "resources" / "db" / "migration"
+        flyway_dst.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(spring_flyway_src, flyway_dst / "V1__prophet_init.sql")
+
+    if spring_liquibase_root_src.exists():
+        liquibase_dst = example / "src" / "main" / "resources" / "db" / "changelog"
+        liquibase_dst.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(spring_liquibase_root_src, liquibase_dst / "db.changelog-master.yaml")
+
+    if spring_liquibase_prophet_changelog_src.exists():
+        liquibase_prophet_dst = example / "src" / "main" / "resources" / "db" / "changelog" / "prophet"
+        liquibase_prophet_dst.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(spring_liquibase_prophet_changelog_src, liquibase_prophet_dst / "changelog-master.yaml")
+
+    if spring_liquibase_sql_src.exists():
+        liquibase_prophet_dst = example / "src" / "main" / "resources" / "db" / "changelog" / "prophet"
+        liquibase_prophet_dst.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(spring_liquibase_sql_src, liquibase_prophet_dst / "0001-init.sql")
 
 
 def _find_block_close(text: str, open_brace_index: int) -> int:
@@ -2802,6 +3181,8 @@ generation:
     - sql
     - openapi
     - spring_boot
+    - flyway
+    - liquibase
   out_dir: gen
   spring_boot:
     base_package: com.example.prophet
@@ -2915,6 +3296,10 @@ def cmd_plan(args: argparse.Namespace) -> int:
         print(f"{idx}) {rel} ({status})")
         if rel.endswith("schema.sql"):
             reason = "reason: SQL schema generated from object models and transitions"
+        elif "/migrations/flyway/" in rel:
+            reason = "reason: Flyway migration generated from canonical SQL schema"
+        elif "/migrations/liquibase/" in rel:
+            reason = "reason: Liquibase changelog generated from canonical SQL schema"
         elif rel.endswith("openapi.yaml"):
             reason = "reason: OpenAPI generated from object/action contracts"
         elif "/spring-boot/" in rel:
@@ -3019,6 +3404,26 @@ def cmd_clean(args: argparse.Namespace) -> int:
     removed: List[str] = []
     skipped: List[str] = []
     gradle_messages: List[str] = []
+    generated_markers = ("-- GENERATED FILE: do not edit directly.", "# GENERATED FILE: do not edit directly.")
+
+    def remove_if_generated(path: Path, allow_force: bool = False) -> None:
+        if not path.exists():
+            skipped.append(str(path.relative_to(root)))
+            return
+        text = path.read_text(encoding="utf-8")
+        if allow_force and args.force_schema:
+            path.unlink()
+            removed.append(str(path.relative_to(root)))
+            return
+        if text.startswith(generated_markers):
+            path.unlink()
+            removed.append(str(path.relative_to(root)))
+            return
+        msg = f"{path.relative_to(root)} (not removed: does not look generated"
+        if allow_force:
+            msg += "; use --force-schema"
+        msg += ")"
+        skipped.append(msg)
 
     if out_dir.exists():
         shutil.rmtree(out_dir)
@@ -3055,15 +3460,25 @@ def cmd_clean(args: argparse.Namespace) -> int:
         skipped.append(str(app_prophet_path.relative_to(root)))
 
     schema_path = root / "src" / "main" / "resources" / "schema.sql"
-    if schema_path.exists():
-        schema_text = schema_path.read_text(encoding="utf-8")
-        if args.force_schema or schema_text.startswith("-- GENERATED FILE: do not edit directly."):
-            schema_path.unlink()
-            removed.append(str(schema_path.relative_to(root)))
-        else:
-            skipped.append(f"{schema_path.relative_to(root)} (not removed: does not look generated; use --force-schema)")
-    else:
-        skipped.append(str(schema_path.relative_to(root)))
+    remove_if_generated(schema_path, allow_force=True)
+
+    flyway_sql = root / "src" / "main" / "resources" / "db" / "migration" / "V1__prophet_init.sql"
+    liquibase_root = root / "src" / "main" / "resources" / "db" / "changelog" / "db.changelog-master.yaml"
+    liquibase_prophet_master = root / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "changelog-master.yaml"
+    liquibase_prophet_sql = root / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "0001-init.sql"
+    for p in [flyway_sql, liquibase_root, liquibase_prophet_master, liquibase_prophet_sql]:
+        remove_if_generated(p, allow_force=False)
+
+    maybe_empty_dirs = [
+        root / "src" / "main" / "resources" / "db" / "migration",
+        root / "src" / "main" / "resources" / "db" / "changelog" / "prophet",
+        root / "src" / "main" / "resources" / "db" / "changelog",
+        root / "src" / "main" / "resources" / "db",
+    ]
+    for d in maybe_empty_dirs:
+        if d.exists() and d.is_dir() and not any(d.iterdir()):
+            d.rmdir()
+            removed.append(str(d.relative_to(root)))
 
     ir_dir = root / ".prophet" / "ir"
     if ir_dir.exists() and not any(ir_dir.iterdir()):
@@ -3215,7 +3630,7 @@ def build_cli() -> argparse.ArgumentParser:
     p_generate = sub.add_parser(
         "generate",
         formatter_class=HelpFormatter,
-        help="Generate SQL/OpenAPI/Spring artifacts and current IR",
+        help="Generate SQL/OpenAPI/Spring/migration artifacts and current IR",
         description=(
             "Write deterministic generated artifacts to the configured output directory.\n"
             "Also updates .prophet/ir/current.ir.json and syncs the Spring example project if present."

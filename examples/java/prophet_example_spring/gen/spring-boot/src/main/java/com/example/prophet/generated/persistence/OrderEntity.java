@@ -25,27 +25,27 @@ import java.util.List;
 @Generated("prophet-cli")
 public class OrderEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_user_id", nullable = false)
-    private UserEntity customer;
-
-    @Column(name = "discount_code", nullable = true)
-    private String discountCode;
-
     @Id
     @Column(name = "order_id", nullable = false)
     private String orderId;
 
-    @Convert(converter = OrderShippingAddressStructConverter.class)
-    @Column(name = "shipping_address", nullable = true, columnDefinition = "text")
-    private Address shippingAddress;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "customer_user_id", nullable = false)
+    private UserEntity customer;
+
+    @Column(name = "total_amount", nullable = false)
+    private BigDecimal totalAmount;
+
+    @Column(name = "discount_code", nullable = true)
+    private String discountCode;
 
     @Convert(converter = OrderTagsListConverter.class)
     @Column(name = "tags", nullable = true, columnDefinition = "text")
     private List<String> tags;
 
-    @Column(name = "total_amount", nullable = false)
-    private BigDecimal totalAmount;
+    @Convert(converter = OrderShippingAddressStructConverter.class)
+    @Column(name = "shipping_address", nullable = true, columnDefinition = "text")
+    private Address shippingAddress;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "current_state", nullable = false)
@@ -73,12 +73,28 @@ public class OrderEntity {
         updatedAt = OffsetDateTime.now();
     }
 
+    public String getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(String orderId) {
+        this.orderId = orderId;
+    }
+
     public UserEntity getCustomer() {
         return customer;
     }
 
     public void setCustomer(UserEntity customer) {
         this.customer = customer;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
     public String getDiscountCode() {
@@ -89,22 +105,6 @@ public class OrderEntity {
         this.discountCode = discountCode;
     }
 
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    public Address getShippingAddress() {
-        return shippingAddress;
-    }
-
-    public void setShippingAddress(Address shippingAddress) {
-        this.shippingAddress = shippingAddress;
-    }
-
     public List<String> getTags() {
         return tags;
     }
@@ -113,12 +113,12 @@ public class OrderEntity {
         this.tags = tags;
     }
 
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
+    public Address getShippingAddress() {
+        return shippingAddress;
     }
 
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
+    public void setShippingAddress(Address shippingAddress) {
+        this.shippingAddress = shippingAddress;
     }
 
     public OrderState getCurrentState() {

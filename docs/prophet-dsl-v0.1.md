@@ -134,8 +134,9 @@ Actions now use explicit input/output contracts:
 
 - `actionInput` defines request payload shape.
 - `actionOutput` defines response payload shape.
-- Generated Spring action endpoints consume/return these contracts.
+- Generated Spring action endpoints consume/return these contracts at `POST /actions/<actionName>`.
 - Action execution logic is not auto-generated; handlers are user-implemented.
+- Generated default handler stubs throw `UnsupportedOperationException` until user handlers are present.
 
 ## 6. Ref Semantics
 
@@ -144,14 +145,41 @@ Actions now use explicit input/output contracts:
 - For object persistence, scalar `ref(...)` maps to JPA `@ManyToOne`.
 - For list refs (`ref(User)[]` / `list(ref(User))`), values are stored as JSON in a generated converter-backed column.
 
-## 7. Full Example
+## 7. Field Order Semantics
+
+- Field declaration order is preserved in generated Java record component order.
+- This applies to object records, structs, `actionInput`, and `actionOutput` records.
+- Reordering fields in DSL can require corresponding constructor argument order updates in user code.
+
+## 8. Full Example
 
 See:
 - `ontology/local/main.prophet`
 
 This file is the source of truth for the current supported syntax.
 
-## 8. Current Limitations (v0.1)
+## 9. Current Limitations (v0.1)
 
 - Cross-file imports/namespaces are not yet supported.
 - Advanced trigger filter expressions are not yet supported.
+
+## 10. Generation Targets (Config)
+
+Typical `prophet.yaml` target configuration:
+
+```yaml
+generation:
+  targets:
+    - sql
+    - openapi
+    - spring_boot
+    - flyway
+    - liquibase
+```
+
+Target outputs:
+- `sql` -> `gen/sql/schema.sql`
+- `openapi` -> `gen/openapi/openapi.yaml`
+- `spring_boot` -> `gen/spring-boot/**`
+- `flyway` -> `gen/migrations/flyway/V1__prophet_init.sql`
+- `liquibase` -> `gen/migrations/liquibase/**`

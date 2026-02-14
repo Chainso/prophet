@@ -45,6 +45,6 @@ public class ShipOrderHandler implements ShipOrderActionHandler {
             .map(id -> request.carrier() + "-" + request.trackingNumber() + "-" + id)
             .toList();
 
-        return new ShipOrderResult(List.of(labels), labels, order.getOrderId(), "shipped");
+        return new ShipOrderResult(order.getOrderId(), "shipped", labels, List.of(labels));
     }
 }

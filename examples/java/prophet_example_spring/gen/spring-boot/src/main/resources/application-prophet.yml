@@ -4,3 +4,6 @@ prophet:
     strict-enums: false
   actions:
     base-path: /actions
+spring:
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.yaml

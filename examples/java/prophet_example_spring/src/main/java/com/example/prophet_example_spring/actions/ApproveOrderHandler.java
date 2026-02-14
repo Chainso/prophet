@@ -40,6 +40,6 @@ public class ApproveOrderHandler implements ApproveOrderActionHandler {
         order.setCurrentState(OrderState.APPROVED);
         orderRepository.save(order);
 
-        return new ApproveOrderResult("approved", order.getOrderId(), List.of());
+        return new ApproveOrderResult(order.getOrderId(), "approved", List.of());
     }
 }

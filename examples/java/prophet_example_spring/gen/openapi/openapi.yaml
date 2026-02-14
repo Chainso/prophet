@@ -5,6 +5,67 @@ info:
 servers:
 - url: https://api.example.com
 paths:
+  /orders:
+    get:
+      operationId: listOrder
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 20
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Sort expression, for example field,asc
+      - name: orderId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: customerUserId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: totalAmount
+        in: query
+        required: false
+        schema:
+          type: string
+          description: Decimal encoded as string
+      - name: discountCode
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: currentState
+        in: query
+        required: false
+        schema:
+          type: string
+          enum:
+          - CREATED
+          - APPROVED
+          - SHIPPED
+      responses:
+        '200':
+          description: Paginated Order results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
   /orders/{orderId}:
     get:
       operationId: getOrder
@@ -23,6 +84,47 @@ paths:
                 $ref: '#/components/schemas/Order'
         '404':
           description: Not found
+  /users:
+    get:
+      operationId: listUser
+      parameters:
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 20
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Sort expression, for example field,asc
+      - name: userId
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: email
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Paginated User results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
   /users/{userId}:
     get:
       operationId: getUser
@@ -101,15 +203,15 @@ components:
     Address:
       type: object
       required:
+      - line1
       - city
       - countryCode
-      - line1
       properties:
+        line1:
+          type: string
         city:
           type: string
         countryCode:
-          type: string
-        line1:
           type: string
     ApprovalContext:
       type: object
@@ -118,115 +220,145 @@ components:
       properties:
         approver:
           $ref: '#/components/schemas/UserRef'
-        reason:
-          type: string
         watchers:
           type: array
           items:
             $ref: '#/components/schemas/UserRef'
+        reason:
+          type: string
     Order:
       type: object
       required:
-      - customer
       - orderId
+      - customer
       - totalAmount
       - currentState
       properties:
-        customer:
-          $ref: '#/components/schemas/UserRef'
-        discountCode:
-          type: string
         orderId:
           type: string
-        shippingAddress:
-          $ref: '#/components/schemas/Address'
+        customer:
+          $ref: '#/components/schemas/UserRef'
+        totalAmount:
+          type: string
+          description: Decimal encoded as string
+        discountCode:
+          type: string
         tags:
           type: array
           items:
             type: string
-        totalAmount:
-          type: string
-          description: Decimal encoded as string
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
         currentState:
           type: string
           enum:
-          - APPROVED
           - CREATED
+          - APPROVED
           - SHIPPED
+    OrderPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        number:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
     User:
       type: object
       required:
-      - email
       - userId
+      - email
       properties:
-        email:
-          type: string
         userId:
           type: string
+        email:
+          type: string
+    UserPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        number:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
     ApproveOrderCommand:
       type: object
       required:
       - orderId
       properties:
+        orderId:
+          type: string
         approvedBy:
           type: string
-        context:
-          $ref: '#/components/schemas/ApprovalContext'
         notes:
           type: array
           items:
             type: string
-        orderId:
-          type: string
+        context:
+          $ref: '#/components/schemas/ApprovalContext'
     CreateOrderCommand:
       type: object
       required:
-      - customer
       - orderId
+      - customer
       - totalAmount
       properties:
-        customer:
-          $ref: '#/components/schemas/UserRef'
-        discountCode:
-          type: string
         orderId:
           type: string
-        shippingAddress:
-          $ref: '#/components/schemas/Address'
+        customer:
+          $ref: '#/components/schemas/UserRef'
+        totalAmount:
+          type: string
+          description: Decimal encoded as string
+        discountCode:
+          type: string
         tags:
           type: array
           items:
             type: string
-        totalAmount:
-          type: string
-          description: Decimal encoded as string
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
     ShipOrderCommand:
       type: object
       required:
-      - carrier
       - orderId
-      - packageIds
+      - carrier
       - trackingNumber
+      - packageIds
       properties:
+        orderId:
+          type: string
         carrier:
           type: string
-        orderId:
+        trackingNumber:
           type: string
         packageIds:
           type: array
           items:
             type: string
-        trackingNumber:
-          type: string
     ApproveOrderResult:
       type: object
       required:
-      - decision
       - orderId
+      - decision
       properties:
-        decision:
-          type: string
         orderId:
+          type: string
+        decision:
           type: string
         warnings:
           type: array
@@ -235,12 +367,12 @@ components:
     CreateOrderResult:
       type: object
       required:
-      - currentState
       - orderId
+      - currentState
       properties:
-        currentState:
-          type: string
         orderId:
+          type: string
+        currentState:
           type: string
     ShipOrderResult:
       type: object
@@ -248,17 +380,17 @@ components:
       - orderId
       - shipmentStatus
       properties:
+        orderId:
+          type: string
+        shipmentStatus:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
         labelBatches:
           type: array
           items:
             type: array
             items:
               type: string
-        labels:
-          type: array
-          items:
-            type: string
-        orderId:
-          type: string
-        shipmentStatus:
-          type: string

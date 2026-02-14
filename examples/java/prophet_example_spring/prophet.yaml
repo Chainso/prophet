@@ -8,6 +8,8 @@ generation:
     - sql
     - openapi
     - spring_boot
+    - flyway
+    - liquibase
   out_dir: gen
   spring_boot:
     base_package: com.example.prophet
