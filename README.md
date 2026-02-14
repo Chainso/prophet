@@ -37,6 +37,8 @@ cd examples/java/prophet_example_spring
 - Flyway migration: `gen/migrations/flyway/V1__prophet_init.sql`
 - Liquibase changelog + SQL:
 `gen/migrations/liquibase/db.changelog-master.yaml`, `gen/migrations/liquibase/prophet/*`
+- Baseline-aware delta migrations (when baseline differs):
+`gen/migrations/flyway/V2__prophet_delta.sql`, `gen/migrations/liquibase/prophet/0002-delta.sql`, `gen/migrations/delta/report.json`
 - Spring module: `gen/spring-boot`
 : includes generated domain records, JPA entities/repositories, action contracts, action controllers, query controllers, and migration resources auto-wired to the host app's existing migration stack
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import copy
+import json
 import sys
 import tempfile
 import unittest
@@ -74,6 +76,9 @@ class CodegenSnapshotTests(unittest.TestCase):
         self.assertIn("gen/migrations/liquibase/db.changelog-master.yaml", outputs)
         self.assertIn("gen/migrations/liquibase/prophet/changelog-master.yaml", outputs)
         self.assertIn("gen/migrations/liquibase/prophet/0001-init.sql", outputs)
+        self.assertNotIn("gen/migrations/flyway/V2__prophet_delta.sql", outputs)
+        self.assertNotIn("gen/migrations/liquibase/prophet/0002-delta.sql", outputs)
+        self.assertNotIn("gen/migrations/delta/report.json", outputs)
 
         spring_db_keys = [
             key for key in outputs if key.startswith("gen/spring-boot/src/main/resources/db/")
@@ -125,6 +130,35 @@ dependencies {
         self.assertEqual(detected, {"flyway", "liquibase"})
         self.assertEqual(enabled, {"flyway", "liquibase"})
         self.assertTrue(any("Both Flyway and Liquibase were detected" in warning for warning in warnings))
+
+    def test_delta_migration_generated_when_baseline_is_behind(self) -> None:
+        cfg = load_config(EXAMPLE_ROOT / "prophet.yaml")
+        ontology = parse_ontology((EXAMPLE_ROOT / "ontology" / "local" / "main.prophet").read_text(encoding="utf-8"))
+        ir = build_ir(ontology, cfg)
+
+        baseline_ir = copy.deepcopy(ir)
+        for obj in baseline_ir.get("objects", []):
+            if obj.get("name") == "Order":
+                obj["fields"] = [f for f in obj.get("fields", []) if f.get("name") != "total_amount"]
+                break
+        baseline_ir["ir_hash"] = "baseline-behind-for-delta-test"
+
+        with tempfile.TemporaryDirectory(prefix="prophet-delta-") as tmp:
+            root = Path(tmp)
+            baseline_path = root / ".prophet" / "baselines" / "main.ir.json"
+            baseline_path.parent.mkdir(parents=True, exist_ok=True)
+            baseline_path.write_text(json.dumps(baseline_ir, indent=2) + "\n", encoding="utf-8")
+
+            outputs = build_generated_outputs(ir, cfg, root=root)
+
+        self.assertIn("gen/migrations/flyway/V2__prophet_delta.sql", outputs)
+        self.assertIn("gen/migrations/liquibase/prophet/0002-delta.sql", outputs)
+        self.assertIn("gen/migrations/delta/report.json", outputs)
+        self.assertIn("0002-delta.sql", outputs["gen/migrations/liquibase/prophet/changelog-master.yaml"])
+
+        delta_sql = outputs["gen/migrations/flyway/V2__prophet_delta.sql"]
+        self.assertIn("SAFETY: backfill_required=true", delta_sql)
+        self.assertIn("alter table orders add column if not exists total_amount", delta_sql)
 
 
 if __name__ == "__main__":

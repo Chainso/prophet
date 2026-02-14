@@ -1752,6 +1752,226 @@ def render_sql(ir: Dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
+def table_name_for_object(obj: Dict[str, Any]) -> str:
+    return pluralize(snake_case(obj["name"]))
+
+
+def primary_key_field_for_object(obj: Dict[str, Any]) -> Dict[str, Any]:
+    fields = obj.get("fields", [])
+    return next((f for f in fields if f.get("key") == "primary"), fields[0])
+
+
+def field_sql_column_details(
+    field: Dict[str, Any],
+    type_by_id: Dict[str, Dict[str, Any]],
+    object_by_id: Dict[str, Dict[str, Any]],
+) -> Tuple[str, str, Optional[Tuple[str, str]], Optional[str]]:
+    col_name = snake_case(field["name"])
+    sql_type = sql_type_for_field(field, type_by_id)
+    fk_ref: Optional[Tuple[str, str]] = None
+    idx_col: Optional[str] = None
+    if field["type"]["kind"] == "object_ref":
+        target_obj = object_by_id[field["type"]["target_object_id"]]
+        target_pk = primary_key_field_for_object(target_obj)
+        target_table = table_name_for_object(target_obj)
+        target_pk_col = snake_case(target_pk["name"])
+        col_name = f"{col_name}_{target_pk_col}"
+        sql_type = sql_type_for_field(target_pk, type_by_id)
+        fk_ref = (target_table, target_pk_col)
+        idx_col = col_name
+    return col_name, sql_type, fk_ref, idx_col
+
+
+def render_create_table_statements_for_object(
+    obj: Dict[str, Any],
+    type_by_id: Dict[str, Dict[str, Any]],
+    object_by_id: Dict[str, Dict[str, Any]],
+) -> List[str]:
+    table = table_name_for_object(obj)
+    fields = obj.get("fields", [])
+    pk = primary_key_field_for_object(obj)
+    pk_col = snake_case(pk["name"])
+
+    column_lines: List[str] = []
+    fk_lines: List[str] = []
+    index_lines: List[str] = []
+    for field in fields:
+        col_name, sql_type, fk_ref, idx_col = field_sql_column_details(field, type_by_id, object_by_id)
+        required = field.get("cardinality", {}).get("min", 0) > 0
+        not_null = " not null" if required else ""
+        if field["id"] == pk["id"]:
+            column_lines.append(f"  {col_name} {sql_type} primary key")
+        else:
+            extra = ""
+            if sql_type.startswith("numeric"):
+                extra = f" check ({col_name} >= 0)"
+            column_lines.append(f"  {col_name} {sql_type}{not_null}{extra}")
+        if fk_ref is not None:
+            fk_name = f"fk_{table}_{col_name}"
+            fk_lines.append(
+                f"  constraint {fk_name} foreign key ({col_name}) references {fk_ref[0]}({fk_ref[1]})"
+            )
+        if idx_col is not None:
+            idx_name = f"idx_{table}_{idx_col}"
+            index_lines.append(f"create index if not exists {idx_name} on {table} ({idx_col});")
+
+    if obj.get("states"):
+        enum_vals = ", ".join(f"'{s['name'].upper()}'" for s in obj["states"])
+        column_lines.append(f"  current_state text not null check (current_state in ({enum_vals}))")
+
+    column_lines.extend(
+        [
+            "  row_version bigint not null default 0",
+            "  created_at timestamptz not null default now()",
+            "  updated_at timestamptz not null default now()",
+        ]
+    )
+
+    statements: List[str] = []
+    statements.append(f"create table if not exists {table} (")
+    for idx, col in enumerate(column_lines + fk_lines):
+        suffix = "," if idx < len(column_lines + fk_lines) - 1 else ""
+        statements.append(col + suffix)
+    statements.append(");")
+    statements.extend(index_lines)
+    if obj.get("states"):
+        idx_state = f"idx_{table}_current_state"
+        statements.append(f"create index if not exists {idx_state} on {table} (current_state);")
+        history_table = f"{snake_case(obj['name'])}_state_history"
+        statements.extend(
+            [
+                f"create table if not exists {history_table} (",
+                "  history_id bigserial primary key,",
+                f"  {pk_col} text not null,",
+                "  transition_id text not null,",
+                "  from_state text not null,",
+                "  to_state text not null,",
+                "  changed_at timestamptz not null default now(),",
+                "  changed_by text,",
+                f"  constraint fk_{history_table}_{pk_col} foreign key ({pk_col}) references {table}({pk_col})",
+                ");",
+                f"create index if not exists idx_{history_table}_{pk_col} on {history_table} ({pk_col});",
+                f"create index if not exists idx_{history_table}_changed_at on {history_table} (changed_at);",
+            ]
+        )
+    return statements
+
+
+def render_delta_migration(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, List[str], bool]:
+    old_objects = {o["id"]: o for o in old_ir.get("objects", [])}
+    new_objects = {o["id"]: o for o in new_ir.get("objects", [])}
+    type_by_id = {t["id"]: t for t in new_ir.get("types", [])}
+    object_by_id = {o["id"]: o for o in new_ir.get("objects", [])}
+
+    statements: List[str] = []
+    warnings: List[str] = []
+    destructive_changes = False
+    backfill_required = False
+
+    for oid in sorted(set(new_objects) - set(old_objects)):
+        obj = new_objects[oid]
+        statements.append(f"-- object added: {obj['name']} ({oid})")
+        statements.extend(render_create_table_statements_for_object(obj, type_by_id, object_by_id))
+        statements.append("")
+
+    for oid in sorted(set(old_objects) - set(new_objects)):
+        obj = old_objects[oid]
+        table = table_name_for_object(obj)
+        warnings.append(f"destructive: object removed ({obj['name']}); manual drop for table '{table}' required.")
+        destructive_changes = True
+
+    for oid in sorted(set(old_objects).intersection(new_objects)):
+        old_obj = old_objects[oid]
+        new_obj = new_objects[oid]
+        table = table_name_for_object(new_obj)
+        old_fields = {f["id"]: f for f in old_obj.get("fields", [])}
+        new_fields = {f["id"]: f for f in new_obj.get("fields", [])}
+
+        for fid in sorted(set(new_fields) - set(old_fields)):
+            new_field = new_fields[fid]
+            col_name, sql_type, fk_ref, idx_col = field_sql_column_details(new_field, type_by_id, object_by_id)
+            required = new_field.get("cardinality", {}).get("min", 0) > 0
+            not_null = "" if required else ""
+            extra = f" check ({col_name} >= 0)" if sql_type.startswith("numeric") else ""
+            statements.append(f"alter table {table} add column if not exists {col_name} {sql_type}{not_null}{extra};")
+            if fk_ref is not None:
+                fk_name = f"fk_{table}_{col_name}"
+                statements.append(
+                    f"alter table {table} add constraint {fk_name} foreign key ({col_name}) references {fk_ref[0]}({fk_ref[1]});"
+                )
+            if idx_col is not None:
+                idx_name = f"idx_{table}_{idx_col}"
+                statements.append(f"create index if not exists {idx_name} on {table} ({idx_col});")
+            if required:
+                warnings.append(
+                    f"backfill_required: required field added ({new_obj['name']}.{new_field['name']}); "
+                    f"populate '{table}.{col_name}' then enforce NOT NULL manually."
+                )
+                backfill_required = True
+
+        for fid in sorted(set(old_fields) - set(new_fields)):
+            old_field = old_fields[fid]
+            col_name, _, _, _ = field_sql_column_details(old_field, type_by_id, object_by_id)
+            warnings.append(
+                f"destructive: field removed ({old_obj['name']}.{old_field['name']}); manual drop for '{table}.{col_name}' required."
+            )
+            destructive_changes = True
+
+        for fid in sorted(set(old_fields).intersection(new_fields)):
+            old_field = old_fields[fid]
+            new_field = new_fields[fid]
+            old_type = old_field.get("type", {})
+            new_type = new_field.get("type", {})
+            type_level = classify_type_change(old_type, new_type)
+            if type_level == "breaking":
+                warnings.append(
+                    "destructive: field type changed incompatibly "
+                    f"({new_obj['name']}.{new_field['name']}: {describe_type_descriptor(old_type)} -> {describe_type_descriptor(new_type)})."
+                )
+                destructive_changes = True
+            old_min = int(old_field.get("cardinality", {}).get("min", 0))
+            new_min = int(new_field.get("cardinality", {}).get("min", 0))
+            if new_min > old_min:
+                warnings.append(
+                    f"backfill_required: cardinality tightened for {new_obj['name']}.{new_field['name']} ({old_min} -> {new_min})."
+                )
+                backfill_required = True
+            old_max = old_field.get("cardinality", {}).get("max", 1)
+            new_max = new_field.get("cardinality", {}).get("max", 1)
+            if (old_max == 1 and new_max != 1) or (old_max != 1 and new_max == 1):
+                warnings.append(
+                    f"destructive: scalar/list wire shape changed for {new_obj['name']}.{new_field['name']} ({old_max} -> {new_max})."
+                )
+                destructive_changes = True
+
+        old_state_names = sorted(s["name"] for s in old_obj.get("states", []))
+        new_state_names = sorted(s["name"] for s in new_obj.get("states", []))
+        if old_state_names != new_state_names:
+            warnings.append(
+                f"manual_review: state set changed for {new_obj['name']} (current_state constraint may require manual adjustment)."
+            )
+
+    has_changes = bool(statements or warnings)
+    if not has_changes:
+        return "", [], False
+
+    lines: List[str] = [
+        "-- GENERATED FILE: do not edit directly.",
+        "-- Source: baseline IR -> current IR delta migration",
+        f"-- SAFETY: destructive_changes={'true' if destructive_changes else 'false'}",
+        f"-- SAFETY: backfill_required={'true' if backfill_required else 'false'}",
+        f"-- SAFETY: manual_review_required={'true' if warnings else 'false'}",
+        "",
+    ]
+    if warnings:
+        lines.append("-- WARNINGS:")
+        for warning in warnings:
+            lines.append(f"-- - {warning}")
+        lines.append("")
+    lines.extend(statements)
+    return "\n".join(lines).rstrip() + "\n", warnings, True
+
+
 def render_openapi(ir: Dict[str, Any]) -> str:
     objects = ir["objects"]
     structs = ir.get("structs", [])
@@ -2143,8 +2363,8 @@ def render_liquibase_root_changelog() -> str:
     )
 
 
-def render_liquibase_prophet_changelog() -> str:
-    return (
+def render_liquibase_prophet_changelog(include_delta: bool = False) -> str:
+    changelog = (
         "# GENERATED FILE: do not edit directly.\n"
         "databaseChangeLog:\n"
         "  - changeSet:\n"
@@ -2157,9 +2377,28 @@ def render_liquibase_prophet_changelog() -> str:
         "            splitStatements: true\n"
         "            stripComments: false\n"
     )
+    if include_delta:
+        changelog += (
+            "  - changeSet:\n"
+            "      id: prophet-0002-delta\n"
+            "      author: prophet-cli\n"
+            "      changes:\n"
+            "        - sqlFile:\n"
+            "            path: 0002-delta.sql\n"
+            "            relativeToChangelogFile: true\n"
+            "            splitStatements: true\n"
+            "            stripComments: false\n"
+        )
+    return changelog
 
 
-def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, str]:
+def render_spring_files(
+    ir: Dict[str, Any],
+    cfg: Dict[str, Any],
+    root: Optional[Path] = None,
+    generated_schema_sql: Optional[str] = None,
+    delta_schema_sql: Optional[str] = None,
+) -> Dict[str, str]:
     files: Dict[str, str] = {}
 
     base_package = cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet")
@@ -2167,15 +2406,16 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
     fallback_dep_mgmt_version = str(
         cfg_get(cfg, ["generation", "spring_boot", "dependency_management_version"], "1.1.6")
     )
+    work_root = root if root is not None else Path.cwd()
     boot_version, dep_mgmt_version = detect_gradle_plugin_versions(
-        Path.cwd(),
+        work_root,
         fallback_boot_version,
         fallback_dep_mgmt_version,
     )
-    _, _, enabled_modes, _ = resolve_migration_runtime_modes(cfg, Path.cwd())
+    _, _, enabled_modes, _ = resolve_migration_runtime_modes(cfg, work_root)
     include_flyway = "flyway" in enabled_modes
     include_liquibase = "liquibase" in enabled_modes
-    generated_schema_sql = render_sql(ir)
+    init_schema_sql = generated_schema_sql if generated_schema_sql is not None else render_sql(ir)
     package_path = base_package.replace(".", "/")
 
     objects = ir["objects"]
@@ -2207,11 +2447,17 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
     files["src/main/resources/application-prophet.yml"] = application_prophet_yml
 
     if include_flyway:
-        files["src/main/resources/db/migration/V1__prophet_init.sql"] = generated_schema_sql
+        files["src/main/resources/db/migration/V1__prophet_init.sql"] = init_schema_sql
+        if delta_schema_sql:
+            files["src/main/resources/db/migration/V2__prophet_delta.sql"] = delta_schema_sql
     if include_liquibase:
         files["src/main/resources/db/changelog/db.changelog-master.yaml"] = render_liquibase_root_changelog()
-        files["src/main/resources/db/changelog/prophet/changelog-master.yaml"] = render_liquibase_prophet_changelog()
-        files["src/main/resources/db/changelog/prophet/0001-init.sql"] = generated_schema_sql
+        files["src/main/resources/db/changelog/prophet/changelog-master.yaml"] = render_liquibase_prophet_changelog(
+            include_delta=bool(delta_schema_sql)
+        )
+        files["src/main/resources/db/changelog/prophet/0001-init.sql"] = init_schema_sql
+        if delta_schema_sql:
+            files["src/main/resources/db/changelog/prophet/0002-delta.sql"] = delta_schema_sql
 
     # domain ref records
     ref_types: Dict[str, Dict[str, Any]] = {}
@@ -2995,25 +3241,65 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
     annotate_generated_java_files(files)
     return files
 
+def compute_delta_from_baseline(
+    root: Path, cfg: Dict[str, Any], ir: Dict[str, Any]
+) -> Tuple[Optional[str], List[str], Optional[Path], Optional[str]]:
+    baseline_rel = str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
+    baseline_path = root / baseline_rel
+    if not baseline_path.exists():
+        return None, [], None, None
+    baseline_ir = json.loads(baseline_path.read_text(encoding="utf-8"))
+    delta_sql, delta_warnings, has_delta = render_delta_migration(baseline_ir, ir)
+    if not has_delta:
+        return None, [], baseline_path, str(baseline_ir.get("ir_hash")) if baseline_ir.get("ir_hash") else None
+    return (
+        delta_sql,
+        delta_warnings,
+        baseline_path,
+        str(baseline_ir.get("ir_hash")) if baseline_ir.get("ir_hash") else None,
+    )
 
-def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, str]:
+
+def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optional[Path] = None) -> Dict[str, str]:
     outputs: Dict[str, str] = {}
     out_dir = cfg_get(cfg, ["generation", "out_dir"], "gen")
     targets = cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"])
+    work_root = root if root is not None else Path.cwd()
     schema_sql = render_sql(ir)
+    delta_sql, delta_warnings, baseline_path, baseline_hash = compute_delta_from_baseline(work_root, cfg, ir)
 
     if "sql" in targets:
         outputs[f"{out_dir}/sql/schema.sql"] = schema_sql
     if "flyway" in targets:
         outputs[f"{out_dir}/migrations/flyway/V1__prophet_init.sql"] = schema_sql
+        if delta_sql:
+            outputs[f"{out_dir}/migrations/flyway/V2__prophet_delta.sql"] = delta_sql
     if "liquibase" in targets:
         outputs[f"{out_dir}/migrations/liquibase/db.changelog-master.yaml"] = render_liquibase_root_changelog()
-        outputs[f"{out_dir}/migrations/liquibase/prophet/changelog-master.yaml"] = render_liquibase_prophet_changelog()
+        outputs[f"{out_dir}/migrations/liquibase/prophet/changelog-master.yaml"] = render_liquibase_prophet_changelog(
+            include_delta=bool(delta_sql)
+        )
         outputs[f"{out_dir}/migrations/liquibase/prophet/0001-init.sql"] = schema_sql
+        if delta_sql:
+            outputs[f"{out_dir}/migrations/liquibase/prophet/0002-delta.sql"] = delta_sql
+    if delta_sql:
+        report = {
+            "baseline_ir": str(baseline_path.relative_to(work_root)) if baseline_path is not None else None,
+            "from_ir_hash": baseline_hash,
+            "to_ir_hash": ir.get("ir_hash"),
+            "warnings": delta_warnings,
+        }
+        outputs[f"{out_dir}/migrations/delta/report.json"] = json.dumps(report, indent=2, sort_keys=False) + "\n"
     if "openapi" in targets:
         outputs[f"{out_dir}/openapi/openapi.yaml"] = render_openapi(ir)
     if "spring_boot" in targets:
-        spring_files = render_spring_files(ir, cfg)
+        spring_files = render_spring_files(
+            ir,
+            cfg,
+            root=work_root,
+            generated_schema_sql=schema_sql,
+            delta_schema_sql=delta_sql,
+        )
         for rel_path, content in spring_files.items():
             outputs[f"{out_dir}/spring-boot/{rel_path}"] = content
 
@@ -3077,6 +3363,9 @@ def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:
     spring_src = root / out_dir / "spring-boot" / "src" / "main" / "java" / "com" / "example" / "prophet" / "generated"
     spring_res = root / out_dir / "spring-boot" / "src" / "main" / "resources" / "application-prophet.yml"
     spring_flyway_src = root / out_dir / "spring-boot" / "src" / "main" / "resources" / "db" / "migration" / "V1__prophet_init.sql"
+    spring_flyway_delta_src = (
+        root / out_dir / "spring-boot" / "src" / "main" / "resources" / "db" / "migration" / "V2__prophet_delta.sql"
+    )
     spring_liquibase_root_src = (
         root
         / out_dir
@@ -3112,14 +3401,30 @@ def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:
         / "prophet"
         / "0001-init.sql"
     )
+    spring_liquibase_delta_sql_src = (
+        root
+        / out_dir
+        / "spring-boot"
+        / "src"
+        / "main"
+        / "resources"
+        / "db"
+        / "changelog"
+        / "prophet"
+        / "0002-delta.sql"
+    )
     schema_src = root / out_dir / "sql" / "schema.sql"
     flyway_dst_file = example / "src" / "main" / "resources" / "db" / "migration" / "V1__prophet_init.sql"
+    flyway_delta_dst_file = example / "src" / "main" / "resources" / "db" / "migration" / "V2__prophet_delta.sql"
     liquibase_root_dst_file = example / "src" / "main" / "resources" / "db" / "changelog" / "db.changelog-master.yaml"
     liquibase_prophet_changelog_dst_file = (
         example / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "changelog-master.yaml"
     )
     liquibase_prophet_sql_dst_file = (
         example / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "0001-init.sql"
+    )
+    liquibase_prophet_delta_sql_dst_file = (
+        example / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "0002-delta.sql"
     )
 
     if spring_src.exists():
@@ -3143,6 +3448,12 @@ def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:
         shutil.copy2(spring_flyway_src, flyway_dst / "V1__prophet_init.sql")
     elif flyway_dst_file.exists():
         flyway_dst_file.unlink()
+    if spring_flyway_delta_src.exists():
+        flyway_dst = example / "src" / "main" / "resources" / "db" / "migration"
+        flyway_dst.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(spring_flyway_delta_src, flyway_dst / "V2__prophet_delta.sql")
+    elif flyway_delta_dst_file.exists():
+        flyway_delta_dst_file.unlink()
 
     if spring_liquibase_root_src.exists():
         liquibase_dst = example / "src" / "main" / "resources" / "db" / "changelog"
@@ -3164,6 +3475,12 @@ def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:
         shutil.copy2(spring_liquibase_sql_src, liquibase_prophet_dst / "0001-init.sql")
     elif liquibase_prophet_sql_dst_file.exists():
         liquibase_prophet_sql_dst_file.unlink()
+    if spring_liquibase_delta_sql_src.exists():
+        liquibase_prophet_dst = example / "src" / "main" / "resources" / "db" / "changelog" / "prophet"
+        liquibase_prophet_dst.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(spring_liquibase_delta_sql_src, liquibase_prophet_dst / "0002-delta.sql")
+    elif liquibase_prophet_delta_sql_dst_file.exists():
+        liquibase_prophet_delta_sql_dst_file.unlink()
 
     maybe_empty = [
         example / "src" / "main" / "resources" / "db" / "changelog" / "prophet",
@@ -3498,7 +3815,8 @@ def cmd_plan(args: argparse.Namespace) -> int:
         return 1
 
     ir = build_ir(ont, cfg)
-    outputs = build_generated_outputs(ir, cfg)
+    delta_sql, delta_warnings, baseline_path, _ = compute_delta_from_baseline(root, cfg, ir)
+    outputs = build_generated_outputs(ir, cfg, root=root)
 
     existing = set(managed_existing_files(root, cfg))
     new_files = set(outputs.keys())
@@ -3568,7 +3886,8 @@ def cmd_generate(args: argparse.Namespace) -> int:
         return 1
 
     ir = build_ir(ont, cfg)
-    outputs = build_generated_outputs(ir, cfg)
+    delta_sql, delta_warnings, baseline_path, _ = compute_delta_from_baseline(root, cfg, ir)
+    outputs = build_generated_outputs(ir, cfg, root=root)
 
     if args.verify_clean and args.wire_gradle:
         raise ProphetError("--wire-gradle cannot be used with --verify-clean")
@@ -3617,6 +3936,16 @@ def cmd_generate(args: argparse.Namespace) -> int:
         print("- warnings:")
         for warning in migration_warnings:
             print(f"  - {warning}")
+    if delta_sql:
+        print("")
+        print("Delta migration:")
+        if baseline_path is not None:
+            print(f"- baseline: {baseline_path}")
+        print("- generated: yes (V2__prophet_delta.sql / 0002-delta.sql)")
+        if delta_warnings:
+            print("- safety warnings:")
+            for warning in delta_warnings:
+                print(f"  - {warning}")
     if gradle_messages:
         print("")
         print("Gradle wiring:")
@@ -3700,10 +4029,19 @@ def cmd_clean(args: argparse.Namespace) -> int:
     remove_if_generated(schema_path, allow_force=True)
 
     flyway_sql = root / "src" / "main" / "resources" / "db" / "migration" / "V1__prophet_init.sql"
+    flyway_delta_sql = root / "src" / "main" / "resources" / "db" / "migration" / "V2__prophet_delta.sql"
     liquibase_root = root / "src" / "main" / "resources" / "db" / "changelog" / "db.changelog-master.yaml"
     liquibase_prophet_master = root / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "changelog-master.yaml"
     liquibase_prophet_sql = root / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "0001-init.sql"
-    for p in [flyway_sql, liquibase_root, liquibase_prophet_master, liquibase_prophet_sql]:
+    liquibase_prophet_delta_sql = root / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "0002-delta.sql"
+    for p in [
+        flyway_sql,
+        flyway_delta_sql,
+        liquibase_root,
+        liquibase_prophet_master,
+        liquibase_prophet_sql,
+        liquibase_prophet_delta_sql,
+    ]:
         remove_if_generated(p, allow_force=False)
 
     maybe_empty_dirs = [
@@ -3810,7 +4148,7 @@ def cmd_check(args: argparse.Namespace) -> int:
 
     print("Validation passed.")
     ir = build_ir(ont, cfg)
-    outputs = build_generated_outputs(ir, cfg)
+    outputs = build_generated_outputs(ir, cfg, root=root)
     dirty = collect_dirty_generated_files(root, cfg, outputs)
     status = 0
 

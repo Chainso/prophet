@@ -76,6 +76,13 @@ Default generated targets:
 - `flyway`
 - `liquibase`
 
+When baseline IR differs from current IR, Prophet also emits delta migration artifacts:
+- `gen/migrations/flyway/V2__prophet_delta.sql`
+- `gen/migrations/liquibase/prophet/0002-delta.sql`
+- `gen/migrations/delta/report.json`
+
+Delta SQL includes safety flags and warnings (`destructive`, `backfill_required`, `manual_review`) as comments.
+
 Spring runtime migration wiring is auto-detected from the host Gradle project:
 - if Flyway dependency/plugin is present, Prophet syncs Flyway resources
 - if Liquibase dependency/plugin is present, Prophet syncs Liquibase resources
@@ -110,7 +117,8 @@ Default removals:
 - `src/main/resources/application-prophet.yml`
 - `src/main/resources/schema.sql` (only if it looks generated)
 - `src/main/resources/db/migration/V1__prophet_init.sql` (if generated)
-- `src/main/resources/db/changelog/**` Prophet-managed generated files
+- `src/main/resources/db/migration/V2__prophet_delta.sql` (if generated)
+- `src/main/resources/db/changelog/**` Prophet-managed generated files, including `0002-delta.sql`
 - Gradle multi-module wiring for `:prophet_generated` in `settings.gradle(.kts)` and `build.gradle(.kts)`
 
 ```bash
