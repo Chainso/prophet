@@ -7,7 +7,9 @@ name = "prophet-cli"
 version = "0.2.0"
 description = "Prophet ontology tooling CLI"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "PyYAML>=6.0",
+]
 
 [project.scripts]
 prophet = "prophet_cli.cli:main"
