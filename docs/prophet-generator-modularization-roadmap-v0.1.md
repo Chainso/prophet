@@ -24,6 +24,7 @@ Completed so far:
 14. Added deterministic no-op generation cache support via `prophet gen --skip-unchanged`.
 15. Introduced a schema-validated stack manifest layer for stack matrix governance.
 16. Added explicit generator registry checks to ensure implemented stacks map to concrete generators.
+17. Added semantic conformance tests for action/query/struct/object-ref contracts independent of file snapshots.
 
 In progress:
 
