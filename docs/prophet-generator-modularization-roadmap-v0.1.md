@@ -30,6 +30,7 @@ Completed so far:
 20. Reduced command duplication in `cli.py` by introducing shared validated command context loading.
 21. Expanded stack manifest validation to a full document schema (`schema_version`, capability catalog, stack metadata, default targets).
 22. Added regeneration-safety extension policy docs and integration tests to confirm user extension files are not overwritten.
+23. Added a reproducible no-op generation benchmark script and published baseline performance report.
 
 In progress:
 
