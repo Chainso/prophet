@@ -76,6 +76,8 @@ prophet stacks --json
 ### `prophet hooks`
 Lists generated extension hook surfaces from `gen/manifest/extension-hooks.json`.
 Useful for wiring user-owned implementations against generated interfaces.
+Safety/reference docs:
+- `docs/prophet-extension-hooks-safety-v0.1.md`
 
 ```bash
 prophet hooks

@@ -29,10 +29,11 @@ Completed so far:
 19. Extracted generation cache/signature behavior into `prophet_cli.codegen.cache` with dedicated tests.
 20. Reduced command duplication in `cli.py` by introducing shared validated command context loading.
 21. Expanded stack manifest validation to a full document schema (`schema_version`, capability catalog, stack metadata, default targets).
+22. Added regeneration-safety extension policy docs and integration tests to confirm user extension files are not overwritten.
 
 In progress:
 
-1. Advancing Milestone 3 and Milestone 7 view/extension coverage with stronger conformance tests.
+1. Advancing Milestone 3 view coverage with stronger conformance tests.
 
 ## 1. Purpose
 

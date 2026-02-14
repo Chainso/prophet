@@ -188,6 +188,53 @@ dependencies {
             action_names = {item.get("action_name") for item in payload.get("hooks", [])}
             self.assertIn("createOrder", action_names)
 
+    def test_generation_sync_does_not_overwrite_user_extension_files(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-extension-safety-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_dst = root / "domain" / "main.prophet"
+            ontology_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(EXAMPLE_ONTOLOGY, ontology_dst)
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            example_root = root / "examples" / "java" / "prophet_example_spring"
+            example_root.mkdir(parents=True, exist_ok=True)
+            (example_root / "build.gradle.kts").write_text("plugins { java }\n", encoding="utf-8")
+
+            user_extension = (
+                example_root
+                / "src"
+                / "main"
+                / "java"
+                / "com"
+                / "example"
+                / "prophet"
+                / "extensions"
+                / "CreateOrderActionHandlerImpl.java"
+            )
+            user_extension.parent.mkdir(parents=True, exist_ok=True)
+            original_content = (
+                "package com.example.prophet.extensions;\n\n"
+                "public class CreateOrderActionHandlerImpl {\n"
+                "  public String marker() { return \"user-owned\"; }\n"
+                "}\n"
+            )
+            user_extension.write_text(original_content, encoding="utf-8")
+
+            run_cli(root, "gen")
+            run_cli(root, "gen")
+
+            self.assertTrue(user_extension.exists())
+            self.assertEqual(user_extension.read_text(encoding="utf-8"), original_content)
+
     def test_missing_config_includes_actionable_hint(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-cli-hints-") as tmp:
             root = Path(tmp)

@@ -29,6 +29,7 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
 - `docs/`: DSL, architecture, JPA mapping, compatibility policy
 - `docs/prophet-generator-modularization-roadmap-v0.1.md`: modularization strategy and contributor-ready execution roadmap
 - `docs/prophet-stack-manifest-schema-v0.1.md`: validated stack-manifest schema and capability governance contract
+- `docs/prophet-extension-hooks-safety-v0.1.md`: regeneration-safety contract for user extension code
 - `examples/java/prophet_example_spring/`: runnable Spring example + profile tests
 - `.github/workflows/ci.yml`: CI gates for Python + Spring validation
 - `prophet.ttl`: base ontology model
