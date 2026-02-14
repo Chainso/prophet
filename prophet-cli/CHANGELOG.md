@@ -4,6 +4,12 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-02-14
+
+### Fixed
+- Updated Spring example action handlers to import generated classes from ontology-scoped package paths (`com.example.prophet.commerce_local.generated.*`).
+- Restored clean example build after `0.5.0` package namespace changes.
+
 ## [0.5.0] - 2026-02-14
 
 ### Added

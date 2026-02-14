@@ -1,11 +1,11 @@
 package com.example.prophet_example_spring.actions;
 
-import com.example.prophet.generated.actions.ShipOrderCommand;
-import com.example.prophet.generated.actions.ShipOrderResult;
-import com.example.prophet.generated.actions.handlers.ShipOrderActionHandler;
-import com.example.prophet.generated.domain.OrderState;
-import com.example.prophet.generated.persistence.OrderEntity;
-import com.example.prophet.generated.persistence.OrderRepository;
+import com.example.prophet.commerce_local.generated.actions.ShipOrderCommand;
+import com.example.prophet.commerce_local.generated.actions.ShipOrderResult;
+import com.example.prophet.commerce_local.generated.actions.handlers.ShipOrderActionHandler;
+import com.example.prophet.commerce_local.generated.domain.OrderState;
+import com.example.prophet.commerce_local.generated.persistence.OrderEntity;
+import com.example.prophet.commerce_local.generated.persistence.OrderRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;

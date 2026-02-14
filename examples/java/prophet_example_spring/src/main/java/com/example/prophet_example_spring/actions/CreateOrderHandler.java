@@ -1,13 +1,13 @@
 package com.example.prophet_example_spring.actions;
 
-import com.example.prophet.generated.actions.CreateOrderCommand;
-import com.example.prophet.generated.actions.CreateOrderResult;
-import com.example.prophet.generated.actions.handlers.CreateOrderActionHandler;
-import com.example.prophet.generated.domain.OrderState;
-import com.example.prophet.generated.persistence.OrderEntity;
-import com.example.prophet.generated.persistence.OrderRepository;
-import com.example.prophet.generated.persistence.UserEntity;
-import com.example.prophet.generated.persistence.UserRepository;
+import com.example.prophet.commerce_local.generated.actions.CreateOrderCommand;
+import com.example.prophet.commerce_local.generated.actions.CreateOrderResult;
+import com.example.prophet.commerce_local.generated.actions.handlers.CreateOrderActionHandler;
+import com.example.prophet.commerce_local.generated.domain.OrderState;
+import com.example.prophet.commerce_local.generated.persistence.OrderEntity;
+import com.example.prophet.commerce_local.generated.persistence.OrderRepository;
+import com.example.prophet.commerce_local.generated.persistence.UserEntity;
+import com.example.prophet.commerce_local.generated.persistence.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
