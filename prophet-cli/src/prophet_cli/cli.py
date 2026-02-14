@@ -4219,6 +4219,36 @@ def load_ontology_from_cfg(root: Path, cfg: Dict[str, Any]) -> Ontology:
     return parse_ontology(ont_path.read_text(encoding="utf-8"))
 
 
+@dataclass(frozen=True)
+class CommandContext:
+    root: Path
+    cfg: Dict[str, Any]
+    stack: StackSpec
+    ontology_path: Path
+    ontology: Ontology
+    strict_enums: bool
+
+
+def load_command_context(root: Path) -> Tuple[CommandContext, List[str]]:
+    cfg = load_config(root / "prophet.yaml")
+    stack = resolve_stack_spec(cfg)
+    ontology_path = ontology_path_from_cfg(root, cfg)
+    ontology = load_ontology_from_cfg(root, cfg)
+    strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
+    errors = validate_ontology(ontology, strict_enums=strict_enums)
+    return (
+        CommandContext(
+            root=root,
+            cfg=cfg,
+            stack=stack,
+            ontology_path=ontology_path,
+            ontology=ontology,
+            strict_enums=strict_enums,
+        ),
+        errors,
+    )
+
+
 def print_validation_failure(errors: List[str], ontology_path: Path) -> None:
     print(f"Validation failed for {ontology_path} ({len(errors)} errors):")
     for idx, err in enumerate(errors, start=1):
@@ -4346,14 +4376,9 @@ determinism:
 
 def cmd_validate(args: argparse.Namespace) -> int:
     root = Path.cwd()
-    cfg = load_config(root / "prophet.yaml")
-    resolve_stack_spec(cfg)
-    ontology_path = ontology_path_from_cfg(root, cfg)
-    ont = load_ontology_from_cfg(root, cfg)
-    strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
-    errors = validate_ontology(ont, strict_enums=strict_enums)
+    ctx, errors = load_command_context(root)
     if errors:
-        print_validation_failure(errors, ontology_path)
+        print_validation_failure(errors, ctx.ontology_path)
         return 1
     print("Validation passed.")
     return 0
@@ -4361,21 +4386,16 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 def cmd_plan(args: argparse.Namespace) -> int:
     root = Path.cwd()
-    cfg = load_config(root / "prophet.yaml")
-    stack = resolve_stack_spec(cfg)
-    ontology_path = ontology_path_from_cfg(root, cfg)
-    ont = load_ontology_from_cfg(root, cfg)
-    strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
-    errors = validate_ontology(ont, strict_enums=strict_enums)
+    ctx, errors = load_command_context(root)
     if errors:
-        print_validation_failure(errors, ontology_path)
+        print_validation_failure(errors, ctx.ontology_path)
         return 1
 
-    ir = build_ir(ont, cfg)
-    delta_sql, delta_warnings, baseline_path, _, _ = compute_delta_from_baseline(root, cfg, ir)
-    outputs = build_generated_outputs(ir, cfg, root=root)
+    ir = build_ir(ctx.ontology, ctx.cfg)
+    delta_sql, delta_warnings, baseline_path, _, _ = compute_delta_from_baseline(root, ctx.cfg, ir)
+    outputs = build_generated_outputs(ir, ctx.cfg, root=root)
 
-    existing = set(managed_existing_files(root, cfg))
+    existing = set(managed_existing_files(root, ctx.cfg))
     new_files = set(outputs.keys())
 
     changes: List[Tuple[str, str]] = []
@@ -4392,7 +4412,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
     for rel in sorted(existing - new_files):
         changes.append((rel, "deleted"))
 
-    baseline_path = root / str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
+    baseline_path = root / str(cfg_get(ctx.cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     compatibility = "non_functional"
     required_bump = "patch"
     reasons: List[str] = []
@@ -4420,13 +4440,13 @@ def cmd_plan(args: argparse.Namespace) -> int:
     if args.json:
         payload = {
             "stack": {
-                "id": stack.id,
-                "language": stack.language,
-                "framework": stack.framework,
-                "orm": stack.orm,
-                "status": stack.status,
-                "implemented": stack.implemented,
-                "capabilities": sorted(stack.capabilities),
+                "id": ctx.stack.id,
+                "language": ctx.stack.language,
+                "framework": ctx.stack.framework,
+                "orm": ctx.stack.orm,
+                "status": ctx.stack.status,
+                "implemented": ctx.stack.implemented,
+                "capabilities": sorted(ctx.stack.capabilities),
             },
             "changes": change_items,
             "summary": {
@@ -4441,7 +4461,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
         return 0
 
     print(f"Plan: {len(changes)} changes")
-    print(f"Stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
+    print(f"Stack: {ctx.stack.id} ({ctx.stack.language}/{ctx.stack.framework}/{ctx.stack.orm})")
     for idx, item in enumerate(change_items, start=1):
         print(f"{idx}) {item['path']} ({item['status']})")
         print(f"   reason: {item['reason']}")
@@ -4462,29 +4482,24 @@ def cmd_plan(args: argparse.Namespace) -> int:
 
 def cmd_generate(args: argparse.Namespace) -> int:
     root = Path.cwd()
-    cfg = load_config(root / "prophet.yaml")
-    stack = resolve_stack_spec(cfg)
-    ontology_path = ontology_path_from_cfg(root, cfg)
-    ont = load_ontology_from_cfg(root, cfg)
-    strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
-    errors = validate_ontology(ont, strict_enums=strict_enums)
+    ctx, errors = load_command_context(root)
     if errors:
-        print_validation_failure(errors, ontology_path)
+        print_validation_failure(errors, ctx.ontology_path)
         return 1
 
-    ir = build_ir(ont, cfg)
+    ir = build_ir(ctx.ontology, ctx.cfg)
 
     if args.verify_clean and args.wire_gradle:
         raise ProphetError("--wire-gradle cannot be used with --verify-clean")
     if args.verify_clean and args.skip_unchanged:
         raise ProphetError("--skip-unchanged cannot be used with --verify-clean")
 
-    out_dir = str(cfg_get(cfg, ["generation", "out_dir"], "gen"))
-    targets = list(cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"]))
-    baseline_ir = str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
+    out_dir = str(cfg_get(ctx.cfg, ["generation", "out_dir"], "gen"))
+    targets = list(cfg_get(ctx.cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"]))
+    baseline_ir = str(cfg_get(ctx.cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     signature = compute_generation_signature(
         toolchain_version=TOOLCHAIN_VERSION,
-        stack_id=stack.id,
+        stack_id=ctx.stack.id,
         ir_hash=str(ir.get("ir_hash", "")),
         out_dir=out_dir,
         targets=targets,
@@ -4496,15 +4511,15 @@ def cmd_generate(args: argparse.Namespace) -> int:
     if args.skip_unchanged and not args.wire_gradle:
         if cached_signature == signature and manifest_path.exists():
             print("Skipped generation: configuration and IR unchanged.")
-            print(f"- stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
+            print(f"- stack: {ctx.stack.id} ({ctx.stack.language}/{ctx.stack.framework}/{ctx.stack.orm})")
             print(f"- signature: {signature}")
             return 0
 
-    delta_sql, delta_warnings, baseline_path, _, _ = compute_delta_from_baseline(root, cfg, ir)
-    outputs = build_generated_outputs(ir, cfg, root=root)
+    delta_sql, delta_warnings, baseline_path, _, _ = compute_delta_from_baseline(root, ctx.cfg, ir)
+    outputs = build_generated_outputs(ir, ctx.cfg, root=root)
 
     if args.verify_clean:
-        dirty = collect_dirty_generated_files(root, cfg, outputs)
+        dirty = collect_dirty_generated_files(root, ctx.cfg, outputs)
         if dirty:
             print_dirty_generated_files(dirty)
             return 1
@@ -4512,26 +4527,26 @@ def cmd_generate(args: argparse.Namespace) -> int:
         print("Generated outputs are clean.")
         return 0
 
-    remove_stale_outputs(root, cfg, outputs)
+    remove_stale_outputs(root, ctx.cfg, outputs)
     write_outputs(outputs, root)
 
     ir_path = root / ".prophet" / "ir" / "current.ir.json"
     ir_path.parent.mkdir(parents=True, exist_ok=True)
     ir_path.write_text(json.dumps(ir, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
-    ensure_baseline_exists(root, cfg, ir)
+    ensure_baseline_exists(root, ctx.cfg, ir)
 
-    sync_example_project(root, cfg)
+    sync_example_project(root, ctx.cfg)
 
     gradle_messages: List[str] = []
     requested_migrations, detected_migrations, enabled_migrations, migration_warnings = resolve_migration_runtime_modes(
-        cfg, root
+        ctx.cfg, root
     )
     if args.wire_gradle:
-        gradle_messages = wire_gradle_multi_module(root, cfg)
+        gradle_messages = wire_gradle_multi_module(root, ctx.cfg)
 
     print("Generated artifacts:")
-    print(f"- stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
+    print(f"- stack: {ctx.stack.id} ({ctx.stack.language}/{ctx.stack.framework}/{ctx.stack.orm})")
     for rel in sorted(outputs.keys()):
         print(f"- {rel}")
     print("- .prophet/ir/current.ir.json")
@@ -4569,7 +4584,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
         {
             "schema_version": 1,
             "toolchain_version": TOOLCHAIN_VERSION,
-            "stack_id": stack.id,
+            "stack_id": ctx.stack.id,
             "signature": signature,
             "ir_hash": ir.get("ir_hash"),
             "out_dir": out_dir,
@@ -4765,19 +4780,14 @@ def cmd_hooks(args: argparse.Namespace) -> int:
 
 def cmd_version_check(args: argparse.Namespace) -> int:
     root = Path.cwd()
-    cfg = load_config(root / "prophet.yaml")
-    resolve_stack_spec(cfg)
-    ontology_path = ontology_path_from_cfg(root, cfg)
-    ont = load_ontology_from_cfg(root, cfg)
-    strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
-    errors = validate_ontology(ont, strict_enums=strict_enums)
+    ctx, errors = load_command_context(root)
     if errors:
-        print_validation_failure(errors, ontology_path)
+        print_validation_failure(errors, ctx.ontology_path)
         return 1
 
-    current_ir = build_ir(ont, cfg)
+    current_ir = build_ir(ctx.ontology, ctx.cfg)
 
-    baseline_rel = args.against or str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
+    baseline_rel = args.against or str(cfg_get(ctx.cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline_path = root / baseline_rel
     if not baseline_path.exists():
         raise ProphetError(f"Baseline IR not found: {baseline_path}")
@@ -4818,37 +4828,32 @@ def cmd_version_check(args: argparse.Namespace) -> int:
 
 def cmd_check(args: argparse.Namespace) -> int:
     root = Path.cwd()
-    cfg = load_config(root / "prophet.yaml")
-    stack = resolve_stack_spec(cfg)
-    ontology_path = ontology_path_from_cfg(root, cfg)
-    ont = load_ontology_from_cfg(root, cfg)
-    strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
-    errors = validate_ontology(ont, strict_enums=strict_enums)
+    ctx, errors = load_command_context(root)
     if errors:
         if args.json:
             report = {
                 "ok": False,
                 "validation": {
                     "passed": False,
-                    "ontology_file": str(ontology_path),
+                    "ontology_file": str(ctx.ontology_path),
                     "errors": errors,
                 },
             }
             print(json.dumps(report, indent=2, sort_keys=False))
             return 1
-        print_validation_failure(errors, ontology_path)
+        print_validation_failure(errors, ctx.ontology_path)
         return 1
 
-    ir = build_ir(ont, cfg)
-    delta_sql, delta_warnings, _, _, delta_meta = compute_delta_from_baseline(root, cfg, ir)
-    outputs = build_generated_outputs(ir, cfg, root=root)
-    dirty = collect_dirty_generated_files(root, cfg, outputs)
+    ir = build_ir(ctx.ontology, ctx.cfg)
+    delta_sql, delta_warnings, _, _, delta_meta = compute_delta_from_baseline(root, ctx.cfg, ir)
+    outputs = build_generated_outputs(ir, ctx.cfg, root=root)
+    dirty = collect_dirty_generated_files(root, ctx.cfg, outputs)
     status = 0
     dirty_clean = not dirty
     if not dirty_clean:
         status = 1
 
-    baseline_rel = args.against or str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
+    baseline_rel = args.against or str(cfg_get(ctx.cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline_path = root / baseline_rel
     compatibility_level = "unknown"
     required_bump = "unknown"
@@ -4871,24 +4876,24 @@ def cmd_check(args: argparse.Namespace) -> int:
         if not compatibility_passed:
             status = 1
     requested_migrations, detected_migrations, enabled_migrations, migration_warnings = resolve_migration_runtime_modes(
-        cfg, root
+        ctx.cfg, root
     )
 
     if args.json:
         report = {
             "ok": status == 0,
             "stack": {
-                "id": stack.id,
-                "language": stack.language,
-                "framework": stack.framework,
-                "orm": stack.orm,
-                "status": stack.status,
-                "implemented": stack.implemented,
-                "capabilities": sorted(stack.capabilities),
+                "id": ctx.stack.id,
+                "language": ctx.stack.language,
+                "framework": ctx.stack.framework,
+                "orm": ctx.stack.orm,
+                "status": ctx.stack.status,
+                "implemented": ctx.stack.implemented,
+                "capabilities": sorted(ctx.stack.capabilities),
             },
             "validation": {
                 "passed": True,
-                "ontology_file": str(ontology_path),
+                "ontology_file": str(ctx.ontology_path),
                 "errors": [],
             },
             "generation": {
@@ -4928,7 +4933,7 @@ def cmd_check(args: argparse.Namespace) -> int:
         return status
 
     print("Validation passed.")
-    print(f"Stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
+    print(f"Stack: {ctx.stack.id} ({ctx.stack.language}/{ctx.stack.framework}/{ctx.stack.orm})")
     if dirty:
         print("")
         print_dirty_generated_files(dirty)

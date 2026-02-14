@@ -27,12 +27,12 @@ Completed so far:
 17. Added semantic conformance tests for action/query/struct/object-ref contracts independent of file snapshots.
 18. Added `prophet hooks` command with JSON output to expose generated extension surfaces directly.
 19. Extracted generation cache/signature behavior into `prophet_cli.codegen.cache` with dedicated tests.
+20. Reduced command duplication in `cli.py` by introducing shared validated command context loading.
 
 In progress:
 
-1. Reducing duplicated legacy logic in `cli.py` now that core delegation is active.
-2. Advancing Milestone 3 and Milestone 7 view/extension coverage with stronger conformance tests.
-3. Expanding Milestone 4 stack validation into full target manifest schema.
+1. Advancing Milestone 3 and Milestone 7 view/extension coverage with stronger conformance tests.
+2. Expanding Milestone 4 stack validation into full target manifest schema.
 
 ## 1. Purpose
 
