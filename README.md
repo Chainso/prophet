@@ -5,7 +5,7 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
 
 ## Status
 
-- Toolchain release: `0.4.0`
+- Toolchain release: `0.5.0`
 - Golden runtime target: Spring Boot
 - Example app: `examples/java/prophet_example_spring`
 

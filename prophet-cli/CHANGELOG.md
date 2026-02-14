@@ -4,6 +4,21 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-02-14
+
+### Added
+- DSL metadata support via `description "..."` / `documentation "..."` across ontology entities.
+- Composite primary key declarations via object-level `key primary (fieldA, fieldB)` syntax.
+- Optional object-level display key marker via `key display (...)` metadata.
+- Composite-key-aware SQL/JPA/query/openapi generation, including multi-segment get-by-id paths.
+- New DSL feature tests for metadata and composite-key validation coverage.
+
+### Changed
+- Spring generated package root is now ontology-scoped: `<base_package>.<ontology_name>`.
+- Generated JavaDoc and OpenAPI summaries now derive from DSL metadata when provided.
+- Validation now enforces current object-reference constraint: target object refs require single-field primary keys.
+- Compatibility diffing ignores description-only changes for actions/events/triggers.
+
 ## [0.4.0] - 2026-02-14
 
 ### Added
