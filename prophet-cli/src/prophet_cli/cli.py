@@ -18,6 +18,7 @@ import yaml
 
 TOOLCHAIN_VERSION = "0.1.0"
 IR_VERSION = "0.1"
+COMPATIBILITY_POLICY_DOC = "docs/prophet-compatibility-policy-v0.2.md"
 
 BASE_TYPES = {
     "string",
@@ -4134,6 +4135,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
     print("")
     print(f"Compatibility: {compatibility}")
     print(f"Required version bump: {required_bump}")
+    print(f"Policy reference: {COMPATIBILITY_POLICY_DOC}")
 
     if reasons and args.show_reasons:
         print("")
@@ -4385,6 +4387,7 @@ def cmd_version_check(args: argparse.Namespace) -> int:
     print(f"Compatibility result: {compatibility}")
     print(f"Required version bump: {required_bump}")
     print(f"Declared version bump: {declared} ({old_ver} -> {new_ver})")
+    print(f"Policy reference: {COMPATIBILITY_POLICY_DOC}")
 
     if changes:
         print("")
@@ -4400,6 +4403,7 @@ def cmd_version_check(args: argparse.Namespace) -> int:
     if bump_rank(declared) < bump_rank(required_bump):
         print("")
         print("Version check failed: declared bump is lower than required bump.")
+        print(f"See compatibility policy table: {COMPATIBILITY_POLICY_DOC}")
         return 1
 
     return 0
@@ -4449,12 +4453,14 @@ def cmd_check(args: argparse.Namespace) -> int:
         print(f"Compatibility result: {compatibility}")
         print(f"Required version bump: {required_bump}")
         print(f"Declared version bump: {declared} ({old_ver} -> {new_ver})")
+        print(f"Policy reference: {COMPATIBILITY_POLICY_DOC}")
         if changes and args.show_reasons:
             print("Detected compatibility changes:")
             for item in changes:
                 print(f"- {item}")
         if bump_rank(declared) < bump_rank(required_bump):
             print("Version check failed: declared bump is lower than required bump.")
+            print(f"See compatibility policy table: {COMPATIBILITY_POLICY_DOC}")
             status = 1
 
     print("")

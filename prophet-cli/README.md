@@ -135,6 +135,9 @@ Compares current IR against baseline and reports compatibility + required bump.
 prophet version check --against .prophet/baselines/main.ir.json
 ```
 
+Compatibility rules used by CLI are documented in:
+- `docs/prophet-compatibility-policy-v0.2.md`
+
 ## Expected Project Files
 
 - `prophet.yaml`

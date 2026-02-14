@@ -10,6 +10,7 @@ This repository currently contains:
 - `docs/prophet-dsl-v0.1.md` (DSL language reference and examples)
 - `docs/prophet-spring-boot-golden-stack-v0.1.md` (deep integration contract)
 - `docs/prophet-jpa-mapping-v0.1.md` (ontology-to-database/JPA translation rules)
+- `docs/prophet-compatibility-policy-v0.2.md` (semantic compatibility policy tables)
 - `prophet-cli/` Python package for the CLI (`prophet_cli`)
 - `prophet-cli/RELEASING.md` + `prophet-cli/CHANGELOG.md` (release process + history)
 - `./prophet` root launcher script (local convenience wrapper)
