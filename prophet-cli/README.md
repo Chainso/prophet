@@ -64,7 +64,7 @@ prophet check --against .prophet/baselines/main.ir.json
 `--json` emits structured diagnostics for CI bots and automation.
 
 ### `prophet stacks`
-Lists supported stack ids, framework/ORM pairings, and capability metadata.
+Lists supported stack ids, framework/ORM pairings, implementation status, and capability metadata.
 
 ```bash
 prophet stacks

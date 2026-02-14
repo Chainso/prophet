@@ -4718,7 +4718,8 @@ def cmd_stacks(args: argparse.Namespace) -> int:
     rows = supported_stack_table()
     print("Supported stacks:")
     for row in rows:
-        print(f"- {row['id']}: {row['language']}/{row['framework']}/{row['orm']}")
+        status = "implemented" if row.get("implemented") else "planned"
+        print(f"- {row['id']}: {row['language']}/{row['framework']}/{row['orm']} [{status}]")
         print(f"  capabilities: {', '.join(row['capabilities'])}")
     return 0
 

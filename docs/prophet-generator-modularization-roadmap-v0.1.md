@@ -17,6 +17,7 @@ Completed so far:
 7. Added explicit code generation pipeline contract layer (`GenerationContext` + stack generator routing).
 8. Added first dedicated target module boundary at `prophet_cli.targets.java_spring_jpa`.
 9. Added structured `prophet plan --json` diagnostics for CI and automation workflows.
+10. Added explicit stack status metadata (`implemented` vs `planned`) for transparent contributor planning.
 
 In progress:
 

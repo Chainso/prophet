@@ -12,6 +12,7 @@ class StackSpec:
     language: str
     framework: str
     orm: str
+    implemented: bool
     capabilities: Set[str]
 
 
@@ -21,6 +22,7 @@ SUPPORTED_STACKS: Dict[str, StackSpec] = {
         language="java",
         framework="spring_boot",
         orm="jpa",
+        implemented=True,
         capabilities={
             "action_endpoints",
             "typed_query_filters",
@@ -36,6 +38,7 @@ SUPPORTED_STACKS: Dict[str, StackSpec] = {
         language="node",
         framework="express",
         orm="typeorm",
+        implemented=False,
         capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
     ),
     "node_express_prisma": StackSpec(
@@ -43,6 +46,7 @@ SUPPORTED_STACKS: Dict[str, StackSpec] = {
         language="node",
         framework="express",
         orm="prisma",
+        implemented=False,
         capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
     ),
     "node_express_mongoose": StackSpec(
@@ -50,6 +54,7 @@ SUPPORTED_STACKS: Dict[str, StackSpec] = {
         language="node",
         framework="express",
         orm="mongoose",
+        implemented=False,
         capabilities={"action_endpoints", "typed_query_filters", "pagination", "nested_lists", "structs"},
     ),
     "python_fastapi_sqlalchemy": StackSpec(
@@ -57,6 +62,7 @@ SUPPORTED_STACKS: Dict[str, StackSpec] = {
         language="python",
         framework="fastapi",
         orm="sqlalchemy",
+        implemented=False,
         capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
     ),
     "python_flask_sqlalchemy": StackSpec(
@@ -64,6 +70,7 @@ SUPPORTED_STACKS: Dict[str, StackSpec] = {
         language="python",
         framework="flask",
         orm="sqlalchemy",
+        implemented=False,
         capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
     ),
     "python_django_orm": StackSpec(
@@ -71,6 +78,7 @@ SUPPORTED_STACKS: Dict[str, StackSpec] = {
         language="python",
         framework="django",
         orm="django_orm",
+        implemented=False,
         capabilities={"action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"},
     ),
 }
@@ -155,6 +163,7 @@ def supported_stack_table() -> List[Dict[str, Any]]:
                 "language": spec.language,
                 "framework": spec.framework,
                 "orm": spec.orm,
+                "implemented": spec.implemented,
                 "capabilities": sorted(spec.capabilities),
             }
         )

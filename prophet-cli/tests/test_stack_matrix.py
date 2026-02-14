@@ -53,7 +53,9 @@ class StackMatrixTests(unittest.TestCase):
         self.assertIn("does not match stack id", str(ctx.exception))
 
     def test_supported_matrix_contains_planned_stacks(self) -> None:
-        ids = {row["id"] for row in supported_stack_table()}
+        rows = supported_stack_table()
+        ids = {row["id"] for row in rows}
+        by_id = {row["id"]: row for row in rows}
         self.assertIn("java_spring_jpa", ids)
         self.assertIn("node_express_typeorm", ids)
         self.assertIn("node_express_prisma", ids)
@@ -61,6 +63,8 @@ class StackMatrixTests(unittest.TestCase):
         self.assertIn("python_fastapi_sqlalchemy", ids)
         self.assertIn("python_flask_sqlalchemy", ids)
         self.assertIn("python_django_orm", ids)
+        self.assertTrue(by_id["java_spring_jpa"]["implemented"])
+        self.assertFalse(by_id["python_fastapi_sqlalchemy"]["implemented"])
 
 
 if __name__ == "__main__":
