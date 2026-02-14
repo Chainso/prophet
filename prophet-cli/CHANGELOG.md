@@ -4,6 +4,14 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-02-14
+
+### Changed
+- Restructured documentation into separate quickstart, user reference, and developer sections.
+- Rewrote top-level README for first-time users with a plain-language ontology explanation.
+- Added Prophet brand assets and usage guidelines under `brand/`.
+- Updated CLI compatibility policy reference path to `docs/reference/compatibility.md`.
+
 ## [0.6.1] - 2026-02-14
 
 ### Changed

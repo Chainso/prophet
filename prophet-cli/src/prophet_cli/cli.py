@@ -49,7 +49,7 @@ from prophet_cli.targets.java_spring_jpa import JavaSpringJpaDeps
 from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_java_spring_jpa_outputs
 
 
-TOOLCHAIN_VERSION = "0.6.1"
+TOOLCHAIN_VERSION = "0.6.2"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
