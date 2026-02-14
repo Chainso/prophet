@@ -7,11 +7,10 @@ import com.example.prophet.generated.actions.CreateOrderCommand;
 import com.example.prophet.generated.actions.CreateOrderResult;
 import com.example.prophet.generated.actions.ShipOrderCommand;
 import com.example.prophet.generated.actions.ShipOrderResult;
-import com.example.prophet.generated.actions.handlers.ApproveOrderActionHandler;
-import com.example.prophet.generated.actions.handlers.CreateOrderActionHandler;
-import com.example.prophet.generated.actions.handlers.ShipOrderActionHandler;
+import com.example.prophet.generated.actions.services.ApproveOrderActionService;
+import com.example.prophet.generated.actions.services.CreateOrderActionService;
+import com.example.prophet.generated.actions.services.ShipOrderActionService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,28 +24,24 @@ import static org.springframework.http.HttpStatus.NOT_IMPLEMENTED;
 @Generated("prophet-cli")
 public class ActionEndpointController {
 
-    private final ObjectProvider<ApproveOrderActionHandler> approveOrderHandlerProvider;
-    private final ObjectProvider<CreateOrderActionHandler> createOrderHandlerProvider;
-    private final ObjectProvider<ShipOrderActionHandler> shipOrderHandlerProvider;
+    private final ApproveOrderActionService approveOrderService;
+    private final CreateOrderActionService createOrderService;
+    private final ShipOrderActionService shipOrderService;
 
     public ActionEndpointController(
-        ObjectProvider<ApproveOrderActionHandler> approveOrderHandlerProvider,
-        ObjectProvider<CreateOrderActionHandler> createOrderHandlerProvider,
-        ObjectProvider<ShipOrderActionHandler> shipOrderHandlerProvider
+        ApproveOrderActionService approveOrderService,
+        CreateOrderActionService createOrderService,
+        ShipOrderActionService shipOrderService
     ) {
-        this.approveOrderHandlerProvider = approveOrderHandlerProvider;
-        this.createOrderHandlerProvider = createOrderHandlerProvider;
-        this.shipOrderHandlerProvider = shipOrderHandlerProvider;
+        this.approveOrderService = approveOrderService;
+        this.createOrderService = createOrderService;
+        this.shipOrderService = shipOrderService;
     }
 
     @PostMapping("/approveOrder")
     public ResponseEntity<ApproveOrderResult> approveOrder(@Valid @RequestBody ApproveOrderCommand request) {
-        ApproveOrderActionHandler handler = approveOrderHandlerProvider.getIfAvailable();
-        if (handler == null) {
-            throw new ResponseStatusException(NOT_IMPLEMENTED, "No handler bean provided for action 'approveOrder'");
-        }
         try {
-            return ResponseEntity.ok(handler.handle(request));
+            return ResponseEntity.ok(approveOrderService.execute(request));
         } catch (UnsupportedOperationException ex) {
             throw new ResponseStatusException(NOT_IMPLEMENTED, ex.getMessage(), ex);
         }
@@ -54,12 +49,8 @@ public class ActionEndpointController {
 
     @PostMapping("/createOrder")
     public ResponseEntity<CreateOrderResult> createOrder(@Valid @RequestBody CreateOrderCommand request) {
-        CreateOrderActionHandler handler = createOrderHandlerProvider.getIfAvailable();
-        if (handler == null) {
-            throw new ResponseStatusException(NOT_IMPLEMENTED, "No handler bean provided for action 'createOrder'");
-        }
         try {
-            return ResponseEntity.ok(handler.handle(request));
+            return ResponseEntity.ok(createOrderService.execute(request));
         } catch (UnsupportedOperationException ex) {
             throw new ResponseStatusException(NOT_IMPLEMENTED, ex.getMessage(), ex);
         }
@@ -67,12 +58,8 @@ public class ActionEndpointController {
 
     @PostMapping("/shipOrder")
     public ResponseEntity<ShipOrderResult> shipOrder(@Valid @RequestBody ShipOrderCommand request) {
-        ShipOrderActionHandler handler = shipOrderHandlerProvider.getIfAvailable();
-        if (handler == null) {
-            throw new ResponseStatusException(NOT_IMPLEMENTED, "No handler bean provided for action 'shipOrder'");
-        }
         try {
-            return ResponseEntity.ok(handler.handle(request));
+            return ResponseEntity.ok(shipOrderService.execute(request));
         } catch (UnsupportedOperationException ex) {
             throw new ResponseStatusException(NOT_IMPLEMENTED, ex.getMessage(), ex);
         }

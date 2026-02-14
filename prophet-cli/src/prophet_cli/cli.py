@@ -2917,6 +2917,7 @@ def render_spring_files(
         req_name = action_input_by_id[action["input_shape_id"]]["name"]
         res_name = action_output_by_id[action["output_shape_id"]]["name"]
         handler_name = f"{pascal_case(action['name'])}ActionHandler"
+        service_name = f"{pascal_case(action['name'])}ActionService"
         handler_src = (
             f"package {base_package}.generated.actions.handlers;\n\n"
             f"import {base_package}.generated.actions.{req_name};\n"
@@ -2946,10 +2947,50 @@ def render_spring_files(
         )
         files[f"src/main/java/{package_path}/generated/actions/handlers/defaults/{default_cls}.java"] = default_handler_src
 
-    # action controller delegates to user-provided handler beans
+        service_src = (
+            f"package {base_package}.generated.actions.services;\n\n"
+            f"import {base_package}.generated.actions.{req_name};\n"
+            f"import {base_package}.generated.actions.{res_name};\n\n"
+            f"public interface {service_name} {{\n"
+            f"    {res_name} execute({req_name} request);\n"
+            "}\n"
+        )
+        files[f"src/main/java/{package_path}/generated/actions/services/{service_name}.java"] = service_src
+
+        default_service_name = f"{service_name}Default"
+        default_service_src = (
+            f"package {base_package}.generated.actions.services.defaults;\n\n"
+            f"import {base_package}.generated.actions.{req_name};\n"
+            f"import {base_package}.generated.actions.{res_name};\n"
+            f"import {base_package}.generated.actions.handlers.{handler_name};\n"
+            f"import {base_package}.generated.actions.services.{service_name};\n"
+            "import org.springframework.beans.factory.ObjectProvider;\n"
+            "import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\n"
+            "import org.springframework.stereotype.Component;\n\n"
+            "@Component\n"
+            f"@ConditionalOnMissingBean({service_name}.class)\n"
+            f"public class {default_service_name} implements {service_name} {{\n"
+            f"    private final ObjectProvider<{handler_name}> handlerProvider;\n\n"
+            f"    public {default_service_name}(ObjectProvider<{handler_name}> handlerProvider) {{\n"
+            "        this.handlerProvider = handlerProvider;\n"
+            "    }\n\n"
+            "    @Override\n"
+            f"    public {res_name} execute({req_name} request) {{\n"
+            f"        {handler_name} handler = handlerProvider.getIfAvailable();\n"
+            "        if (handler == null) {\n"
+            f"            throw new UnsupportedOperationException(\"No handler bean provided for action '{action['name']}'\");\n"
+            "        }\n"
+            "        return handler.handle(request);\n"
+            "    }\n"
+            "}\n"
+        )
+        files[
+            f"src/main/java/{package_path}/generated/actions/services/defaults/{default_service_name}.java"
+        ] = default_service_src
+
+    # action controller delegates to generated action services
     controller_imports = {
         "import jakarta.validation.Valid;",
-        "import org.springframework.beans.factory.ObjectProvider;",
         "import org.springframework.http.ResponseEntity;",
         "import org.springframework.web.bind.annotation.PostMapping;",
         "import org.springframework.web.bind.annotation.RequestBody;",
@@ -2965,25 +3006,21 @@ def render_spring_files(
     for action in sorted(actions, key=lambda x: x["id"]):
         req_name = action_input_by_id[action["input_shape_id"]]["name"]
         res_name = action_output_by_id[action["output_shape_id"]]["name"]
-        handler_name = f"{pascal_case(action['name'])}ActionHandler"
-        handler_var = f"{camel_case(action['name'])}HandlerProvider"
+        service_name = f"{pascal_case(action['name'])}ActionService"
+        service_var = f"{camel_case(action['name'])}Service"
         method_name = camel_case(action["name"])
         controller_imports.add(f"import {base_package}.generated.actions.{req_name};")
         controller_imports.add(f"import {base_package}.generated.actions.{res_name};")
-        controller_imports.add(f"import {base_package}.generated.actions.handlers.{handler_name};")
-        controller_fields.append(f"    private final ObjectProvider<{handler_name}> {handler_var};")
-        ctor_args.append(f"        ObjectProvider<{handler_name}> {handler_var}")
-        ctor_assigns.append(f"        this.{handler_var} = {handler_var};")
+        controller_imports.add(f"import {base_package}.generated.actions.services.{service_name};")
+        controller_fields.append(f"    private final {service_name} {service_var};")
+        ctor_args.append(f"        {service_name} {service_var}")
+        ctor_assigns.append(f"        this.{service_var} = {service_var};")
         controller_methods.extend(
             [
                 f"    @PostMapping(\"/{action['name']}\")",
                 f"    public ResponseEntity<{res_name}> {method_name}(@Valid @RequestBody {req_name} request) {{",
-                f"        {handler_name} handler = {handler_var}.getIfAvailable();",
-                "        if (handler == null) {",
-                f"            throw new ResponseStatusException(NOT_IMPLEMENTED, \"No handler bean provided for action '{action['name']}'\");",
-                "        }",
                 "        try {",
-                "            return ResponseEntity.ok(handler.handle(request));",
+                f"            return ResponseEntity.ok({service_var}.execute(request));",
                 "        } catch (UnsupportedOperationException ex) {",
                 "            throw new ResponseStatusException(NOT_IMPLEMENTED, ex.getMessage(), ex);",
                 "        }",

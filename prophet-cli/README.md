@@ -149,7 +149,8 @@ prophet version check --against .prophet/baselines/main.ir.json
 - Nested list types are supported (for example `string[][]`, `list(list(string))`).
 - Generated Java record component order follows DSL field declaration order.
 - Actions are not auto-implemented; generated endpoints call handler beans.
-- Generated default handler stubs throw `UnsupportedOperationException` until user handlers are provided.
+- Generated action services (`generated.actions.services.*`) are the API boundary used by controllers.
+- Default generated services delegate to handler beans; generated default handler stubs throw `UnsupportedOperationException` until user handlers are provided.
 
 ## Config (`prophet.yaml`)
 

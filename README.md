@@ -50,7 +50,8 @@ cd examples/java/prophet_example_spring
 - v0.1 golden runtime integration target is Spring Boot.
 - In v0.1 codegen, actions are generated as direct API endpoints (`/actions/*`).
 - Action API payloads come from DSL `actionInput`/`actionOutput` contracts.
-- Generated action endpoints delegate to action handlers; generated default handler stubs throw `UnsupportedOperationException` and return `501` until replaced by user beans.
+- Generated action endpoints delegate to generated action services; default services delegate to handler beans.
+- Generated default handler stubs throw `UnsupportedOperationException` and endpoints return `501` until replaced by user beans.
 - DSL fields support scalar and list types (for example `string[]` or `list(string)`).
 - DSL supports nested list types (for example `string[][]`) and reusable `struct` types for non-entity nested payloads.
 - Event ingestion/dispatch remains an external runtime concern, not Spring codegen output.
