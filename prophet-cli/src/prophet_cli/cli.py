@@ -35,6 +35,9 @@ from prophet_cli.codegen.stacks import resolve_stack_spec
 from prophet_cli.codegen.stacks import supported_stack_table
 from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.pipeline import run_generation_pipeline
+from prophet_cli.codegen.artifacts import managed_existing_files as _managed_existing_files
+from prophet_cli.codegen.artifacts import remove_stale_outputs as _remove_stale_outputs
+from prophet_cli.codegen.artifacts import write_outputs as _write_outputs
 from prophet_cli.targets.java_spring_jpa import JavaSpringJpaDeps
 from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_java_spring_jpa_outputs
 
@@ -3875,67 +3878,17 @@ def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optio
 
 
 def write_outputs(outputs: Dict[str, str], root: Path) -> None:
-    for rel_path, content in outputs.items():
-        path = root / rel_path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
+    _write_outputs(outputs, root)
 
 
 def remove_stale_outputs(root: Path, cfg: Dict[str, Any], outputs: Dict[str, str]) -> None:
-    existing = set(managed_existing_files(root, cfg))
-    desired = set(outputs.keys())
-    stale = sorted(existing - desired)
-    for rel in stale:
-        p = root / rel
-        if p.exists():
-            p.unlink()
-            parent = p.parent
-            while parent != root and parent.exists() and not any(parent.iterdir()):
-                parent.rmdir()
-                parent = parent.parent
+    out_dir = str(cfg_get(cfg, ["generation", "out_dir"], "gen"))
+    _remove_stale_outputs(root, out_dir, outputs)
 
 
 def managed_existing_files(root: Path, cfg: Dict[str, Any]) -> List[str]:
-    out_dir = cfg_get(cfg, ["generation", "out_dir"], "gen")
-    manifest_path = root / out_dir / "manifest" / "generated-files.json"
-    if manifest_path.exists():
-        try:
-            payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-            outputs = payload.get("outputs", [])
-            if isinstance(outputs, list):
-                managed_from_manifest = []
-                for entry in outputs:
-                    if isinstance(entry, dict):
-                        rel = entry.get("path")
-                        if isinstance(rel, str) and rel:
-                            managed_from_manifest.append(rel)
-                # include manifest itself for cleanliness checks and stale removal
-                managed_from_manifest.append(str(manifest_path.relative_to(root)))
-                return sorted(set(managed_from_manifest))
-        except Exception:
-            # Fall back to directory scan when manifest is malformed.
-            pass
-
-    managed_paths = [
-        root / out_dir / "sql",
-        root / out_dir / "migrations",
-        root / out_dir / "openapi",
-        root / out_dir / "spring-boot",
-        root / out_dir / "manifest",
-    ]
-    ignored_parts = {"build", ".gradle", ".idea", ".settings", "bin", "out", "target"}
-    result: List[str] = []
-    for p in managed_paths:
-        if p.exists():
-            for child in p.rglob("*"):
-                if child.is_file():
-                    rel = child.relative_to(root)
-                    if any(part in ignored_parts for part in rel.parts):
-                        continue
-                    if any(part.startswith(".") for part in rel.parts):
-                        continue
-                    result.append(str(rel))
-    return sorted(result)
+    out_dir = str(cfg_get(cfg, ["generation", "out_dir"], "gen"))
+    return _managed_existing_files(root, out_dir)
 
 
 def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:

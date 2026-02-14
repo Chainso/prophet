@@ -18,6 +18,7 @@ Completed so far:
 8. Added first dedicated target module boundary at `prophet_cli.targets.java_spring_jpa`.
 9. Added structured `prophet plan --json` diagnostics for CI and automation workflows.
 10. Added explicit stack status metadata (`implemented` vs `planned`) for transparent contributor planning.
+11. Extracted artifact lifecycle utilities (`write`, `managed file detection`, `stale cleanup`) into `prophet_cli.codegen.artifacts`.
 
 In progress:
 
