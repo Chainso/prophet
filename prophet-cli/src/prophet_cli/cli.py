@@ -29,6 +29,8 @@ from prophet_cli.core.compatibility import parse_semver as _core_parse_semver
 from prophet_cli.core.compatibility import required_level_to_bump as _core_required_level_to_bump
 from prophet_cli.core.validation import validate_ontology as _core_validate_ontology
 from prophet_cli.core.validation import validate_type_expr as _core_validate_type_expr
+from prophet_cli.codegen.stacks import resolve_stack_spec
+from prophet_cli.codegen.stacks import supported_stack_table
 
 
 TOOLCHAIN_VERSION = "0.3.0"
@@ -3849,6 +3851,12 @@ def compute_delta_from_baseline(
 def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optional[Path] = None) -> Dict[str, str]:
     outputs: Dict[str, str] = {}
     out_dir = cfg_get(cfg, ["generation", "out_dir"], "gen")
+    stack = resolve_stack_spec(cfg)
+    if stack.id != "java_spring_jpa":
+        raise ProphetError(
+            f"Stack '{stack.id}' is declared but not yet implemented for generation output. "
+            "Current generator implementation supports only 'java_spring_jpa'."
+        )
     targets = cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"])
     work_root = root if root is not None else Path.cwd()
     schema_sql = render_sql(ir)
@@ -4333,6 +4341,8 @@ project:
   ontology_file: path/to/your-ontology.prophet
   version_source: ontology
 generation:
+  stack:
+    id: java_spring_jpa
   targets:
     - sql
     - openapi
@@ -4376,6 +4386,7 @@ determinism:
 def cmd_validate(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    resolve_stack_spec(cfg)
     ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
@@ -4390,6 +4401,7 @@ def cmd_validate(args: argparse.Namespace) -> int:
 def cmd_plan(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    stack = resolve_stack_spec(cfg)
     ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
@@ -4429,6 +4441,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
         required_bump = required_level_to_bump(compatibility)
 
     print(f"Plan: {len(changes)} changes")
+    print(f"Stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
     for idx, (rel, status) in enumerate(changes, start=1):
         print(f"{idx}) {rel} ({status})")
         if rel.endswith("schema.sql"):
@@ -4462,6 +4475,7 @@ def cmd_plan(args: argparse.Namespace) -> int:
 def cmd_generate(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    stack = resolve_stack_spec(cfg)
     ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
@@ -4505,6 +4519,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
         gradle_messages = wire_gradle_multi_module(root, cfg)
 
     print("Generated artifacts:")
+    print(f"- stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
     for rel in sorted(outputs.keys()):
         print(f"- {rel}")
     print("- .prophet/ir/current.ir.json")
@@ -4670,9 +4685,19 @@ def cmd_clean(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_stacks(args: argparse.Namespace) -> int:
+    rows = supported_stack_table()
+    print("Supported stacks:")
+    for row in rows:
+        print(f"- {row['id']}: {row['language']}/{row['framework']}/{row['orm']}")
+        print(f"  capabilities: {', '.join(row['capabilities'])}")
+    return 0
+
+
 def cmd_version_check(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    resolve_stack_spec(cfg)
     ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
@@ -4727,6 +4752,7 @@ def cmd_version_check(args: argparse.Namespace) -> int:
 def cmd_check(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
+    stack = resolve_stack_spec(cfg)
     ontology_path = ontology_path_from_cfg(root, cfg)
     ont = load_ontology_from_cfg(root, cfg)
     strict_enums = bool(cfg_get(cfg, ["compatibility", "strict_enums"], False))
@@ -4784,6 +4810,13 @@ def cmd_check(args: argparse.Namespace) -> int:
     if args.json:
         report = {
             "ok": status == 0,
+            "stack": {
+                "id": stack.id,
+                "language": stack.language,
+                "framework": stack.framework,
+                "orm": stack.orm,
+                "capabilities": sorted(stack.capabilities),
+            },
             "validation": {
                 "passed": True,
                 "ontology_file": str(ontology_path),
@@ -4826,6 +4859,7 @@ def cmd_check(args: argparse.Namespace) -> int:
         return status
 
     print("Validation passed.")
+    print(f"Stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
     if dirty:
         print("")
         print_dirty_generated_files(dirty)
@@ -4965,6 +4999,14 @@ def build_cli() -> argparse.ArgumentParser:
         help="Emit structured JSON diagnostics instead of human-readable text",
     )
     p_check.set_defaults(func=cmd_check)
+
+    p_stacks = sub.add_parser(
+        "stacks",
+        formatter_class=HelpFormatter,
+        help="List supported generation stack ids and capabilities",
+        description="Display supported framework/ORM stack combinations and capability metadata.",
+    )
+    p_stacks.set_defaults(func=cmd_stacks)
 
     p_generate = sub.add_parser(
         "generate",

@@ -62,6 +62,13 @@ prophet check --against .prophet/baselines/main.ir.json
 
 `--json` emits structured diagnostics for CI bots and automation.
 
+### `prophet stacks`
+Lists supported stack ids, framework/ORM pairings, and capability metadata.
+
+```bash
+prophet stacks
+```
+
 ### `prophet generate` / `prophet gen`
 Writes generated artifacts and current IR.
 
@@ -71,6 +78,17 @@ prophet gen
 ```
 
 Also syncs generated Spring artifacts into `examples/java/prophet_example_spring` when present.
+
+Stack selection is configured in `prophet.yaml`:
+
+```yaml
+generation:
+  stack:
+    id: java_spring_jpa
+```
+
+Current generator implementation supports artifact generation for `java_spring_jpa`.
+Other declared stacks are validated and reserved for upcoming target implementations.
 
 Default generated targets:
 - `sql`

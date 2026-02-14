@@ -38,6 +38,14 @@ def run_cli(cwd: Path, *args: str, expect_code: int = 0) -> subprocess.Completed
 
 
 class CliIntegrationTests(unittest.TestCase):
+    def test_stacks_command_lists_supported_matrix(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-stacks-") as tmp:
+            root = Path(tmp)
+            result = run_cli(root, "stacks")
+            self.assertIn("java_spring_jpa", result.stdout)
+            self.assertIn("node_express_typeorm", result.stdout)
+            self.assertIn("python_django_orm", result.stdout)
+
     def test_end_to_end_cli_flow(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-cli-it-") as tmp:
             root = Path(tmp)

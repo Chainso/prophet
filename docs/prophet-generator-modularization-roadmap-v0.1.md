@@ -11,11 +11,14 @@ Completed so far:
    - compatibility logic
 2. Wired CLI delegation to core modules while preserving existing command behavior.
 3. Added delegation regression tests to lock the modularization seam.
+4. Added explicit stack matrix and capability metadata with CLI validation.
+5. Added `prophet stacks` command for contributor/operator visibility.
 
 In progress:
 
 1. Reducing duplicated legacy logic in `cli.py` now that core delegation is active.
 2. Advancing Milestone 2 and Milestone 3 work packages with no behavior drift.
+3. Expanding Milestone 4 stack validation into full target manifest schema.
 
 ## 1. Purpose
 
