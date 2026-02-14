@@ -18,16 +18,19 @@ repositories {
 	mavenCentral()
 }
 
-	dependencies {
-		implementation("org.springframework.boot:spring-boot-starter-web")
-		implementation("org.springframework.boot:spring-boot-starter-validation")
-		implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-		runtimeOnly("com.h2database:h2")
-		runtimeOnly("org.postgresql:postgresql")
-		testImplementation("org.springframework.boot:spring-boot-starter-test")
-		testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-	    implementation(project(":prophet_generated"))
-	}
+dependencies {
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-validation")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	runtimeOnly("com.h2database:h2")
+	runtimeOnly("org.postgresql:postgresql")
+	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-testcontainers")
+	testImplementation("org.testcontainers:junit-jupiter")
+	testImplementation("org.testcontainers:postgresql")
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+	implementation(project(":prophet_generated"))
+}
 
 tasks.withType<Test> {
 	useJUnitPlatform()
