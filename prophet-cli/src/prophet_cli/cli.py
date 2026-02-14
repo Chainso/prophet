@@ -1446,6 +1446,67 @@ def add_java_imports_for_type(java_type: str, imports: set[str]) -> None:
         imports.add("import java.time.Duration;")
 
 
+def render_java_record_with_builder(
+    package_name: str,
+    imports: set[str],
+    record_name: str,
+    fields: List[Tuple[str, str, bool]],
+) -> str:
+    record_components: List[str] = []
+    for java_t, field_name, required in fields:
+        ann = "@NotNull " if required else ""
+        if required:
+            imports.add("import jakarta.validation.constraints.NotNull;")
+        record_components.append(f"    {ann}{java_t} {field_name}")
+
+    builder_field_lines = [f"        private {java_t} {field_name};" for java_t, field_name, _ in fields]
+    builder_setter_lines: List[str] = []
+    for java_t, field_name, _ in fields:
+        builder_setter_lines.extend(
+            [
+                f"        public Builder {field_name}({java_t} value) {{",
+                f"            this.{field_name} = value;",
+                "            return this;",
+                "        }",
+                "",
+            ]
+        )
+
+    builder_build_lines = [
+        f"        public {record_name} build() {{",
+        f"            return new {record_name}(",
+    ]
+    for idx, (_, field_name, _) in enumerate(fields):
+        suffix = "," if idx < len(fields) - 1 else ""
+        builder_build_lines.append(f"                {field_name}{suffix}")
+    builder_build_lines.extend(
+        [
+            "            );",
+            "        }",
+        ]
+    )
+
+    import_block = "\n".join(sorted(imports))
+    source = (
+        f"package {package_name};\n\n"
+        + (f"{import_block}\n\n" if import_block else "")
+        + f"public record {record_name}(\n"
+        + ",\n".join(record_components)
+        + "\n) {\n\n"
+        + "    public static Builder builder() {\n"
+        + "        return new Builder();\n"
+        + "    }\n\n"
+        + "    public static final class Builder {\n"
+        + ("\n".join(builder_field_lines) + "\n\n" if builder_field_lines else "")
+        + "\n".join(builder_setter_lines)
+        + "\n".join(builder_build_lines)
+        + "\n"
+        + "    }\n"
+        + "}\n"
+    )
+    return source
+
+
 def json_schema_for_field(
     field: Dict[str, Any],
     type_by_id: Dict[str, Dict[str, Any]],
@@ -2160,19 +2221,18 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         target_pk = next((x for x in target_fields if x.get("key") == "primary"), target_fields[0])
         pk_java = java_type_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
         cls = f"{target['name']}Ref"
-        files[f"src/main/java/{package_path}/generated/domain/{cls}.java"] = (
-            f"package {base_package}.generated.domain;\n\n"
-            "import jakarta.validation.constraints.NotNull;\n\n"
-            f"public record {cls}(\n"
-            f"    @NotNull {pk_java} {camel_case(target_pk['name'])}\n"
-            ") {\n"
-            "}\n"
+        ref_fields = [(pk_java, camel_case(target_pk["name"]), True)]
+        files[f"src/main/java/{package_path}/generated/domain/{cls}.java"] = render_java_record_with_builder(
+            f"{base_package}.generated.domain",
+            set(),
+            cls,
+            ref_fields,
         )
 
     # struct domain records
     for struct in structs:
         imports: set[str] = set()
-        components: List[str] = []
+        struct_fields: List[Tuple[str, str, bool]] = []
         for f in struct.get("fields", []):
             java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(java_t, imports)
@@ -2183,18 +2243,14 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
                 target_struct = struct_by_id[target_struct_id]
                 if target_struct["name"] != struct["name"]:
                     imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
-            ann = "@NotNull " if f.get("cardinality", {}).get("min", 0) > 0 else ""
-            if ann:
-                imports.add("import jakarta.validation.constraints.NotNull;")
-            components.append(f"    {ann}{java_t} {camel_case(f['name'])}")
+            required = f.get("cardinality", {}).get("min", 0) > 0
+            struct_fields.append((java_t, camel_case(f["name"]), required))
 
-        import_block = "\n".join(sorted(imports))
-        files[f"src/main/java/{package_path}/generated/domain/{struct['name']}.java"] = (
-            f"package {base_package}.generated.domain;\n\n"
-            + (f"{import_block}\n\n" if import_block else "")
-            + f"public record {struct['name']}(\n"
-            + ",\n".join(components)
-            + "\n) {\n}\n"
+        files[f"src/main/java/{package_path}/generated/domain/{struct['name']}.java"] = render_java_record_with_builder(
+            f"{base_package}.generated.domain",
+            imports,
+            struct["name"],
+            struct_fields,
         )
 
     # state enums + domain records
@@ -2209,30 +2265,28 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
                 "}\n"
             )
 
-        imports: List[str] = ["import jakarta.validation.constraints.NotNull;"]
-        components: List[str] = []
-        extra_imports: set[str] = set()
+        imports: set[str] = set()
+        object_fields: List[Tuple[str, str, bool]] = []
 
         for f in obj.get("fields", []):
             java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
-            add_java_imports_for_type(java_t, extra_imports)
+            add_java_imports_for_type(java_t, imports)
             for target_struct_id in struct_target_ids_for_type(f["type"]):
                 target_struct = struct_by_id[target_struct_id]
-                extra_imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
+                imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
 
-            ann = "@NotNull " if f.get("cardinality", {}).get("min", 0) > 0 else ""
-            components.append(f"    {ann}{java_t} {camel_case(f['name'])}")
+            required = f.get("cardinality", {}).get("min", 0) > 0
+            object_fields.append((java_t, camel_case(f["name"]), required))
 
         if obj.get("states"):
-            components.append(f"    @NotNull {obj['name']}State currentState")
+            object_fields.append((f"{obj['name']}State", "currentState", True))
+            imports.add(f"import {base_package}.generated.domain.{obj['name']}State;")
 
-        import_block = "\n".join(sorted(set(imports).union(extra_imports)))
-        files[f"src/main/java/{package_path}/generated/domain/{obj['name']}.java"] = (
-            f"package {base_package}.generated.domain;\n\n"
-            f"{import_block}\n\n"
-            f"public record {obj['name']}(\n"
-            + ",\n".join(components)
-            + "\n) {\n}\n"
+        files[f"src/main/java/{package_path}/generated/domain/{obj['name']}.java"] = render_java_record_with_builder(
+            f"{base_package}.generated.domain",
+            imports,
+            obj["name"],
+            object_fields,
         )
 
     # persistence entities and repositories
@@ -2586,11 +2640,9 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
     action_shapes = sorted(action_inputs + action_outputs, key=lambda x: x["id"])
     for shape in action_shapes:
         imports: set[str] = set()
-        components: List[str] = []
+        shape_fields: List[Tuple[str, str, bool]] = []
         for f in shape.get("fields", []):
             java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
-            if f.get("cardinality", {}).get("min", 0) > 0:
-                imports.add("import jakarta.validation.constraints.NotNull;")
             add_java_imports_for_type(java_t, imports)
             for target_id in object_ref_target_ids_for_type(f["type"]):
                 target = object_by_id[target_id]
@@ -2598,17 +2650,14 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             for target_struct_id in struct_target_ids_for_type(f["type"]):
                 target_struct = struct_by_id[target_struct_id]
                 imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
-            ann = "@NotNull " if f.get("cardinality", {}).get("min", 0) > 0 else ""
-            components.append(f"    {ann}{java_t} {camel_case(f['name'])}")
+            required = f.get("cardinality", {}).get("min", 0) > 0
+            shape_fields.append((java_t, camel_case(f["name"]), required))
 
-        import_block = "\n".join(sorted(imports))
-        record_src = (
-            f"package {base_package}.generated.actions;\n\n"
-            + (f"{import_block}\n\n" if import_block else "")
-            + f"public record {shape['name']}(\n"
-            + ",\n".join(components)
-            + "\n) {\n"
-            + "}\n"
+        record_src = render_java_record_with_builder(
+            f"{base_package}.generated.actions",
+            imports,
+            shape["name"],
+            shape_fields,
         )
         files[f"src/main/java/{package_path}/generated/actions/{shape['name']}.java"] = record_src
 
@@ -2743,7 +2792,7 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         add_java_imports_for_type(pk_java, imports)
 
         ref_imports: set[str] = set()
-        domain_args: List[str] = []
+        domain_builder_steps: List[str] = []
         for f in fields:
             prop = camel_case(f["name"])
             getter = "get" + prop[:1].upper() + prop[1:] + "()"
@@ -2755,16 +2804,16 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
                 target_get = "get" + target_pk_prop[:1].upper() + target_pk_prop[1:] + "()"
                 ref_cls = f"{target['name']}Ref"
                 ref_imports.add(f"import {base_package}.generated.domain.{ref_cls};")
-                domain_args.append(
-                    f"            entity.{getter} == null ? null : new {ref_cls}(entity.{getter}.{target_get})"
+                domain_builder_steps.append(
+                    f"            .{prop}(entity.{getter} == null ? null : {ref_cls}.builder().{target_pk_prop}(entity.{getter}.{target_get}).build())"
                 )
             else:
-                domain_args.append(f"            entity.{getter}")
+                domain_builder_steps.append(f"            .{prop}(entity.{getter})")
 
         if obj.get("states"):
             enum_cls = f"{obj['name']}State"
             imports.add(f"import {base_package}.generated.domain.{enum_cls};")
-            domain_args.append("            entity.getCurrentState()")
+            domain_builder_steps.append("            .currentState(entity.getCurrentState())")
 
         list_method_params: List[str] = []
         filter_conditions: List[str] = []
@@ -2851,26 +2900,28 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         if needs_date_time_format_import:
             imports.add("import org.springframework.format.annotation.DateTimeFormat;")
 
-        list_response_src = (
-            f"package {base_package}.generated.api;\n\n"
-            "import java.util.List;\n"
-            f"import {base_package}.generated.domain.{domain_name};\n\n"
-            f"public record {list_response_name}(\n"
-            f"    List<{domain_name}> items,\n"
-            "    int page,\n"
-            "    int size,\n"
-            "    long totalElements,\n"
-            "    int totalPages\n"
-            ") {\n"
-            "}\n"
+        list_response_src = render_java_record_with_builder(
+            f"{base_package}.generated.api",
+            {
+                "import java.util.List;",
+                f"import {base_package}.generated.domain.{domain_name};",
+            },
+            list_response_name,
+            [
+                (f"List<{domain_name}>", "items", True),
+                ("int", "page", True),
+                ("int", "size", True),
+                ("long", "totalElements", True),
+                ("int", "totalPages", True),
+            ],
         )
         files[f"src/main/java/{package_path}/generated/api/{list_response_name}.java"] = list_response_src
 
         to_domain_method = (
             f"    private {domain_name} toDomain({entity_name} entity) {{\n"
-            f"        return new {domain_name}(\n"
-            + ",\n".join(domain_args)
-            + "\n        );\n"
+            f"        return {domain_name}.builder()\n"
+            + "\n".join(domain_builder_steps)
+            + "\n            .build();\n"
             "    }\n\n"
         )
 
@@ -2893,7 +2944,13 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             + (filter_block + "\n" if filter_block else "")
             + f"        Page<{entity_name}> entityPage = repository.findAll(spec, pageable);\n"
             + f"        List<{domain_name}> items = entityPage.stream().map(this::toDomain).toList();\n"
-            + f"        {list_response_name} result = new {list_response_name}(items, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());\n"
+            + f"        {list_response_name} result = {list_response_name}.builder()\n"
+            + "            .items(items)\n"
+            + "            .page(entityPage.getNumber())\n"
+            + "            .size(entityPage.getSize())\n"
+            + "            .totalElements(entityPage.getTotalElements())\n"
+            + "            .totalPages(entityPage.getTotalPages())\n"
+            + "            .build();\n"
             + "        return ResponseEntity.ok(result);\n"
             "    }\n\n"
             f"    @GetMapping(\"/{{{pk_prop}}}\")\n"

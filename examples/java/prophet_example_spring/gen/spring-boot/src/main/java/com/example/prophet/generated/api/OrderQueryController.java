@@ -59,7 +59,13 @@ public class OrderQueryController {
         }
         Page<OrderEntity> entityPage = repository.findAll(spec, pageable);
         List<Order> items = entityPage.stream().map(this::toDomain).toList();
-        OrderListResponse result = new OrderListResponse(items, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
+        OrderListResponse result = OrderListResponse.builder()
+            .items(items)
+            .page(entityPage.getNumber())
+            .size(entityPage.getSize())
+            .totalElements(entityPage.getTotalElements())
+            .totalPages(entityPage.getTotalPages())
+            .build();
         return ResponseEntity.ok(result);
     }
 
@@ -74,15 +80,15 @@ public class OrderQueryController {
         return ResponseEntity.ok(domain);
     }
     private Order toDomain(OrderEntity entity) {
-        return new Order(
-            entity.getOrderId(),
-            entity.getCustomer() == null ? null : new UserRef(entity.getCustomer().getUserId()),
-            entity.getTotalAmount(),
-            entity.getDiscountCode(),
-            entity.getTags(),
-            entity.getShippingAddress(),
-            entity.getCurrentState()
-        );
+        return Order.builder()
+            .orderId(entity.getOrderId())
+            .customer(entity.getCustomer() == null ? null : UserRef.builder().userId(entity.getCustomer().getUserId()).build())
+            .totalAmount(entity.getTotalAmount())
+            .discountCode(entity.getDiscountCode())
+            .tags(entity.getTags())
+            .shippingAddress(entity.getShippingAddress())
+            .currentState(entity.getCurrentState())
+            .build();
     }
 
 }

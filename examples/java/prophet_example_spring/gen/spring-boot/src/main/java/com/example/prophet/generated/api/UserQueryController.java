@@ -43,7 +43,13 @@ public class UserQueryController {
         }
         Page<UserEntity> entityPage = repository.findAll(spec, pageable);
         List<User> items = entityPage.stream().map(this::toDomain).toList();
-        UserListResponse result = new UserListResponse(items, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
+        UserListResponse result = UserListResponse.builder()
+            .items(items)
+            .page(entityPage.getNumber())
+            .size(entityPage.getSize())
+            .totalElements(entityPage.getTotalElements())
+            .totalPages(entityPage.getTotalPages())
+            .build();
         return ResponseEntity.ok(result);
     }
 
@@ -58,10 +64,10 @@ public class UserQueryController {
         return ResponseEntity.ok(domain);
     }
     private User toDomain(UserEntity entity) {
-        return new User(
-            entity.getUserId(),
-            entity.getEmail()
-        );
+        return User.builder()
+            .userId(entity.getUserId())
+            .email(entity.getEmail())
+            .build();
     }
 
 }

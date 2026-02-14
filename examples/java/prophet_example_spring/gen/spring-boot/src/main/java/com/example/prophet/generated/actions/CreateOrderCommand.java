@@ -16,4 +16,57 @@ public record CreateOrderCommand(
     List<String> tags,
     Address shippingAddress
 ) {
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private String orderId;
+        private UserRef customer;
+        private BigDecimal totalAmount;
+        private String discountCode;
+        private List<String> tags;
+        private Address shippingAddress;
+
+        public Builder orderId(String value) {
+            this.orderId = value;
+            return this;
+        }
+
+        public Builder customer(UserRef value) {
+            this.customer = value;
+            return this;
+        }
+
+        public Builder totalAmount(BigDecimal value) {
+            this.totalAmount = value;
+            return this;
+        }
+
+        public Builder discountCode(String value) {
+            this.discountCode = value;
+            return this;
+        }
+
+        public Builder tags(List<String> value) {
+            this.tags = value;
+            return this;
+        }
+
+        public Builder shippingAddress(Address value) {
+            this.shippingAddress = value;
+            return this;
+        }
+        public CreateOrderCommand build() {
+            return new CreateOrderCommand(
+                orderId,
+                customer,
+                totalAmount,
+                discountCode,
+                tags,
+                shippingAddress
+            );
+        }
+    }
 }
