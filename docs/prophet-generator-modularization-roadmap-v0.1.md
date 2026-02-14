@@ -15,6 +15,7 @@ Completed so far:
 5. Added `prophet stacks` command for contributor/operator visibility.
 6. Added generated artifact ownership manifest (`gen/manifest/generated-files.json`) and integrated manifest-aware managed file detection.
 7. Added explicit code generation pipeline contract layer (`GenerationContext` + stack generator routing).
+8. Added first dedicated target module boundary at `prophet_cli.targets.java_spring_jpa`.
 
 In progress:
 
