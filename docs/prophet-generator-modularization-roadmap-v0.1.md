@@ -2,6 +2,9 @@
 
 ## Status Snapshot (2026-02-14)
 
+Roadmap phase status: **Complete**.
+Closeout artifact: `docs/prophet-modularization-closeout-v0.1.md`.
+
 Completed so far:
 
 1. Introduced `prophet_cli.core` package boundaries for:
@@ -370,9 +373,9 @@ Mitigation:
 
 ## 14. Immediate Next Actions
 
-1. Start Milestone 1 baseline freeze and semantic guardrails.
-2. Produce milestone task breakdown with clear acceptance criteria per task.
-3. Begin Milestone 2 extraction once Milestone 1 gates are green.
+1. Start next-phase target implementations on top of this modular foundation.
+2. Expand cross-target semantic conformance tests as each stack becomes implemented.
+3. Maintain stack manifest and compatibility governance as the matrix grows.
 
 ## 15. Open Source Contributor Onboarding
 
