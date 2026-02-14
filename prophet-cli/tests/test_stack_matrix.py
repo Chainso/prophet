@@ -78,6 +78,9 @@ class StackMatrixTests(unittest.TestCase):
         self.assertIn("python_django_orm", ids)
         self.assertTrue(by_id["java_spring_jpa"]["implemented"])
         self.assertEqual(by_id["java_spring_jpa"]["status"], "implemented")
+        self.assertIn("description", by_id["java_spring_jpa"])
+        self.assertIn("default_targets", by_id["java_spring_jpa"])
+        self.assertIn("spring_boot", by_id["java_spring_jpa"]["default_targets"])
         self.assertFalse(by_id["python_fastapi_sqlalchemy"]["implemented"])
         self.assertEqual(by_id["python_fastapi_sqlalchemy"]["status"], "planned")
 

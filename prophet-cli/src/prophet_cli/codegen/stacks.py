@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Tuple
 
 from prophet_cli.core.errors import ProphetError
-from prophet_cli.codegen.stack_manifest import STACK_MANIFEST
-from prophet_cli.codegen.stack_manifest import validate_stack_manifest
+from prophet_cli.codegen.stack_manifest import STACK_MANIFEST_DOCUMENT
+from prophet_cli.codegen.stack_manifest import validate_stack_manifest_document
 
 
 @dataclass(frozen=True)
@@ -16,12 +16,22 @@ class StackSpec:
     orm: str
     status: str
     implemented: bool
+    description: str
+    default_targets: Tuple[str, ...]
+    notes: str
     capabilities: Set[str]
 
 
-def _load_supported_stacks() -> Dict[str, StackSpec]:
+def _load_manifest() -> Dict[str, Any]:
+    return validate_stack_manifest_document(STACK_MANIFEST_DOCUMENT)
+
+
+_STACK_MANIFEST = _load_manifest()
+
+
+def _load_supported_stacks(manifest: Dict[str, Any]) -> Dict[str, StackSpec]:
     supported: Dict[str, StackSpec] = {}
-    for entry in validate_stack_manifest(STACK_MANIFEST):
+    for entry in manifest.get("stacks", []):
         supported[entry["id"]] = StackSpec(
             id=entry["id"],
             language=entry["language"],
@@ -29,12 +39,15 @@ def _load_supported_stacks() -> Dict[str, StackSpec]:
             orm=entry["orm"],
             status=entry["status"],
             implemented=entry["status"] == "implemented",
+            description=entry["description"],
+            default_targets=tuple(entry["default_targets"]),
+            notes=str(entry.get("notes", "")),
             capabilities=set(entry["capabilities"]),
         )
     return supported
 
 
-SUPPORTED_STACKS: Dict[str, StackSpec] = _load_supported_stacks()
+SUPPORTED_STACKS: Dict[str, StackSpec] = _load_supported_stacks(_STACK_MANIFEST)
 
 
 def _cfg_get(cfg: Dict[str, Any], keys: List[str], default: Any = None) -> Any:
@@ -127,7 +140,17 @@ def supported_stack_table() -> List[Dict[str, Any]]:
                 "orm": spec.orm,
                 "status": spec.status,
                 "implemented": spec.implemented,
+                "description": spec.description,
+                "default_targets": list(spec.default_targets),
+                "notes": spec.notes,
                 "capabilities": sorted(spec.capabilities),
             }
         )
     return rows
+
+
+def stack_manifest_metadata() -> Dict[str, Any]:
+    return {
+        "schema_version": _STACK_MANIFEST["schema_version"],
+        "capability_catalog": list(_STACK_MANIFEST["capability_catalog"]),
+    }

@@ -33,6 +33,7 @@ from prophet_cli.core.compatibility import required_level_to_bump as _core_requi
 from prophet_cli.core.validation import validate_ontology as _core_validate_ontology
 from prophet_cli.core.validation import validate_type_expr as _core_validate_type_expr
 from prophet_cli.codegen.stacks import resolve_stack_spec
+from prophet_cli.codegen.stacks import stack_manifest_metadata
 from prophet_cli.codegen.stacks import supported_stack_table
 from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.contracts import StackGenerator
@@ -4737,16 +4738,33 @@ def cmd_clean(args: argparse.Namespace) -> int:
 
 
 def cmd_stacks(args: argparse.Namespace) -> int:
+    metadata = stack_manifest_metadata()
     rows = supported_stack_table()
     if args.json:
-        print(json.dumps({"stacks": rows}, indent=2, sort_keys=False))
+        print(
+            json.dumps(
+                {
+                    "schema_version": metadata["schema_version"],
+                    "capability_catalog": metadata["capability_catalog"],
+                    "stacks": rows,
+                },
+                indent=2,
+                sort_keys=False,
+            )
+        )
         return 0
 
     print("Supported stacks:")
+    print(f"- schema_version: {metadata['schema_version']}")
     for row in rows:
         status = str(row.get("status", "planned"))
         print(f"- {row['id']}: {row['language']}/{row['framework']}/{row['orm']} [{status}]")
+        print(f"  description: {row['description']}")
         print(f"  capabilities: {', '.join(row['capabilities'])}")
+        print(f"  default targets: {', '.join(row['default_targets'])}")
+        notes = str(row.get("notes", "")).strip()
+        if notes:
+            print(f"  notes: {notes}")
     return 0
 
 

@@ -50,8 +50,13 @@ class CliIntegrationTests(unittest.TestCase):
 
             json_result = run_cli(root, "stacks", "--json")
             payload = json.loads(json_result.stdout)
+            self.assertEqual(payload.get("schema_version"), 1)
+            self.assertIn("capability_catalog", payload)
             self.assertIn("stacks", payload)
-            self.assertTrue(any(item.get("id") == "java_spring_jpa" for item in payload["stacks"]))
+            java_stack = next((item for item in payload["stacks"] if item.get("id") == "java_spring_jpa"), None)
+            self.assertIsNotNone(java_stack)
+            self.assertIn("description", java_stack)
+            self.assertIn("default_targets", java_stack)
 
     def test_end_to_end_cli_flow(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-cli-it-") as tmp:
