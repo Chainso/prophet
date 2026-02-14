@@ -72,6 +72,15 @@ prophet stacks
 prophet stacks --json
 ```
 
+### `prophet hooks`
+Lists generated extension hook surfaces from `gen/manifest/extension-hooks.json`.
+Useful for wiring user-owned implementations against generated interfaces.
+
+```bash
+prophet hooks
+prophet hooks --json
+```
+
 ### `prophet generate` / `prophet gen`
 Writes generated artifacts and current IR.
 

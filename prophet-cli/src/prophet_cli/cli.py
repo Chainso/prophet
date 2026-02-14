@@ -4261,6 +4261,8 @@ def hints_for_prophet_error(message: str) -> List[str]:
         hints.append("Verify `project.ontology_file` points to an existing file relative to your current directory.")
     if "baseline ir not found" in msg:
         hints.append("Run `prophet gen` once to create a baseline, or set `compatibility.baseline_ir`.")
+    if "extension hook manifest not found" in msg:
+        hints.append("Run `prophet gen` first so Prophet can emit extension hook metadata.")
     if "--wire-gradle cannot be used with --verify-clean" in msg:
         hints.append("Use `prophet gen --wire-gradle` and `prophet check` (or `prophet generate --verify-clean`) as separate steps.")
     if "--skip-unchanged cannot be used with --verify-clean" in msg:
@@ -4755,6 +4757,34 @@ def cmd_stacks(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_hooks(args: argparse.Namespace) -> int:
+    root = Path.cwd()
+    cfg = load_config(root / "prophet.yaml")
+    out_dir = str(cfg_get(cfg, ["generation", "out_dir"], "gen"))
+    manifest_path = root / out_dir / "manifest" / "extension-hooks.json"
+    if not manifest_path.exists():
+        raise ProphetError(f"Extension hook manifest not found: {manifest_path}.")
+
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    hooks = payload.get("hooks", [])
+
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=False))
+        return 0
+
+    print(f"Extension hooks ({len(hooks)}):")
+    for idx, item in enumerate(hooks, start=1):
+        kind = str(item.get("kind", "hook"))
+        name = str(item.get("action_name", ""))
+        hook_id = str(item.get("action_id", ""))
+        print(f"{idx}) {kind}: {name} ({hook_id})")
+        if item.get("java_interface"):
+            print(f"   interface: {item['java_interface']}")
+        if item.get("default_implementation_class"):
+            print(f"   default: {item['default_implementation_class']}")
+    return 0
+
+
 def cmd_version_check(args: argparse.Namespace) -> int:
     root = Path.cwd()
     cfg = load_config(root / "prophet.yaml")
@@ -5078,6 +5108,22 @@ def build_cli() -> argparse.ArgumentParser:
         help="Emit structured JSON stack matrix output",
     )
     p_stacks.set_defaults(func=cmd_stacks)
+
+    p_hooks = sub.add_parser(
+        "hooks",
+        formatter_class=HelpFormatter,
+        help="List generated extension hook surfaces",
+        description=(
+            "Read generated extension hook metadata and print available extension points.\n"
+            "Requires a prior `prophet gen` run."
+        ),
+    )
+    p_hooks.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit structured JSON hook metadata from extension-hooks.json",
+    )
+    p_hooks.set_defaults(func=cmd_hooks)
 
     p_generate = sub.add_parser(
         "generate",

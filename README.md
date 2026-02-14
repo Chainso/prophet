@@ -43,6 +43,7 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet validate
 $(git rev-parse --show-toplevel)/.venv/bin/prophet plan --show-reasons
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --skip-unchanged
+$(git rev-parse --show-toplevel)/.venv/bin/prophet hooks
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --json
 ./gradlew :prophet_generated:compileJava compileJava

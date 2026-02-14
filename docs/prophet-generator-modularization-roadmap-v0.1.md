@@ -25,6 +25,7 @@ Completed so far:
 15. Introduced a schema-validated stack manifest layer for stack matrix governance.
 16. Added explicit generator registry checks to ensure implemented stacks map to concrete generators.
 17. Added semantic conformance tests for action/query/struct/object-ref contracts independent of file snapshots.
+18. Added `prophet hooks` command with JSON output to expose generated extension surfaces directly.
 
 In progress:
 
