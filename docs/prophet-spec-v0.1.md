@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Prophet is the ontology compiler kernel for Seer.  
+Prophet is an ontology compiler kernel.  
 In v0.1, Prophet focuses on local ontology authoring, validation, deterministic planning, and generation.
 
 ## 2. Scope (v0.1)
@@ -52,6 +52,7 @@ A change is **breaking** if any previously valid payload, transition, query cont
 - Same input DSL + same toolchain version => byte-identical IR, plan output, and generated artifacts.
 - No timestamps, random ordering, or machine-specific absolute paths in outputs.
 - Canonical ordering is required for entities and fields.
+- Field declaration order is preserved in generated contract record components.
 
 ## 4. Change Classification Matrix (v0.1)
 
@@ -88,6 +89,30 @@ Legend:
 | Change trigger target action | B | Behavioral contract change |
 | Add new event type/action | A | No removal/rewire |
 | Remove event/action | B | Existing producers/consumers break |
+
+### 4.1 Struct Evolution (Detailed)
+
+| Struct change | Class | Rationale |
+|---|---|---|
+| Add optional field | A | Existing payloads remain valid |
+| Add required field | B | Existing payloads can fail validation |
+| Remove field | B | Existing readers/writers can break |
+| Tighten field cardinality (`min` up / `max` down) | B | Narrows valid payloads |
+| Loosen field cardinality (`min` down / `max` up) | A* | `B` if scalar/list wire shape changes |
+| Incompatible field type change | B | Contract semantics changed |
+| Numeric widening (`int` -> `long`) | A | Broader accepted values |
+
+### 4.2 List and Cardinality Evolution (Detailed)
+
+| List/cardinality change | Class | Rationale |
+|---|---|---|
+| Scalar -> list (`max 1` -> `many`) | B | JSON/API wire shape break |
+| List -> scalar (`many` -> `max 1`) | B | JSON/API wire shape break |
+| Nested depth change (`T[]` -> `T[][]`) | B | Item shape changed |
+| Element type widening | A | Backward-compatible broadening |
+| Element type narrowing/incompatible change | B | Existing values may fail |
+| `min` increase (for any list/scalar field) | B | Formerly valid payloads invalidated |
+| `min` decrease (for any list/scalar field) | A | Less restrictive |
 
 ## 5. Versioning Policy
 
@@ -135,7 +160,7 @@ IR principles:
 
 ### 8.1 `prophet init`
 
-Creates starter project layout and sample ontology.
+Creates starter project layout and configuration skeleton.
 
 Example:
 ```bash
@@ -147,9 +172,13 @@ Example output:
 Initialized Prophet project.
 Created:
 - prophet.yaml
-- ontology/local/main.prophet
 - .prophet/ir
 - .prophet/baselines
+
+Next:
+- set project.ontology_file to your ontology file path
+- author your ontology file, or start from:
+  examples/java/prophet_example_spring/ontology/local/main.prophet
 
 Note: gen/ is created on first 'prophet gen' or 'prophet generate'.
 ```
@@ -166,8 +195,8 @@ prophet validate
 Example output:
 ```text
 Validation failed (2 errors):
-1) ontology/local/main.prophet:42:5 field `total_amount` cardinality min=1 conflicts with default=null
-2) ontology/local/main.prophet:87:3 transition `order_ship` references unknown state id `state_order_shipped`
+1) path/to/ontology.prophet:42:5 field `total_amount` cardinality min=1 conflicts with default=null
+2) path/to/ontology.prophet:87:3 transition `order_ship` references unknown state id `state_order_shipped`
 ```
 
 ### 8.3 `prophet plan`
@@ -286,14 +315,13 @@ The v0.1 golden stack is:
 
 Minimum generated Spring integration surface:
 - Domain model classes (from object models and types)
-- State/transition guard helpers
 - Action endpoint controllers (one endpoint per action under `/actions/*`)
 - Default action handler stubs (throwing unsupported operation until overridden)
 - Repository interfaces for generated entities
 - Paginated/filterable query controllers (`GET /<objects>` + `GET /<objects>/{id}`)
 - Configuration properties for generated API behavior
 - Deterministic JPA mappings (tables, columns, FK relations, optimistic locking, state history)
-- Generated Flyway and Liquibase resources in Spring module (`src/main/resources/db/**`)
+- Generated migration resources in Spring module (`src/main/resources/db/**`) auto-detected from host app migration stack
 
 Generation boundary:
 - `gen/spring-boot/.../generated` is tool-owned

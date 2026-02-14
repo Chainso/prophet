@@ -1,6 +1,6 @@
 # Prophet
 
-Prophet is the ontology compiler kernel behind Seer.
+Prophet is an ontology compiler kernel for business-domain systems.
 
 ## Current State
 
@@ -12,7 +12,6 @@ This repository currently contains:
 - `docs/prophet-jpa-mapping-v0.1.md` (ontology-to-database/JPA translation rules)
 - `prophet-cli/` Python package for the CLI (`prophet_cli`)
 - `./prophet` root launcher script (local convenience wrapper)
-- `ontology/local/main.prophet` (reference DSL example)
 - `examples/java/prophet_example_spring` standalone Spring Boot + H2 example app
 
 ## Quick Start (Example Project)
@@ -38,7 +37,7 @@ cd examples/java/prophet_example_spring
 - Liquibase changelog + SQL:
 `gen/migrations/liquibase/db.changelog-master.yaml`, `gen/migrations/liquibase/prophet/*`
 - Spring module: `gen/spring-boot`
-: includes generated domain records, JPA entities/repositories, action contracts, action controllers, query controllers, migration resources
+: includes generated domain records, JPA entities/repositories, action contracts, action controllers, query controllers, and migration resources auto-wired to the host app's existing migration stack
 
 ## Notes
 
@@ -51,6 +50,7 @@ cd examples/java/prophet_example_spring
 - Generated action endpoints delegate to action handlers; generated default handler stubs throw `UnsupportedOperationException` and return `501` until replaced by user beans.
 - DSL fields support scalar and list types (for example `string[]` or `list(string)`).
 - DSL supports nested list types (for example `string[][]`) and reusable `struct` types for non-entity nested payloads.
-- Event ingestion/dispatch remains a Seer platform concern, not Spring codegen output.
+- Event ingestion/dispatch remains an external runtime concern, not Spring codegen output.
 - Generated query APIs include:
 `GET /<objects>/{id}` and paginated/filterable `GET /<objects>` backed by JPA specifications.
+- List endpoints return generated DTO envelopes (`*ListResponse`) instead of raw Spring `Page` serialization.

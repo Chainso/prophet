@@ -154,7 +154,7 @@ Actions now use explicit input/output contracts:
 ## 8. Full Example
 
 See:
-- `ontology/local/main.prophet`
+- `examples/java/prophet_example_spring/ontology/local/main.prophet`
 
 This file is the source of truth for the current supported syntax.
 

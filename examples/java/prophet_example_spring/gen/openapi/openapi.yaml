@@ -61,11 +61,11 @@ paths:
           - SHIPPED
       responses:
         '200':
-          description: Paginated Order results
+          description: Paginated Order list response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderPage'
+                $ref: '#/components/schemas/OrderListResponse'
   /orders/{orderId}:
     get:
       operationId: getOrder
@@ -120,11 +120,11 @@ paths:
           type: string
       responses:
         '200':
-          description: Paginated User results
+          description: Paginated User list response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UserPage'
+                $ref: '#/components/schemas/UserListResponse'
   /users/{userId}:
     get:
       operationId: getUser
@@ -255,14 +255,20 @@ components:
           - CREATED
           - APPROVED
           - SHIPPED
-    OrderPage:
+    OrderListResponse:
       type: object
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
       properties:
-        content:
+        items:
           type: array
           items:
             $ref: '#/components/schemas/Order'
-        number:
+        page:
           type: integer
         size:
           type: integer
@@ -280,14 +286,20 @@ components:
           type: string
         email:
           type: string
-    UserPage:
+    UserListResponse:
       type: object
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
       properties:
-        content:
+        items:
           type: array
           items:
             $ref: '#/components/schemas/User'
-        number:
+        page:
           type: integer
         size:
           type: integer

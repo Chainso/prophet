@@ -1,5 +1,5 @@
 -- GENERATED FILE: do not edit directly.
--- Source: ontology/local/main.prophet
+-- Source: configured ontology file (project.ontology_file)
 
 create table if not exists prophet_state_catalog (
   object_model_id text not null,

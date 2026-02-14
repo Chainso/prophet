@@ -40,12 +40,20 @@ export SPRING_DATASOURCE_PASSWORD=
 - `POST /actions/approveOrder`
 - `POST /actions/shipOrder`
 
+List endpoint response shape:
+- generated DTO envelopes (`OrderListResponse`, `UserListResponse`) with:
+  - `items`
+  - `page`
+  - `size`
+  - `totalElements`
+  - `totalPages`
+
 ## Notes
 
 - Hibernate generates schema from JPA entities at startup (`ddl-auto=update`) in this example.
 - Prophet also generates migration artifacts:
   - Flyway: `gen/migrations/flyway/V1__prophet_init.sql`
   - Liquibase: `gen/migrations/liquibase/**`
-  - Spring module resources: `gen/spring-boot/src/main/resources/db/**`
+  - Spring runtime resources under `gen/spring-boot/src/main/resources/db/**` are auto-detected from existing app dependencies/plugins.
 - Generated classes live under `gen/spring-boot/src/main/java/com/example/prophet/generated`.
-- Seer owns event ingestion/dispatch; this app only exposes action endpoints.
+- Event ingestion/dispatch is external; this app only exposes action endpoints.

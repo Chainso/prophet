@@ -8,6 +8,7 @@ import com.example.prophet.generated.persistence.OrderEntity;
 import com.example.prophet.generated.persistence.OrderRepository;
 import jakarta.persistence.criteria.JoinType;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,7 +33,7 @@ public class OrderQueryController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<Order>> list(
+    public ResponseEntity<OrderListResponse> list(
         @RequestParam(name = "orderId", required = false) String orderId,
         @RequestParam(name = "customerUserId", required = false) String customerUserId,
         @RequestParam(name = "totalAmount", required = false) BigDecimal totalAmount,
@@ -56,7 +57,9 @@ public class OrderQueryController {
         if (currentState != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("currentState"), currentState));
         }
-        Page<Order> result = repository.findAll(spec, pageable).map(this::toDomain);
+        Page<OrderEntity> entityPage = repository.findAll(spec, pageable);
+        List<Order> items = entityPage.stream().map(this::toDomain).toList();
+        OrderListResponse result = new OrderListResponse(items, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
         return ResponseEntity.ok(result);
     }
 

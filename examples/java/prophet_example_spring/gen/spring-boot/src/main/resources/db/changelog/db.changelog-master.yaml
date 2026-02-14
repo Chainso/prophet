@@ -1,5 +1,0 @@
-# GENERATED FILE: do not edit directly.
-databaseChangeLog:
-  - include:
-      file: prophet/changelog-master.yaml
-      relativeToChangelogFile: true

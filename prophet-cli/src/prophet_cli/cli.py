@@ -1104,6 +1104,7 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
     ir = {
         "ir_version": IR_VERSION,
         "toolchain_version": TOOLCHAIN_VERSION,
+        "ontology_source_file": str(cfg_get(cfg, ["project", "ontology_file"], "")),
         "ontology": {
             "id": ont.id,
             "name": ont.name,
@@ -1534,7 +1535,7 @@ def annotate_generated_java_files(files: Dict[str, str]) -> None:
 def render_sql(ir: Dict[str, Any]) -> str:
     lines: List[str] = []
     lines.append("-- GENERATED FILE: do not edit directly.")
-    lines.append("-- Source: ontology/local/main.prophet")
+    lines.append("-- Source: configured ontology file (project.ontology_file)")
     lines.append("")
 
     objects = ir["objects"]
@@ -1753,14 +1754,15 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
-        components_schemas[f"{obj['name']}Page"] = {
+        components_schemas[f"{obj['name']}ListResponse"] = {
             "type": "object",
+            "required": ["items", "page", "size", "totalElements", "totalPages"],
             "properties": {
-                "content": {
+                "items": {
                     "type": "array",
                     "items": {"$ref": f"#/components/schemas/{obj['name']}"},
                 },
-                "number": {"type": "integer"},
+                "page": {"type": "integer"},
                 "size": {"type": "integer"},
                 "totalElements": {"type": "integer"},
                 "totalPages": {"type": "integer"},
@@ -1867,10 +1869,10 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                 "parameters": list_parameters,
                 "responses": {
                     "200": {
-                        "description": f"Paginated {obj['name']} results",
+                        "description": f"Paginated {obj['name']} list response",
                         "content": {
                             "application/json": {
-                                "schema": {"$ref": f"#/components/schemas/{obj['name']}Page"}
+                                "schema": {"$ref": f"#/components/schemas/{obj['name']}ListResponse"}
                             }
                         },
                     }
@@ -2013,6 +2015,32 @@ def detect_gradle_plugin_versions(
     return boot_version, dep_mgmt_version
 
 
+def detect_gradle_migration_tools(root: Path) -> set[str]:
+    build_kts = root / "build.gradle.kts"
+    build_groovy = root / "build.gradle"
+    build_path: Optional[Path] = build_kts if build_kts.exists() else build_groovy if build_groovy.exists() else None
+    if build_path is None:
+        return set()
+
+    text = build_path.read_text(encoding="utf-8")
+    tools: set[str] = set()
+
+    if (
+        "org.flywaydb:flyway-core" in text
+        or 'id("org.flywaydb.flyway")' in text
+        or "id 'org.flywaydb.flyway'" in text
+    ):
+        tools.add("flyway")
+    if (
+        "org.liquibase:liquibase-core" in text
+        or 'id("org.liquibase.gradle")' in text
+        or "id 'org.liquibase.gradle'" in text
+    ):
+        tools.add("liquibase")
+
+    return tools
+
+
 def render_liquibase_root_changelog() -> str:
     return (
         "# GENERATED FILE: do not edit directly.\n"
@@ -2053,8 +2081,9 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         fallback_dep_mgmt_version,
     )
     targets = set(cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"]))
-    include_flyway = "flyway" in targets
-    include_liquibase = "liquibase" in targets
+    detected_tools = detect_gradle_migration_tools(Path.cwd())
+    include_flyway = "flyway" in targets and "flyway" in detected_tools
+    include_liquibase = "liquibase" in targets and "liquibase" in detected_tools
     generated_schema_sql = render_sql(ir)
     package_path = base_package.replace(".", "/")
 
@@ -2519,10 +2548,8 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         f"package {base_package}.generated.config;\n\n"
         "import org.springframework.boot.autoconfigure.domain.EntityScan;\n"
         "import org.springframework.context.annotation.Configuration;\n"
-        "import org.springframework.data.web.config.EnableSpringDataWebSupport;\n"
         "import org.springframework.data.jpa.repository.config.EnableJpaRepositories;\n\n"
         "@Configuration\n"
-        "@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)\n"
         f"@EntityScan(basePackages = \"{base_package}.generated.persistence\")\n"
         f"@EnableJpaRepositories(basePackages = \"{base_package}.generated.persistence\")\n"
         "public class GeneratedPersistenceConfig {\n"
@@ -2666,11 +2693,13 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         repo_name = f"{obj['name']}Repository"
         entity_name = f"{obj['name']}Entity"
         domain_name = obj["name"]
+        list_response_name = f"{obj['name']}ListResponse"
         pk_prop = camel_case(pk["name"])
         pk_java = java_type_for_field(pk, type_by_id, object_by_id, struct_by_id)
         path_table = pluralize(snake_case(obj["name"]))
 
         imports = {
+            "import java.util.List;",
             "import java.util.Optional;",
             "import org.springframework.data.domain.Page;",
             "import org.springframework.data.domain.Pageable;",
@@ -2797,6 +2826,21 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
         if needs_date_time_format_import:
             imports.add("import org.springframework.format.annotation.DateTimeFormat;")
 
+        list_response_src = (
+            f"package {base_package}.generated.api;\n\n"
+            "import java.util.List;\n"
+            f"import {base_package}.generated.domain.{domain_name};\n\n"
+            f"public record {list_response_name}(\n"
+            f"    List<{domain_name}> items,\n"
+            "    int page,\n"
+            "    int size,\n"
+            "    long totalElements,\n"
+            "    int totalPages\n"
+            ") {\n"
+            "}\n"
+        )
+        files[f"src/main/java/{package_path}/generated/api/{list_response_name}.java"] = list_response_src
+
         to_domain_method = (
             f"    private {domain_name} toDomain({entity_name} entity) {{\n"
             f"        return new {domain_name}(\n"
@@ -2817,13 +2861,15 @@ def render_spring_files(ir: Dict[str, Any], cfg: Dict[str, Any]) -> Dict[str, st
             "        this.repository = repository;\n"
             "    }\n\n"
             "    @GetMapping\n"
-            f"    public ResponseEntity<Page<{domain_name}>> list(\n"
+            f"    public ResponseEntity<{list_response_name}> list(\n"
             f"{list_method_signature}\n"
             "    ) {\n"
             f"        Specification<{entity_name}> spec = (root, query, cb) -> cb.conjunction();\n"
             + (filter_block + "\n" if filter_block else "")
-            + f"        Page<{domain_name}> result = repository.findAll(spec, pageable).map(this::toDomain);\n"
-            "        return ResponseEntity.ok(result);\n"
+            + f"        Page<{entity_name}> entityPage = repository.findAll(spec, pageable);\n"
+            + f"        List<{domain_name}> items = entityPage.stream().map(this::toDomain).toList();\n"
+            + f"        {list_response_name} result = new {list_response_name}(items, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());\n"
+            + "        return ResponseEntity.ok(result);\n"
             "    }\n\n"
             f"    @GetMapping(\"/{{{pk_prop}}}\")\n"
             f"    public ResponseEntity<{domain_name}> getById(@PathVariable(\"{pk_prop}\") {pk_java} {pk_prop}) {{\n"
@@ -2873,6 +2919,20 @@ def write_outputs(outputs: Dict[str, str], root: Path) -> None:
         path = root / rel_path
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
+
+
+def remove_stale_outputs(root: Path, cfg: Dict[str, Any], outputs: Dict[str, str]) -> None:
+    existing = set(managed_existing_files(root, cfg))
+    desired = set(outputs.keys())
+    stale = sorted(existing - desired)
+    for rel in stale:
+        p = root / rel
+        if p.exists():
+            p.unlink()
+            parent = p.parent
+            while parent != root and parent.exists() and not any(parent.iterdir()):
+                parent.rmdir()
+                parent = parent.parent
 
 
 def managed_existing_files(root: Path, cfg: Dict[str, Any]) -> List[str]:
@@ -2947,6 +3007,14 @@ def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:
         / "0001-init.sql"
     )
     schema_src = root / out_dir / "sql" / "schema.sql"
+    flyway_dst_file = example / "src" / "main" / "resources" / "db" / "migration" / "V1__prophet_init.sql"
+    liquibase_root_dst_file = example / "src" / "main" / "resources" / "db" / "changelog" / "db.changelog-master.yaml"
+    liquibase_prophet_changelog_dst_file = (
+        example / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "changelog-master.yaml"
+    )
+    liquibase_prophet_sql_dst_file = (
+        example / "src" / "main" / "resources" / "db" / "changelog" / "prophet" / "0001-init.sql"
+    )
 
     if spring_src.exists():
         dst = example / "src" / "main" / "java" / "com" / "example" / "prophet" / "generated"
@@ -2967,21 +3035,39 @@ def sync_example_project(root: Path, cfg: Dict[str, Any]) -> None:
         flyway_dst = example / "src" / "main" / "resources" / "db" / "migration"
         flyway_dst.mkdir(parents=True, exist_ok=True)
         shutil.copy2(spring_flyway_src, flyway_dst / "V1__prophet_init.sql")
+    elif flyway_dst_file.exists():
+        flyway_dst_file.unlink()
 
     if spring_liquibase_root_src.exists():
         liquibase_dst = example / "src" / "main" / "resources" / "db" / "changelog"
         liquibase_dst.mkdir(parents=True, exist_ok=True)
         shutil.copy2(spring_liquibase_root_src, liquibase_dst / "db.changelog-master.yaml")
+    elif liquibase_root_dst_file.exists():
+        liquibase_root_dst_file.unlink()
 
     if spring_liquibase_prophet_changelog_src.exists():
         liquibase_prophet_dst = example / "src" / "main" / "resources" / "db" / "changelog" / "prophet"
         liquibase_prophet_dst.mkdir(parents=True, exist_ok=True)
         shutil.copy2(spring_liquibase_prophet_changelog_src, liquibase_prophet_dst / "changelog-master.yaml")
+    elif liquibase_prophet_changelog_dst_file.exists():
+        liquibase_prophet_changelog_dst_file.unlink()
 
     if spring_liquibase_sql_src.exists():
         liquibase_prophet_dst = example / "src" / "main" / "resources" / "db" / "changelog" / "prophet"
         liquibase_prophet_dst.mkdir(parents=True, exist_ok=True)
         shutil.copy2(spring_liquibase_sql_src, liquibase_prophet_dst / "0001-init.sql")
+    elif liquibase_prophet_sql_dst_file.exists():
+        liquibase_prophet_sql_dst_file.unlink()
+
+    maybe_empty = [
+        example / "src" / "main" / "resources" / "db" / "changelog" / "prophet",
+        example / "src" / "main" / "resources" / "db" / "changelog",
+        example / "src" / "main" / "resources" / "db" / "migration",
+        example / "src" / "main" / "resources" / "db",
+    ]
+    for d in maybe_empty:
+        if d.exists() and d.is_dir() and not any(d.iterdir()):
+            d.rmdir()
 
 
 def _find_block_close(text: str, open_brace_index: int) -> int:
@@ -3137,7 +3223,13 @@ def unwire_gradle_multi_module(root: Path, cfg: Dict[str, Any]) -> List[str]:
 
 
 def load_ontology_from_cfg(root: Path, cfg: Dict[str, Any]) -> Ontology:
-    ont_path = root / str(cfg_get(cfg, ["project", "ontology_file"], "ontology/local/main.prophet"))
+    ontology_file = cfg_get(cfg, ["project", "ontology_file"], None)
+    if not ontology_file:
+        raise ProphetError(
+            "Missing required config: project.ontology_file in prophet.yaml "
+            "(see examples/java/prophet_example_spring/ontology/local/main.prophet for an example)."
+        )
+    ont_path = root / str(ontology_file)
     if not ont_path.exists():
         raise ProphetError(f"Ontology file not found: {ont_path}")
     return parse_ontology(ont_path.read_text(encoding="utf-8"))
@@ -3173,8 +3265,8 @@ def cmd_init(args: argparse.Namespace) -> int:
     cfg_path.write_text(
         """schema_version: 1
 project:
-  name: local-ontology
-  ontology_file: ontology/local/main.prophet
+  name: my-ontology
+  ontology_file: path/to/your-ontology.prophet
   version_source: ontology
 generation:
   targets:
@@ -3198,28 +3290,6 @@ determinism:
         encoding="utf-8",
     )
 
-    ont_path = root / "ontology" / "local" / "main.prophet"
-    ont_path.parent.mkdir(parents=True, exist_ok=True)
-    ont_path.write_text(
-        """ontology example_local {
-  id "ont_example_local"
-  version "0.1.0"
-
-  object Sample {
-    id "obj_sample"
-
-    field sample_id {
-      id "fld_sample_id"
-      type string
-      required
-      key primary
-    }
-  }
-}
-""",
-        encoding="utf-8",
-    )
-
     # Create internal Prophet state directories.
     (root / ".prophet" / "ir").mkdir(parents=True, exist_ok=True)
     (root / ".prophet" / "baselines").mkdir(parents=True, exist_ok=True)
@@ -3227,9 +3297,13 @@ determinism:
     print("Initialized Prophet project.")
     print("Created:")
     print("- prophet.yaml")
-    print("- ontology/local/main.prophet")
     print("- .prophet/ir")
     print("- .prophet/baselines")
+    print("")
+    print("Next:")
+    print("- set project.ontology_file to your ontology file path")
+    print("- author your ontology file, or start from:")
+    print("  examples/java/prophet_example_spring/ontology/local/main.prophet")
     print("")
     print("Note: gen/ is created on first 'prophet gen' or 'prophet generate'.")
     return 0
@@ -3361,6 +3435,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
         print("Generated outputs are clean.")
         return 0
 
+    remove_stale_outputs(root, cfg, outputs)
     write_outputs(outputs, root)
 
     ir_path = root / ".prophet" / "ir" / "current.ir.json"
@@ -3593,13 +3668,16 @@ def build_cli() -> argparse.ArgumentParser:
     p_init = sub.add_parser(
         "init",
         formatter_class=HelpFormatter,
-        help="Create starter prophet.yaml and ontology scaffold",
-        description="Initialize a new Prophet project scaffold in the current directory.",
+        help="Create starter prophet.yaml and Prophet metadata directories",
+        description=(
+            "Initialize Prophet config and metadata directories in the current directory.\n"
+            "Set project.ontology_file to your own ontology file path."
+        ),
     )
     p_init.add_argument(
         "--force",
         action="store_true",
-        help="Overwrite existing prophet.yaml and starter ontology files",
+        help="Overwrite existing prophet.yaml and Prophet metadata scaffold",
     )
     p_init.set_defaults(func=cmd_init)
 

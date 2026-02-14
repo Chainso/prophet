@@ -4,6 +4,7 @@ import javax.annotation.processing.Generated;
 import com.example.prophet.generated.domain.User;
 import com.example.prophet.generated.persistence.UserEntity;
 import com.example.prophet.generated.persistence.UserRepository;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ public class UserQueryController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<User>> list(
+    public ResponseEntity<UserListResponse> list(
         @RequestParam(name = "userId", required = false) String userId,
         @RequestParam(name = "email", required = false) String email,
         @PageableDefault(size = 20) Pageable pageable
@@ -40,7 +41,9 @@ public class UserQueryController {
         if (email != null) {
             spec = spec.and((root, query, cb) -> cb.equal(root.get("email"), email));
         }
-        Page<User> result = repository.findAll(spec, pageable).map(this::toDomain);
+        Page<UserEntity> entityPage = repository.findAll(spec, pageable);
+        List<User> items = entityPage.stream().map(this::toDomain).toList();
+        UserListResponse result = new UserListResponse(items, entityPage.getNumber(), entityPage.getSize(), entityPage.getTotalElements(), entityPage.getTotalPages());
         return ResponseEntity.ok(result);
     }
 

@@ -77,8 +77,8 @@ Each ontology action generates:
 
 In v0.1 Spring codegen:
 - Event ingestion is not generated.
-- Seer owns ingestion/dispatch orchestration.
-- Prophet action endpoints can return data that Seer uses to build platform events.
+- Ingestion/dispatch orchestration is handled by the host platform/runtime.
+- Prophet action endpoints can return data that external orchestration layers use to build platform events.
 
 ## 4. Catalog Tables
 
@@ -115,7 +115,8 @@ Per object model:
 Shared generated components:
 - Action endpoint controller
 - Query controllers (`GET /<objects>/{id}` and paginated/filterable `GET /<objects>`)
-- Flyway and Liquibase migration resources (`db/migration`, `db/changelog`)
+  returning generated list DTO envelopes (not raw Spring `Page` payloads)
+- Migration resources (`db/migration`, `db/changelog`) auto-wired based on existing host app migration stack
 
 ## 6. Canonical Type Map (v0.1)
 
@@ -166,4 +167,4 @@ Additive changes include:
 - Keeps domain data strongly typed and query-friendly.
 - Preserves ontology semantics (states/transitions) in the database.
 - Produces JPA code engineers can use directly.
-- Keeps Seer-specific orchestration concerns outside generated service code.
+- Keeps external orchestration concerns outside generated service code.

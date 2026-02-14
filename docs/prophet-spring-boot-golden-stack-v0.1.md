@@ -36,11 +36,14 @@ Provide a first-class Spring Boot integration where Prophet ontology contracts g
 4. Query API
 - Object query controllers (`GET /<objects>/{id}`) over generated repositories
 - Paginated/filterable object query controllers (`GET /<objects>`) backed by JPA Specifications
+- List endpoints return generated DTO envelopes (never raw JPA entities or raw Spring `Page` payloads)
+- Filter query params are generated for scalar/object-ref/state fields plus paging params (`page`, `size`, `sort`);
+  list/struct fields are not exposed as direct query filters
 
 5. Spring wiring
 - Generated config enabling entity/repository scanning for generated persistence package
-- Generated migration resources for Flyway and Liquibase under `src/main/resources/db/**`
-- Generated Spring Data page serialization mode set to `VIA_DTO` for stable paginated JSON output
+- Generated migration resources under `src/main/resources/db/**` auto-detected from the app's existing migration stack
+  (`flyway` and/or `liquibase` dependencies/plugins already present in the host Gradle project)
 
 ## 4. Ownership Boundary
 
@@ -77,4 +80,4 @@ If only the generated default stub exists, endpoint returns `501 Not Implemented
 
 - Auto-implementing action business logic.
 - Auto-inferred state transitions from action names.
-- Event ingestion/dispatch runtime (owned by Seer platform).
+- Event ingestion/dispatch runtime (owned by an external platform/runtime layer).
