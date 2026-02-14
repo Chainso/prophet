@@ -2,6 +2,22 @@
 
 All notable changes to `prophet-cli` are documented in this file.
 
+## [0.3.0] - 2026-02-14
+
+### Added
+- Real Postgres profile context test coverage via Testcontainers in the Spring example app.
+- Delta migration report intelligence:
+  - structured `summary` counts,
+  - structured `findings`,
+  - heuristic `object_rename_hint` and `column_rename_hint` diagnostics.
+- Versioned query contract manifest in IR (`query_contracts`, `query_contracts_version`) with explicit compatibility checks for query paths/filters/operators.
+- Structured diagnostics mode: `prophet check --json`.
+- End-to-end HTTP action-flow integration test in the Spring example (`createOrder -> approveOrder -> shipOrder -> query/get`).
+
+### Changed
+- Toolchain version bumped to `0.3.0`.
+- Example documentation expanded for typed query endpoints and integration test coverage.
+
 ## [0.2.0] - 2026-02-14
 
 ### Added
