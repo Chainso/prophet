@@ -35,9 +35,10 @@ Provide a first-class Spring Boot integration where Prophet ontology contracts g
 
 4. Query API
 - Object query controllers (`GET /<objects>/{id}` for single keys, `GET /<objects>/{k1}/{k2}/...` for composite keys) over generated repositories
-- Paginated/filterable object query controllers (`GET /<objects>`) backed by JPA Specifications
+- Paginated object query controllers (`GET /<objects>`) for paging/sort only
+- Filtered queries through typed `POST /<objects>/query` backed by JPA Specifications
 - List endpoints return generated DTO envelopes (never raw JPA entities or raw Spring `Page` payloads)
-- Filter query params are generated for scalar/object-ref/state fields plus paging params (`page`, `size`, `sort`);
+- Filter DTOs are generated for scalar/object-ref/state fields and used by `POST /<objects>/query`;
   list/struct fields are not exposed as direct query filters
 
 5. Spring wiring

@@ -26,7 +26,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -44,29 +43,9 @@ public class OrderQueryController {
 
     @GetMapping
     public ResponseEntity<OrderListResponse> list(
-        @RequestParam(name = "orderId", required = false) String orderId,
-        @RequestParam(name = "customerUserId", required = false) String customerUserId,
-        @RequestParam(name = "totalAmount", required = false) BigDecimal totalAmount,
-        @RequestParam(name = "discountCode", required = false) String discountCode,
-        @RequestParam(name = "currentState", required = false) OrderState currentState,
         @PageableDefault(size = 20) Pageable pageable
     ) {
         Specification<OrderEntity> spec = (root, query, cb) -> cb.conjunction();
-        if (orderId != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("orderId"), orderId));
-        }
-        if (customerUserId != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.join("customer", JoinType.LEFT).get("userId"), customerUserId));
-        }
-        if (totalAmount != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("totalAmount"), totalAmount));
-        }
-        if (discountCode != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("discountCode"), discountCode));
-        }
-        if (currentState != null) {
-            spec = spec.and((root, query, cb) -> cb.equal(root.get("currentState"), currentState));
-        }
         Page<OrderEntity> entityPage = repository.findAll(spec, pageable);
         List<Order> items = entityPage.stream().map(mapper::toDomain).toList();
         OrderListResponse result = OrderListResponse.builder()

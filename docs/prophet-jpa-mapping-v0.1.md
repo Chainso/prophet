@@ -114,7 +114,8 @@ Per object model:
 
 Shared generated components:
 - Action endpoint controller
-- Query controllers (`GET /<objects>/{id}` for single keys or `GET /<objects>/{k1}/{k2}/...` for composite keys, plus paginated/filterable `GET /<objects>`)
+- Query controllers (`GET /<objects>/{id}` for single keys or `GET /<objects>/{k1}/{k2}/...` for composite keys, plus paginated `GET /<objects>`)
+- Typed filter query controllers (`POST /<objects>/query`) for all field-based filtering
   returning generated list DTO envelopes (not raw Spring `Page` payloads)
 - Migration resources (`db/migration`, `db/changelog`) auto-wired based on existing host app migration stack
 

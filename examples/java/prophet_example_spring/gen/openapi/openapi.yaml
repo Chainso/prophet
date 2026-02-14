@@ -32,36 +32,6 @@ paths:
         schema:
           type: string
         description: Sort expression, for example field,asc
-      - name: orderId
-        in: query
-        required: false
-        schema: &id007
-          type: string
-      - name: customerUserId
-        in: query
-        required: false
-        schema: &id008
-          type: string
-      - name: totalAmount
-        in: query
-        required: false
-        schema: &id009
-          type: string
-          description: Decimal encoded as string
-      - name: discountCode
-        in: query
-        required: false
-        schema: &id010
-          type: string
-      - name: currentState
-        in: query
-        required: false
-        schema:
-          type: string
-          enum:
-          - CREATED
-          - APPROVED
-          - SHIPPED
       responses:
         '200':
           description: Paginated Order list response
@@ -134,16 +104,6 @@ paths:
         schema:
           type: string
         description: Sort expression, for example field,asc
-      - name: userId
-        in: query
-        required: false
-        schema: &id012
-          type: string
-      - name: email
-        in: query
-        required: false
-        schema: &id013
-          type: string
       responses:
         '200':
           description: Paginated User list response
@@ -462,7 +422,8 @@ components:
     OrderOrderIdFilter:
       type: object
       properties:
-        eq: *id007
+        eq: &id007
+          type: string
         in:
           type: array
           items: *id007
@@ -471,14 +432,17 @@ components:
     OrderCustomerUserIdFilter:
       type: object
       properties:
-        eq: *id008
+        eq: &id008
+          type: string
         in:
           type: array
           items: *id008
     OrderTotalAmountFilter:
       type: object
       properties:
-        eq: *id009
+        eq: &id009
+          type: string
+          description: Decimal encoded as string
         in:
           type: array
           items: *id009
@@ -487,7 +451,8 @@ components:
     OrderDiscountCodeFilter:
       type: object
       properties:
-        eq: *id010
+        eq: &id010
+          type: string
         in:
           type: array
           items: *id010
@@ -521,7 +486,8 @@ components:
     UserUserIdFilter:
       type: object
       properties:
-        eq: *id012
+        eq: &id012
+          type: string
         in:
           type: array
           items: *id012
@@ -530,7 +496,8 @@ components:
     UserEmailFilter:
       type: object
       properties:
-        eq: *id013
+        eq: &id013
+          type: string
         in:
           type: array
           items: *id013

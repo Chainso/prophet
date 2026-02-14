@@ -4,6 +4,13 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-02-14
+
+### Changed
+- `GET /<objects>` list endpoints are now pagination/sort only.
+- All field/state filtering is now centralized on `POST /<objects>/query`.
+- Updated generated Spring query controllers, OpenAPI docs, and project documentation to reflect query-only filtering.
+
 ## [0.5.1] - 2026-02-14
 
 ### Fixed

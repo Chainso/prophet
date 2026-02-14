@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.4.0",
+  "toolchain_version": "0.5.1",
   "stack": {
     "id": "java_spring_jpa",
     "language": "java",
     "framework": "spring_boot",
     "orm": "jpa"
   },
-  "ir_hash": "e7bb73ee135781a7243ae96f88a650e6ca6ebcadf72680562595a2bc89ce4dbf",
+  "ir_hash": "2aa20b3eacff68f86f4a76d91081e77fa60dda6dbb216405baa060f2d4574e93",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -31,11 +31,11 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "99236f6e2f93324e99833cc499c6801404c72828f493132b8a4df35b933a32f8"
+      "sha256": "ee5a3e0f0acc29a8b4499e462cc6e7305afba845414ce9c5d3d8d4d1b2934ed2"
     },
     {
       "path": "gen/spring-boot/build.gradle.kts",
-      "sha256": "118d86359b88c064b8988254184e364f008e0bd357b64f8425266b46902dcca6"
+      "sha256": "d193ea99229e6badd741d49ae6fb4fb2d7c03586a187224db9bf1d7705478a5b"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/actions/ApproveOrderCommand.java",
@@ -119,7 +119,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/api/OrderQueryController.java",
-      "sha256": "ed828b717d9d68fa5809d63d3ae73c3192d5ce107115683ee032d6c0628f591f"
+      "sha256": "27deff66dfe08859a6730c69501967bad3f4dcc8c358b07e8376e644cb764ac1"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/api/UserListResponse.java",
@@ -127,7 +127,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/api/UserQueryController.java",
-      "sha256": "3dacd3de17ee8a30c547777a0359856e4811907cc484255342a70f613a72efc1"
+      "sha256": "881ea1250dc2e03972354c7a6c5b70c41c918be4a0eda9031272891c69abf0bd"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/api/filters/OrderCurrentStateFilter.java",

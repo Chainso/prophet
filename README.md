@@ -5,7 +5,7 @@ It turns a domain DSL into deterministic artifacts: schema, API contracts, and a
 
 ## Status
 
-- Toolchain release: `0.5.1`
+- Toolchain release: `0.5.2`
 - Golden runtime target: Spring Boot
 - Example app: `examples/java/prophet_example_spring`
 
@@ -95,9 +95,9 @@ From `prophet gen`:
 - Actions are generated as API endpoints at `/actions/*`
 - Controllers delegate to generated action services (`generated.actions.services.*`)
 - Object APIs include:
-  - `GET /<objects>`
+  - `GET /<objects>` (pagination/sort only)
   - `GET /<objects>/{id}` for single-field keys, or `GET /<objects>/{k1}/{k2}/...` for composite keys
-  - `POST /<objects>/query` with typed filter DSL (`eq`, `in`, `gte`, `lte`, `contains`)
+  - `POST /<objects>/query` with typed filter DSL (`eq`, `in`, `gte`, `lte`, `contains`) for all filtering
 - Query layer maps entities via generated mappers (`generated.mapping.*DomainMapper`)
 
 ## DSL Notes

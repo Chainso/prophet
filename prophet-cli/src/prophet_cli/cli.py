@@ -49,7 +49,7 @@ from prophet_cli.targets.java_spring_jpa import JavaSpringJpaDeps
 from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_java_spring_jpa_outputs
 
 
-TOOLCHAIN_VERSION = "0.5.1"
+TOOLCHAIN_VERSION = "0.5.2"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/prophet-compatibility-policy-v0.2.md"
 
@@ -2545,14 +2545,6 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                 param_name = camel_case(f["name"])
                 param_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
 
-            list_parameters.append(
-                {
-                    "name": param_name,
-                    "in": "query",
-                    "required": False,
-                    "schema": param_schema,
-                }
-            )
             filter_name = f"{obj['name']}{pascal_case(param_name)}Filter"
             filter_props: Dict[str, Any] = {"eq": param_schema}
             if kind == "object_ref":
@@ -2572,17 +2564,6 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             query_filter_props[param_name] = {"$ref": f"#/components/schemas/{filter_name}"}
 
         if obj.get("states"):
-            list_parameters.append(
-                {
-                    "name": "currentState",
-                    "in": "query",
-                    "required": False,
-                    "schema": {
-                        "type": "string",
-                        "enum": [s["name"].upper() for s in obj["states"]],
-                    },
-                }
-            )
             state_filter_name = f"{obj['name']}CurrentStateFilter"
             enum_schema = {
                 "type": "string",
@@ -3660,7 +3641,6 @@ def render_spring_files(
             "import org.springframework.http.ResponseEntity;",
             "import org.springframework.web.bind.annotation.GetMapping;",
             "import org.springframework.web.bind.annotation.PathVariable;",
-            "import org.springframework.web.bind.annotation.RequestParam;",
             "import org.springframework.web.bind.annotation.RequestMapping;",
             "import org.springframework.web.bind.annotation.RestController;",
             f"import {base_package}.generated.domain.{domain_name};",
@@ -3719,13 +3699,11 @@ def render_spring_files(
         )
         files[f"src/main/java/{package_path}/generated/mapping/{mapper_name}.java"] = mapper_src
 
-        list_method_params: List[str] = []
-        filter_conditions: List[str] = []
+        list_method_params: List[str] = ["        @PageableDefault(size = 20) Pageable pageable"]
         typed_filter_conditions: List[str] = []
         typed_query_fields: List[Tuple[str, str, bool]] = []
         typed_query_imports: set[str] = set()
         needs_join_type_import = False
-        needs_date_time_format_import = False
 
         def base_type_for_descriptor(type_desc: Dict[str, Any]) -> Optional[str]:
             if type_desc["kind"] == "base":
@@ -3746,19 +3724,8 @@ def render_spring_files(
                 target = object_by_id[field_type["target_object_id"]]
                 target_pk = primary_key_field_for_object(target)
                 target_pk_prop = camel_case(target_pk["name"])
-                param_name = f"{entity_prop}{pascal_case(target_pk_prop)}"
                 param_java = java_type_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
                 add_java_imports_for_type(param_java, imports)
-                list_method_params.append(
-                    f"        @RequestParam(name = \"{param_name}\", required = false) {param_java} {param_name}"
-                )
-                filter_conditions.extend(
-                    [
-                        f"        if ({param_name} != null) {{",
-                        f"            spec = spec.and((root, query, cb) -> cb.equal(root.join(\"{entity_prop}\", JoinType.LEFT).get(\"{target_pk_prop}\"), {param_name}));",
-                        "        }",
-                    ]
-                )
                 needs_join_type_import = True
 
                 filter_imports: set[str] = set()
@@ -3793,28 +3760,9 @@ def render_spring_files(
                 )
                 continue
 
-            param_name = entity_prop
             param_java = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(param_java, imports)
             base_type = base_type_for_descriptor(field_type)
-            annotation_suffix = ""
-            if base_type == "date":
-                annotation_suffix = " @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)"
-                needs_date_time_format_import = True
-            elif base_type == "datetime":
-                annotation_suffix = " @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)"
-                needs_date_time_format_import = True
-
-            list_method_params.append(
-                f"        @RequestParam(name = \"{param_name}\", required = false){annotation_suffix} {param_java} {param_name}"
-            )
-            filter_conditions.extend(
-                [
-                    f"        if ({param_name} != null) {{",
-                    f"            spec = spec.and((root, query, cb) -> cb.equal(root.get(\"{entity_prop}\"), {param_name}));",
-                    "        }",
-                ]
-            )
 
             filter_imports: set[str] = set()
             add_java_imports_for_type(param_java, filter_imports)
@@ -3885,16 +3833,6 @@ def render_spring_files(
 
         if obj.get("states"):
             enum_cls = f"{obj['name']}State"
-            list_method_params.append(
-                f"        @RequestParam(name = \"currentState\", required = false) {enum_cls} currentState"
-            )
-            filter_conditions.extend(
-                [
-                    "        if (currentState != null) {",
-                    "            spec = spec.and((root, query, cb) -> cb.equal(root.get(\"currentState\"), currentState));",
-                    "        }",
-                ]
-            )
             state_filter_name = f"{obj['name']}CurrentStateFilter"
             files[
                 f"src/main/java/{package_path}/generated/api/filters/{state_filter_name}.java"
@@ -3937,14 +3875,10 @@ def render_spring_files(
         imports.add("import org.springframework.web.bind.annotation.RequestBody;")
         imports.add(f"import {base_package}.generated.api.filters.{typed_query_name};")
 
-        list_method_params.append("        @PageableDefault(size = 20) Pageable pageable")
         list_method_signature = ",\n".join(list_method_params)
-        filter_block = "\n".join(filter_conditions)
 
         if needs_join_type_import:
             imports.add("import jakarta.persistence.criteria.JoinType;")
-        if needs_date_time_format_import:
-            imports.add("import org.springframework.format.annotation.DateTimeFormat;")
 
         list_response_src = render_java_record_with_builder(
             f"{base_package}.generated.api",
@@ -4045,7 +3979,6 @@ def render_spring_files(
             f"{list_method_signature}\n"
             "    ) {\n"
             f"        Specification<{entity_name}> spec = (root, query, cb) -> cb.conjunction();\n"
-            + (filter_block + "\n" if filter_block else "")
             + f"        Page<{entity_name}> entityPage = repository.findAll(spec, pageable);\n"
             + f"        List<{domain_name}> items = entityPage.stream().map(mapper::toDomain).toList();\n"
             + f"        {list_response_name} result = {list_response_name}.builder()\n"
