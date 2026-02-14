@@ -113,6 +113,7 @@ dependencies {
 
             self.assertFalse((root / "gen").exists())
             self.assertFalse((root / ".prophet" / "ir" / "current.ir.json").exists())
+            self.assertFalse((root / ".prophet" / "cache" / "generation.json").exists())
 
             settings_after = (root / "settings.gradle.kts").read_text(encoding="utf-8")
             build_after = (root / "build.gradle.kts").read_text(encoding="utf-8")
@@ -121,6 +122,30 @@ dependencies {
 
             verify_after_clean = run_cli(root, "generate", "--verify-clean", expect_code=1)
             self.assertIn("Generated outputs are not clean", verify_after_clean.stdout)
+
+    def test_generate_skip_unchanged_uses_generation_cache(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-skip-unchanged-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_dst = root / "domain" / "main.prophet"
+            ontology_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(EXAMPLE_ONTOLOGY, ontology_dst)
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            run_cli(root, "gen")
+            cache_file = root / ".prophet" / "cache" / "generation.json"
+            self.assertTrue(cache_file.exists())
+
+            skipped = run_cli(root, "gen", "--skip-unchanged")
+            self.assertIn("Skipped generation: configuration and IR unchanged.", skipped.stdout)
 
     def test_missing_config_includes_actionable_hint(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-cli-hints-") as tmp:

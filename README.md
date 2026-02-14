@@ -41,6 +41,7 @@ cd examples/java/prophet_example_spring
 $(git rev-parse --show-toplevel)/.venv/bin/prophet validate
 $(git rev-parse --show-toplevel)/.venv/bin/prophet plan --show-reasons
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen --skip-unchanged
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --json
 ./gradlew :prophet_generated:compileJava compileJava
@@ -66,9 +67,13 @@ From `prophet gen`:
 
 - `.prophet/ir/current.ir.json`
   - includes `query_contracts` + `query_contracts_version` for explicit API/filter compatibility tracking
+- `.prophet/cache/generation.json`
+  - deterministic generation signature used by `prophet gen --skip-unchanged`
 - `gen/sql/schema.sql`
 - `gen/openapi/openapi.yaml`
 - `gen/manifest/generated-files.json`
+- `gen/manifest/extension-hooks.json`
+  - generated extension surfaces (for example action handler interfaces) that user code can implement safely
 - `gen/migrations/flyway/V1__prophet_init.sql`
 - `gen/migrations/liquibase/prophet/0001-init.sql`
 - Baseline-aware delta outputs when baseline differs:

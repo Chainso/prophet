@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "stack": "java_spring_jpa",
+  "hooks": [
+    {
+      "kind": "action_handler",
+      "action_id": "act_approve_order",
+      "action_name": "approveOrder",
+      "java_interface": "com.example.prophet.generated.actions.handlers.ApproveOrderActionHandler",
+      "default_implementation_class": "com.example.prophet.generated.actions.handlers.defaults.ApproveOrderActionHandlerDefault"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_create_order",
+      "action_name": "createOrder",
+      "java_interface": "com.example.prophet.generated.actions.handlers.CreateOrderActionHandler",
+      "default_implementation_class": "com.example.prophet.generated.actions.handlers.defaults.CreateOrderActionHandlerDefault"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_ship_order",
+      "action_name": "shipOrder",
+      "java_interface": "com.example.prophet.generated.actions.handlers.ShipOrderActionHandler",
+      "default_implementation_class": "com.example.prophet.generated.actions.handlers.defaults.ShipOrderActionHandlerDefault"
+    }
+  ]
+}

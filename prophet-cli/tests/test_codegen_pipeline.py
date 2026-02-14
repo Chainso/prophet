@@ -11,6 +11,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "prophet-cli" / "src"))
 from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.pipeline import run_generation_pipeline
 from prophet_cli.core.errors import ProphetError
+from prophet_cli.core.ir_reader import IRReader
 
 
 class CodegenPipelineTests(unittest.TestCase):
@@ -18,6 +19,22 @@ class CodegenPipelineTests(unittest.TestCase):
         context = GenerationContext(
             stack_id="java_spring_jpa",
             ir={"ir_hash": "abc"},
+            ir_reader=IRReader.from_dict(
+                {
+                    "ir_version": "0.1",
+                    "toolchain_version": "0.3.0",
+                    "ontology": {"id": "o", "name": "O", "version": "0.1.0"},
+                    "types": [],
+                    "objects": [],
+                    "structs": [],
+                    "action_inputs": [],
+                    "action_outputs": [],
+                    "actions": [],
+                    "events": [],
+                    "triggers": [],
+                    "ir_hash": "abc",
+                }
+            ),
             cfg={},
             root=Path("."),
         )
@@ -32,7 +49,34 @@ class CodegenPipelineTests(unittest.TestCase):
     def test_pipeline_rejects_unimplemented_stack(self) -> None:
         context = GenerationContext(
             stack_id="python_fastapi_sqlalchemy",
-            ir={},
+            ir={
+                "ir_version": "0.1",
+                "toolchain_version": "0.3.0",
+                "ontology": {"id": "o", "name": "O", "version": "0.1.0"},
+                "types": [],
+                "objects": [],
+                "structs": [],
+                "action_inputs": [],
+                "action_outputs": [],
+                "actions": [],
+                "events": [],
+                "triggers": [],
+            },
+            ir_reader=IRReader.from_dict(
+                {
+                    "ir_version": "0.1",
+                    "toolchain_version": "0.3.0",
+                    "ontology": {"id": "o", "name": "O", "version": "0.1.0"},
+                    "types": [],
+                    "objects": [],
+                    "structs": [],
+                    "action_inputs": [],
+                    "action_outputs": [],
+                    "actions": [],
+                    "events": [],
+                    "triggers": [],
+                }
+            ),
             cfg={},
             root=Path("."),
         )
@@ -43,4 +87,3 @@ class CodegenPipelineTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

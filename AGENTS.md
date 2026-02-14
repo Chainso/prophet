@@ -16,7 +16,7 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 ## Critical Rules
 
 - Do not hand-edit generated files under `gen/` as a source of truth.
-- Implement generator/template changes in `prophet-cli/src/prophet_cli/cli.py`, then regenerate.
+- Implement generator/template changes in source modules (`prophet_cli/core`, `prophet_cli/codegen`, `prophet_cli/targets/*`), then regenerate.
 - Preserve deterministic output ordering.
 - Keep ontology `id` values as immutable compatibility anchors.
 - When behavior changes, update docs and tests in the same change.
@@ -41,7 +41,10 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 
 ## Where to Edit
 
-- CLI and codegen: `prophet-cli/src/prophet_cli/cli.py`
+- CLI command orchestration: `prophet-cli/src/prophet_cli/cli.py`
+- Core compiler modules: `prophet-cli/src/prophet_cli/core/`
+- Codegen contracts/pipeline/artifacts: `prophet-cli/src/prophet_cli/codegen/`
+- Stack generators: `prophet-cli/src/prophet_cli/targets/`
 - CLI package docs: `prophet-cli/README.md`
 - Root docs: `README.md`, `docs/*`
 - Contributor guidance/backlog: `CONTRIBUTING.md`

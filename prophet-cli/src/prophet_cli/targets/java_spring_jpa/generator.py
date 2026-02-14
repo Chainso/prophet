@@ -10,6 +10,11 @@ from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.stacks import StackSpec
 
 
+def _pascal_case(value: str) -> str:
+    chunks = [part for part in value.replace("-", "_").split("_") if part]
+    return "".join(chunk[:1].upper() + chunk[1:] for chunk in chunks)
+
+
 @dataclass(frozen=True)
 class JavaSpringJpaDeps:
     cfg_get: Callable[[Dict[str, Any], List[str], Any], Any]
@@ -24,7 +29,7 @@ class JavaSpringJpaDeps:
 
 
 def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dict[str, str]:
-    ir = context.ir
+    ir = context.ir_reader.as_dict()
     cfg = context.cfg
     work_root = context.root
     outputs: Dict[str, str] = {}
@@ -52,7 +57,7 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
         report = {
             "baseline_ir": str(baseline_path.relative_to(work_root)) if baseline_path is not None else None,
             "from_ir_hash": baseline_hash,
-            "to_ir_hash": ir.get("ir_hash"),
+            "to_ir_hash": context.ir_reader.ir_hash,
             "warnings": delta_warnings,
             "summary": {
                 "safe_auto_apply_count": delta_meta.get("safe_auto_apply_count", 0),
@@ -75,6 +80,31 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
         for rel_path, content in spring_files.items():
             outputs[f"{out_dir}/spring-boot/{rel_path}"] = content
 
+    base_package = str(deps.cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet"))
+    extension_hooks = []
+    for action in sorted(context.ir_reader.actions(), key=lambda item: str(item.get("name", ""))):
+        action_name = str(action.get("name", ""))
+        action_id = str(action.get("id", ""))
+        interface_name = f"{_pascal_case(action_name)}ActionHandler"
+        extension_hooks.append(
+            {
+                "kind": "action_handler",
+                "action_id": action_id,
+                "action_name": action_name,
+                "java_interface": f"{base_package}.generated.actions.handlers.{interface_name}",
+                "default_implementation_class": f"{base_package}.generated.actions.handlers.defaults.{interface_name}Default",
+            }
+        )
+    outputs[f"{out_dir}/manifest/extension-hooks.json"] = json.dumps(
+        {
+            "schema_version": 1,
+            "stack": stack.id,
+            "hooks": extension_hooks,
+        },
+        indent=2,
+        sort_keys=False,
+    ) + "\n"
+
     manifest_rel = f"{out_dir}/manifest/generated-files.json"
     hashed_outputs = {
         rel: hashlib.sha256(content.encode("utf-8")).hexdigest()
@@ -89,7 +119,7 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
             "framework": stack.framework,
             "orm": stack.orm,
         },
-        "ir_hash": ir.get("ir_hash"),
+        "ir_hash": context.ir_reader.ir_hash,
         "outputs": [
             {"path": rel, "sha256": digest}
             for rel, digest in sorted(hashed_outputs.items())
@@ -98,4 +128,3 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
     outputs[manifest_rel] = json.dumps(manifest_payload, indent=2, sort_keys=False) + "\n"
 
     return outputs
-

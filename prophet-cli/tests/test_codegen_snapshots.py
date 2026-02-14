@@ -81,6 +81,7 @@ class CodegenSnapshotTests(unittest.TestCase):
         self.assertNotIn("gen/migrations/liquibase/prophet/0002-delta.sql", outputs)
         self.assertNotIn("gen/migrations/delta/report.json", outputs)
         self.assertIn("gen/manifest/generated-files.json", outputs)
+        self.assertIn("gen/manifest/extension-hooks.json", outputs)
 
         spring_db_keys = [
             key for key in outputs if key.startswith("gen/spring-boot/src/main/resources/db/")
@@ -171,6 +172,16 @@ dependencies {
         listed_paths = {entry["path"] for entry in manifest["outputs"]}
         self.assertIn("gen/sql/schema.sql", listed_paths)
         self.assertIn("gen/openapi/openapi.yaml", listed_paths)
+        self.assertIn("gen/manifest/extension-hooks.json", listed_paths)
+
+    def test_extension_hook_manifest_contains_action_handlers(self) -> None:
+        outputs, _ = build_outputs_from_example()
+        hooks_doc = json.loads(outputs["gen/manifest/extension-hooks.json"])
+        hooks = hooks_doc.get("hooks", [])
+        action_names = {item.get("action_name") for item in hooks}
+        self.assertIn("createOrder", action_names)
+        self.assertIn("approveOrder", action_names)
+        self.assertIn("shipOrder", action_names)
 
     def test_delta_report_summary_and_rename_hints(self) -> None:
         cfg = load_config(EXAMPLE_ROOT / "prophet.yaml")

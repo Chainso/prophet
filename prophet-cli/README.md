@@ -76,6 +76,7 @@ Writes generated artifacts and current IR.
 ```bash
 prophet generate
 prophet gen
+prophet gen --skip-unchanged
 ```
 
 Also syncs generated Spring artifacts into `examples/java/prophet_example_spring` when present.
@@ -125,6 +126,10 @@ Generated ownership manifest:
 - `gen/manifest/generated-files.json`
 - includes stack metadata and deterministic hashes for generated outputs
 
+Generated extension hook manifest:
+- `gen/manifest/extension-hooks.json`
+- lists generated extension points (for example action handler interfaces + default classes)
+
 Spring runtime migration wiring is auto-detected from the host Gradle project:
 - if Flyway dependency/plugin is present, Prophet syncs Flyway resources
 - if Liquibase dependency/plugin is present, Prophet syncs Liquibase resources
@@ -149,12 +154,24 @@ CI mode. Fails if committed generated files differ from current generation.
 prophet generate --verify-clean
 ```
 
+### `prophet gen --skip-unchanged`
+Skips no-op regeneration when the current config + IR signature matches the last successful generation cache.
+
+- cache file: `.prophet/cache/generation.json`
+- ignored when `--wire-gradle` is used
+- incompatible with `--verify-clean`
+
+```bash
+prophet gen --skip-unchanged
+```
+
 ### `prophet clean`
 Removes generated artifacts from current project.
 
 Default removals:
 - `gen/`
 - `.prophet/ir/current.ir.json`
+- `.prophet/cache/generation.json`
 - `src/main/java/<base_package>/generated`
 - `src/main/resources/application-prophet.yml`
 - `src/main/resources/schema.sql` (only if it looks generated)

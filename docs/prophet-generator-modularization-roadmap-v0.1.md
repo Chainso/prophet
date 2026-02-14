@@ -19,11 +19,14 @@ Completed so far:
 9. Added structured `prophet plan --json` diagnostics for CI and automation workflows.
 10. Added explicit stack status metadata (`implemented` vs `planned`) for transparent contributor planning.
 11. Extracted artifact lifecycle utilities (`write`, `managed file detection`, `stale cleanup`) into `prophet_cli.codegen.artifacts`.
+12. Added a standardized `IRReader` boundary and routed reference target generation through it.
+13. Added extension hook manifest generation (`gen/manifest/extension-hooks.json`) for action handler surfaces.
+14. Added deterministic no-op generation cache support via `prophet gen --skip-unchanged`.
 
 In progress:
 
 1. Reducing duplicated legacy logic in `cli.py` now that core delegation is active.
-2. Advancing Milestone 2 and Milestone 3 work packages with no behavior drift.
+2. Advancing Milestone 3 and Milestone 7 view/extension coverage with stronger conformance tests.
 3. Expanding Milestone 4 stack validation into full target manifest schema.
 
 ## 1. Purpose

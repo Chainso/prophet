@@ -19,6 +19,7 @@ from prophet_cli.core.errors import ProphetError
 from prophet_cli.core.config import cfg_get as _core_cfg_get
 from prophet_cli.core.config import load_config as _core_load_config
 from prophet_cli.core.ir import build_ir as _core_build_ir
+from prophet_cli.core.ir_reader import IRReader
 from prophet_cli.core.parser import parse_ontology as _core_parse_ontology
 from prophet_cli.core.parser import resolve_type_descriptor as _core_resolve_type_descriptor
 from prophet_cli.core.parser import unwrap_list_type_once as _core_unwrap_list_type_once
@@ -3863,9 +3864,11 @@ def _generate_outputs_for_java_spring_jpa(context: GenerationContext) -> Dict[st
 def build_generated_outputs(ir: Dict[str, Any], cfg: Dict[str, Any], root: Optional[Path] = None) -> Dict[str, str]:
     stack = resolve_stack_spec(cfg)
     work_root = root if root is not None else Path.cwd()
+    ir_reader = IRReader.from_dict(ir)
     context = GenerationContext(
         stack_id=stack.id,
         ir=ir,
+        ir_reader=ir_reader,
         cfg=cfg,
         root=work_root,
     )
@@ -4251,9 +4254,46 @@ def hints_for_prophet_error(message: str) -> List[str]:
         hints.append("Run `prophet gen` once to create a baseline, or set `compatibility.baseline_ir`.")
     if "--wire-gradle cannot be used with --verify-clean" in msg:
         hints.append("Use `prophet gen --wire-gradle` and `prophet check` (or `prophet generate --verify-clean`) as separate steps.")
+    if "--skip-unchanged cannot be used with --verify-clean" in msg:
+        hints.append("Use `prophet gen --skip-unchanged` for local no-op speedups, and `prophet check` or `prophet generate --verify-clean` in CI.")
     if "invalid semver" in msg:
         hints.append("Use semantic versions in ontology `version`, for example `1.2.3`.")
     return hints
+
+
+def generation_cache_path(root: Path) -> Path:
+    return root / ".prophet" / "cache" / "generation.json"
+
+
+def compute_generation_signature(cfg: Dict[str, Any], ir: Dict[str, Any], stack_id: str) -> str:
+    payload = {
+        "toolchain_version": TOOLCHAIN_VERSION,
+        "stack_id": stack_id,
+        "ir_hash": str(ir.get("ir_hash", "")),
+        "out_dir": str(cfg_get(cfg, ["generation", "out_dir"], "gen")),
+        "targets": list(cfg_get(cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"])),
+        "baseline_ir": str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json")),
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def load_generation_cache(root: Path) -> Dict[str, Any]:
+    path = generation_cache_path(root)
+    if not path.exists():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if isinstance(payload, dict):
+            return payload
+    except Exception:
+        return {}
+    return {}
+
+
+def write_generation_cache(root: Path, payload: Dict[str, Any]) -> None:
+    path = generation_cache_path(root)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
 
 def ensure_baseline_exists(root: Path, cfg: Dict[str, Any], ir: Dict[str, Any]) -> Path:
@@ -4451,11 +4491,26 @@ def cmd_generate(args: argparse.Namespace) -> int:
         return 1
 
     ir = build_ir(ont, cfg)
-    delta_sql, delta_warnings, baseline_path, _, _ = compute_delta_from_baseline(root, cfg, ir)
-    outputs = build_generated_outputs(ir, cfg, root=root)
 
     if args.verify_clean and args.wire_gradle:
         raise ProphetError("--wire-gradle cannot be used with --verify-clean")
+    if args.verify_clean and args.skip_unchanged:
+        raise ProphetError("--skip-unchanged cannot be used with --verify-clean")
+
+    signature = compute_generation_signature(cfg, ir, stack.id)
+    out_dir = str(cfg_get(cfg, ["generation", "out_dir"], "gen"))
+    manifest_path = root / out_dir / "manifest" / "generated-files.json"
+    cache_payload = load_generation_cache(root)
+    cached_signature = str(cache_payload.get("signature", "")) if isinstance(cache_payload, dict) else ""
+    if args.skip_unchanged and not args.wire_gradle:
+        if cached_signature == signature and manifest_path.exists():
+            print("Skipped generation: configuration and IR unchanged.")
+            print(f"- stack: {stack.id} ({stack.language}/{stack.framework}/{stack.orm})")
+            print(f"- signature: {signature}")
+            return 0
+
+    delta_sql, delta_warnings, baseline_path, _, _ = compute_delta_from_baseline(root, cfg, ir)
+    outputs = build_generated_outputs(ir, cfg, root=root)
 
     if args.verify_clean:
         dirty = collect_dirty_generated_files(root, cfg, outputs)
@@ -4518,6 +4573,18 @@ def cmd_generate(args: argparse.Namespace) -> int:
         for msg in gradle_messages:
             print(f"- {msg}")
 
+    write_generation_cache(
+        root,
+        {
+            "schema_version": 1,
+            "toolchain_version": TOOLCHAIN_VERSION,
+            "stack_id": stack.id,
+            "signature": signature,
+            "ir_hash": ir.get("ir_hash"),
+            "out_dir": out_dir,
+        },
+    )
+
     return 0
 
 
@@ -4532,6 +4599,7 @@ def cmd_clean(args: argparse.Namespace) -> int:
     baseline_rel = str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline_path = root / baseline_rel
     current_ir_path = root / ".prophet" / "ir" / "current.ir.json"
+    generation_cache = generation_cache_path(root)
 
     removed: List[str] = []
     skipped: List[str] = []
@@ -4568,6 +4636,12 @@ def cmd_clean(args: argparse.Namespace) -> int:
         removed.append(str(current_ir_path.relative_to(root)))
     else:
         skipped.append(str(current_ir_path.relative_to(root)))
+
+    if generation_cache.exists():
+        generation_cache.unlink()
+        removed.append(str(generation_cache.relative_to(root)))
+    else:
+        skipped.append(str(generation_cache.relative_to(root)))
 
     if args.remove_baseline:
         if baseline_path.exists():
@@ -4625,6 +4699,11 @@ def cmd_clean(args: argparse.Namespace) -> int:
     if ir_dir.exists() and not any(ir_dir.iterdir()):
         ir_dir.rmdir()
         removed.append(str(ir_dir.relative_to(root)))
+
+    cache_dir = root / ".prophet" / "cache"
+    if cache_dir.exists() and not any(cache_dir.iterdir()):
+        cache_dir.rmdir()
+        removed.append(str(cache_dir.relative_to(root)))
 
     if not args.keep_gradle_wire:
         gradle_messages = unwire_gradle_multi_module(root, cfg)
@@ -4997,6 +5076,11 @@ def build_cli() -> argparse.ArgumentParser:
         action="store_true",
         help="Auto-wire current Gradle project as multi-module with :prophet_generated",
     )
+    p_generate.add_argument(
+        "--skip-unchanged",
+        action="store_true",
+        help="Skip generation when config/IR signature is unchanged (ignored with --wire-gradle)",
+    )
     p_generate.set_defaults(func=cmd_generate)
 
     p_gen = sub.add_parser(
@@ -5017,6 +5101,11 @@ def build_cli() -> argparse.ArgumentParser:
         "--wire-gradle",
         action="store_true",
         help="Auto-wire current Gradle project as multi-module with :prophet_generated",
+    )
+    p_gen.add_argument(
+        "--skip-unchanged",
+        action="store_true",
+        help="Skip generation when config/IR signature is unchanged (ignored with --wire-gradle)",
     )
     p_gen.set_defaults(func=cmd_generate)
 

@@ -10,6 +10,10 @@
   "ir_hash": "06f5db76667bc0eef66b8920e5836868ad4a67abd03d66addc968b825957f5c8",
   "outputs": [
     {
+      "path": "gen/manifest/extension-hooks.json",
+      "sha256": "5827743c8257f45d6b1a97160607b1fcfdaf58f561bf413001f11923e669ca44"
+    },
+    {
       "path": "gen/migrations/flyway/V1__prophet_init.sql",
       "sha256": "a63de1bbc17fa31fc83cf11ed719dc3cdffc4590c31341d17970e49dab8fcf67"
     },
