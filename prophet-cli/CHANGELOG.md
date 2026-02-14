@@ -4,6 +4,8 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-02-14
+
 ### Added
 - Dedicated PyPI publish workflow (`.github/workflows/publish-pypi.yml`) triggered by release tags and manual dispatch.
 - Package build validation in CI (`python -m build`, `twine check`, wheel install smoke test).
