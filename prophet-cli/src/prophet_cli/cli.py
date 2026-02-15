@@ -32,6 +32,7 @@ from prophet_cli.core.compatibility import parse_semver as _core_parse_semver
 from prophet_cli.core.compatibility import required_level_to_bump as _core_required_level_to_bump
 from prophet_cli.core.validation import validate_ontology as _core_validate_ontology
 from prophet_cli.core.validation import validate_type_expr as _core_validate_type_expr
+from prophet_cli.core.materialize import materialize_missing_ids
 from prophet_cli.codegen.stacks import resolve_stack_spec
 from prophet_cli.codegen.stacks import stack_manifest_metadata
 from prophet_cli.codegen.stacks import supported_stack_table
@@ -49,7 +50,7 @@ from prophet_cli.targets.java_spring_jpa import JavaSpringJpaDeps
 from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_java_spring_jpa_outputs
 
 
-TOOLCHAIN_VERSION = "0.7.0"
+TOOLCHAIN_VERSION = "0.8.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
@@ -4537,7 +4538,13 @@ def load_ontology_from_cfg(root: Path, cfg: Dict[str, Any]) -> Ontology:
     ont_path = ontology_path_from_cfg(root, cfg)
     if not ont_path.exists():
         raise ProphetError(f"Ontology file not found: {ont_path}")
-    return parse_ontology(ont_path.read_text(encoding="utf-8"))
+    source = ont_path.read_text(encoding="utf-8")
+    ontology = parse_ontology(source)
+    materialized_source, changed = materialize_missing_ids(source, ontology)
+    if changed:
+        ont_path.write_text(materialized_source, encoding="utf-8")
+        ontology = parse_ontology(materialized_source)
+    return ontology
 
 
 @dataclass(frozen=True)
@@ -4991,7 +4998,7 @@ def cmd_clean(args: argparse.Namespace) -> int:
         ontology_path = root / ontology_rel
         if ontology_path.exists():
             try:
-                ontology = parse_ontology(ontology_path.read_text(encoding="utf-8"))
+                ontology = load_ontology_from_cfg(root, cfg)
                 ontology_name = ontology.name
             except Exception:
                 pass

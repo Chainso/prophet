@@ -133,6 +133,64 @@ dependencies {
             verify_after_clean = run_cli(root, "generate", "--verify-clean", expect_code=1)
             self.assertIn("Generated outputs are not clean", verify_after_clean.stdout)
 
+    def test_validate_materializes_missing_ids_into_source_file(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-materialize-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_path = root / "domain" / "main.prophet"
+            ontology_path.parent.mkdir(parents=True, exist_ok=True)
+            ontology_path.write_text(
+                """ontology commerce_local {
+  version "0.1.0"
+
+  object Order {
+    field orderId {
+      type string
+      key primary
+    }
+  }
+
+  action createOrder {
+    kind process
+
+    input {
+      field order {
+        type ref(Order)
+      }
+    }
+
+    output {
+      field order {
+        type ref(Order)
+      }
+    }
+  }
+}
+""",
+                encoding="utf-8",
+            )
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            run_cli(root, "validate")
+            hydrated = ontology_path.read_text(encoding="utf-8")
+            self.assertIn('id "ont_commerce_local"', hydrated)
+            self.assertIn('id "obj_order"', hydrated)
+            self.assertIn('id "fld_obj_order_order_id"', hydrated)
+            self.assertIn('id "act_create_order"', hydrated)
+            self.assertIn('id "ain_create_order"', hydrated)
+            self.assertIn('id "aout_create_order"', hydrated)
+
+            run_cli(root, "validate")
+            self.assertEqual(hydrated, ontology_path.read_text(encoding="utf-8"))
+
     def test_generate_skip_unchanged_uses_generation_cache(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-cli-skip-unchanged-") as tmp:
             root = Path(tmp)

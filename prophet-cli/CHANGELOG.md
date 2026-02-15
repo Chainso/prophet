@@ -4,6 +4,22 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-02-15
+
+### Added
+- Automatic source hydration for missing DSL IDs:
+  - parsing commands now materialize generated `id "..."` lines back into the ontology file,
+  - stable, non-conflicting IDs are synthesized for ontology elements when omitted.
+- Integration coverage for source ID hydration behavior in CLI tests.
+
+### Changed
+- Action contract syntax is now inline-only:
+  - `input { ... }`
+  - `output { ... }`
+- DSL field ergonomics updated so fields are required by default; users only write `optional` for nullable fields.
+- Updated DSL reference and canonical Spring example ontology to reflect the new contract and requiredness rules.
+- Toolchain/package version advanced to `0.8.0`.
+
 ## [0.7.0] - 2026-02-14
 
 ### Added

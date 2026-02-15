@@ -29,6 +29,7 @@ ontology CommerceLocal {
 
 - `id "..."` is optional on ontology elements.
 - When omitted, Prophet generates a stable non-conflicting ID during parse.
+- CLI commands that parse the ontology (`validate`, `plan`, `gen`, `check`) materialize missing IDs back into the source `.prophet` file immediately.
 - You can still provide explicit IDs anywhere you need stable external references.
 
 ## Field Types
