@@ -89,15 +89,15 @@ python3 -m venv .venv --system-site-packages
 
 | Language | Framework | ORM/Adapter | Stack ID | Example |
 | --- | --- | --- | --- | --- |
-| `java` | `spring_boot` | `jpa` | `java_spring_jpa` | [Spring Example](examples/java/prophet_example_spring) |
-| `node` | `express` | `prisma` | `node_express_prisma` | [Express + Prisma Example](examples/node/prophet_example_express_prisma) |
-| `node` | `express` | `typeorm` | `node_express_typeorm` | [Express + TypeORM Example](examples/node/prophet_example_express_typeorm) |
-| `node` | `express` | `mongoose` | `node_express_mongoose` | [Express + Mongoose Example](examples/node/prophet_example_express_mongoose) |
-| `python` | `fastapi` | `sqlalchemy` | `python_fastapi_sqlalchemy` | [FastAPI + SQLAlchemy Example](examples/python/prophet_example_fastapi_sqlalchemy) |
-| `python` | `fastapi` | `sqlmodel` | `python_fastapi_sqlmodel` | [FastAPI + SQLModel Example](examples/python/prophet_example_fastapi_sqlmodel) |
-| `python` | `flask` | `sqlalchemy` | `python_flask_sqlalchemy` | [Flask + SQLAlchemy Example](examples/python/prophet_example_flask_sqlalchemy) |
-| `python` | `flask` | `sqlmodel` | `python_flask_sqlmodel` | [Flask + SQLModel Example](examples/python/prophet_example_flask_sqlmodel) |
-| `python` | `django` | `django_orm` | `python_django_django_orm` | [Django + Django ORM Example](examples/python/prophet_example_django) |
+| Java | Spring Boot | JPA | `java_spring_jpa` | [Spring Example](examples/java/prophet_example_spring) |
+| Node | Express | Prisma | `node_express_prisma` | [Express + Prisma Example](examples/node/prophet_example_express_prisma) |
+| Node | Express | TypeORM | `node_express_typeorm` | [Express + TypeORM Example](examples/node/prophet_example_express_typeorm) |
+| Node | Express | Mongoose | `node_express_mongoose` | [Express + Mongoose Example](examples/node/prophet_example_express_mongoose) |
+| Python | FastAPI | SQLAlchemy | `python_fastapi_sqlalchemy` | [FastAPI + SQLAlchemy Example](examples/python/prophet_example_fastapi_sqlalchemy) |
+| Python | FastAPI | SQLModel | `python_fastapi_sqlmodel` | [FastAPI + SQLModel Example](examples/python/prophet_example_fastapi_sqlmodel) |
+| Python | Flask | SQLAlchemy | `python_flask_sqlalchemy` | [Flask + SQLAlchemy Example](examples/python/prophet_example_flask_sqlalchemy) |
+| Python | Flask | SQLModel | `python_flask_sqlmodel` | [Flask + SQLModel Example](examples/python/prophet_example_flask_sqlmodel) |
+| Python | Django | Django ORM | `python_django_django_orm` | [Django + Django ORM Example](examples/python/prophet_example_django) |
 
 ## License
 
