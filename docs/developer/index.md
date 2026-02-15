@@ -7,6 +7,7 @@ This section is for contributors and maintainers of Prophet.
 - Architecture: [Architecture](architecture.md)
 - IR contract: [IR Contract](ir-contract.md)
 - Codegen architecture: [Codegen Architecture](codegen-architecture.md)
+- Python targets roadmap: [Python Targets Roadmap](python-targets-roadmap.md)
 
 ## Engineering Workflow
 
