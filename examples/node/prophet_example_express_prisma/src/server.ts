@@ -2,16 +2,16 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 
-import { mountProphet } from '../gen/node-express/src/generated/index';
+import { mountProphet } from '../gen/node-express/src/generated/index.js';
 import {
   type ApproveOrderActionHandler,
   type CreateOrderActionHandler,
   type GeneratedActionContext,
   type ShipOrderActionHandler,
-} from '../gen/node-express/src/generated/action-handlers';
-import type * as Actions from '../gen/node-express/src/generated/actions';
-import type * as Domain from '../gen/node-express/src/generated/domain';
-import { PrismaGeneratedRepositories } from '../gen/node-express/src/generated/prisma-adapters';
+} from '../gen/node-express/src/generated/action-handlers.js';
+import type * as Actions from '../gen/node-express/src/generated/actions.js';
+import type * as Domain from '../gen/node-express/src/generated/domain.js';
+import { PrismaGeneratedRepositories } from '../gen/node-express/src/generated/prisma-adapters.js';
 
 const app = express();
 app.use(express.json());

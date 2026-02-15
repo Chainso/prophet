@@ -1,7 +1,7 @@
 // GENERATED FILE: do not edit directly.
 
-import type * as Domain from './domain';
-import type * as Filters from './query';
+import type * as Domain from './domain.js';
+import type * as Filters from './query.js';
 
 export interface Page<T> {
   items: T[];

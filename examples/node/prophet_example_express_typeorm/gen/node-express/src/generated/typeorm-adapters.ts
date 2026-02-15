@@ -1,13 +1,13 @@
 // GENERATED FILE: do not edit directly.
 
 import { DataSource, type Repository, type SelectQueryBuilder } from 'typeorm';
-import type * as Domain from './domain';
-import type * as Filters from './query';
-import type * as Persistence from './persistence';
+import type * as Domain from './domain.js';
+import type * as Filters from './query.js';
+import type * as Persistence from './persistence.js';
 import {
   OrderEntity,
   UserEntity
-} from './typeorm-entities';
+} from './typeorm-entities.js';
 
 function normalizePage(page: number, size: number): { page: number; size: number } {
   const normalizedPage = Number.isFinite(page) && page >= 0 ? Math.trunc(page) : 0;
@@ -71,7 +71,7 @@ function orderApplyFilter(qb: SelectQueryBuilder<OrderEntity>, filter: Filters.O
   if (customerFilter?.in?.length) {
     const clauses: string[] = [];
     const params: Record<string, unknown> = {};
-    customerFilter.in.forEach((entry, idx) => {
+    customerFilter.in.forEach((entry: any, idx: number) => {
       const inner: string[] = [];
       inner.push(`record.customer_user_id = :customer_in_${idx}_userId`);
       params['customer_in_' + idx + '_userId'] = entry.userId;

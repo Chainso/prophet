@@ -1,9 +1,9 @@
 // GENERATED FILE: do not edit directly.
 
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import { GeneratedActionExecutionService } from './action-service';
-import type { GeneratedActionContext } from './action-handlers';
-import * as Schemas from './validation';
+import { GeneratedActionExecutionService } from './action-service.js';
+import type { GeneratedActionContext } from './action-handlers.js';
+import * as Schemas from './validation.js';
 
 export function buildGeneratedActionRouter(
   service: GeneratedActionExecutionService,

@@ -5,10 +5,10 @@ import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 @Entity('orders')
 export class OrderEntity {
   @PrimaryColumn({ type: 'varchar', name: 'order_id' })
-  orderId: string;
+  orderId!: string;
 
   @Column({ type: 'varchar', nullable: false, name: 'customer_user_id' })
-  customerUserId: string;
+  customerUserId!: string;
 
   @ManyToOne(() => UserEntity, { nullable: false })
   @JoinColumn([
@@ -17,28 +17,28 @@ export class OrderEntity {
   customer!: UserEntity;
 
   @Column({ type: 'numeric', nullable: false, name: 'total_amount' })
-  totalAmount: number;
+  totalAmount!: number;
 
   @Column({ type: 'varchar', nullable: true, name: 'discount_code' })
-  discountCode?: string;
+  discountCode?: string | null;
 
   @Column({ type: 'simple-json', nullable: true, name: 'tags' })
-  tags?: unknown;
+  tags?: unknown | null;
 
   @Column({ type: 'simple-json', nullable: true, name: 'shipping_address' })
-  shippingAddress?: unknown;
+  shippingAddress?: unknown | null;
 
   @Column({ type: 'varchar', nullable: false, name: 'current_state' })
-  currentState: string;
+  currentState!: string;
 
 }
 
 @Entity('users')
 export class UserEntity {
   @PrimaryColumn({ type: 'varchar', name: 'user_id' })
-  userId: string;
+  userId!: string;
 
   @Column({ type: 'varchar', nullable: false, name: 'email' })
-  email: string;
+  email!: string;
 
 }

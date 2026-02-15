@@ -70,7 +70,7 @@ class NodeTargetTests(unittest.TestCase):
         self.assertIn("constructor(private readonly dataSource: DataSource)", outputs["gen/node-express/src/generated/typeorm-adapters.ts"])
         self.assertIn("createQueryBuilder('record')", outputs["gen/node-express/src/generated/typeorm-adapters.ts"])
         self.assertNotIn("implement repository binding logic", outputs["gen/node-express/src/generated/typeorm-adapters.ts"])
-        self.assertIn("currentState: string", outputs["gen/node-express/src/generated/typeorm-entities.ts"])
+        self.assertIn("currentState!: string", outputs["gen/node-express/src/generated/typeorm-entities.ts"])
         self.assertIn("orderId: String(req.params['id'])", outputs["gen/node-express/src/generated/query-routes.ts"])
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])

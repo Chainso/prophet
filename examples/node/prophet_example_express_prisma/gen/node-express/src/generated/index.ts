@@ -1,12 +1,12 @@
 // GENERATED FILE: do not edit directly.
 
 import type { Application } from 'express';
-import { buildGeneratedActionRouter } from './action-routes';
-import { buildGeneratedQueryRouter } from './query-routes';
-import { GeneratedActionExecutionService } from './action-service';
-import { GeneratedEventEmitterNoOp, type GeneratedEventEmitter } from './events';
-import type { GeneratedActionContext, GeneratedActionHandlers } from './action-handlers';
-import type { GeneratedRepositories } from './persistence';
+import { buildGeneratedActionRouter } from './action-routes.js';
+import { buildGeneratedQueryRouter } from './query-routes.js';
+import { GeneratedActionExecutionService } from './action-service.js';
+import { GeneratedEventEmitterNoOp, type GeneratedEventEmitter } from './events.js';
+import type { GeneratedActionContext, GeneratedActionHandlers } from './action-handlers.js';
+import type { GeneratedRepositories } from './persistence.js';
 
 export interface GeneratedMountDependencies {
   repositories: GeneratedRepositories;

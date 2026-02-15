@@ -1,8 +1,8 @@
 // GENERATED FILE: do not edit directly.
 
-import type * as Actions from './actions';
-import type { GeneratedActionContext, GeneratedActionHandlers } from './action-handlers';
-import type { GeneratedEventEmitter } from './events';
+import type * as Actions from './actions.js';
+import type { GeneratedActionContext, GeneratedActionHandlers } from './action-handlers.js';
+import type { GeneratedEventEmitter } from './events.js';
 
 export class GeneratedActionExecutionService {
   constructor(

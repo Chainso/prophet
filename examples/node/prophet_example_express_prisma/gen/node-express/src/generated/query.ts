@@ -4,7 +4,7 @@ import type {
   OrderRef,
   OrderState,
   UserRef
-} from './domain';
+} from './domain.js';
 
 export interface OrderQueryFilter {
   customer?: {

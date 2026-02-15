@@ -1,8 +1,8 @@
 // GENERATED FILE: do not edit directly.
 
-import type * as Actions from './actions';
-import type { GeneratedRepositories } from './persistence';
-import type { GeneratedEventEmitter } from './events';
+import type * as Actions from './actions.js';
+import type { GeneratedRepositories } from './persistence.js';
+import type { GeneratedEventEmitter } from './events.js';
 
 export interface GeneratedActionContext {
   repositories: GeneratedRepositories;

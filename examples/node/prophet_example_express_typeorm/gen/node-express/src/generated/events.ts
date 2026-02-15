@@ -4,13 +4,13 @@ import type {
   ApproveOrderResult,
   CreateOrderResult,
   ShipOrderResult
-} from './actions';
+} from './actions.js';
 
 import type {
   PaymentCaptured,
   OrderApproveTransition,
   OrderShipTransition
-} from './event-contracts';
+} from './event-contracts.js';
 
 export interface GeneratedEventEmitter {
   emitApproveOrderResult(event: ApproveOrderResult): Promise<void>;

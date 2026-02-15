@@ -1,9 +1,9 @@
 // GENERATED FILE: do not edit directly.
 
 import type { PrismaClient } from '@prisma/client';
-import type * as Domain from './domain';
-import type * as Filters from './query';
-import type * as Persistence from './persistence';
+import type * as Domain from './domain.js';
+import type * as Filters from './query.js';
+import type * as Persistence from './persistence.js';
 
 function normalizePage(page: number, size: number): { page: number; size: number } {
   const normalizedPage = Number.isFinite(page) && page >= 0 ? Math.trunc(page) : 0;
@@ -47,7 +47,7 @@ function orderWhere(filter: Filters.OrderQueryFilter | undefined): any {
   }
   if (customerFilter?.in?.length) {
     and.push({
-      OR: customerFilter.in.map((entry) => ({
+      OR: customerFilter.in.map((entry: any) => ({
         customer_user_id: entry.userId,
       })),
     });

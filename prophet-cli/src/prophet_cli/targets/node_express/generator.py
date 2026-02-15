@@ -11,6 +11,8 @@ from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.stacks import StackSpec
 from prophet_cli.core.ir_reader import IRReader
 
+_TS_FROM_SPEC_RE = re.compile(r"(from\s+['\"])(\.\.?/[^'\"]+)(['\"])")
+
 
 def _pascal_case(value: str) -> str:
     chunks = [part for part in re.split(r"[_\-\s]+", value) if part]
@@ -34,6 +36,16 @@ def _pluralize(value: str) -> str:
     if value.endswith("s"):
         return value + "es"
     return value + "s"
+
+
+def _append_js_extensions_to_relative_imports(ts_source: str) -> str:
+    def repl(match: re.Match[str]) -> str:
+        prefix, module_path, suffix = match.groups()
+        if module_path.endswith((".js", ".mjs", ".cjs", ".json", ".node")):
+            return match.group(0)
+        return f"{prefix}{module_path}.js{suffix}"
+
+    return _TS_FROM_SPEC_RE.sub(repl, ts_source)
 
 
 def _ts_base_type(base_name: str) -> str:
@@ -297,6 +309,14 @@ def _render_event_contracts(ir: Dict[str, Any]) -> str:
     output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+    action_output_names = sorted(
+        {
+            _pascal_case(str(item.get("name", "Shape")))
+            for item in ir.get("action_outputs", [])
+            if isinstance(item, dict)
+        }
+    )
+    action_output_aliases = {name: f"{name}ActionOutput" for name in action_output_names}
 
     lines: List[str] = [
         "// GENERATED FILE: do not edit directly.",
@@ -308,11 +328,20 @@ def _render_event_contracts(ir: Dict[str, Any]) -> str:
             f"{_pascal_case(str(item.get('name', 'Object')))}State" for item in ir.get("objects", []) if isinstance(item, dict) and item.get("states")
         })),
         "} from './domain';",
-        "import type {",
-        "  " + ",\n  ".join(sorted({_pascal_case(str(item.get("name", "Shape"))) for item in ir.get("action_outputs", []) if isinstance(item, dict)})),
-        "} from './actions';",
-        "",
     ]
+    if action_output_names:
+        lines.extend(
+            [
+                "import type {",
+                "  " + ",\n  ".join(
+                    [f"{name} as {action_output_aliases[name]}" for name in action_output_names]
+                ),
+                "} from './actions';",
+                "",
+            ]
+        )
+    else:
+        lines.append("")
 
     for event in sorted(ir.get("events", []), key=lambda item: str(item.get("id", ""))):
         if not isinstance(event, dict):
@@ -329,7 +358,8 @@ def _render_event_contracts(ir: Dict[str, Any]) -> str:
         elif kind == "action_output":
             output_id = str(event.get("output_shape_id", ""))
             alias = _pascal_case(str(output_by_id.get(output_id, {}).get("name", event_name)))
-            lines.append(f"export type {event_name} = {alias};")
+            aliased_import = action_output_aliases.get(alias, alias)
+            lines.append(f"export type {event_name} = {aliased_import};")
             lines.append("")
         elif kind == "transition":
             object_id = str(event.get("object_id", ""))
@@ -1183,7 +1213,7 @@ def _render_prisma_adapter(ir: Dict[str, Any], *, provider: str) -> str:
                 if "in" in operators:
                     lines.append(f"  if ({filter_name}Filter?.in?.length) {{")
                     lines.append("    and.push({")
-                    lines.append(f"      OR: {filter_name}Filter.in.map((entry) => ({{")
+                    lines.append(f"      OR: {filter_name}Filter.in.map((entry: any) => ({{")
                     for col, _, pk_name in ref_cols:
                         lines.append(f"        {col}: entry.{_camel_case(pk_name)},")
                     lines.append("      })),")
@@ -1488,7 +1518,10 @@ def _render_typeorm_entities(ir: Dict[str, Any]) -> str:
                         lines.append(f"  @PrimaryColumn({{ type: '{fk_type}', name: '{fk_col_raw}' }})")
                     else:
                         lines.append(f"  @Column({{ type: '{fk_type}', nullable: {nullable}, name: '{fk_col_raw}' }})")
-                    lines.append(f"  {fk_prop}{'?' if not required else ''}: {fk_ts_type};")
+                    if required:
+                        lines.append(f"  {fk_prop}!: {fk_ts_type};")
+                    else:
+                        lines.append(f"  {fk_prop}?: {fk_ts_type} | null;")
                     lines.append("")
                     join_defs.append(f"    {{ name: '{fk_col_raw}', referencedColumnName: '{_camel_case(target_pk_name)}' }},")
                 lines.append(f"  @ManyToOne(() => {target_name}Entity, {{ nullable: {nullable} }})")
@@ -1507,12 +1540,15 @@ def _render_typeorm_entities(ir: Dict[str, Any]) -> str:
                 lines.append(f"  @PrimaryColumn({{ type: '{col_type}', name: '{field_name_raw}' }})")
             else:
                 lines.append(f"  @Column({{ type: '{col_type}', nullable: {nullable}, name: '{field_name_raw}' }})")
-            lines.append(f"  {field_name}{'?' if not required else ''}: {ts_type};")
+            if required:
+                lines.append(f"  {field_name}!: {ts_type};")
+            else:
+                lines.append(f"  {field_name}?: {ts_type} | null;")
             lines.append("")
 
         if obj.get("states"):
             lines.append("  @Column({ type: 'varchar', nullable: false, name: 'current_state' })")
-            lines.append("  currentState: string;")
+            lines.append("  currentState!: string;")
             lines.append("")
 
         lines.append("}")
@@ -1714,7 +1750,7 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
                     lines.append(f"  if ({filter_name}Filter?.in?.length) {{")
                     lines.append("    const clauses: string[] = [];")
                     lines.append("    const params: Record<string, unknown> = {};")
-                    lines.append(f"    {filter_name}Filter.in.forEach((entry, idx) => {{")
+                    lines.append(f"    {filter_name}Filter.in.forEach((entry: any, idx: number) => {{")
                     lines.append("      const inner: string[] = [];")
                     for target_pk in target_pk_fields:
                         target_prop = _camel_case(str(target_pk.get("name", "id")))
@@ -1926,6 +1962,10 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
     if stack.orm == "typeorm" and "typeorm" in targets:
         outputs[f"{node_prefix}/src/generated/typeorm-entities.ts"] = _render_typeorm_entities(ir)
         outputs[f"{node_prefix}/src/generated/typeorm-adapters.ts"] = _render_typeorm_adapter(ir)
+
+    for rel, content in list(outputs.items()):
+        if rel.startswith(f"{node_prefix}/src/generated/") and rel.endswith(".ts"):
+            outputs[rel] = _append_js_extensions_to_relative_imports(content)
 
     extension_hooks = []
     for action in sorted(context.ir_reader.action_contracts(), key=lambda item: item.name):

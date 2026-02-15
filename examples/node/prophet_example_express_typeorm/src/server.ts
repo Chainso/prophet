@@ -3,17 +3,17 @@ import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
 import { DataSource } from 'typeorm';
 
-import { mountProphet } from '../gen/node-express/src/generated/index';
+import { mountProphet } from '../gen/node-express/src/generated/index.js';
 import {
   type ApproveOrderActionHandler,
   type CreateOrderActionHandler,
   type GeneratedActionContext,
   type ShipOrderActionHandler,
-} from '../gen/node-express/src/generated/action-handlers';
-import type * as Actions from '../gen/node-express/src/generated/actions';
-import type * as Domain from '../gen/node-express/src/generated/domain';
-import { TypeOrmGeneratedRepositories } from '../gen/node-express/src/generated/typeorm-adapters';
-import { OrderEntity, UserEntity } from '../gen/node-express/src/generated/typeorm-entities';
+} from '../gen/node-express/src/generated/action-handlers.js';
+import type * as Actions from '../gen/node-express/src/generated/actions.js';
+import type * as Domain from '../gen/node-express/src/generated/domain.js';
+import { TypeOrmGeneratedRepositories } from '../gen/node-express/src/generated/typeorm-adapters.js';
+import { OrderEntity, UserEntity } from '../gen/node-express/src/generated/typeorm-entities.js';
 
 class CreateOrderHandler implements CreateOrderActionHandler {
   async handle(input: Actions.CreateOrderCommand, context: GeneratedActionContext): Promise<Actions.CreateOrderResult> {

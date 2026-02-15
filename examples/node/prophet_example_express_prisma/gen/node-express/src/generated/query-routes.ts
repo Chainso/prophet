@@ -1,8 +1,8 @@
 // GENERATED FILE: do not edit directly.
 
 import { Router, type Request, type Response, type NextFunction } from 'express';
-import type { GeneratedRepositories } from './persistence';
-import type * as Filters from './query';
+import type { GeneratedRepositories } from './persistence.js';
+import type * as Filters from './query.js';
 
 function parsePage(value: unknown, fallback: number): number {
   const n = Number(value);

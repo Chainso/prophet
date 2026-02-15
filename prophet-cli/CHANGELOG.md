@@ -4,6 +4,20 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.8.2] - 2026-02-15
+
+### Fixed
+- Node Express ESM codegen now emits explicit `.js` relative import specifiers in generated TypeScript sources to satisfy `moduleResolution: NodeNext` builds.
+- Node Express + TypeORM codegen nullability/strictness fixes:
+  - generated entity fields now use strict-property-safe declarations for required columns,
+  - nullable columns now emit `| null`-aware field types,
+  - generated adapters map optional domain values to nullable persistence columns consistently.
+- Node target test expectations aligned with strict TypeORM entity output.
+
+### Changed
+- Added Node example build output ignore rule for `examples/node/**/dist/`.
+- Toolchain/package version advanced to `0.8.2`.
+
 ## [0.8.1] - 2026-02-15
 
 ### Fixed

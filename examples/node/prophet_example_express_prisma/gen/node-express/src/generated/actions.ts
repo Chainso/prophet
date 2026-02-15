@@ -6,7 +6,7 @@ import type {
   Money,
   OrderRef,
   UserRef
-} from './domain';
+} from './domain.js';
 
 export interface ApproveOrderCommand {
   order: OrderRef;
