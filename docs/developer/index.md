@@ -13,6 +13,7 @@ This section is for contributors and maintainers of Prophet.
 - Testing strategy: [Testing](testing.md)
 - CI/CD: [CI/CD](ci-cd.md)
 - Releasing: [Releasing](releasing.md)
+- Publishing setup: [Publishing Setup](publishing-setup.md)
 - Runtime publishing: [prophet-lib Runtime Runbook](prophet-lib-release.md)
 - Contributing: [Contributing](contributing.md)
 

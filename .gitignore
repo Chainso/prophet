@@ -28,3 +28,10 @@ examples/python/**/*.sqlite
 examples/python/**/*.sqlite-*
 examples/python/**/dev.db
 examples/python/**/dev.db-*
+
+# prophet-lib local build artifacts
+prophet-lib/java/.gradle/
+prophet-lib/java/build/
+prophet-lib/python/build/
+prophet-lib/python/dist/
+prophet-lib/python/*.egg-info/

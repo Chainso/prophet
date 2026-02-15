@@ -35,4 +35,5 @@ Tag push triggers PyPI publish workflow.
 ## Detailed Runbook
 
 - [prophet-cli/RELEASING.md](../../prophet-cli/RELEASING.md)
+- [Publishing Setup](publishing-setup.md)
 - [prophet-lib Runtime Runbook](prophet-lib-release.md)
