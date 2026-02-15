@@ -25,7 +25,7 @@ def render_action_contracts(ir: Dict[str, Any]) -> str:
 
     for shape in _sort_dict_entries(list(ir.get("action_inputs", []))):
         name = _pascal_case(str(shape.get("name", "ActionInput")))
-        lines.append("@dataclass")
+        lines.append("@dataclass(kw_only=True)")
         lines.append(f"class {name}:")
         fields = [field for field in shape.get("fields", []) if isinstance(field, dict)]
         if not fields:
@@ -44,7 +44,7 @@ def render_action_contracts(ir: Dict[str, Any]) -> str:
 
     for shape in _sort_dict_entries(list(ir.get("action_outputs", []))):
         name = _pascal_case(str(shape.get("name", "ActionOutput")))
-        lines.append("@dataclass")
+        lines.append("@dataclass(kw_only=True)")
         lines.append(f"class {name}:")
         fields = [field for field in shape.get("fields", []) if isinstance(field, dict)]
         if not fields:

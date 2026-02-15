@@ -48,7 +48,7 @@ def render_query_contracts(ir: Dict[str, Any]) -> str:
                     struct_by_id=struct_by_id,
                 )
 
-            lines.append("@dataclass")
+            lines.append("@dataclass(kw_only=True)")
             lines.append(f"class {class_name}:")
             if "eq" in operators:
                 lines.append(f"    eq: Optional[{field_type}] = None")
@@ -64,7 +64,7 @@ def render_query_contracts(ir: Dict[str, Any]) -> str:
                 lines.append("    pass")
             lines.append("")
 
-        lines.append("@dataclass")
+        lines.append("@dataclass(kw_only=True)")
         lines.append(f"class {obj_name}QueryFilter:")
         if not contract.get("filters"):
             lines.append("    pass")

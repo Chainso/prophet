@@ -25,7 +25,7 @@ def render_event_contracts(ir: Dict[str, Any]) -> str:
 
     for event in _sort_dict_entries([item for item in ir.get("events", []) if isinstance(item, dict)]):
         name = _pascal_case(str(event.get("name", "Event")))
-        lines.append("@dataclass")
+        lines.append("@dataclass(kw_only=True)")
         lines.append(f"class {name}:")
         fields = [field for field in event.get("fields", []) if isinstance(field, dict)]
         if not fields:

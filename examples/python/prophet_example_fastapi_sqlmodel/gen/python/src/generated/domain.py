@@ -6,21 +6,21 @@ from typing import Any, Dict, List, Literal, Optional
 
 Money = float
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderRef:
     orderId: str
 
-@dataclass
+@dataclass(kw_only=True)
 class UserRef:
     userId: str
 
-@dataclass
+@dataclass(kw_only=True)
 class Address:
     line1: str
     city: str
     countryCode: str
 
-@dataclass
+@dataclass(kw_only=True)
 class ApprovalContext:
     approver: UserRef
     watchers: Optional[List[UserRef]] = None
@@ -28,7 +28,7 @@ class ApprovalContext:
 
 OrderState = Literal['created', 'approved', 'shipped']
 
-@dataclass
+@dataclass(kw_only=True)
 class Order:
     orderId: str
     customer: UserRef
@@ -38,7 +38,7 @@ class Order:
     shippingAddress: Optional[Address] = None
     currentState: OrderState
 
-@dataclass
+@dataclass(kw_only=True)
 class User:
     userId: str
     email: str

@@ -6,36 +6,36 @@ from typing import List, Optional
 
 from .domain import *
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderCurrentStateFilter:
     eq: Optional[str] = None
     inValues: Optional[List[str]] = None
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderCustomerFilter:
     eq: Optional[UserRef] = None
     inValues: Optional[List[UserRef]] = None
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderDiscountCodeFilter:
     eq: Optional[str] = None
     inValues: Optional[List[str]] = None
     contains: Optional[str] = None
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderOrderIdFilter:
     eq: Optional[str] = None
     inValues: Optional[List[str]] = None
     contains: Optional[str] = None
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderTotalAmountFilter:
     eq: Optional[float] = None
     inValues: Optional[List[float]] = None
     gte: Optional[float] = None
     lte: Optional[float] = None
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderQueryFilter:
     currentState: Optional[OrderCurrentStateFilter] = None
     customer: Optional[OrderCustomerFilter] = None
@@ -43,19 +43,19 @@ class OrderQueryFilter:
     orderId: Optional[OrderOrderIdFilter] = None
     totalAmount: Optional[OrderTotalAmountFilter] = None
 
-@dataclass
+@dataclass(kw_only=True)
 class UserEmailFilter:
     eq: Optional[str] = None
     inValues: Optional[List[str]] = None
     contains: Optional[str] = None
 
-@dataclass
+@dataclass(kw_only=True)
 class UserUserIdFilter:
     eq: Optional[str] = None
     inValues: Optional[List[str]] = None
     contains: Optional[str] = None
 
-@dataclass
+@dataclass(kw_only=True)
 class UserQueryFilter:
     email: Optional[UserEmailFilter] = None
     userId: Optional[UserUserIdFilter] = None

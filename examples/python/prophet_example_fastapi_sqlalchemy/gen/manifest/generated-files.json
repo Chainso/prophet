@@ -39,15 +39,15 @@
     },
     {
       "path": "gen/python/src/generated/actions.py",
-      "sha256": "8e6d66b5e9eb6fe886d8319f19c4cdaaf34c7baaf04e5585bf21fd14205b9f73"
+      "sha256": "d91ccd0f8d7ac7319a5213d11108cec9ddff6fcc60769af5cf29857e2356af07"
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "01e67694147dc8b2af427f4babcf1092fe0441410b8bc2c4eed00c014e9e6226"
+      "sha256": "b9fcf93230ea5a4f233f1750ff7cce57df46d19a441af5b51375cc02404e1e6c"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "8c42a09054f99657b60caa3799a1b6adfcdc38dcd51d588a3374e7c0738fbff4"
+      "sha256": "769415911e02b9e89a5eab5b49c5626068431a8fb30f1991b144412bc11a1f83"
     },
     {
       "path": "gen/python/src/generated/events.py",
@@ -55,7 +55,7 @@
     },
     {
       "path": "gen/python/src/generated/fastapi_routes.py",
-      "sha256": "e9050ebfbd5e69586bb99ef8ef66b0f81fd93d07e806a4bf2d0a7d10d3060ae2"
+      "sha256": "6441bcd14ffd0e611b62b44d10a581c33cd100106ae9ec760b388e2106c33157"
     },
     {
       "path": "gen/python/src/generated/persistence.py",
@@ -63,7 +63,7 @@
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "c7451ebb2fe82c66a619b14ac74f0848dc8bba0d20937239f9ea0c9affae1630"
+      "sha256": "b1cfec1067b64fba41f1d3567125bf7e43407af2b887b8b4b3b19bcd6b7a20ed"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_adapters.py",

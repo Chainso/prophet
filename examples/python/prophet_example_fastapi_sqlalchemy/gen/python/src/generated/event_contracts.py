@@ -6,26 +6,26 @@ from typing import Optional, List
 
 from .domain import *
 
-@dataclass
+@dataclass(kw_only=True)
 class ApproveOrderResult:
     pass
 
-@dataclass
+@dataclass(kw_only=True)
 class CreateOrderResult:
     pass
 
-@dataclass
+@dataclass(kw_only=True)
 class ShipOrderResult:
     pass
 
-@dataclass
+@dataclass(kw_only=True)
 class PaymentCaptured:
     order: OrderRef
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderApproveTransition:
     pass
 
-@dataclass
+@dataclass(kw_only=True)
 class OrderShipTransition:
     pass

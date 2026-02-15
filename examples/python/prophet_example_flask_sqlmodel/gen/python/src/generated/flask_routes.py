@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 import dataclasses
+import types
+
+from typing import Any, Union, get_args, get_origin, get_type_hints
 
 from flask import Blueprint, jsonify, request
 
@@ -9,6 +12,47 @@ from .action_handlers import GeneratedActionContext
 from .action_service import GeneratedActionExecutionService
 from .actions import *
 from .persistence import GeneratedRepositories
+from .query import *
+
+_TYPE_HINT_CACHE: dict[type, dict[str, Any]] = {}
+
+def _coerce_value(expected_type: Any, value: Any) -> Any:
+    if value is None:
+        return None
+    origin = get_origin(expected_type)
+    if origin is list:
+        (item_type,) = get_args(expected_type) or (Any,)
+        if not isinstance(value, list):
+            return value
+        return [_coerce_value(item_type, item) for item in value]
+    if origin is dict:
+        return value
+    if origin in (types.UnionType, Union):
+        args = [item for item in get_args(expected_type) if item is not type(None)]
+        if len(args) == 1:
+            return _coerce_value(args[0], value)
+        for arg in args:
+            try:
+                return _coerce_value(arg, value)
+            except Exception:
+                continue
+        return value
+    if isinstance(expected_type, type) and dataclasses.is_dataclass(expected_type):
+        if isinstance(value, expected_type):
+            return value
+        if not isinstance(value, dict):
+            return value
+        hints = _TYPE_HINT_CACHE.get(expected_type)
+        if hints is None:
+            hints = get_type_hints(expected_type, globalns=globals(), localns=globals())
+            _TYPE_HINT_CACHE[expected_type] = hints
+        kwargs: dict[str, Any] = {}
+        for field in dataclasses.fields(expected_type):
+            if field.name in value:
+                field_type = hints.get(field.name, Any)
+                kwargs[field.name] = _coerce_value(field_type, value[field.name])
+        return expected_type(**kwargs)
+    return value
 
 def build_generated_blueprint(service: GeneratedActionExecutionService, context: GeneratedActionContext, repositories: GeneratedRepositories) -> Blueprint:
     bp = Blueprint('prophet_generated', __name__)
@@ -16,21 +60,21 @@ def build_generated_blueprint(service: GeneratedActionExecutionService, context:
     @bp.post('/actions/approveOrder')
     def action_approveOrder():
         payload = request.get_json(silent=True) or {}
-        input_model = ApproveOrderCommand(**payload)
+        input_model = _coerce_value(ApproveOrderCommand, payload)
         result = service.execute_approveOrder(input_model, context)
         return jsonify(dataclasses.asdict(result))
 
     @bp.post('/actions/createOrder')
     def action_createOrder():
         payload = request.get_json(silent=True) or {}
-        input_model = CreateOrderCommand(**payload)
+        input_model = _coerce_value(CreateOrderCommand, payload)
         result = service.execute_createOrder(input_model, context)
         return jsonify(dataclasses.asdict(result))
 
     @bp.post('/actions/shipOrder')
     def action_shipOrder():
         payload = request.get_json(silent=True) or {}
-        input_model = ShipOrderCommand(**payload)
+        input_model = _coerce_value(ShipOrderCommand, payload)
         result = service.execute_shipOrder(input_model, context)
         return jsonify(dataclasses.asdict(result))
 
@@ -53,7 +97,7 @@ def build_generated_blueprint(service: GeneratedActionExecutionService, context:
         page = int(request.args.get('page', 0))
         size = int(request.args.get('size', 20))
         payload = request.get_json(silent=True) or {}
-        filter_model = OrderQueryFilter(**payload)
+        filter_model = _coerce_value(OrderQueryFilter, payload)
         result = repositories.order.query(filter_model, page, size)
         return jsonify(dataclasses.asdict(result))
 
@@ -76,7 +120,7 @@ def build_generated_blueprint(service: GeneratedActionExecutionService, context:
         page = int(request.args.get('page', 0))
         size = int(request.args.get('size', 20))
         payload = request.get_json(silent=True) or {}
-        filter_model = UserQueryFilter(**payload)
+        filter_model = _coerce_value(UserQueryFilter, payload)
         result = repositories.user.query(filter_model, page, size)
         return jsonify(dataclasses.asdict(result))
 
