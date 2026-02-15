@@ -6,7 +6,6 @@ import com.example.prophet.commerce_local.generated.actions.ApproveOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.ApproveOrderActionHandler;
 import com.example.prophet.commerce_local.generated.actions.services.ApproveOrderActionService;
 import com.example.prophet.commerce_local.generated.events.GeneratedEventEmitter;
-import com.example.prophet.commerce_local.generated.events.OrderApprovedEvent;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -31,11 +30,7 @@ public class ApproveOrderActionServiceDefault implements ApproveOrderActionServi
             throw new UnsupportedOperationException("No handler bean provided for action 'approveOrder'");
         }
         ApproveOrderResult result = handler.handle(request);
-        eventEmitter.emitOrderApprovedEvent(
-            OrderApprovedEvent.builder()
-                .payload(result)
-                .build()
-        );
+        eventEmitter.emitApproveOrderResult(result);
         return result;
     }
 }

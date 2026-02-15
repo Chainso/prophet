@@ -1,37 +1,43 @@
 package com.example.prophet.commerce_local.generated.events;
 
 import javax.annotation.processing.Generated;
-import com.example.prophet.commerce_local.generated.events.OrderApprovedEvent;
-import com.example.prophet.commerce_local.generated.events.OrderApprovedTransition;
-import com.example.prophet.commerce_local.generated.events.OrderCreatedEvent;
-import com.example.prophet.commerce_local.generated.events.OrderShippedEvent;
+import com.example.prophet.commerce_local.generated.actions.ApproveOrderResult;
+import com.example.prophet.commerce_local.generated.actions.CreateOrderResult;
+import com.example.prophet.commerce_local.generated.actions.ShipOrderResult;
+import com.example.prophet.commerce_local.generated.events.OrderApproveTransition;
+import com.example.prophet.commerce_local.generated.events.OrderShipTransition;
 import com.example.prophet.commerce_local.generated.events.PaymentCaptured;
 
 @Generated("prophet-cli")
 public interface GeneratedEventEmitter {
     /**
-     * Emit 'OrderApprovedEvent'.
+     * Approval result contract.
      */
-    void emitOrderApprovedEvent(OrderApprovedEvent event);
+    void emitApproveOrderResult(ApproveOrderResult event);
 
     /**
-     * Emit 'OrderApprovedTransition'.
+     * Emit 'CreateOrderResult'.
      */
-    void emitOrderApprovedTransition(OrderApprovedTransition event);
+    void emitCreateOrderResult(CreateOrderResult event);
 
     /**
-     * Emit 'OrderCreatedEvent'.
+     * Emit 'ShipOrderResult'.
      */
-    void emitOrderCreatedEvent(OrderCreatedEvent event);
-
-    /**
-     * Emit 'OrderShippedEvent'.
-     */
-    void emitOrderShippedEvent(OrderShippedEvent event);
+    void emitShipOrderResult(ShipOrderResult event);
 
     /**
      * Emit 'PaymentCaptured'.
      */
     void emitPaymentCaptured(PaymentCaptured event);
+
+    /**
+     * Emit 'OrderApproveTransition'.
+     */
+    void emitOrderApproveTransition(OrderApproveTransition event);
+
+    /**
+     * Emit 'OrderShipTransition'.
+     */
+    void emitOrderShipTransition(OrderShipTransition event);
 
 }

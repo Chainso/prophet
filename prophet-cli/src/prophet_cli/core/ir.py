@@ -10,6 +10,15 @@ from .models import Ontology
 from .parser import resolve_type_descriptor
 
 
+def _pascal_case(value: str) -> str:
+    chunks = [part for part in value.replace("-", "_").split("_") if part]
+    return "".join(chunk[:1].upper() + chunk[1:] for chunk in chunks)
+
+
+def transition_event_name(object_name: str, transition_name: str) -> str:
+    return f"{object_name}{_pascal_case(transition_name)}Transition"
+
+
 def _effective_object_key_field_names(
     field_names_in_order: List[str],
     key_declarations: List[Any],
@@ -209,8 +218,6 @@ def build_ir(
             action_output_entry["description"] = shape.description
         action_outputs.append(action_output_entry)
 
-    event_name_to_id = {e.name: e.id for e in ont.events}
-
     actions = []
     for a in sorted_by_id(ont.actions):
         action_entry = {
@@ -226,23 +233,62 @@ def build_ir(
 
     obj_name_to_states = {o.name: {s.name: s.id for s in o.states} for o in ont.objects}
 
+    event_name_to_id: Dict[str, str] = {}
     events = []
     for e in sorted_by_id(ont.events):
         entry = {
             "id": e.id,
             "name": e.name,
-            "kind": e.kind,
-            "object_id": object_name_to_id[e.object_name],
+            "kind": "signal",
+            "fields": [],
         }
         if e.description:
             entry["description"] = e.description
-        if e.action:
-            entry["action_id"] = action_name_to_id[e.action]
-        if e.from_state:
-            entry["from_state_id"] = obj_name_to_states[e.object_name][e.from_state]
-        if e.to_state:
-            entry["to_state_id"] = obj_name_to_states[e.object_name][e.to_state]
+        signal_fields = []
+        for f in e.fields:
+            resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
+            max_cardinality = "many" if resolved_type.get("kind") == "list" else 1
+            signal_field_entry = {
+                "id": f.id,
+                "name": f.name,
+                "type": resolved_type,
+                "cardinality": {"min": 1 if f.required else 0, "max": max_cardinality},
+            }
+            if f.description:
+                signal_field_entry["description"] = f.description
+            signal_fields.append(signal_field_entry)
+        entry["fields"] = signal_fields
         events.append(entry)
+        event_name_to_id[e.name] = e.id
+
+    for shape in sorted_by_id(ont.action_outputs):
+        action_output_event = {
+            "id": shape.id,
+            "name": shape.name,
+            "kind": "action_output",
+            "output_shape_id": shape.id,
+        }
+        if shape.description:
+            action_output_event["description"] = shape.description
+        events.append(action_output_event)
+        event_name_to_id[shape.name] = shape.id
+
+    for obj in sorted_by_id(ont.objects):
+        for tr in sorted(obj.transitions, key=lambda x: x.id):
+            transition_name = transition_event_name(obj.name, tr.name)
+            transition_entry = {
+                "id": tr.id,
+                "name": transition_name,
+                "kind": "transition",
+                "object_id": object_name_to_id[obj.name],
+                "transition_id": tr.id,
+                "from_state_id": obj_name_to_states[obj.name][tr.from_state],
+                "to_state_id": obj_name_to_states[obj.name][tr.to_state],
+            }
+            if tr.description:
+                transition_entry["description"] = tr.description
+            events.append(transition_entry)
+            event_name_to_id[transition_name] = tr.id
 
     triggers = []
     for t in sorted_by_id(ont.triggers):

@@ -2,16 +2,14 @@ package com.example.prophet.commerce_local.generated.events;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.domain.OrderRef;
+import jakarta.validation.constraints.NotNull;
 
 /**
- * Signal event emitted for 'PaymentCaptured'.
+ * Emit 'PaymentCaptured'.
  */
 @Generated("prophet-cli")
 public record PaymentCaptured(
-    /**
-     * Reference to the Order instance associated with this event.
-     */
-    OrderRef objectRef
+    @NotNull OrderRef order
 ) {
 
     public static Builder builder() {
@@ -19,15 +17,15 @@ public record PaymentCaptured(
     }
 
     public static final class Builder {
-        private OrderRef objectRef;
+        private OrderRef order;
 
-        public Builder objectRef(OrderRef value) {
-            this.objectRef = value;
+        public Builder order(OrderRef value) {
+            this.order = value;
             return this;
         }
         public PaymentCaptured build() {
             return new PaymentCaptured(
-                objectRef
+                order
             );
         }
     }

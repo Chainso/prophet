@@ -3,6 +3,7 @@ package com.example.prophet_example_spring.actions;
 import com.example.prophet.commerce_local.generated.actions.ShipOrderCommand;
 import com.example.prophet.commerce_local.generated.actions.ShipOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.ShipOrderActionHandler;
+import com.example.prophet.commerce_local.generated.domain.OrderRef;
 import com.example.prophet.commerce_local.generated.domain.OrderState;
 import com.example.prophet.commerce_local.generated.persistence.OrderEntity;
 import com.example.prophet.commerce_local.generated.persistence.OrderRepository;
@@ -27,8 +28,9 @@ public class ShipOrderHandler implements ShipOrderActionHandler {
     @Override
     @Transactional
     public ShipOrderResult handle(ShipOrderCommand request) {
-        OrderEntity order = orderRepository.findById(request.orderId())
-            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found: " + request.orderId()));
+        String orderId = request.order().orderId();
+        OrderEntity order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Order not found: " + orderId));
 
         if (order.getCurrentState() != OrderState.APPROVED) {
             throw new ResponseStatusException(
@@ -45,6 +47,11 @@ public class ShipOrderHandler implements ShipOrderActionHandler {
             .map(id -> request.carrier() + "-" + request.trackingNumber() + "-" + id)
             .toList();
 
-        return new ShipOrderResult(order.getOrderId(), "shipped", labels, List.of(labels));
+        return new ShipOrderResult(
+            OrderRef.builder().orderId(order.getOrderId()).build(),
+            "shipped",
+            labels,
+            List.of(labels)
+        );
     }
 }

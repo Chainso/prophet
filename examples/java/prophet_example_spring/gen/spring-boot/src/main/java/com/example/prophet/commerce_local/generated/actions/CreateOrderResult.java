@@ -1,11 +1,12 @@
 package com.example.prophet.commerce_local.generated.actions;
 
 import javax.annotation.processing.Generated;
+import com.example.prophet.commerce_local.generated.domain.OrderRef;
 import jakarta.validation.constraints.NotNull;
 
 @Generated("prophet-cli")
 public record CreateOrderResult(
-    @NotNull String orderId,
+    @NotNull OrderRef order,
     @NotNull String currentState
 ) {
 
@@ -14,11 +15,11 @@ public record CreateOrderResult(
     }
 
     public static final class Builder {
-        private String orderId;
+        private OrderRef order;
         private String currentState;
 
-        public Builder orderId(String value) {
-            this.orderId = value;
+        public Builder order(OrderRef value) {
+            this.order = value;
             return this;
         }
 
@@ -28,7 +29,7 @@ public record CreateOrderResult(
         }
         public CreateOrderResult build() {
             return new CreateOrderResult(
-                orderId,
+                order,
                 currentState
             );
         }

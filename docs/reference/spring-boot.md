@@ -43,9 +43,19 @@ List responses are generated DTO envelopes (`*ListResponse`), not raw Spring `Pa
 ## Action APIs
 
 - `POST /actions/<actionName>`
-- request/response payloads map to generated `actionInput`/`actionOutput` contracts
+- request/response payloads map to generated action input/output contracts
 - default generated handlers throw `UnsupportedOperationException`
 - user implements handler/service beans in user-owned code
+
+## Event Emitter APIs
+
+- generated `GeneratedEventEmitter` interface exposes typed emit methods for:
+  - signals,
+  - transitions,
+  - action outputs.
+- generated `GeneratedEventEmitterNoOp` is registered automatically when no custom emitter bean is provided.
+- generated default action services emit action-output events automatically after successful handler execution.
+- signal and transition emission remains user-controlled via custom emitter usage.
 
 ## Ownership Boundaries
 

@@ -97,10 +97,7 @@ class EventDef:
     name: str
     id: str
     kind: str
-    action: Optional[str]
-    object_name: str
-    from_state: Optional[str]
-    to_state: Optional[str]
+    fields: List[FieldDef]
     description: Optional[str]
     line: int
 

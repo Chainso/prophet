@@ -6,7 +6,6 @@ import com.example.prophet.commerce_local.generated.actions.ShipOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.ShipOrderActionHandler;
 import com.example.prophet.commerce_local.generated.actions.services.ShipOrderActionService;
 import com.example.prophet.commerce_local.generated.events.GeneratedEventEmitter;
-import com.example.prophet.commerce_local.generated.events.OrderShippedEvent;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -31,11 +30,7 @@ public class ShipOrderActionServiceDefault implements ShipOrderActionService {
             throw new UnsupportedOperationException("No handler bean provided for action 'shipOrder'");
         }
         ShipOrderResult result = handler.handle(request);
-        eventEmitter.emitOrderShippedEvent(
-            OrderShippedEvent.builder()
-                .payload(result)
-                .build()
-        );
+        eventEmitter.emitShipOrderResult(result);
         return result;
     }
 }

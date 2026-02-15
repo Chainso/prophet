@@ -6,7 +6,12 @@ A Prophet ontology is a domain contract describing:
 - Objects and fields
 - Optional object state models (states and transitions)
 - Action inputs and outputs
-- Actions, events, and triggers
+- Actions, signals, and triggers
+
+Event categories in the model:
+- Signals are explicitly defined in DSL (`signal` blocks).
+- Action outputs are events by definition (derived from action output contracts).
+- Object transitions are events by definition (derived from object transition definitions).
 
 ## DSL -> IR -> Artifacts
 

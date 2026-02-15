@@ -42,6 +42,11 @@ export SPRING_DATASOURCE_PASSWORD=
 - `POST /actions/approveOrder`
 - `POST /actions/shipOrder`
 
+Action payload notes:
+- `createOrder` mints a new order ID server-side; request body does not include `orderId`.
+- `approveOrder` and `shipOrder` use object references in request payloads (for example `{ "order": { "orderId": "..." } }`).
+- action responses return object references for created/updated orders.
+
 List endpoint response shape:
 - generated DTO envelopes (`OrderListResponse`, `UserListResponse`) with:
   - `items`

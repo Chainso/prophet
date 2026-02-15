@@ -9,7 +9,6 @@ import java.util.List;
 
 @Generated("prophet-cli")
 public record CreateOrderCommand(
-    @NotNull String orderId,
     @NotNull UserRef customer,
     @NotNull BigDecimal totalAmount,
     String discountCode,
@@ -22,17 +21,11 @@ public record CreateOrderCommand(
     }
 
     public static final class Builder {
-        private String orderId;
         private UserRef customer;
         private BigDecimal totalAmount;
         private String discountCode;
         private List<String> tags;
         private Address shippingAddress;
-
-        public Builder orderId(String value) {
-            this.orderId = value;
-            return this;
-        }
 
         public Builder customer(UserRef value) {
             this.customer = value;
@@ -60,7 +53,6 @@ public record CreateOrderCommand(
         }
         public CreateOrderCommand build() {
             return new CreateOrderCommand(
-                orderId,
                 customer,
                 totalAmount,
                 discountCode,

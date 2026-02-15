@@ -12,6 +12,15 @@ from .parser import resolve_type_descriptor
 from .errors import ProphetError
 
 
+def _pascal_case(value: str) -> str:
+    chunks = [part for part in value.replace("-", "_").split("_") if part]
+    return "".join(chunk[:1].upper() + chunk[1:] for chunk in chunks)
+
+
+def transition_event_name(object_name: str, transition_name: str) -> str:
+    return f"{object_name}{_pascal_case(transition_name)}Transition"
+
+
 def _effective_key_field_names(
     obj: ObjectDef,
     kind: str,
@@ -84,6 +93,8 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         id_entries.append((f"action {a.name}", a.id, a.line))
     for e in ont.events:
         id_entries.append((f"event {e.name}", e.id, e.line))
+        for f in e.fields:
+            id_entries.append((f"field {e.name}.{f.name}", f.id, f.line))
     for t in ont.triggers:
         id_entries.append((f"trigger {t.name}", t.id, t.line))
 
@@ -101,7 +112,6 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
     action_input_names = {s.name: s for s in ont.action_inputs}
     action_output_names = {s.name: s for s in ont.action_outputs}
     action_names = {a.name: a for a in ont.actions}
-    event_names = {e.name: e for e in ont.events}
 
     for t in ont.types:
         if t.base not in BASE_TYPES:
@@ -209,32 +219,35 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         if a.output_shape not in action_output_names:
             errors.append(f"line {a.line}: action {a.name} output shape '{a.output_shape}' not found")
 
-    for e in ont.events:
-        if e.kind not in {"action_output", "signal", "transition"}:
-            errors.append(f"line {e.line}: event {e.name} kind '{e.kind}' is invalid")
-        if e.object_name not in object_names:
-            errors.append(f"line {e.line}: event {e.name} object '{e.object_name}' not found")
-            continue
+    for signal in ont.events:
+        if signal.kind != "signal":
+            errors.append(
+                f"line {signal.line}: signal {signal.name} has unsupported kind '{signal.kind}'"
+            )
+        validate_action_shape_fields("signal", signal.name, signal.fields)
 
-        obj = object_names[e.object_name]
-        state_names = {s.name for s in obj.states}
-
-        if e.kind == "action_output":
-            if not e.action:
-                errors.append(f"line {e.line}: action_output event {e.name} must reference action")
-            elif e.action not in action_names:
-                errors.append(f"line {e.line}: event {e.name} references unknown action '{e.action}'")
-        if e.kind == "transition":
-            if not e.from_state or not e.to_state:
-                errors.append(f"line {e.line}: transition event {e.name} must define from and to")
-            else:
-                if e.from_state not in state_names:
-                    errors.append(f"line {e.line}: transition event {e.name} from state '{e.from_state}' missing on object {obj.name}")
-                if e.to_state not in state_names:
-                    errors.append(f"line {e.line}: transition event {e.name} to state '{e.to_state}' missing on object {obj.name}")
+    event_name_sources: Dict[str, str] = {}
+    for signal in ont.events:
+        event_name_sources[signal.name] = f"signal {signal.name}"
+    for shape in ont.action_outputs:
+        existing = event_name_sources.get(shape.name)
+        if existing is not None:
+            errors.append(
+                f"line {shape.line}: actionOutput {shape.name} collides with event name from {existing}"
+            )
+        event_name_sources[shape.name] = f"actionOutput {shape.name}"
+    for obj in ont.objects:
+        for tr in obj.transitions:
+            derived_name = transition_event_name(obj.name, tr.name)
+            existing = event_name_sources.get(derived_name)
+            if existing is not None:
+                errors.append(
+                    f"line {tr.line}: transition event name '{derived_name}' collides with {existing}"
+                )
+            event_name_sources[derived_name] = f"transition {obj.name}.{tr.name}"
 
     for tr in ont.triggers:
-        if tr.event_name not in event_names:
+        if tr.event_name not in event_name_sources:
             errors.append(f"line {tr.line}: trigger {tr.name} references unknown event '{tr.event_name}'")
         if tr.action_name not in action_names:
             errors.append(f"line {tr.line}: trigger {tr.name} references unknown action '{tr.action_name}'")

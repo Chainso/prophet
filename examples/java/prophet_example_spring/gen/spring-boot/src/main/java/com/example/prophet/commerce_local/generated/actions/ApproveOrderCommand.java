@@ -2,6 +2,8 @@ package com.example.prophet.commerce_local.generated.actions;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.domain.ApprovalContext;
+import com.example.prophet.commerce_local.generated.domain.OrderRef;
+import com.example.prophet.commerce_local.generated.domain.UserRef;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
@@ -10,8 +12,8 @@ import java.util.List;
  */
 @Generated("prophet-cli")
 public record ApproveOrderCommand(
-    @NotNull String orderId,
-    String approvedBy,
+    @NotNull OrderRef order,
+    UserRef approvedBy,
     List<String> notes,
     ApprovalContext context
 ) {
@@ -21,17 +23,17 @@ public record ApproveOrderCommand(
     }
 
     public static final class Builder {
-        private String orderId;
-        private String approvedBy;
+        private OrderRef order;
+        private UserRef approvedBy;
         private List<String> notes;
         private ApprovalContext context;
 
-        public Builder orderId(String value) {
-            this.orderId = value;
+        public Builder order(OrderRef value) {
+            this.order = value;
             return this;
         }
 
-        public Builder approvedBy(String value) {
+        public Builder approvedBy(UserRef value) {
             this.approvedBy = value;
             return this;
         }
@@ -47,7 +49,7 @@ public record ApproveOrderCommand(
         }
         public ApproveOrderCommand build() {
             return new ApproveOrderCommand(
-                orderId,
+                order,
                 approvedBy,
                 notes,
                 context

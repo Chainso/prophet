@@ -6,7 +6,7 @@
 ontology CommerceLocal {
   id "ontology_commerce_local"
   version "0.1.0"
-  # type/object/struct/actionInput/actionOutput/action/event/trigger blocks
+  # type/object/struct/action/signal/trigger blocks
 }
 ```
 
@@ -15,11 +15,11 @@ ontology CommerceLocal {
 - `type`
 - `object`
 - `struct`
-- `actionInput` / `action_input`
-- `actionOutput` / `action_output`
 - `action`
-- `event`
+- `signal`
 - `trigger`
+- `actionInput` / `action_input` (explicit reusable contract blocks)
+- `actionOutput` / `action_output` (explicit reusable contract blocks)
 
 ## Lexical Rules
 
@@ -53,32 +53,53 @@ Display key metadata marker:
 
 ## Action Contracts
 
-Actions must point to explicit input/output shapes:
+Actions can declare contracts inline (recommended) or reference named top-level shapes.
 
 ```prophet
-actionInput CreateOrderCommand {
-  id "shape_create_order_cmd"
-  field customer_id {
-    id "fld_create_order_customer_id"
-    type string
-    required
-  }
-}
-
-actionOutput CreateOrderResult {
-  id "shape_create_order_result"
-  field order_id {
-    id "fld_create_order_result_order_id"
-    type string
-    required
-  }
-}
-
 action createOrder {
   id "act_create_order"
   kind process
-  input CreateOrderCommand
-  output CreateOrderResult
+
+  input CreateOrderCommand {
+    id "shape_create_order_cmd"
+    field customer_id {
+      id "fld_create_order_customer_id"
+      type string
+      required
+    }
+  }
+
+  output CreateOrderResult {
+    id "shape_create_order_result"
+    field order_id {
+      id "fld_create_order_result_order_id"
+      type string
+      required
+    }
+  }
+}
+```
+
+## Event Semantics
+
+- `signal` is the only explicit top-level event definition in the DSL.
+- `actionOutput` contracts are event types by definition and are derived automatically as events.
+- object `transition` definitions are also derived automatically as events.
+- triggers can reference any derived event name:
+  - signal name (for example `PaymentCaptured`)
+  - action output shape name (for example `ApproveOrderResult`)
+  - derived transition event name `<Object><Transition>Transition` (for example `OrderApproveTransition`)
+
+Signal example:
+
+```prophet
+signal PaymentCaptured {
+  id "sig_payment_captured"
+  field orderId {
+    id "fld_sig_payment_captured_order_id"
+    type string
+    required
+  }
 }
 ```
 
@@ -90,8 +111,8 @@ action createOrder {
 - key constraints
 - action/event/trigger link integrity
 - object-ref target constraints (currently single-field PK targets)
-- valid `actionInput`/`actionOutput` references in action definitions
-- valid event kind semantics (`action_output`, `signal`, `transition`)
+- valid action input/output references in action definitions
+- signal schema validity
 - valid trigger references to existing events/actions
 
 ## Canonical Example

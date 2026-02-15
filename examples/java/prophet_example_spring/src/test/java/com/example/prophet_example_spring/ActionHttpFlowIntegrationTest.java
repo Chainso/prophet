@@ -25,12 +25,9 @@ class ActionHttpFlowIntegrationTest {
 
     @Test
     void createApproveShipAndQueryOrderOverHttp() {
-        String orderId = "order-http-1";
-
         ResponseEntity<Map> createResponse = restTemplate.postForEntity(
             "/actions/createOrder",
             Map.of(
-                "orderId", orderId,
                 "customer", Map.of("userId", "user-http-1"),
                 "totalAmount", new BigDecimal("42.50"),
                 "discountCode", "PROMO10",
@@ -45,14 +42,16 @@ class ActionHttpFlowIntegrationTest {
         );
         assertEquals(HttpStatus.OK, createResponse.getStatusCode());
         assertNotNull(createResponse.getBody());
-        assertEquals(orderId, createResponse.getBody().get("orderId"));
+        String orderId = String.valueOf(((Map<?, ?>) createResponse.getBody().get("order")).get("orderId"));
+        assertNotNull(orderId);
+        assertFalse(orderId.isBlank());
         assertEquals("created", createResponse.getBody().get("currentState"));
 
         ResponseEntity<Map> approveResponse = restTemplate.postForEntity(
             "/actions/approveOrder",
             Map.of(
-                "orderId", orderId,
-                "approvedBy", "approver-1",
+                "order", Map.of("orderId", orderId),
+                "approvedBy", Map.of("userId", "approver-1"),
                 "notes", List.of("looks good"),
                 "context", Map.of(
                     "approver", Map.of("userId", "approver-1"),
@@ -69,7 +68,7 @@ class ActionHttpFlowIntegrationTest {
         ResponseEntity<Map> shipResponse = restTemplate.postForEntity(
             "/actions/shipOrder",
             Map.of(
-                "orderId", orderId,
+                "order", Map.of("orderId", orderId),
                 "carrier", "UPS",
                 "trackingNumber", "TRACK-001",
                 "packageIds", List.of("PKG-1", "PKG-2")

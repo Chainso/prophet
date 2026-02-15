@@ -3,6 +3,7 @@ package com.example.prophet_example_spring.actions;
 import com.example.prophet.commerce_local.generated.actions.CreateOrderCommand;
 import com.example.prophet.commerce_local.generated.actions.CreateOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.CreateOrderActionHandler;
+import com.example.prophet.commerce_local.generated.domain.OrderRef;
 import com.example.prophet.commerce_local.generated.domain.OrderState;
 import com.example.prophet.commerce_local.generated.persistence.OrderEntity;
 import com.example.prophet.commerce_local.generated.persistence.OrderRepository;
@@ -10,9 +11,8 @@ import com.example.prophet.commerce_local.generated.persistence.UserEntity;
 import com.example.prophet.commerce_local.generated.persistence.UserRepository;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import java.util.UUID;
 
 @Component
 public class CreateOrderHandler implements CreateOrderActionHandler {
@@ -28,15 +28,16 @@ public class CreateOrderHandler implements CreateOrderActionHandler {
     @Override
     @Transactional
     public CreateOrderResult handle(CreateOrderCommand request) {
-        if (orderRepository.existsById(request.orderId())) {
-            throw new ResponseStatusException(BAD_REQUEST, "Order already exists: " + request.orderId());
+        String mintedOrderId = UUID.randomUUID().toString();
+        while (orderRepository.existsById(mintedOrderId)) {
+            mintedOrderId = UUID.randomUUID().toString();
         }
 
         UserEntity customer = userRepository.findById(request.customer().userId())
             .orElseGet(() -> createDefaultUser(request.customer().userId()));
 
         OrderEntity order = new OrderEntity();
-        order.setOrderId(request.orderId());
+        order.setOrderId(mintedOrderId);
         order.setCustomer(customer);
         order.setTotalAmount(request.totalAmount());
         order.setDiscountCode(request.discountCode());
@@ -45,7 +46,10 @@ public class CreateOrderHandler implements CreateOrderActionHandler {
         order.setCurrentState(OrderState.CREATED);
         orderRepository.save(order);
 
-        return new CreateOrderResult(order.getOrderId(), order.getCurrentState().name().toLowerCase());
+        return new CreateOrderResult(
+            OrderRef.builder().orderId(order.getOrderId()).build(),
+            order.getCurrentState().name().toLowerCase()
+        );
     }
 
     private UserEntity createDefaultUser(String userId) {

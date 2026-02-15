@@ -316,7 +316,17 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
                 keep = ("id", "name", "kind", "input_shape_id", "output_shape_id")
                 return {k: item.get(k) for k in keep}
             if kind == "event":
-                keep = ("id", "name", "kind", "object_id", "action_id", "from_state_id", "to_state_id")
+                keep = (
+                    "id",
+                    "name",
+                    "kind",
+                    "fields",
+                    "output_shape_id",
+                    "object_id",
+                    "transition_id",
+                    "from_state_id",
+                    "to_state_id",
+                )
                 return {k: item.get(k) for k in keep}
             if kind == "trigger":
                 keep = ("id", "name", "event_id", "action_id")

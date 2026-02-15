@@ -140,227 +140,190 @@ ontology commerce_local {
     }
   }
 
-  actionInput ApproveOrderCommand {
-    id "ain_approve_order"
-    description "Input payload for approving an order."
-
-    field orderId {
-      id "fld_ain_approve_order_order_id"
-      type string
-      required
-    }
-
-    field approvedBy {
-      id "fld_ain_approve_order_approved_by"
-      type string
-      optional
-    }
-
-    field notes {
-      id "fld_ain_approve_order_notes"
-      type list(string)
-      optional
-    }
-
-    field context {
-      id "fld_ain_approve_order_context"
-      type ApprovalContext
-      optional
-    }
-  }
-
-  actionOutput ApproveOrderResult {
-    id "aout_approve_order"
-    description "Approval result contract."
-
-    field orderId {
-      id "fld_aout_approve_order_order_id"
-      type string
-      required
-    }
-
-    field decision {
-      id "fld_aout_approve_order_decision"
-      type string
-      required
-    }
-
-    field warnings {
-      id "fld_aout_approve_order_warnings"
-      type string[]
-      optional
-    }
-  }
-
-  actionInput ShipOrderCommand {
-    id "ain_ship_order"
-
-    field orderId {
-      id "fld_ain_ship_order_order_id"
-      type string
-      required
-    }
-
-    field carrier {
-      id "fld_ain_ship_order_carrier"
-      type string
-      required
-    }
-
-    field trackingNumber {
-      id "fld_ain_ship_order_tracking_number"
-      type string
-      required
-    }
-
-    field packageIds {
-      id "fld_ain_ship_order_package_ids"
-      type string[]
-      required
-    }
-  }
-
-  actionOutput ShipOrderResult {
-    id "aout_ship_order"
-
-    field orderId {
-      id "fld_aout_ship_order_order_id"
-      type string
-      required
-    }
-
-    field shipmentStatus {
-      id "fld_aout_ship_order_status"
-      type string
-      required
-    }
-
-    field labels {
-      id "fld_aout_ship_order_labels"
-      type string[]
-      optional
-    }
-
-    field labelBatches {
-      id "fld_aout_ship_order_label_batches"
-      type string[][]
-      optional
-    }
-  }
-
-  actionInput CreateOrderCommand {
-    id "ain_create_order"
-
-    field orderId {
-      id "fld_ain_create_order_order_id"
-      type string
-      required
-    }
-
-    field customer {
-      id "fld_ain_create_order_customer"
-      type ref(User)
-      required
-    }
-
-    field totalAmount {
-      id "fld_ain_create_order_total_amount"
-      type Money
-      required
-    }
-
-    field discountCode {
-      id "fld_ain_create_order_discount_code"
-      type string
-      optional
-    }
-
-    field tags {
-      id "fld_ain_create_order_tags"
-      type string[]
-      optional
-    }
-
-    field shippingAddress {
-      id "fld_ain_create_order_shipping_address"
-      type Address
-      optional
-    }
-  }
-
-  actionOutput CreateOrderResult {
-    id "aout_create_order"
-
-    field orderId {
-      id "fld_aout_create_order_order_id"
-      type string
-      required
-    }
-
-    field currentState {
-      id "fld_aout_create_order_current_state"
-      type string
-      required
-    }
-  }
-
   action createOrder {
     id "act_create_order"
     kind process
-    input CreateOrderCommand
-    output CreateOrderResult
     description "Creates a new order."
+
+    input CreateOrderCommand {
+      id "ain_create_order"
+
+      field customer {
+        id "fld_ain_create_order_customer"
+        type ref(User)
+        required
+      }
+
+      field totalAmount {
+        id "fld_ain_create_order_total_amount"
+        type Money
+        required
+      }
+
+      field discountCode {
+        id "fld_ain_create_order_discount_code"
+        type string
+        optional
+      }
+
+      field tags {
+        id "fld_ain_create_order_tags"
+        type string[]
+        optional
+      }
+
+      field shippingAddress {
+        id "fld_ain_create_order_shipping_address"
+        type Address
+        optional
+      }
+    }
+
+    output CreateOrderResult {
+      id "aout_create_order"
+
+      field order {
+        id "fld_aout_create_order_order"
+        type ref(Order)
+        required
+      }
+
+      field currentState {
+        id "fld_aout_create_order_current_state"
+        type string
+        required
+      }
+    }
   }
 
   action approveOrder {
     id "act_approve_order"
     kind process
-    input ApproveOrderCommand
-    output ApproveOrderResult
     description "Approves an existing order."
+
+    input ApproveOrderCommand {
+      id "ain_approve_order"
+      description "Input payload for approving an order."
+
+      field order {
+        id "fld_ain_approve_order_order"
+        type ref(Order)
+        required
+      }
+
+      field approvedBy {
+        id "fld_ain_approve_order_approved_by"
+        type ref(User)
+        optional
+      }
+
+      field notes {
+        id "fld_ain_approve_order_notes"
+        type list(string)
+        optional
+      }
+
+      field context {
+        id "fld_ain_approve_order_context"
+        type ApprovalContext
+        optional
+      }
+    }
+
+    output ApproveOrderResult {
+      id "aout_approve_order"
+      description "Approval result contract."
+
+      field order {
+        id "fld_aout_approve_order_order"
+        type ref(Order)
+        required
+      }
+
+      field decision {
+        id "fld_aout_approve_order_decision"
+        type string
+        required
+      }
+
+      field warnings {
+        id "fld_aout_approve_order_warnings"
+        type string[]
+        optional
+      }
+    }
   }
 
   action shipOrder {
     id "act_ship_order"
     kind workflow
-    input ShipOrderCommand
-    output ShipOrderResult
     description "Ships an approved order."
+
+    input ShipOrderCommand {
+      id "ain_ship_order"
+
+      field order {
+        id "fld_ain_ship_order_order"
+        type ref(Order)
+        required
+      }
+
+      field carrier {
+        id "fld_ain_ship_order_carrier"
+        type string
+        required
+      }
+
+      field trackingNumber {
+        id "fld_ain_ship_order_tracking_number"
+        type string
+        required
+      }
+
+      field packageIds {
+        id "fld_ain_ship_order_package_ids"
+        type string[]
+        required
+      }
+    }
+
+    output ShipOrderResult {
+      id "aout_ship_order"
+
+      field order {
+        id "fld_aout_ship_order_order"
+        type ref(Order)
+        required
+      }
+
+      field shipmentStatus {
+        id "fld_aout_ship_order_status"
+        type string
+        required
+      }
+
+      field labels {
+        id "fld_aout_ship_order_labels"
+        type string[]
+        optional
+      }
+
+      field labelBatches {
+        id "fld_aout_ship_order_label_batches"
+        type string[][]
+        optional
+      }
+    }
   }
 
-  event OrderApprovedEvent {
-    id "evt_order_approved_output"
-    kind action_output
-    action approveOrder
-    object Order
-  }
+  signal PaymentCaptured {
+    id "sig_payment_captured"
 
-  event OrderShippedEvent {
-    id "evt_order_shipped_output"
-    kind action_output
-    action shipOrder
-    object Order
-  }
-
-  event OrderCreatedEvent {
-    id "evt_order_created_output"
-    kind action_output
-    action createOrder
-    object Order
-  }
-
-  event PaymentCaptured {
-    id "evt_payment_captured"
-    kind signal
-    object Order
-  }
-
-  event OrderApprovedTransition {
-    id "evt_order_approved_transition"
-    kind transition
-    object Order
-    from created
-    to approved
+    field order {
+      id "fld_sig_payment_captured_order"
+      type ref(Order)
+      required
+    }
   }
 
   trigger onPaymentCaptured {
@@ -371,7 +334,7 @@ ontology commerce_local {
 
   trigger onOrderApproved {
     id "trg_on_order_approved"
-    when event OrderApprovedEvent
+    when event ApproveOrderResult
     invoke shipOrder
   }
 }

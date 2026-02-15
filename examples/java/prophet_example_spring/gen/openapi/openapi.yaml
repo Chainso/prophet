@@ -209,6 +209,13 @@ components:
       properties:
         userId:
           type: string
+    OrderRef:
+      type: object
+      required:
+      - orderId
+      properties:
+        orderId:
+          type: string
     Address:
       type: object
       required:
@@ -321,12 +328,12 @@ components:
     ApproveOrderCommand:
       type: object
       required:
-      - orderId
+      - order
       properties:
-        orderId:
-          type: string
+        order:
+          $ref: '#/components/schemas/OrderRef'
         approvedBy:
-          type: string
+          $ref: '#/components/schemas/UserRef'
         notes:
           type: array
           items:
@@ -337,12 +344,9 @@ components:
     CreateOrderCommand:
       type: object
       required:
-      - orderId
       - customer
       - totalAmount
       properties:
-        orderId:
-          type: string
         customer:
           $ref: '#/components/schemas/UserRef'
         totalAmount:
@@ -359,13 +363,13 @@ components:
     ShipOrderCommand:
       type: object
       required:
-      - orderId
+      - order
       - carrier
       - trackingNumber
       - packageIds
       properties:
-        orderId:
-          type: string
+        order:
+          $ref: '#/components/schemas/OrderRef'
         carrier:
           type: string
         trackingNumber:
@@ -377,11 +381,11 @@ components:
     ApproveOrderResult:
       type: object
       required:
-      - orderId
+      - order
       - decision
       properties:
-        orderId:
-          type: string
+        order:
+          $ref: '#/components/schemas/OrderRef'
         decision:
           type: string
         warnings:
@@ -392,21 +396,21 @@ components:
     CreateOrderResult:
       type: object
       required:
-      - orderId
+      - order
       - currentState
       properties:
-        orderId:
-          type: string
+        order:
+          $ref: '#/components/schemas/OrderRef'
         currentState:
           type: string
     ShipOrderResult:
       type: object
       required:
-      - orderId
+      - order
       - shipmentStatus
       properties:
-        orderId:
-          type: string
+        order:
+          $ref: '#/components/schemas/OrderRef'
         shipmentStatus:
           type: string
         labels:

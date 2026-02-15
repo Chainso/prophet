@@ -2899,16 +2899,14 @@ def render_spring_files(
     type_by_id = {t["id"]: t for t in ir.get("types", [])}
     object_by_id = {o["id"]: o for o in objects}
     struct_by_id = {s["id"]: s for s in structs}
-    action_by_id = {a["id"]: a for a in actions}
     action_input_by_id = {s["id"]: s for s in action_inputs}
     action_output_by_id = {s["id"]: s for s in action_outputs}
-    events_by_action_id: Dict[str, List[Dict[str, Any]]] = {}
+    action_output_event_by_shape_id: Dict[str, Dict[str, Any]] = {}
     for event in events:
-        action_id = event.get("action_id")
-        if event.get("kind") == "action_output" and action_id:
-            events_by_action_id.setdefault(str(action_id), []).append(event)
-    for action_events in events_by_action_id.values():
-        action_events.sort(key=lambda item: item["id"])
+        if event.get("kind") == "action_output":
+            shape_id = str(event.get("output_shape_id", ""))
+            if shape_id:
+                action_output_event_by_shape_id[shape_id] = event
 
     files["build.gradle.kts"] = render_gradle_file(boot_version, dep_mgmt_version)
     application_prophet_yml = (
@@ -2948,8 +2946,13 @@ def render_spring_files(
                 target = object_by_id[target_id]
                 ref_types[target["id"]] = target
     for event in events:
-        target = object_by_id[event["object_id"]]
-        ref_types[target["id"]] = target
+        if "object_id" in event:
+            target = object_by_id[event["object_id"]]
+            ref_types[target["id"]] = target
+        for f in event.get("fields", []):
+            for target_id in object_ref_target_ids_for_type(f["type"]):
+                target = object_by_id[target_id]
+                ref_types[target["id"]] = target
 
     for target in sorted(ref_types.values(), key=lambda x: x["id"]):
         target_pk = primary_key_field_for_object(target)
@@ -3487,79 +3490,74 @@ def render_spring_files(
         files[f"src/main/java/{package_path}/generated/actions/{shape['name']}.java"] = record_src
 
     # event contract records and emitter contract
+    emitter_specs: List[Tuple[str, str, str, str]] = []
+    emitter_imports: set[str] = set()
     for event in sorted(events, key=lambda x: x["id"]):
         event_kind = str(event.get("kind", "signal"))
         event_name = str(event["name"])
+        method_name = f"emit{pascal_case(event_name)}"
+        method_description = str(event.get("description", "")).strip() or f"Emit '{event_name}'."
+
+        if event_kind == "action_output":
+            output_shape = action_output_by_id.get(str(event.get("output_shape_id", "")))
+            if output_shape is None:
+                continue
+            param_type = str(output_shape["name"])
+            emitter_imports.add(f"import {base_package}.generated.actions.{param_type};")
+            emitter_specs.append((event_name, method_name, param_type, method_description))
+            continue
+
         event_fields: List[Tuple[str, str, bool]] = []
         event_imports: set[str] = set()
         event_field_descriptions: Dict[str, str] = {}
-        event_description = str(event.get("description", "")).strip()
-        object_model = object_by_id[event["object_id"]]
-        object_ref_name = f"{object_model['name']}Ref"
-        event_imports.add(f"import {base_package}.generated.domain.{object_ref_name};")
-        event_fields.append((object_ref_name, "objectRef", False))
-        event_field_descriptions["objectRef"] = f"Reference to the {object_model['name']} instance associated with this event."
 
-        if event_kind == "action_output":
-            action_id = str(event.get("action_id", ""))
-            action = action_by_id.get(action_id)
-            if action is not None:
-                output_shape = action_output_by_id[action["output_shape_id"]]
-                output_name = output_shape["name"]
-                event_imports.add(f"import {base_package}.generated.actions.{output_name};")
-                event_fields.append((output_name, "payload", True))
-                event_field_descriptions["payload"] = (
-                    f"Action output payload emitted by action '{action['name']}'."
-                )
-            if not event_description:
-                event_description = f"Action output event emitted for '{event_name}'."
+        if event_kind == "signal":
+            for f in event.get("fields", []):
+                java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
+                add_java_imports_for_type(java_t, event_imports)
+                for target_id in object_ref_target_ids_for_type(f["type"]):
+                    target = object_by_id[target_id]
+                    event_imports.add(f"import {base_package}.generated.domain.{target['name']}Ref;")
+                for target_struct_id in struct_target_ids_for_type(f["type"]):
+                    target_struct = struct_by_id[target_struct_id]
+                    event_imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
+                required = f.get("cardinality", {}).get("min", 0) > 0
+                event_fields.append((java_t, camel_case(f["name"]), required))
+                if f.get("description"):
+                    event_field_descriptions[camel_case(f["name"])] = str(f["description"])
         elif event_kind == "transition":
-            states_by_id = {state["id"]: state for state in object_model.get("states", [])}
-            from_state = states_by_id.get(event.get("from_state_id"))
-            to_state = states_by_id.get(event.get("to_state_id"))
-            enum_name = f"{object_model['name']}State"
-            event_imports.add(f"import {base_package}.generated.domain.{enum_name};")
-            event_fields.append((enum_name, "fromState", True))
-            event_fields.append((enum_name, "toState", True))
-            event_field_descriptions["fromState"] = (
-                f"State before transition ({str(from_state.get('name')) if from_state else 'unknown'})."
-            )
-            event_field_descriptions["toState"] = (
-                f"State after transition ({str(to_state.get('name')) if to_state else 'unknown'})."
-            )
-            if not event_description:
-                event_description = f"Transition event emitted for '{event_name}'."
-        else:
-            if not event_description:
-                event_description = f"Signal event emitted for '{event_name}'."
+            object_id = event.get("object_id")
+            if object_id in object_by_id:
+                object_model = object_by_id[object_id]
+                object_ref_name = f"{object_model['name']}Ref"
+                event_imports.add(f"import {base_package}.generated.domain.{object_ref_name};")
+                event_fields.append((object_ref_name, "objectRef", False))
+                event_field_descriptions["objectRef"] = (
+                    f"Reference to the {object_model['name']} instance associated with this transition."
+                )
 
         event_record_src = render_java_record_with_builder(
             f"{base_package}.generated.events",
             event_imports,
             event_name,
             event_fields,
-            record_description=event_description or None,
+            record_description=method_description or None,
             field_descriptions=event_field_descriptions,
         )
         files[f"src/main/java/{package_path}/generated/events/{event_name}.java"] = event_record_src
+        emitter_imports.add(f"import {base_package}.generated.events.{event_name};")
+        emitter_specs.append((event_name, method_name, event_name, method_description))
 
-    emitter_imports = [
-        f"import {base_package}.generated.events.{event['name']};"
-        for event in sorted(events, key=lambda x: x["id"])
-    ]
     emitter_methods: List[str] = []
-    for event in sorted(events, key=lambda x: x["id"]):
-        event_name = str(event["name"])
-        method_name = f"emit{pascal_case(event_name)}"
-        method_description = str(event.get("description", "")).strip() or f"Emit '{event_name}'."
+    for _, method_name, param_type, method_description in emitter_specs:
         method_doc = render_javadoc_block(method_description, indent="    ").rstrip("\n")
         if method_doc:
             emitter_methods.append(method_doc)
-        emitter_methods.append(f"    void {method_name}({event_name} event);")
+        emitter_methods.append(f"    void {method_name}({param_type} event);")
         emitter_methods.append("")
     emitter_src = (
         f"package {base_package}.generated.events;\n\n"
-        + ("".join(f"{line}\n" for line in sorted(set(emitter_imports))) + "\n" if emitter_imports else "")
+        + ("".join(f"{line}\n" for line in sorted(emitter_imports)) + "\n" if emitter_imports else "")
         + "public interface GeneratedEventEmitter {\n"
         + ("".join(f"{line}\n" for line in emitter_methods) if emitter_methods else "")
         + "}\n"
@@ -3570,14 +3568,13 @@ def render_spring_files(
         "import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;",
         "import org.springframework.stereotype.Component;",
     }
+    no_op_imports.update(emitter_imports)
     no_op_methods: List[str] = []
-    for event in sorted(events, key=lambda x: x["id"]):
-        event_name = str(event["name"])
-        method_name = f"emit{pascal_case(event_name)}"
+    for _, method_name, param_type, _ in emitter_specs:
         no_op_methods.extend(
             [
                 "    @Override",
-                f"    public void {method_name}({event_name} event) {{",
+                f"    public void {method_name}({param_type} event) {{",
                 "    }",
                 "",
             ]
@@ -3643,7 +3640,6 @@ def render_spring_files(
         files[f"src/main/java/{package_path}/generated/actions/services/{service_name}.java"] = service_src
 
         default_service_name = f"{service_name}Default"
-        action_output_events = events_by_action_id.get(action["id"], [])
         service_default_imports = {
             f"import {base_package}.generated.actions.{req_name};",
             f"import {base_package}.generated.actions.{res_name};",
@@ -3653,20 +3649,14 @@ def render_spring_files(
             "import org.springframework.beans.factory.ObjectProvider;",
             "import org.springframework.stereotype.Component;",
         }
-        for event in action_output_events:
-            service_default_imports.add(f"import {base_package}.generated.events.{event['name']};")
+
+        action_output_event = action_output_event_by_shape_id.get(action["output_shape_id"])
+        emit_method_name = None
+        if action_output_event is not None:
+            emit_method_name = f"emit{pascal_case(str(action_output_event['name']))}"
         emit_lines: List[str] = []
-        for event in action_output_events:
-            emit_method = f"emit{pascal_case(event['name'])}"
-            emit_lines.extend(
-                [
-                    f"        eventEmitter.{emit_method}(",
-                    f"            {event['name']}.builder()",
-                    "                .payload(result)",
-                    "                .build()",
-                    "        );",
-                ]
-            )
+        if emit_method_name is not None:
+            emit_lines.append(f"        eventEmitter.{emit_method_name}(result);")
         emit_section = "\n".join(emit_lines)
         if emit_section:
             emit_section = emit_section + "\n"
