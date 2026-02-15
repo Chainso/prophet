@@ -65,7 +65,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 
 - [x] D1: Create implementation plan and progress tracker (this file)
 - [x] D2: Add `prophet-lib` runtime packages for JavaScript, Python, Java
-- [ ] D3: Migrate Node generator to `EventPublisher` + `ActionOutcome` + event wire envelopes
+- [x] D3: Migrate Node generator to `EventPublisher` + `ActionOutcome` + event wire envelopes
 - [ ] D4: Migrate Python generator to `EventPublisher` + `ActionOutcome` + event wire envelopes
 - [ ] D5: Migrate Java generator to async `EventPublisher` + `ActionOutcome` + event wire envelopes
 - [ ] D6: Update examples to compile and run with new generated contracts
@@ -95,7 +95,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 
 - 2026-02-15: D1 completed and committed.
 - 2026-02-15: D2 completed and committed (JS/Python/Java runtime scaffolds added).
-- 2026-02-15: D3 started (Node generator migration).
+- 2026-02-15: D3 completed and committed (Node generator now publishes via async EventPublisher and event wire envelopes).
 
 ## Notes
 

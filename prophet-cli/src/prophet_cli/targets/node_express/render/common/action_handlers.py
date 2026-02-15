@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from ..support import _camel_case
 from ..support import _pascal_case
@@ -14,11 +14,14 @@ def _render_action_handlers(ir: Dict[str, Any]) -> str:
         "",
         "import type * as Actions from './actions';",
         "import type { Repositories } from './persistence';",
-        "import type { EventEmitter } from './events';",
+        "import type { ActionOutcome, ActionOutcomeValue, EventPublisher } from './events';",
         "",
         "export interface ActionContext {",
         "  repositories: Repositories;",
-        "  eventEmitter: EventEmitter;",
+        "  eventPublisher: EventPublisher;",
+        "  traceId?: string;",
+        "  eventSource?: string;",
+        "  eventAttributes?: Record<string, string>;",
         "}",
         "",
     ]
@@ -32,13 +35,15 @@ def _render_action_handlers(ir: Dict[str, Any]) -> str:
 
         iface = f"{action_name}ActionHandler"
         lines.append(f"export interface {iface} {{")
-        lines.append(f"  handle(input: Actions.{input_name}, context: ActionContext): Promise<Actions.{output_name}>;")
+        lines.append(
+            f"  handle(input: Actions.{input_name}, context: ActionContext): Promise<ActionOutcomeValue<Actions.{output_name}>>;"
+        )
         lines.append("}")
         lines.append("")
 
         default_impl = f"{iface}Default"
         lines.append(f"export class {default_impl} implements {iface} {{")
-        lines.append(f"  async handle(_input: Actions.{input_name}): Promise<Actions.{output_name}> {{")
+        lines.append(f"  async handle(_input: Actions.{input_name}): Promise<ActionOutcome<Actions.{output_name}>> {{")
         lines.append(
             f"    throw new Error('No implementation registered for action: {str(action.get('name', 'action'))}');"
         )
@@ -56,5 +61,4 @@ def _render_action_handlers(ir: Dict[str, Any]) -> str:
     lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
-
 
