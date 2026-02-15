@@ -91,7 +91,8 @@ Prisma generated repositories:
 - constructor expects `PrismaClient`
 - generated methods implement paging, typed filtering, `getById`, and `save` via `upsert`
 - Prisma schema includes object refs, state column (`current_state`), and supports composite primary keys
-- datasource provider/url are driven by `DATABASE_PROVIDER` and `DATABASE_URL`
+- datasource URL is driven by `DATABASE_URL`; provider defaults to `sqlite` and can be configured with:
+  - `generation.node_express.prisma.provider` in `prophet.yaml`
 
 TypeORM generated repositories:
 
@@ -99,6 +100,28 @@ TypeORM generated repositories:
 - generated entities include columns, relations, and state column (`current_state`)
 - generated methods implement paging, typed filtering, `getById`, and `save`
 - query filtering is translated through `QueryBuilder`
+- database connection/runtime options come from your application-owned `DataSource` configuration
+
+## TypeORM Production DB Setup
+
+Prophet generates TypeORM entities/adapters, but does not own your DB connection settings.
+For production, configure `DataSource` in your app from environment and disable `synchronize`.
+
+Example pattern:
+
+```ts
+const dataSource = new DataSource({
+  type: 'postgres',
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT ?? 5432),
+  username: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  ssl: process.env.DB_SSL === 'true',
+  synchronize: false,
+  entities: [OrderEntity, UserEntity],
+});
+```
 
 ## Recommended Targets
 

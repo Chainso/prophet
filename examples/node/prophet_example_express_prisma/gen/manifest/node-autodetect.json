@@ -4,7 +4,7 @@
   "stack_id": "node_express_prisma",
   "confidence": "high",
   "confidence_score": 90,
-  "package_manager": "unknown",
+  "package_manager": "npm",
   "module_mode": "module",
   "tsconfig": "tsconfig.json",
   "tsconfig_details": {

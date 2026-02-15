@@ -1,6 +1,6 @@
 // GENERATED FILE: do not edit directly.
 
-import { DataSource, type SelectQueryBuilder } from 'typeorm';
+import { DataSource, type Repository, type SelectQueryBuilder } from 'typeorm';
 import type * as Domain from './domain';
 import type * as Filters from './query';
 import type * as Persistence from './persistence';
@@ -102,9 +102,11 @@ function orderApplyOrderBy(qb: SelectQueryBuilder<OrderEntity>): void {
 }
 
 class OrderTypeOrmRepository implements Persistence.OrderRepository {
-  private readonly repo = this.dataSource.getRepository(OrderEntity);
+  private readonly repo: Repository<OrderEntity>;
 
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(private readonly dataSource: DataSource) {
+    this.repo = dataSource.getRepository(OrderEntity);
+  }
 
   async list(page: number, size: number): Promise<Persistence.Page<Domain.Order>> {
     const normalized = normalizePage(page, size);
@@ -186,9 +188,11 @@ function userApplyOrderBy(qb: SelectQueryBuilder<UserEntity>): void {
 }
 
 class UserTypeOrmRepository implements Persistence.UserRepository {
-  private readonly repo = this.dataSource.getRepository(UserEntity);
+  private readonly repo: Repository<UserEntity>;
 
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(private readonly dataSource: DataSource) {
+    this.repo = dataSource.getRepository(UserEntity);
+  }
 
   async list(page: number, size: number): Promise<Persistence.Page<Domain.User>> {
     const normalized = normalizePage(page, size);

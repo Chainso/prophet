@@ -16,6 +16,18 @@ function totalPages(totalElements: number, size: number): number {
   return Math.ceil(totalElements / size);
 }
 
+function parseJsonValue<T>(value: unknown): T | undefined {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return undefined;
+    }
+  }
+  return value as T;
+}
+
 export class PrismaGeneratedRepositories implements Persistence.GeneratedRepositories {
   order: Persistence.OrderRepository;
   user: Persistence.UserRepository;
@@ -78,8 +90,8 @@ function orderRowToDomain(row: any): Domain.Order {
     },
     totalAmount: row.total_amount,
     discountCode: row.discount_code ?? undefined,
-    tags: row.tags ?? undefined,
-    shippingAddress: row.shipping_address ?? undefined,
+    tags: parseJsonValue(row.tags) as any,
+    shippingAddress: parseJsonValue(row.shipping_address) as any,
     currentState: row.current_state,
   };
 }
@@ -90,8 +102,8 @@ function orderDomainToRow(item: Domain.Order): any {
     customer_user_id: item.customer.userId,
     total_amount: item.totalAmount,
     discount_code: item.discountCode ?? null,
-    tags: item.tags ?? null,
-    shipping_address: item.shippingAddress ?? null,
+    tags: item.tags === undefined ? null : JSON.stringify(item.tags),
+    shipping_address: item.shippingAddress === undefined ? null : JSON.stringify(item.shippingAddress),
     current_state: item.currentState,
   };
 }

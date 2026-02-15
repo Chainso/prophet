@@ -20,7 +20,6 @@ Generated output includes:
 
 ```bash
 npm install
-export DATABASE_PROVIDER=sqlite
 export DATABASE_URL="file:./dev.db"
 npm run prisma:generate
 npm run prisma:push

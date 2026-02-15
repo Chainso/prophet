@@ -8,7 +8,6 @@ Primary contributor docs now live under:
 - [docs/developer/testing.md](docs/developer/testing.md)
 - [docs/developer/ci-cd.md](docs/developer/ci-cd.md)
 - [docs/developer/releasing.md](docs/developer/releasing.md)
-- [docs/developer/node-express-roadmap.md](docs/developer/node-express-roadmap.md)
 
 ## Quick Setup
 

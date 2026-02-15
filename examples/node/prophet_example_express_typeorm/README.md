@@ -30,3 +30,13 @@ Try:
 2. `POST /actions/approveOrder`
 3. `POST /actions/shipOrder`
 4. `POST /orders/query`
+
+## Production DB Notes
+
+This example uses `sqlite` with `synchronize: true` for fast local testing.
+
+For production:
+- configure TypeORM `DataSource` from environment (host/port/user/password/db/ssl/pool)
+- use your production driver (`postgres`, `mysql`, `mssql`, etc.)
+- set `synchronize: false`
+- manage schema changes with migrations

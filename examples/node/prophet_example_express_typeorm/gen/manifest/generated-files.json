@@ -15,11 +15,11 @@
     },
     {
       "path": "gen/manifest/node-autodetect.json",
-      "sha256": "63b0fb25b5266c3abf1d0558815015ea99c3e6df74cb04582bcbbde8aab14c83"
+      "sha256": "88367e839b16c20cc6443096b0bb5a867ddbf7e0e4978efc792133584012137b"
     },
     {
       "path": "gen/node-express/package.json",
-      "sha256": "1c062908157532b6b2081a84c555e8c6d1f176791b3dd2d48a8545460722a3bb"
+      "sha256": "99599da0bb55c43b09bceb619899981a844d6dc53ada60f72e368767cc306a3b"
     },
     {
       "path": "gen/node-express/src/generated/action-handlers.ts",
@@ -67,7 +67,7 @@
     },
     {
       "path": "gen/node-express/src/generated/typeorm-adapters.ts",
-      "sha256": "f0af2d35e0b9a1e1249480731f419a01643ed1b37d501637a9edccc0e5da65b8"
+      "sha256": "25614135034ac0ad444f97a674d5e6655d76da9752419b07b843f2d7323024ad"
     },
     {
       "path": "gen/node-express/src/generated/typeorm-entities.ts",

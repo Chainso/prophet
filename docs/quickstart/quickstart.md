@@ -76,7 +76,6 @@ Action APIs:
 ```bash
 cd examples/node/prophet_example_express_prisma
 prophet gen
-export DATABASE_PROVIDER=sqlite
 export DATABASE_URL="file:./dev.db"
 npm install
 npm run prisma:generate
@@ -106,6 +105,11 @@ Expected outcome:
 - `gen/openapi/openapi.yaml`
 - `gen/manifest/node-autodetect.json`
 - running Express app with SQLite-backed TypeORM repositories
+
+Important:
+- The example app uses SQLite + `synchronize: true` for local demo speed.
+- For production, configure your `DataSource` from environment and set `synchronize: false`.
+- Prophet owns generated entities/adapters; your app owns DB driver/connection/pooling/SSL config.
 
 ## Next Reads
 

@@ -9,7 +9,7 @@ Current implemented stacks:
 - `node_express_prisma`
 - `node_express_typeorm`
 
-Planned stacks can exist in manifest as non-implemented entries for roadmap visibility and validation.
+Planned stacks can exist in manifest as non-implemented entries for forward visibility and validation.
 
 Manifest contract requirements include:
 - top-level schema version

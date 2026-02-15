@@ -4,6 +4,23 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-02-15
+
+### Fixed
+- Node Express + TypeORM runtime initialization bug in generated repositories:
+  - generated `TypeOrmRepository` classes now initialize `repo` inside constructors (after `DataSource` is available),
+  - prevents `Cannot read properties of undefined (reading 'getRepository')` on app startup.
+- Node Express + Prisma generation compatibility improvements:
+  - Prisma datasource provider is generated as a concrete provider value (default `sqlite`, configurable in `prophet.yaml`),
+  - provider/env and list/struct schema edge cases resolved for generated Prisma schema and adapters.
+
+### Changed
+- Expanded docs and references for Node runtime behavior and TypeORM production DB ownership (`DataSource` configuration in host app).
+- Updated AGENTS/developer/user docs structure and removed obsolete Node roadmap document.
+- Added repository ignore rules for local Node example SQLite test DB files.
+- Added and track `package-lock.json` files for Node example projects.
+- Toolchain/package version advanced to `0.8.1`.
+
 ## [0.8.0] - 2026-02-15
 
 ### Added

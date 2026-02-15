@@ -11,7 +11,10 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 
 1. Read [README.md](README.md) for repo entry points.
 2. Read [Quickstart](docs/quickstart/quickstart.md) and [Reference Index](docs/reference/index.md) for user-facing behavior.
-3. Use [examples/java/prophet_example_spring](examples/java/prophet_example_spring) as the canonical validation app.
+3. Use the example app matching your target stack:
+   - [examples/java/prophet_example_spring](examples/java/prophet_example_spring)
+   - [examples/node/prophet_example_express_prisma](examples/node/prophet_example_express_prisma)
+   - [examples/node/prophet_example_express_typeorm](examples/node/prophet_example_express_typeorm)
 4. Read [Developer Index](docs/developer/index.md) before changing internal architecture.
 
 ## Critical Rules
@@ -39,6 +42,21 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew :prophet_generated:compileJava compileJava
 ./gradlew test
+```
+
+Node example generation + checks:
+
+```bash
+cd examples/node/prophet_example_express_prisma
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+npm install
+npm run prisma:generate
+npm run build
+
+cd ../prophet_example_express_typeorm
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+npm install
+npm run build
 ```
 
 ## Where to Edit

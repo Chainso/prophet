@@ -900,18 +900,23 @@ def _prisma_scalar_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Di
     return "String"
 
 
-def _prisma_column_type_for_field(field: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
+def _prisma_column_type_for_field(
+    field: Dict[str, Any],
+    type_by_id: Dict[str, Dict[str, Any]],
+    *,
+    provider: str,
+) -> str:
     type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
     kind = str(type_desc.get("kind", ""))
     if kind in {"base", "custom"}:
         return _prisma_scalar_type_for_descriptor(type_desc, type_by_id)
     if kind == "struct":
-        return "Json"
+        return "Json" if provider == "postgresql" else "String"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
-        if str(element.get("kind", "")) in {"base", "custom"}:
+        if provider == "postgresql" and str(element.get("kind", "")) in {"base", "custom"}:
             return f"{_prisma_scalar_type_for_descriptor(element, type_by_id)}[]"
-        return "Json"
+        return "String"
     return "String"
 
 
@@ -935,9 +940,20 @@ def _prisma_ref_columns(
     return result
 
 
-def _render_prisma_schema(ir: Dict[str, Any]) -> str:
+def _render_prisma_schema(ir: Dict[str, Any], *, provider: str) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    target_field_names_by_id: Dict[str, set[str]] = {}
+    for obj in ir.get("objects", []):
+        if not isinstance(obj, dict):
+            continue
+        oid = str(obj.get("id", ""))
+        target_field_names_by_id[oid] = {
+            str(field.get("name", "field"))
+            for field in obj.get("fields", [])
+            if isinstance(field, dict)
+        }
+        target_field_names_by_id[oid].add("current_state")
 
     lines = [
         "// GENERATED FILE: do not edit directly.",
@@ -946,15 +962,49 @@ def _render_prisma_schema(ir: Dict[str, Any]) -> str:
         "}",
         "",
         "datasource db {",
-        "  provider = env(\"DATABASE_PROVIDER\")",
+        f"  provider = \"{provider}\"",
         "  url      = env(\"DATABASE_URL\")",
         "}",
         "",
     ]
+    inbound_relations: Dict[str, List[Tuple[str, str, str]]] = {}
+    source_relation_name: Dict[Tuple[str, str], str] = {}
+    used_names_by_target: Dict[str, set[str]] = {
+        key: set(value) for key, value in target_field_names_by_id.items()
+    }
+    for source_obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(source_obj, dict):
+            continue
+        source_object_id = str(source_obj.get("id", ""))
+        source_model_name = _pascal_case(str(source_obj.get("name", "Object")))
+        for field in source_obj.get("fields", []):
+            if not isinstance(field, dict):
+                continue
+            field_id = str(field.get("id", ""))
+            field_name = str(field.get("name", "field"))
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            if str(type_desc.get("kind", "")) != "object_ref":
+                continue
+            target_object_id = str(type_desc.get("target_object_id", ""))
+            target_obj = object_by_id.get(target_object_id, {})
+            target_model_name = _pascal_case(str(target_obj.get("name", "Object")))
+            relation_name = f"{source_model_name}_{field_name}_{target_model_name}"
+            source_relation_name[(source_object_id, field_id)] = relation_name
+
+            back_base = f"{_camel_case(_pluralize(source_model_name))}By{_pascal_case(field_name)}"
+            used_names = used_names_by_target.setdefault(target_object_id, set())
+            candidate = back_base
+            suffix = 2
+            while candidate in used_names:
+                candidate = f"{back_base}{suffix}"
+                suffix += 1
+            used_names.add(candidate)
+            inbound_relations.setdefault(target_object_id, []).append((candidate, source_model_name, relation_name))
 
     for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
         if not isinstance(obj, dict):
             continue
+        object_id = str(obj.get("id", ""))
         model_name = _pascal_case(str(obj.get("name", "Object")))
         lines.append(f"model {model_name} {{")
 
@@ -973,10 +1023,12 @@ def _render_prisma_schema(ir: Dict[str, Any]) -> str:
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
             if str(type_desc.get("kind", "")) == "object_ref":
                 ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
-                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_object_id = str(type_desc.get("target_object_id", ""))
+                target_obj = object_by_id.get(target_object_id, {})
                 target_name = _pascal_case(str(target_obj.get("name", "Object")))
                 fk_cols = [item[0] for item in ref_cols]
                 ref_keys = [item[2] for item in ref_cols]
+                relation_name = source_relation_name.get((object_id, field_id), f"{model_name}_{field_name}_{target_name}")
                 for fk_col, fk_type, _ in ref_cols:
                     lines.append(f"  {fk_col} {fk_type}{'' if required else '?'}")
                     if field_id in primary_id_set:
@@ -984,15 +1036,20 @@ def _render_prisma_schema(ir: Dict[str, Any]) -> str:
                     if field_id in display_ids:
                         display_columns.append(fk_col)
                 relation_lines.append(
-                    f"  {field_name} {target_name}{'' if required else '?'} @relation(fields: [{', '.join(fk_cols)}], references: [{', '.join(ref_keys)}])"
+                    f"  {field_name} {target_name}{'' if required else '?'} @relation(\"{relation_name}\", fields: [{', '.join(fk_cols)}], references: [{', '.join(ref_keys)}])"
                 )
                 continue
 
-            field_type = _prisma_column_type_for_field(field, type_by_id)
+            field_type = _prisma_column_type_for_field(field, type_by_id, provider=provider)
             annotations: List[str] = []
             if len(primary_ids) == 1 and primary_ids[0] == field_id:
                 annotations.append("@id")
-            lines.append(f"  {field_name} {field_type}{'' if required else '?'}{(' ' + ' '.join(annotations)) if annotations else ''}")
+            if field_type.endswith("[]"):
+                if not required:
+                    annotations.append("@default([])")
+                lines.append(f"  {field_name} {field_type}{(' ' + ' '.join(annotations)) if annotations else ''}")
+            else:
+                lines.append(f"  {field_name} {field_type}{'' if required else '?'}{(' ' + ' '.join(annotations)) if annotations else ''}")
             if field_id in primary_id_set:
                 expanded_primary_columns.append(field_name)
             if field_id in display_ids:
@@ -1008,6 +1065,8 @@ def _render_prisma_schema(ir: Dict[str, Any]) -> str:
 
         for relation_line in relation_lines:
             lines.append(relation_line)
+        for back_field, source_model, relation_name in inbound_relations.get(object_id, []):
+            lines.append(f"  {back_field} {source_model}[] @relation(\"{relation_name}\")")
 
         if len(primary_ids) != 1 and expanded_primary_columns:
             lines.append(f"  @@id([{', '.join(expanded_primary_columns)}])")
@@ -1020,9 +1079,10 @@ def _render_prisma_schema(ir: Dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _render_prisma_adapter(ir: Dict[str, Any]) -> str:
+def _render_prisma_adapter(ir: Dict[str, Any], *, provider: str) -> str:
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
     query_contract_by_object_id = {
         str(item.get("object_id", "")): item
         for item in ir.get("query_contracts", [])
@@ -1046,6 +1106,18 @@ def _render_prisma_adapter(ir: Dict[str, Any]) -> str:
         "function totalPages(totalElements: number, size: number): number {",
         "  if (size <= 0) return 0;",
         "  return Math.ceil(totalElements / size);",
+        "}",
+        "",
+        "function parseJsonValue<T>(value: unknown): T | undefined {",
+        "  if (value === null || value === undefined) return undefined;",
+        "  if (typeof value === 'string') {",
+        "    try {",
+        "      return JSON.parse(value) as T;",
+        "    } catch {",
+        "      return undefined;",
+        "    }",
+        "  }",
+        "  return value as T;",
         "}",
         "",
         "export class PrismaGeneratedRepositories implements Persistence.GeneratedRepositories {",
@@ -1195,6 +1267,22 @@ def _render_prisma_adapter(ir: Dict[str, Any]) -> str:
                         lines.append(f"      {_camel_case(pk_name)}: row.{col},")
                     lines.append("    },")
                 continue
+            kind = str(type_desc.get("kind", ""))
+            if provider != "postgresql" and kind in {"list", "struct"}:
+                ts_type = _ts_type_for_descriptor(
+                    type_desc,
+                    type_by_id=type_by_id,
+                    object_by_id=object_by_id,
+                    struct_by_id=struct_by_id,
+                )
+                if required:
+                    if kind == "list":
+                        lines.append(f"    {prop_name}: (parseJsonValue(row.{field_name}) ?? []) as any,")
+                    else:
+                        lines.append(f"    {prop_name}: (parseJsonValue(row.{field_name}) ?? {{}}) as any,")
+                else:
+                    lines.append(f"    {prop_name}: parseJsonValue(row.{field_name}) as any,")
+                continue
             if required:
                 lines.append(f"    {prop_name}: row.{field_name},")
             else:
@@ -1221,6 +1309,13 @@ def _render_prisma_adapter(ir: Dict[str, Any]) -> str:
                         lines.append(f"    {col}: item.{prop_name}.{_camel_case(pk_name)},")
                     else:
                         lines.append(f"    {col}: item.{prop_name}?.{_camel_case(pk_name)} ?? null,")
+                continue
+            kind = str(type_desc.get("kind", ""))
+            if provider != "postgresql" and kind in {"list", "struct"}:
+                if required:
+                    lines.append(f"    {field_name}: JSON.stringify(item.{prop_name}),")
+                else:
+                    lines.append(f"    {field_name}: item.{prop_name} === undefined ? null : JSON.stringify(item.{prop_name}),")
                 continue
             if required:
                 lines.append(f"    {field_name}: item.{prop_name},")
@@ -1444,7 +1539,7 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
     lines = [
         "// GENERATED FILE: do not edit directly.",
         "",
-        "import { DataSource, type SelectQueryBuilder } from 'typeorm';",
+        "import { DataSource, type Repository, type SelectQueryBuilder } from 'typeorm';",
         "import type * as Domain from './domain';",
         "import type * as Filters from './query';",
         "import type * as Persistence from './persistence';",
@@ -1671,9 +1766,11 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
         lines.append("")
 
         lines.append(f"class {obj_name}TypeOrmRepository implements Persistence.{obj_name}Repository {{")
-        lines.append(f"  private readonly repo = this.dataSource.getRepository({entity_name});")
+        lines.append(f"  private readonly repo: Repository<{entity_name}>;")
         lines.append("")
-        lines.append("  constructor(private readonly dataSource: DataSource) {}")
+        lines.append("  constructor(private readonly dataSource: DataSource) {")
+        lines.append(f"    this.repo = dataSource.getRepository({entity_name});")
+        lines.append("  }")
         lines.append("")
         lines.append(f"  async list(page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
         lines.append("    const normalized = normalizePage(page, size);")
@@ -1747,7 +1844,7 @@ def _render_node_package_json(stack: StackSpec) -> str:
             "typescript": "^5.6.3",
         },
     }
-    return "// GENERATED FILE: do not edit directly.\n" + json.dumps(payload, indent=2, sort_keys=False) + "\n"
+    return json.dumps(payload, indent=2, sort_keys=False) + "\n"
 
 
 def _render_node_tsconfig() -> str:
@@ -1818,8 +1915,13 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
         outputs[f"{node_prefix}/src/generated/index.ts"] = _render_index_file(ir)
 
     if stack.orm == "prisma" and "prisma" in targets:
-        outputs[f"{node_prefix}/prisma/schema.prisma"] = _render_prisma_schema(ir)
-        outputs[f"{node_prefix}/src/generated/prisma-adapters.ts"] = _render_prisma_adapter(ir)
+        configured_provider = str(
+            deps.cfg_get(cfg, ["generation", "node_express", "prisma", "provider"], "sqlite")
+        ).strip()
+        supported_providers = {"sqlite", "postgresql", "mysql", "sqlserver", "cockroachdb"}
+        prisma_provider = configured_provider if configured_provider in supported_providers else "sqlite"
+        outputs[f"{node_prefix}/prisma/schema.prisma"] = _render_prisma_schema(ir, provider=prisma_provider)
+        outputs[f"{node_prefix}/src/generated/prisma-adapters.ts"] = _render_prisma_adapter(ir, provider=prisma_provider)
 
     if stack.orm == "typeorm" and "typeorm" in targets:
         outputs[f"{node_prefix}/src/generated/typeorm-entities.ts"] = _render_typeorm_entities(ir)

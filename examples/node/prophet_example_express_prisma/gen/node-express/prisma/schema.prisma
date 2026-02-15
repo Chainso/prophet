@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider = env("DATABASE_PROVIDER")
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -13,13 +13,14 @@ model Order {
   customer_user_id String
   total_amount Decimal
   discount_code String?
-  tags String[]?
-  shipping_address Json?
+  tags String?
+  shipping_address String?
   current_state String @default("created")
-  customer User @relation(fields: [customer_user_id], references: [user_id])
+  customer User @relation("Order_customer_User", fields: [customer_user_id], references: [user_id])
 }
 
 model User {
   user_id String @id
   email String
+  ordersByCustomer Order[] @relation("Order_customer_User")
 }

@@ -8,3 +8,12 @@
 # Python bytecode
 *.py[cod]
 *$py.class
+
+# Node dependencies
+**/node_modules/
+
+# Local test/demo SQLite databases (Node examples)
+examples/node/**/*.sqlite
+examples/node/**/*.sqlite-*
+examples/node/**/dev.db
+examples/node/**/dev.db-*
