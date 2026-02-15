@@ -4,8 +4,9 @@
 
 - `node_express_prisma`
 - `node_express_typeorm`
+- `node_express_mongoose`
 
-Both stacks generate a shared Express runtime surface and stack-specific ORM artifacts.
+All stacks generate a shared Express runtime surface and stack-specific ORM artifacts.
 
 ## Generated Artifacts
 
@@ -34,6 +35,11 @@ TypeORM-only (`typeorm` target):
 - `gen/node-express/src/generated/typeorm-entities.ts`
 - `gen/node-express/src/generated/typeorm-adapters.ts`
 
+Mongoose-only (`mongoose` target):
+
+- `gen/node-express/src/generated/mongoose-models.ts`
+- `gen/node-express/src/generated/mongoose-adapters.ts`
+
 ## Auto-Detection
 
 Prophet auto-detects Node project signals and writes a detection report:
@@ -43,7 +49,7 @@ Prophet auto-detects Node project signals and writes a detection report:
 Signals include:
 
 - package manager lock file (`npm`, `pnpm`, `yarn`, `bun`)
-- `package.json` dependencies (`express`, `@prisma/client`, `typeorm`)
+- `package.json` dependencies (`express`, `@prisma/client`, `typeorm`, `mongoose`)
 - module mode (`type: module` / `commonjs`)
 - tsconfig presence
 - candidate app entrypoint
@@ -52,8 +58,9 @@ When no explicit stack is configured, Prophet can auto-select:
 
 - `node_express_prisma`
 - `node_express_typeorm`
+- `node_express_mongoose`
 
-If both Prisma and TypeORM are detected, Prophet reports ambiguity and expects explicit config.
+If multiple supported ORMs are detected, Prophet reports ambiguity and expects explicit config.
 Autodetect now fails closed when Express is detected but a safe ORM stack cannot be inferred.
 
 ## Node Auto-Wiring
@@ -102,6 +109,13 @@ TypeORM generated repositories:
 - query filtering is translated through `QueryBuilder`
 - database connection/runtime options come from your application-owned `DataSource` configuration
 
+Mongoose generated repositories:
+
+- constructor accepts generated model bindings (defaults to generated models)
+- generated models include schema/index scaffolding from ontology object and key definitions
+- generated methods implement paging, typed filtering, `getById`, and `save` (`findOneAndUpdate` upsert)
+- MongoDB connection/runtime options come from your application-owned `mongoose.connect(...)` configuration
+
 ## TypeORM Production DB Setup
 
 Prophet generates TypeORM entities/adapters, but does not own your DB connection settings.
@@ -141,4 +155,13 @@ generation:
   stack:
     id: node_express_typeorm
   targets: [sql, openapi, node_express, typeorm, manifest]
+```
+
+Mongoose stack:
+
+```yaml
+generation:
+  stack:
+    id: node_express_mongoose
+  targets: [openapi, node_express, mongoose, manifest]
 ```

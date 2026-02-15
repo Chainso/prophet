@@ -1,0 +1,67 @@
+// GENERATED FILE: do not edit directly.
+
+import { z } from 'zod';
+
+export const OrderRefSchema = z.object({
+  orderId: z.string(),
+});
+
+export const UserRefSchema = z.object({
+  userId: z.string(),
+});
+
+export const AddressSchema = z.object({
+  line1: z.string(),
+  city: z.string(),
+  countryCode: z.string(),
+});
+
+export const ApprovalContextSchema = z.object({
+  approver: UserRefSchema,
+  watchers: z.array(UserRefSchema).optional(),
+  reason: z.string().optional(),
+});
+
+export const ApproveOrderCommandSchema = z.object({
+  order: OrderRefSchema,
+  approvedBy: UserRefSchema.optional(),
+  notes: z.array(z.string()).optional(),
+  context: ApprovalContextSchema.optional(),
+});
+
+export const CreateOrderCommandSchema = z.object({
+  customer: UserRefSchema,
+  totalAmount: z.number(),
+  discountCode: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  shippingAddress: AddressSchema.optional(),
+});
+
+export const ShipOrderCommandSchema = z.object({
+  order: OrderRefSchema,
+  carrier: z.string(),
+  trackingNumber: z.string(),
+  packageIds: z.array(z.string()),
+});
+
+export const ApproveOrderResultSchema = z.object({
+  order: OrderRefSchema,
+  decision: z.string(),
+  warnings: z.array(z.string()).optional(),
+});
+
+export const CreateOrderResultSchema = z.object({
+  order: OrderRefSchema,
+  currentState: z.string(),
+});
+
+export const ShipOrderResultSchema = z.object({
+  order: OrderRefSchema,
+  shipmentStatus: z.string(),
+  labels: z.array(z.string()).optional(),
+  labelBatches: z.array(z.array(z.string())).optional(),
+});
+
+export const PaymentCapturedSchema = z.object({
+  order: OrderRefSchema,
+});

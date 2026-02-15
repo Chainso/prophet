@@ -1,0 +1,49 @@
+// GENERATED FILE: do not edit directly.
+
+import type {
+  Address,
+  ApprovalContext,
+  Money,
+  OrderRef,
+  UserRef
+} from './domain.js';
+
+export interface ApproveOrderCommand {
+  order: OrderRef;
+  approvedBy?: UserRef;
+  notes?: string[];
+  context?: ApprovalContext;
+}
+
+export interface CreateOrderCommand {
+  customer: UserRef;
+  totalAmount: number;
+  discountCode?: string;
+  tags?: string[];
+  shippingAddress?: Address;
+}
+
+export interface ShipOrderCommand {
+  order: OrderRef;
+  carrier: string;
+  trackingNumber: string;
+  packageIds: string[];
+}
+
+export interface ApproveOrderResult {
+  order: OrderRef;
+  decision: string;
+  warnings?: string[];
+}
+
+export interface CreateOrderResult {
+  order: OrderRef;
+  currentState: string;
+}
+
+export interface ShipOrderResult {
+  order: OrderRef;
+  shipmentStatus: string;
+  labels?: string[];
+  labelBatches?: string[][];
+}

@@ -18,13 +18,15 @@
   "versions": {
     "express": "^4.19.2",
     "prisma": "",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "mongoose": ""
   },
   "signals": {
     "has_package_json": true,
     "has_express": true,
     "has_prisma": false,
-    "has_typeorm": true
+    "has_typeorm": true,
+    "has_mongoose": false
   },
   "reasons": [
     "express dependency detected",

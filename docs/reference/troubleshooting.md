@@ -67,7 +67,7 @@ git add -A
 ## Node stack autodetection ambiguity
 
 Cause:
-- `package.json` indicates `express` with both Prisma and TypeORM signals.
+- `package.json` indicates `express` with multiple supported ORM signals (for example Prisma + TypeORM, or TypeORM + Mongoose).
 
 Fix:
 - Set stack explicitly in `prophet.yaml`:
@@ -77,13 +77,14 @@ generation:
   stack:
     id: node_express_prisma
 # or: node_express_typeorm
+# or: node_express_mongoose
 ```
 
 ## `Node autodetect failed to resolve a safe generation stack`
 
 Cause:
 - Express was detected, but Prophet could not infer a single supported Node ORM target.
-- Common cases: both ORMs detected, or Express detected with neither Prisma nor TypeORM.
+- Common cases: multiple ORMs detected, or Express detected with none of Prisma/TypeORM/Mongoose.
 
 Fix:
 - Set `generation.stack.id` explicitly in `prophet.yaml`:
@@ -94,6 +95,8 @@ generation:
     id: node_express_prisma
 # or
 #   id: node_express_typeorm
+# or
+#   id: node_express_mongoose
 ```
 
 ## Node `package.json` script rewiring concerns

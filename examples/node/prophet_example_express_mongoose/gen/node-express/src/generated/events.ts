@@ -1,0 +1,43 @@
+// GENERATED FILE: do not edit directly.
+
+import type {
+  ApproveOrderResult,
+  CreateOrderResult,
+  ShipOrderResult
+} from './actions.js';
+
+import type {
+  PaymentCaptured,
+  OrderApproveTransition,
+  OrderShipTransition
+} from './event-contracts.js';
+
+export interface GeneratedEventEmitter {
+  emitApproveOrderResult(event: ApproveOrderResult): Promise<void>;
+  emitCreateOrderResult(event: CreateOrderResult): Promise<void>;
+  emitShipOrderResult(event: ShipOrderResult): Promise<void>;
+  emitPaymentCaptured(event: PaymentCaptured): Promise<void>;
+  emitOrderApproveTransition(event: OrderApproveTransition): Promise<void>;
+  emitOrderShipTransition(event: OrderShipTransition): Promise<void>;
+}
+
+export class GeneratedEventEmitterNoOp implements GeneratedEventEmitter {
+  async emitApproveOrderResult(_event: ApproveOrderResult): Promise<void> {
+    return;
+  }
+  async emitCreateOrderResult(_event: CreateOrderResult): Promise<void> {
+    return;
+  }
+  async emitShipOrderResult(_event: ShipOrderResult): Promise<void> {
+    return;
+  }
+  async emitPaymentCaptured(_event: PaymentCaptured): Promise<void> {
+    return;
+  }
+  async emitOrderApproveTransition(_event: OrderApproveTransition): Promise<void> {
+    return;
+  }
+  async emitOrderShipTransition(_event: OrderShipTransition): Promise<void> {
+    return;
+  }
+}

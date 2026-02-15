@@ -8,6 +8,7 @@ Current implemented stacks:
 - `java_spring_jpa`
 - `node_express_prisma`
 - `node_express_typeorm`
+- `node_express_mongoose`
 
 Planned stacks can exist in manifest as non-implemented entries for forward visibility and validation.
 

@@ -121,6 +121,9 @@ jobs:
           - name: express-typeorm
             dir: examples/node/prophet_example_express_typeorm
             orm: typeorm
+          - name: express-mongoose
+            dir: examples/node/prophet_example_express_mongoose
+            orm: mongoose
 
     steps:
       - name: Checkout

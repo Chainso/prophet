@@ -37,6 +37,7 @@ From a `.prophet` ontology file, Prophet can generate:
 - Node/Express integration code (typed contracts, zod validation, action/query routes, event emitter interfaces)
 - Prisma schema + repository adapters for Node targets
 - TypeORM entities + repository adapters for Node targets (wired through your application-owned `DataSource`)
+- Mongoose models + repository adapters for Node targets (wired through your application-owned Mongoose connection)
 - Flyway/Liquibase migration artifacts
 - Generation manifests for ownership and extension hooks
 
@@ -76,11 +77,13 @@ Implemented stacks:
 - `java` + `spring_boot` + `jpa`
 - `node` + `express` + `prisma`
 - `node` + `express` + `typeorm`
+- `node` + `express` + `mongoose`
 
 Examples:
 - [Spring Example](examples/java/prophet_example_spring)
 - [Express + Prisma Example](examples/node/prophet_example_express_prisma)
 - [Express + TypeORM Example](examples/node/prophet_example_express_typeorm)
+- [Express + Mongoose Example](examples/node/prophet_example_express_mongoose)
 
 ## License
 

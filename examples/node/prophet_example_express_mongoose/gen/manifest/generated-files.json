@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "toolchain_version": "0.9.0",
+  "stack": {
+    "id": "node_express_mongoose",
+    "language": "node",
+    "framework": "express",
+    "orm": "mongoose"
+  },
+  "ir_hash": "d4011abdce6c481007139f5f2a645a4ffac43a36289d5e1ba3db5d4a403c8a3f",
+  "outputs": [
+    {
+      "path": "gen/manifest/extension-hooks.json",
+      "sha256": "b0c6f1499ee54209120391c6525276a93a7c410d3549f0e0b17f906dc3228560"
+    },
+    {
+      "path": "gen/manifest/node-autodetect.json",
+      "sha256": "a25aeedb0e004470b6e475d8767c911b5929c97b33681926769940bd3e50cec8"
+    },
+    {
+      "path": "gen/node-express/package.json",
+      "sha256": "458736bc2d5e0e4bd721492ba2de1a05dd018b768419cacf09c6879859bfecfd"
+    },
+    {
+      "path": "gen/node-express/src/generated/action-handlers.ts",
+      "sha256": "f9d68d7ed6be74481446f0c531a3f77f93a90d66a7a960301035222620723faf"
+    },
+    {
+      "path": "gen/node-express/src/generated/action-routes.ts",
+      "sha256": "a29ee4ec08e4eea93d4bf704d9398d85da754e256c650af4d921e3e9433ba4fa"
+    },
+    {
+      "path": "gen/node-express/src/generated/action-service.ts",
+      "sha256": "c029dc3ec30be92984547fe2a0a1e4af6819753687b5385e6fe4524ff7783ca2"
+    },
+    {
+      "path": "gen/node-express/src/generated/actions.ts",
+      "sha256": "2162a2e88443473f05bee85e002e92eed86e4e5f9fa60ae4833c9d5635753f81"
+    },
+    {
+      "path": "gen/node-express/src/generated/domain.ts",
+      "sha256": "f338e5d1fa2f260754d575bd2b09246d95faebb9ca1cc0904054bb478f2ecc84"
+    },
+    {
+      "path": "gen/node-express/src/generated/event-contracts.ts",
+      "sha256": "274cbcd8840355bb2e182a5e9edc9d539ae93204fbb7bc9f5c924002a596848c"
+    },
+    {
+      "path": "gen/node-express/src/generated/events.ts",
+      "sha256": "82f49c5eedc40c1a8281d00050734b23c3ec5175d95d6811cff29fa8b3c9634b"
+    },
+    {
+      "path": "gen/node-express/src/generated/index.ts",
+      "sha256": "ce43ab51555ee9dab9e4f0fa22b0cc5b314552bdd7d161ab59520e0a49a68ca9"
+    },
+    {
+      "path": "gen/node-express/src/generated/mongoose-adapters.ts",
+      "sha256": "4c2087898fae5ab8c3c7e3458ff805a14c8723b8b164c2fb7a647dd6160725da"
+    },
+    {
+      "path": "gen/node-express/src/generated/mongoose-models.ts",
+      "sha256": "ce87d00effeb6cdd852824887c3f18b62883315f7aa43b677f7595170c3f5971"
+    },
+    {
+      "path": "gen/node-express/src/generated/persistence.ts",
+      "sha256": "380b02c6f8ad2061bbe60a0945e55f59a1f3e8b14bd6b84aea39a9232915e6a3"
+    },
+    {
+      "path": "gen/node-express/src/generated/query-routes.ts",
+      "sha256": "541880ca95fec19c4a57657f16da9c755dbc3b3016de3ff131f23dbb111dd753"
+    },
+    {
+      "path": "gen/node-express/src/generated/query.ts",
+      "sha256": "4a2dfcad15a2c73e6edae22ed070c2eb042e36bfc0b293a34fdb1c8c13d79d98"
+    },
+    {
+      "path": "gen/node-express/src/generated/validation.ts",
+      "sha256": "0fdfef9d081d310b22ca696e6b1ef1183813fe0d5a711117dd7db50a009414e6"
+    },
+    {
+      "path": "gen/node-express/tsconfig.json",
+      "sha256": "79fdd5ed1b64da729943d7289291efecab86f495b3c92eb4eeff40b6f3851b2a"
+    },
+    {
+      "path": "gen/openapi/openapi.yaml",
+      "sha256": "cd17faa46be26a1293f91484e0e4755204c29357a69c012f9be65d3a5328d787"
+    }
+  ]
+}

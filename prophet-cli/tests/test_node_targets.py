@@ -76,6 +76,25 @@ class NodeTargetTests(unittest.TestCase):
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "node_express_typeorm")
 
+    def test_node_mongoose_stack_generates_expected_artifacts(self) -> None:
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "node_express_mongoose"}
+        cfg["generation"]["targets"] = ["openapi", "node_express", "mongoose", "manifest"]
+
+        ir = build_ir(self._ontology(), cfg)
+        with tempfile.TemporaryDirectory(prefix="prophet-node-mongoose-") as tmp:
+            outputs = build_generated_outputs(ir, cfg, root=Path(tmp))
+
+        self.assertIn("gen/node-express/src/generated/index.ts", outputs)
+        self.assertIn("gen/node-express/src/generated/mongoose-models.ts", outputs)
+        self.assertIn("gen/node-express/src/generated/mongoose-adapters.ts", outputs)
+        self.assertIn("constructor(models: MongooseGeneratedModels = {})", outputs["gen/node-express/src/generated/mongoose-adapters.ts"])
+        self.assertIn("model<", outputs["gen/node-express/src/generated/mongoose-models.ts"])
+        self.assertIn("currentState", outputs["gen/node-express/src/generated/mongoose-models.ts"])
+
+        manifest = json.loads(outputs["gen/manifest/generated-files.json"])
+        self.assertEqual(manifest["stack"]["id"], "node_express_mongoose")
+
     def test_autodetect_selects_node_prisma_and_rewrites_default_targets(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-prisma-") as tmp:
             root = Path(tmp)
@@ -138,6 +157,34 @@ class NodeTargetTests(unittest.TestCase):
             self.assertEqual(mutated["generation"]["stack"]["id"], "node_express_typeorm")
             self.assertEqual(mutated["generation"]["targets"], ["sql", "openapi", "node_express", "typeorm", "manifest"])
 
+    def test_autodetect_selects_node_mongoose_and_rewrites_default_targets(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-autodetect-mongoose-") as tmp:
+            root = Path(tmp)
+            (root / "package.json").write_text(
+                json.dumps(
+                    {
+                        "name": "node-app",
+                        "dependencies": {
+                            "express": "^4.19.2",
+                            "mongoose": "^8.7.0",
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            cfg = {
+                "generation": {
+                    "stack": {"id": "java_spring_jpa"},
+                    "targets": ["sql", "openapi", "spring_boot", "flyway", "liquibase"],
+                }
+            }
+            mutated = apply_node_autodetect(copy.deepcopy(cfg), root)
+            self.assertEqual(mutated["generation"]["stack"]["id"], "node_express_mongoose")
+            self.assertEqual(mutated["generation"]["targets"], ["openapi", "node_express", "mongoose", "manifest"])
+
     def test_autodetect_reports_ambiguous_orm_choice(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-ambiguous-") as tmp:
             root = Path(tmp)
@@ -159,7 +206,7 @@ class NodeTargetTests(unittest.TestCase):
             report = detect_node_stack(root)
             self.assertEqual(report.get("confidence"), "ambiguous")
             self.assertEqual(report.get("stack_id"), "")
-            self.assertTrue(any("both Prisma and TypeORM" in item for item in report.get("warnings", [])))
+            self.assertTrue(any("multiple ORM signals" in item for item in report.get("warnings", [])))
 
     def test_autodetect_fail_closed_when_no_supported_orm_is_detected(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-fail-closed-") as tmp:
@@ -186,6 +233,7 @@ class NodeTargetTests(unittest.TestCase):
             mutated = apply_node_autodetect(copy.deepcopy(cfg), root)
             self.assertIn("_autodetect_error", mutated)
             self.assertIn("node_express_prisma", str(mutated.get("_autodetect_error", "")))
+            self.assertIn("node_express_mongoose", str(mutated.get("_autodetect_error", "")))
 
 
 if __name__ == "__main__":

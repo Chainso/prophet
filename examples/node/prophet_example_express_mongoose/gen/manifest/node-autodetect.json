@@ -1,0 +1,46 @@
+{
+  "enabled": true,
+  "project_kind": "node",
+  "stack_id": "node_express_mongoose",
+  "confidence": "high",
+  "confidence_score": 90,
+  "package_manager": "npm",
+  "module_mode": "module",
+  "tsconfig": "tsconfig.json",
+  "tsconfig_details": {
+    "rootDir": "",
+    "outDir": "dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "entrypoint": "dist/server.js",
+  "monorepo": false,
+  "versions": {
+    "express": "^4.19.2",
+    "prisma": "",
+    "typeorm": "",
+    "mongoose": "^8.7.0"
+  },
+  "signals": {
+    "has_package_json": true,
+    "has_express": true,
+    "has_prisma": false,
+    "has_typeorm": false,
+    "has_mongoose": true
+  },
+  "reasons": [
+    "express dependency detected",
+    "mongoose dependency/models detected"
+  ],
+  "warnings": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "express dependency detected"
+    },
+    {
+      "level": "info",
+      "message": "mongoose dependency/models detected"
+    }
+  ]
+}

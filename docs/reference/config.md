@@ -36,11 +36,13 @@ compatibility:
   - `node_express`
   - `prisma`
   - `typeorm`
+  - `mongoose`
   - `manifest`
 - `stack`: stack selection
   - `id: java_spring_jpa`
   - `id: node_express_prisma`
   - `id: node_express_typeorm`
+  - `id: node_express_mongoose`
   - or tuple form (`language/framework/orm`)
 - `spring_boot.base_package`: Java package base
 - `spring_boot.boot_version`: host Spring Boot line
@@ -64,6 +66,10 @@ Node DB configuration notes:
   - Prophet generates entities + repository adapters
   - actual database connection is owned by your application `DataSource` setup (host/port/db/user/password/ssl/pool)
   - no TypeORM connection keys are currently read from `prophet.yaml`
+- Mongoose stack:
+  - Prophet generates Mongoose models + repository adapters
+  - connection URI/credentials/connection lifecycle are owned by your application (`mongoose.connect(...)`)
+  - no Mongoose connection keys are currently read from `prophet.yaml`
 
 ## `compatibility`
 

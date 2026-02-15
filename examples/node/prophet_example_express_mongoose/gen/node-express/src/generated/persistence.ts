@@ -1,0 +1,39 @@
+// GENERATED FILE: do not edit directly.
+
+import type * as Domain from './domain.js';
+import type * as Filters from './query.js';
+
+export interface Page<T> {
+  items: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface OrderId {
+  orderId: string;
+}
+
+export interface OrderRepository {
+  list(page: number, size: number): Promise<Page<Domain.Order>>;
+  getById(id: OrderId): Promise<Domain.Order | null>;
+  query(filter: Filters.OrderQueryFilter, page: number, size: number): Promise<Page<Domain.Order>>;
+  save(item: Domain.Order): Promise<Domain.Order>;
+}
+
+export interface UserId {
+  userId: string;
+}
+
+export interface UserRepository {
+  list(page: number, size: number): Promise<Page<Domain.User>>;
+  getById(id: UserId): Promise<Domain.User | null>;
+  query(filter: Filters.UserQueryFilter, page: number, size: number): Promise<Page<Domain.User>>;
+  save(item: Domain.User): Promise<Domain.User>;
+}
+
+export interface GeneratedRepositories {
+  order: OrderRepository;
+  user: UserRepository;
+}

@@ -111,6 +111,24 @@ Important:
 - For production, configure your `DataSource` from environment and set `synchronize: false`.
 - Prophet owns generated entities/adapters; your app owns DB driver/connection/pooling/SSL config.
 
+## 8. Node Quickstart (Express + Mongoose)
+
+```bash
+cd examples/node/prophet_example_express_mongoose
+prophet gen
+npm ci
+export MONGO_URL="mongodb://127.0.0.1:27017/prophet_example_mongoose"
+npm run dev
+```
+
+Expected outcome:
+- `gen/node-express/src/generated/**`
+- `gen/node-express/src/generated/mongoose-models.ts`
+- `gen/node-express/src/generated/mongoose-adapters.ts`
+- `gen/openapi/openapi.yaml`
+- `gen/manifest/node-autodetect.json`
+- running Express app with MongoDB-backed generated repositories
+
 ## Next Reads
 
 - Full CLI reference: [CLI](../reference/cli.md)

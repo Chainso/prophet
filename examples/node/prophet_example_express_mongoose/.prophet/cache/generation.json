@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "toolchain_version": "0.9.0",
+  "stack_id": "node_express_mongoose",
+  "signature": "a0ac50144a69ad70a198092423246f164ccdfb8e63f1a796e55bdc2d0c875cdc",
+  "ir_hash": "d4011abdce6c481007139f5f2a645a4ffac43a36289d5e1ba3db5d4a403c8a3f",
+  "out_dir": "gen"
+}

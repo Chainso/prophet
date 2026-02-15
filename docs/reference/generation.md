@@ -44,6 +44,11 @@ TypeORM stack adds:
 - `gen/node-express/src/generated/typeorm-adapters.ts`
 - generated TypeORM repositories implement list/query/getById/save against `DataSource`
 
+Mongoose stack adds:
+- `gen/node-express/src/generated/mongoose-models.ts`
+- `gen/node-express/src/generated/mongoose-adapters.ts`
+- generated Mongoose repositories implement list/query/getById/save against `Model` bindings
+
 ## Migration Outputs
 
 - Flyway init: `gen/migrations/flyway/V1__prophet_init.sql`

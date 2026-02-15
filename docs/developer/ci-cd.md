@@ -6,8 +6,9 @@ Main jobs:
 - package validation (tests, build, twine check, wheel smoke install)
 - Spring integration validation (generate, verify-clean, check, compile, tests)
 - Node integration validation matrix:
-  - Express + Prisma (generate, npm install, prisma generate, ts build, verify-clean, check)
-  - Express + TypeORM (generate, npm install, ts build, verify-clean, check)
+  - Express + Prisma (generate, npm ci, prisma generate, ts build, verify-clean, check)
+  - Express + TypeORM (generate, npm ci, ts build, verify-clean, check)
+  - Express + Mongoose (generate, npm ci, ts build, verify-clean, check)
 
 Guardrails:
 - workflow concurrency cancellation for redundant runs
@@ -28,5 +29,6 @@ Release validation also covers:
 - Spring example generation/runtime checks
 - Node Prisma generation + compile checks
 - Node TypeORM generation + compile checks
+- Node Mongoose generation + compile checks
 
 Requires GitHub environment `pypi` and PyPI trusted publisher config.

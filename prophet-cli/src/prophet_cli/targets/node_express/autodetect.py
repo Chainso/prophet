@@ -108,6 +108,7 @@ def detect_node_stack(root: Path) -> Dict[str, Any]:
     has_express = "express" in deps
     has_prisma = "prisma" in deps or "@prisma/client" in deps or (root / "prisma" / "schema.prisma").exists()
     has_typeorm = "typeorm" in deps or any((root / "src").glob("**/*entity*.ts"))
+    has_mongoose = "mongoose" in deps or any((root / "src").glob("**/*model*.ts"))
 
     stack_id = ""
     confidence = "none"
@@ -115,20 +116,28 @@ def detect_node_stack(root: Path) -> Dict[str, Any]:
     reasons: List[str] = []
     warnings: List[str] = []
 
-    if has_express and has_prisma and has_typeorm:
+    detected_orms: List[tuple[str, str, str]] = []
+    if has_prisma:
+        detected_orms.append(("prisma", "node_express_prisma", "prisma dependency/schema detected"))
+    if has_typeorm:
+        detected_orms.append(("typeorm", "node_express_typeorm", "typeorm dependency/entities detected"))
+    if has_mongoose:
+        detected_orms.append(("mongoose", "node_express_mongoose", "mongoose dependency/models detected"))
+
+    if has_express and len(detected_orms) > 1:
         confidence = "ambiguous"
         confidence_score = 40
-        warnings.append("Detected both Prisma and TypeORM in an Express project; set generation.stack.id explicitly.")
-    elif has_express and has_prisma:
-        stack_id = "node_express_prisma"
+        warnings.append(
+            "Detected multiple ORM signals in an Express project ("
+            + ", ".join(item[0] for item in detected_orms)
+            + "); set generation.stack.id explicitly."
+        )
+    elif has_express and len(detected_orms) == 1:
+        _, detected_stack_id, reason = detected_orms[0]
+        stack_id = detected_stack_id
         confidence = "high"
         confidence_score = 90
-        reasons.extend(["express dependency detected", "prisma dependency/schema detected"])
-    elif has_express and has_typeorm:
-        stack_id = "node_express_typeorm"
-        confidence = "high"
-        confidence_score = 90
-        reasons.extend(["express dependency detected", "typeorm dependency/entities detected"])
+        reasons.extend(["express dependency detected", reason])
     elif has_express:
         confidence = "low"
         confidence_score = 30
@@ -161,12 +170,14 @@ def detect_node_stack(root: Path) -> Dict[str, Any]:
             "express": str(deps.get("express", "")),
             "prisma": str(deps.get("prisma", deps.get("@prisma/client", ""))),
             "typeorm": str(deps.get("typeorm", "")),
+            "mongoose": str(deps.get("mongoose", "")),
         },
         "signals": {
             "has_package_json": has_package_json,
             "has_express": has_express,
             "has_prisma": has_prisma,
             "has_typeorm": bool(has_typeorm),
+            "has_mongoose": bool(has_mongoose),
         },
         "reasons": reasons,
         "warnings": warnings,
@@ -204,6 +215,8 @@ def apply_node_autodetect(cfg: Dict[str, Any], root: Path) -> Dict[str, Any]:
             generation["targets"] = ["sql", "openapi", "node_express", "prisma", "manifest"]
         elif str(report.get("stack_id")) == "node_express_typeorm":
             generation["targets"] = ["sql", "openapi", "node_express", "typeorm", "manifest"]
+        elif str(report.get("stack_id")) == "node_express_mongoose":
+            generation["targets"] = ["openapi", "node_express", "mongoose", "manifest"]
 
     cfg.pop("_autodetect_error", None)
     if report.get("enabled") and (not explicit_stack or default_java_stack) and not str(report.get("stack_id", "")).strip():
@@ -212,7 +225,7 @@ def apply_node_autodetect(cfg: Dict[str, Any], root: Path) -> Dict[str, Any]:
             warning_hint = warning_list[0] if isinstance(warning_list, list) and warning_list else "Unable to infer Node stack."
             cfg["_autodetect_error"] = (
                 f"{warning_hint} "
-                "Set generation.stack.id explicitly to node_express_prisma or node_express_typeorm."
+                "Set generation.stack.id explicitly to node_express_prisma, node_express_typeorm, or node_express_mongoose."
             )
 
     cfg["_autodetect"] = report

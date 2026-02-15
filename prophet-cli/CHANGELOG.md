@@ -4,6 +4,25 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-02-15
+
+### Added
+- Implemented Node Express + Mongoose stack (`node_express_mongoose`) with:
+  - generated Mongoose models,
+  - generated Mongoose repository adapters,
+  - stack matrix/manifest registration and test coverage.
+- Added a complete runnable example at `examples/node/prophet_example_express_mongoose` with generated integration wiring and concrete action handlers.
+- Expanded CI Node matrix to validate Express + Mongoose generation/build/clean checks.
+
+### Changed
+- Node stack autodetection now includes Mongoose signals and explicit ambiguous-ORM diagnostics across Prisma/TypeORM/Mongoose.
+- Node docs/quickstart/developer guides updated to cover Mongoose targets, stack ids, and validation flow.
+- Top-level README updated to list the Express + Mongoose example.
+
+### Fixed
+- Mongoose code generation type emission now qualifies object-ref and struct document field types against generated domain types (`Domain.*`) so generated TypeScript compiles cleanly.
+- Toolchain/package version advanced to `0.9.0`.
+
 ## [0.8.4] - 2026-02-15
 
 ### Changed

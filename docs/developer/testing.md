@@ -33,7 +33,7 @@ Prisma example:
 ```bash
 cd examples/node/prophet_example_express_prisma
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen
-npm install
+npm ci
 npm run prisma:generate
 npm run build
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
@@ -44,7 +44,17 @@ TypeORM example:
 ```bash
 cd examples/node/prophet_example_express_typeorm
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen
-npm install
+npm ci
+npm run build
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
+```
+
+Mongoose example:
+
+```bash
+cd examples/node/prophet_example_express_mongoose
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+npm ci
 npm run build
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ```

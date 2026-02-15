@@ -53,7 +53,7 @@ from prophet_cli.targets.node_express import generate_outputs as generate_node_e
 from prophet_cli.targets.node_express.autodetect import apply_node_autodetect
 
 
-TOOLCHAIN_VERSION = "0.8.4"
+TOOLCHAIN_VERSION = "0.9.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
@@ -4211,6 +4211,7 @@ def registered_generators() -> Dict[str, StackGenerator]:
         "java_spring_jpa": _generate_outputs_for_java_spring_jpa,
         "node_express_prisma": _generate_outputs_for_node_express,
         "node_express_typeorm": _generate_outputs_for_node_express,
+        "node_express_mongoose": _generate_outputs_for_node_express,
     }
 
 

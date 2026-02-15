@@ -1,0 +1,516 @@
+openapi: 3.1.0
+info:
+  title: CommerceLocal API
+  version: 0.1.0
+servers:
+- url: https://api.example.com
+paths:
+  /orders:
+    get:
+      operationId: listOrder
+      parameters:
+      - &id001
+        name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - &id002
+        name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 20
+      - &id003
+        name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Sort expression, for example field,asc
+      responses:
+        '200':
+          description: Paginated Order list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+  /orders/query:
+    post:
+      operationId: queryOrder
+      parameters:
+      - *id001
+      - *id002
+      - *id003
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderQueryFilter'
+      responses:
+        '200':
+          description: Paginated Order list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Order found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Not found
+  /users:
+    get:
+      operationId: listUser
+      parameters:
+      - &id004
+        name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 0
+          default: 0
+      - &id005
+        name: size
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 20
+      - &id006
+        name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Sort expression, for example field,asc
+      responses:
+        '200':
+          description: Paginated User list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+  /users/query:
+    post:
+      operationId: queryUser
+      parameters:
+      - *id004
+      - *id005
+      - *id006
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserQueryFilter'
+      responses:
+        '200':
+          description: Paginated User list response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserListResponse'
+  /users/{userId}:
+    get:
+      operationId: getUser
+      parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: Not found
+  /actions/approveOrder:
+    post:
+      operationId: approveOrderAction
+      summary: Approves an existing order.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApproveOrderCommand'
+      responses:
+        '200':
+          description: Action response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApproveOrderResult'
+  /actions/createOrder:
+    post:
+      operationId: createOrderAction
+      summary: Creates a new order.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderCommand'
+      responses:
+        '200':
+          description: Action response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResult'
+  /actions/shipOrder:
+    post:
+      operationId: shipOrderAction
+      summary: Ships an approved order.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipOrderCommand'
+      responses:
+        '200':
+          description: Action response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipOrderResult'
+components:
+  schemas:
+    UserRef:
+      type: object
+      required:
+      - userId
+      properties:
+        userId:
+          type: string
+    OrderRef:
+      type: object
+      required:
+      - orderId
+      properties:
+        orderId:
+          type: string
+    Address:
+      type: object
+      required:
+      - line1
+      - city
+      - countryCode
+      properties:
+        line1:
+          type: string
+        city:
+          type: string
+        countryCode:
+          type: string
+    ApprovalContext:
+      type: object
+      required:
+      - approver
+      properties:
+        approver:
+          $ref: '#/components/schemas/UserRef'
+        watchers:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRef'
+        reason:
+          type: string
+    Order:
+      type: object
+      required:
+      - orderId
+      - customer
+      - totalAmount
+      - currentState
+      properties:
+        orderId:
+          type: string
+        customer:
+          $ref: '#/components/schemas/UserRef'
+        totalAmount:
+          type: string
+          description: Decimal encoded as string
+        discountCode:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+        currentState:
+          type: string
+          enum:
+          - CREATED
+          - APPROVED
+          - SHIPPED
+      description: Customer order aggregate.
+    OrderListResponse:
+      type: object
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+    User:
+      type: object
+      required:
+      - userId
+      - email
+      properties:
+        userId:
+          type: string
+        email:
+          type: string
+      description: Platform user who can place or approve orders.
+    UserListResponse:
+      type: object
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+    ApproveOrderCommand:
+      type: object
+      required:
+      - order
+      properties:
+        order:
+          $ref: '#/components/schemas/OrderRef'
+        approvedBy:
+          $ref: '#/components/schemas/UserRef'
+        notes:
+          type: array
+          items:
+            type: string
+        context:
+          $ref: '#/components/schemas/ApprovalContext'
+      description: Input payload for approving an order.
+    CreateOrderCommand:
+      type: object
+      required:
+      - customer
+      - totalAmount
+      properties:
+        customer:
+          $ref: '#/components/schemas/UserRef'
+        totalAmount:
+          type: string
+          description: Decimal encoded as string
+        discountCode:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        shippingAddress:
+          $ref: '#/components/schemas/Address'
+    ShipOrderCommand:
+      type: object
+      required:
+      - order
+      - carrier
+      - trackingNumber
+      - packageIds
+      properties:
+        order:
+          $ref: '#/components/schemas/OrderRef'
+        carrier:
+          type: string
+        trackingNumber:
+          type: string
+        packageIds:
+          type: array
+          items:
+            type: string
+    ApproveOrderResult:
+      type: object
+      required:
+      - order
+      - decision
+      properties:
+        order:
+          $ref: '#/components/schemas/OrderRef'
+        decision:
+          type: string
+        warnings:
+          type: array
+          items:
+            type: string
+      description: Approval result contract.
+    CreateOrderResult:
+      type: object
+      required:
+      - order
+      - currentState
+      properties:
+        order:
+          $ref: '#/components/schemas/OrderRef'
+        currentState:
+          type: string
+    ShipOrderResult:
+      type: object
+      required:
+      - order
+      - shipmentStatus
+      properties:
+        order:
+          $ref: '#/components/schemas/OrderRef'
+        shipmentStatus:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        labelBatches:
+          type: array
+          items:
+            type: array
+            items:
+              type: string
+    OrderOrderIdFilter:
+      type: object
+      properties:
+        eq: &id007
+          type: string
+        in:
+          type: array
+          items: *id007
+        contains:
+          type: string
+    OrderCustomerUserIdFilter:
+      type: object
+      properties:
+        eq: &id008
+          type: string
+        in:
+          type: array
+          items: *id008
+    OrderTotalAmountFilter:
+      type: object
+      properties:
+        eq: &id009
+          type: string
+          description: Decimal encoded as string
+        in:
+          type: array
+          items: *id009
+        gte: *id009
+        lte: *id009
+    OrderDiscountCodeFilter:
+      type: object
+      properties:
+        eq: &id010
+          type: string
+        in:
+          type: array
+          items: *id010
+        contains:
+          type: string
+    OrderCurrentStateFilter:
+      type: object
+      properties:
+        eq: &id011
+          type: string
+          enum:
+          - CREATED
+          - APPROVED
+          - SHIPPED
+        in:
+          type: array
+          items: *id011
+    OrderQueryFilter:
+      type: object
+      properties:
+        orderId:
+          $ref: '#/components/schemas/OrderOrderIdFilter'
+        customerUserId:
+          $ref: '#/components/schemas/OrderCustomerUserIdFilter'
+        totalAmount:
+          $ref: '#/components/schemas/OrderTotalAmountFilter'
+        discountCode:
+          $ref: '#/components/schemas/OrderDiscountCodeFilter'
+        currentState:
+          $ref: '#/components/schemas/OrderCurrentStateFilter'
+    UserUserIdFilter:
+      type: object
+      properties:
+        eq: &id012
+          type: string
+        in:
+          type: array
+          items: *id012
+        contains:
+          type: string
+    UserEmailFilter:
+      type: object
+      properties:
+        eq: &id013
+          type: string
+        in:
+          type: array
+          items: *id013
+        contains:
+          type: string
+    UserQueryFilter:
+      type: object
+      properties:
+        userId:
+          $ref: '#/components/schemas/UserUserIdFilter'
+        email:
+          $ref: '#/components/schemas/UserEmailFilter'

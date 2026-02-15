@@ -26,6 +26,7 @@ KNOWN_GENERATION_TARGETS = (
     "node_express",
     "prisma",
     "typeorm",
+    "mongoose",
 )
 
 STACK_MANIFEST_DOCUMENT: Dict[str, Any] = {
@@ -88,11 +89,20 @@ STACK_MANIFEST_DOCUMENT: Dict[str, Any] = {
             "language": "node",
             "framework": "express",
             "orm": "mongoose",
-            "status": "planned",
+            "status": "implemented",
             "description": "Node + Express stack targeting document persistence with Mongoose.",
-            "capabilities": ["action_endpoints", "typed_query_filters", "pagination", "nested_lists", "structs"],
-            "default_targets": ["openapi", "manifest"],
-            "notes": "Object reference capability intentionally omitted pending document-model linking strategy.",
+            "capabilities": [
+                "action_endpoints",
+                "typed_query_filters",
+                "pagination",
+                "object_refs",
+                "nested_lists",
+                "structs",
+                "extension_hooks",
+                "autodetect",
+            ],
+            "default_targets": ["openapi", "node_express", "mongoose", "manifest"],
+            "notes": "Includes generated Express routes, runtime validation contracts, Mongoose model scaffolding/adapters, and autodetect diagnostics.",
         },
         {
             "id": "python_fastapi_sqlalchemy",
