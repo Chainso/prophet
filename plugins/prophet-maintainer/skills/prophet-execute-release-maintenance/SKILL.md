@@ -2,7 +2,7 @@
 name: prophet-execute-release-maintenance
 description: Execute Prophet maintainer release and repository maintenance tasks directly, including version bumps, regeneration consistency, validation gates, changelog updates, tagging, and push readiness. Use for maintainer-only work in the Prophet repository.
 license: See LICENSE for complete terms
-allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:*) Bash(prophet:stacks:*) Bash(prophet:hooks:*) Bash(prophet:version:check:*) Bash(prophet:generate:--verify-clean:*) Bash(prophet:gen:--verify-clean:*)
+allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:*) Bash(prophet:stacks:*) Bash(prophet:hooks:*) Bash(prophet:version:check:*) Bash(prophet:generate:--verify-clean:*) Bash(prophet:gen:--verify-clean:*) Bash(scripts/test-all.sh:*) Bash(git:status:*) Bash(git:log:*) Bash(git:show:*) Bash(git:diff:*) Bash(git:branch:*) Bash(git:tag:*) Bash(git:rev-parse:*) Bash(git:describe:*) Bash(git:shortlog:*) Bash(git:remote:*) Bash(git:ls-files:*) Bash(git:cat-file:*) Bash(git:blame:*) Bash(git:grep:*) Bash(git:name-rev:*)
 ---
 
 # Prophet Execute Release Maintenance
@@ -17,11 +17,13 @@ allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:
 
 1. Assess current state:
    - inspect working tree and branch,
-   - identify intended release scope.
+   - identify intended release scope,
+   - identify the previous released semver tag and review the full commit range from that tag to `HEAD` (for example: `git log --oneline <previous_tag>..HEAD`).
 2. Update versioned artifacts:
    - `prophet-cli/pyproject.toml`,
    - `prophet-cli/src/prophet_cli/cli.py` (`TOOLCHAIN_VERSION`),
-   - changelog entry in `prophet-cli/CHANGELOG.md`.
+   - changelog entry in `prophet-cli/CHANGELOG.md`,
+   - release notes draft/body derived from the reviewed commit range since the previous release tag.
 3. Regenerate impacted example outputs with current CLI version:
    - Java example,
    - Node examples,
@@ -56,4 +58,5 @@ allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:
 
 - Release or maintenance objective is fully implemented.
 - Verification evidence is captured.
+- Release changelog and release notes account for all commits since the previous released version tag.
 - Repository state is ready for maintainers to publish confidently.

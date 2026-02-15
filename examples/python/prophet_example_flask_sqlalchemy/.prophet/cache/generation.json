@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.12.0",
+  "toolchain_version": "0.12.1",
   "stack_id": "python_flask_sqlalchemy",
-  "signature": "5b8f3f444509e56cb5fbefdb20958d677db7504aaa1082705c4c2741d5c50d0a",
-  "ir_hash": "18c51c21f01e8e4b1848a440e224be2b78aa3e3999bc69dd6c17bbd8fb3e4e90",
+  "signature": "e7a611c81ef41e146462409c6b04cce94d2be9a55058ea15db217e28530bf9c1",
+  "ir_hash": "1762550668ad346c4713c63e9b2eb2c939220367f37247689a895945ec67b099",
   "out_dir": "gen"
 }

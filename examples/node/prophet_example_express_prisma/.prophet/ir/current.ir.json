@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.12.0",
+  "toolchain_version": "0.12.1",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_commerce_local",
@@ -812,5 +812,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "c813af06b02746404be863b73c3bb60dd5711f0a7ec0844abe7f68056a0c28d5",
-  "ir_hash": "4dbd237e65c9febd5f8c4a2a0cd81fbc1776a2c84f72651726bdd9f5f795de9e"
+  "ir_hash": "192330ee32f62addd271d09114f180072a5982954ada696fb514b0a542478c81"
 }

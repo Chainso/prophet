@@ -4,6 +4,13 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.12.1] - 2026-02-15
+
+### Changed
+- Expanded the maintainer release skill allowed toolset to include repository-wide validation via `scripts/test-all.sh` and common read-only `git` inspection commands.
+- Updated the maintainer release workflow to explicitly review commits since the previous release tag and derive changelog/release notes from that full range.
+- Toolchain/package version advanced to `0.12.1`.
+
 ## [0.12.0] - 2026-02-15
 
 ### Changed
