@@ -4,6 +4,17 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-02-15
+
+### Changed
+- Refactored Node/Express generation into a modular renderer architecture:
+  - shared support helpers under `targets/node_express/render/support.py`,
+  - stack-agnostic renderers under `targets/node_express/render/common/`,
+  - ORM-specific renderers under `targets/node_express/render/orm/{prisma,typeorm,mongoose}.py`.
+- Reduced `targets/node_express/generator.py` to orchestration responsibilities (stack gating, target selection, manifest assembly).
+- Updated developer architecture documentation to describe the new Node renderer layout.
+- Toolchain/package version advanced to `0.10.0`.
+
 ## [0.9.0] - 2026-02-15
 
 ### Added

@@ -53,7 +53,7 @@ from prophet_cli.targets.node_express import generate_outputs as generate_node_e
 from prophet_cli.targets.node_express.autodetect import apply_node_autodetect
 
 
-TOOLCHAIN_VERSION = "0.9.0"
+TOOLCHAIN_VERSION = "0.10.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 

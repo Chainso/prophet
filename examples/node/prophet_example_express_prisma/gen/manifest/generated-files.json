@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.9.0",
+  "toolchain_version": "0.10.0",
   "stack": {
     "id": "node_express_prisma",
     "language": "node",
     "framework": "express",
     "orm": "prisma"
   },
-  "ir_hash": "d4011abdce6c481007139f5f2a645a4ffac43a36289d5e1ba3db5d4a403c8a3f",
+  "ir_hash": "cbc4207f4ffcc726e2d7259cc1387abf24acc0a47c37ad1cb7f6642306a709d5",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
