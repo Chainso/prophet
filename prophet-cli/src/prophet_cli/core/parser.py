@@ -136,30 +136,6 @@ def parse_ontology(text: str) -> Ontology:
             structs.append(parse_struct_block(p, m.group(1), ln))
             continue
 
-        m = re.match(r"^actionInput\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            action_inputs.append(parse_action_shape_block(p, m.group(1), ln, "actionInput"))
-            continue
-
-        m = re.match(r"^action_input\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            action_inputs.append(parse_action_shape_block(p, m.group(1), ln, "action_input"))
-            continue
-
-        m = re.match(r"^actionOutput\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            action_outputs.append(parse_action_shape_block(p, m.group(1), ln, "actionOutput"))
-            continue
-
-        m = re.match(r"^action_output\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            action_outputs.append(parse_action_shape_block(p, m.group(1), ln, "action_output"))
-            continue
-
         m = re.match(r"^action\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
@@ -543,62 +519,28 @@ def parse_action_block(
             p.pop()
             kind = m.group(1)
             continue
-        m = re.match(r"^input\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
-        if m:
-            p.pop()
-            if inline_input is not None:
-                raise ProphetError(
-                    f"Action {name} defines input shape both inline and by reference (line {ln})"
-                )
-            input_shape = m.group(1)
-            continue
-        m = re.match(r"^input\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            if input_shape is not None:
-                raise ProphetError(
-                    f"Action {name} defines input shape both inline and by reference (line {ln})"
-                )
-            input_shape = m.group(1)
-            inline_input = parse_inline_action_shape_block(p, input_shape, ln, f"action {name} input")
-            continue
         if line == "input {":
             p.pop()
             if input_shape is not None:
-                raise ProphetError(
-                    f"Action {name} defines input shape both inline and by reference (line {ln})"
-                )
-            input_shape = f"{_pascal_case(name)}Input"
+                raise ProphetError(f"Action {name} defines input more than once (line {ln})")
+            input_shape = f"{_pascal_case(name)}Command"
             inline_input = parse_inline_action_shape_block(p, input_shape, ln, f"action {name} input")
-            continue
-        m = re.match(r"^output\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
-        if m:
-            p.pop()
-            if inline_output is not None:
-                raise ProphetError(
-                    f"Action {name} defines output shape both inline and by reference (line {ln})"
-                )
-            output_shape = m.group(1)
-            continue
-        m = re.match(r"^output\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            if output_shape is not None:
-                raise ProphetError(
-                    f"Action {name} defines output shape both inline and by reference (line {ln})"
-                )
-            output_shape = m.group(1)
-            inline_output = parse_inline_action_shape_block(p, output_shape, ln, f"action {name} output")
             continue
         if line == "output {":
             p.pop()
             if output_shape is not None:
-                raise ProphetError(
-                    f"Action {name} defines output shape both inline and by reference (line {ln})"
-                )
-            output_shape = f"{_pascal_case(name)}Output"
+                raise ProphetError(f"Action {name} defines output more than once (line {ln})")
+            output_shape = f"{_pascal_case(name)}Result"
             inline_output = parse_inline_action_shape_block(p, output_shape, ln, f"action {name} output")
             continue
+        if line.startswith("input "):
+            raise ProphetError(
+                f"Action {name} input must be declared as 'input {{ ... }}' (line {ln})"
+            )
+        if line.startswith("output "):
+            raise ProphetError(
+                f"Action {name} output must be declared as 'output {{ ... }}' (line {ln})"
+            )
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()

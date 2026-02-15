@@ -145,7 +145,7 @@ ontology commerce_local {
     kind process
     description "Creates a new order."
 
-    input CreateOrderCommand {
+    input {
       id "ain_create_order"
 
       field customer {
@@ -179,7 +179,7 @@ ontology commerce_local {
       }
     }
 
-    output CreateOrderResult {
+    output {
       id "aout_create_order"
 
       field order {
@@ -201,7 +201,7 @@ ontology commerce_local {
     kind process
     description "Approves an existing order."
 
-    input ApproveOrderCommand {
+    input {
       id "ain_approve_order"
       description "Input payload for approving an order."
 
@@ -230,7 +230,7 @@ ontology commerce_local {
       }
     }
 
-    output ApproveOrderResult {
+    output {
       id "aout_approve_order"
       description "Approval result contract."
 
@@ -259,7 +259,7 @@ ontology commerce_local {
     kind workflow
     description "Ships an approved order."
 
-    input ShipOrderCommand {
+    input {
       id "ain_ship_order"
 
       field order {
@@ -287,7 +287,7 @@ ontology commerce_local {
       }
     }
 
-    output ShipOrderResult {
+    output {
       id "aout_ship_order"
 
       field order {
