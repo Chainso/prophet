@@ -8,14 +8,16 @@ export class OrderEntity {
   orderId: string;
 
   @Column({ type: 'varchar', nullable: false, name: 'customer_user_id' })
-  customerUserId!: string;
+  customerUserId: string;
 
   @ManyToOne(() => UserEntity, { nullable: false })
-  @JoinColumn({ name: 'customer_user_id', referencedColumnName: 'userId' })
+  @JoinColumn([
+    { name: 'customer_user_id', referencedColumnName: 'userId' },
+  ])
   customer!: UserEntity;
 
   @Column({ type: 'numeric', nullable: false, name: 'total_amount' })
-  totalAmount: unknown;
+  totalAmount: number;
 
   @Column({ type: 'varchar', nullable: true, name: 'discount_code' })
   discountCode?: string;
@@ -25,6 +27,9 @@ export class OrderEntity {
 
   @Column({ type: 'simple-json', nullable: true, name: 'shipping_address' })
   shippingAddress?: unknown;
+
+  @Column({ type: 'varchar', nullable: false, name: 'current_state' })
+  currentState: string;
 
 }
 

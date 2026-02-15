@@ -238,6 +238,44 @@ dependencies {
             self.assertEqual(scripts.get("prophet:check"), "prophet check --show-reasons")
             self.assertEqual(scripts.get("prophet:validate"), "prophet validate")
 
+    def test_node_autodetect_fails_closed_when_stack_is_ambiguous(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-node-autodetect-fail-closed-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_dst = root / "domain" / "main.prophet"
+            ontology_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(EXAMPLE_ONTOLOGY, ontology_dst)
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            (root / "package.json").write_text(
+                json.dumps(
+                    {
+                        "name": "node-ambiguous-app",
+                        "type": "module",
+                        "dependencies": {
+                            "express": "^4.19.2",
+                            "typeorm": "^0.3.20",
+                            "@prisma/client": "^5.22.0",
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            result = run_cli(root, "gen", expect_code=1)
+            self.assertIn("Node autodetect failed to resolve a safe generation stack", result.stderr)
+            self.assertIn("generation.stack.id", result.stderr)
+
     def test_generate_skip_unchanged_uses_generation_cache(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-cli-skip-unchanged-") as tmp:
             root = Path(tmp)

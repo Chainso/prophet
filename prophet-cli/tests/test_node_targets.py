@@ -45,6 +45,11 @@ class NodeTargetTests(unittest.TestCase):
         self.assertIn("gen/node-express/src/generated/prisma-adapters.ts", outputs)
         self.assertIn("gen/node-express/prisma/schema.prisma", outputs)
         self.assertIn("gen/manifest/generated-files.json", outputs)
+        self.assertIn("constructor(private readonly client: PrismaClient)", outputs["gen/node-express/src/generated/prisma-adapters.ts"])
+        self.assertIn("this.delegate.findMany", outputs["gen/node-express/src/generated/prisma-adapters.ts"])
+        self.assertIn("this.delegate.upsert", outputs["gen/node-express/src/generated/prisma-adapters.ts"])
+        self.assertNotIn("implement repository binding logic", outputs["gen/node-express/src/generated/prisma-adapters.ts"])
+        self.assertIn("current_state String", outputs["gen/node-express/prisma/schema.prisma"])
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "node_express_prisma")
@@ -62,6 +67,11 @@ class NodeTargetTests(unittest.TestCase):
         self.assertIn("gen/node-express/src/generated/query-routes.ts", outputs)
         self.assertIn("gen/node-express/src/generated/typeorm-entities.ts", outputs)
         self.assertIn("gen/node-express/src/generated/typeorm-adapters.ts", outputs)
+        self.assertIn("constructor(private readonly dataSource: DataSource)", outputs["gen/node-express/src/generated/typeorm-adapters.ts"])
+        self.assertIn("createQueryBuilder('record')", outputs["gen/node-express/src/generated/typeorm-adapters.ts"])
+        self.assertNotIn("implement repository binding logic", outputs["gen/node-express/src/generated/typeorm-adapters.ts"])
+        self.assertIn("currentState: string", outputs["gen/node-express/src/generated/typeorm-entities.ts"])
+        self.assertIn("orderId: String(req.params['id'])", outputs["gen/node-express/src/generated/query-routes.ts"])
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "node_express_typeorm")
@@ -150,6 +160,32 @@ class NodeTargetTests(unittest.TestCase):
             self.assertEqual(report.get("confidence"), "ambiguous")
             self.assertEqual(report.get("stack_id"), "")
             self.assertTrue(any("both Prisma and TypeORM" in item for item in report.get("warnings", [])))
+
+    def test_autodetect_fail_closed_when_no_supported_orm_is_detected(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-autodetect-fail-closed-") as tmp:
+            root = Path(tmp)
+            (root / "package.json").write_text(
+                json.dumps(
+                    {
+                        "name": "node-app",
+                        "dependencies": {
+                            "express": "^4.19.2",
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            cfg = {
+                "generation": {
+                    "stack": {},
+                    "targets": ["sql", "openapi", "spring_boot", "flyway", "liquibase"],
+                }
+            }
+            mutated = apply_node_autodetect(copy.deepcopy(cfg), root)
+            self.assertIn("_autodetect_error", mutated)
+            self.assertIn("node_express_prisma", str(mutated.get("_autodetect_error", "")))
 
 
 if __name__ == "__main__":

@@ -6,23 +6,42 @@ import type {
   UserRef
 } from './domain';
 
-export interface BaseFilter<T> {
-  eq?: T;
-  in?: T[];
-  contains?: T extends string ? string : never;
-  gte?: T;
-  lte?: T;
-}
-
 export interface OrderQueryFilter {
-  customer?: BaseFilter<UserRef>;
-  discountCode?: BaseFilter<string>;
-  orderId?: BaseFilter<string>;
-  totalAmount?: BaseFilter<number>;
-  currentState?: BaseFilter<OrderState>;
+  customer?: {
+    eq?: UserRef;
+    in?: UserRef[];
+  };
+  discountCode?: {
+    eq?: string;
+    in?: string[];
+    contains?: string;
+  };
+  orderId?: {
+    eq?: string;
+    in?: string[];
+    contains?: string;
+  };
+  totalAmount?: {
+    eq?: number;
+    in?: number[];
+    gte?: number;
+    lte?: number;
+  };
+  currentState?: {
+    eq?: OrderState;
+    in?: OrderState[];
+  };
 }
 
 export interface UserQueryFilter {
-  email?: BaseFilter<string>;
-  userId?: BaseFilter<string>;
+  email?: {
+    eq?: string;
+    in?: string[];
+    contains?: string;
+  };
+  userId?: {
+    eq?: string;
+    in?: string[];
+    contains?: string;
+  };
 }

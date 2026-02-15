@@ -4660,6 +4660,12 @@ class CommandContext:
 def load_command_context(root: Path) -> Tuple[CommandContext, List[str]]:
     cfg = load_config(root / "prophet.yaml")
     cfg = apply_node_autodetect(cfg, root)
+    autodetect_error = str(cfg.get("_autodetect_error", "")).strip()
+    if autodetect_error:
+        raise ProphetError(
+            "Node autodetect failed to resolve a safe generation stack. "
+            + autodetect_error
+        )
     stack = resolve_stack_spec(cfg)
     ontology_path = ontology_path_from_cfg(root, cfg)
     ontology = load_ontology_from_cfg(root, cfg)

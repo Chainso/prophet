@@ -415,27 +415,29 @@ def _render_query_filters(ir: Dict[str, Any]) -> str:
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+    lines: List[str] = ["// GENERATED FILE: do not edit directly.", ""]
 
-    lines: List[str] = [
-        "// GENERATED FILE: do not edit directly.",
-        "",
-        "import type {",
-        "  " + ",\n  ".join(sorted({
-            f"{_pascal_case(str(item.get('name', 'Object')))}Ref" for item in ir.get("objects", []) if isinstance(item, dict)
-        } | {
-            f"{_pascal_case(str(item.get('name', 'Object')))}State" for item in ir.get("objects", []) if isinstance(item, dict) and item.get("states")
-        })),
-        "} from './domain';",
-        "",
-        "export interface BaseFilter<T> {",
-        "  eq?: T;",
-        "  in?: T[];",
-        "  contains?: T extends string ? string : never;",
-        "  gte?: T;",
-        "  lte?: T;",
-        "}",
-        "",
-    ]
+    domain_imports = sorted(
+        {
+            f"{_pascal_case(str(item.get('name', 'Object')))}Ref"
+            for item in ir.get("objects", [])
+            if isinstance(item, dict)
+        }
+        | {
+            f"{_pascal_case(str(item.get('name', 'Object')))}State"
+            for item in ir.get("objects", [])
+            if isinstance(item, dict) and item.get("states")
+        }
+    )
+    if domain_imports:
+        lines.extend(
+            [
+                "import type {",
+                "  " + ",\n  ".join(domain_imports),
+                "} from './domain';",
+                "",
+            ]
+        )
 
     for contract in sorted(ir.get("query_contracts", []), key=lambda item: str(item.get("object_id", ""))):
         if not isinstance(contract, dict):
@@ -457,7 +459,19 @@ def _render_query_filters(ir: Dict[str, Any]) -> str:
                 field = fields_by_id.get(field_id, {})
                 type_desc = field.get("type", {}) if isinstance(field, dict) and isinstance(field.get("type"), dict) else {}
                 ts_type = _ts_type_for_descriptor(type_desc, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)
-            lines.append(f"  {field_name}?: BaseFilter<{ts_type}>;")
+            ops = [str(op) for op in item.get("operators", []) if isinstance(op, str)]
+            lines.append(f"  {field_name}?: {{")
+            if "eq" in ops:
+                lines.append(f"    eq?: {ts_type};")
+            if "in" in ops:
+                lines.append(f"    in?: {ts_type}[];")
+            if "contains" in ops:
+                lines.append("    contains?: string;")
+            if "gte" in ops:
+                lines.append(f"    gte?: {ts_type};")
+            if "lte" in ops:
+                lines.append(f"    lte?: {ts_type};")
+            lines.append("  };")
         lines.append("}")
         lines.append("")
 
@@ -465,6 +479,10 @@ def _render_query_filters(ir: Dict[str, Any]) -> str:
 
 
 def _render_persistence_contracts(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+
     lines: List[str] = [
         "// GENERATED FILE: do not edit directly.",
         "",
@@ -493,10 +511,13 @@ def _render_persistence_contracts(ir: Dict[str, Any]) -> str:
         lines.append(f"export interface {id_name} {{")
         for field in _object_primary_key_fields(obj):
             field_name = _camel_case(str(field.get("name", "id")))
-            field_type = "string"
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
-            if str(type_desc.get("kind", "")) == "base":
-                field_type = _ts_base_type(str(type_desc.get("name", "string")))
+            field_type = _ts_type_for_descriptor(
+                type_desc,
+                type_by_id=type_by_id,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+            )
             lines.append(f"  {field_name}: {field_type};")
         lines.append("}")
         lines.append("")
@@ -749,6 +770,8 @@ def _render_query_routes(ir: Dict[str, Any]) -> str:
         obj_name = _pascal_case(str(obj.get("name", "Object")))
         repo_prop = _camel_case(obj_name)
         filter_type = f"Filters.{obj_name}QueryFilter"
+        pk_fields = _object_primary_key_fields(obj)
+        pk_props = [_camel_case(str(field.get("name", "id"))) for field in pk_fields]
 
         paths = contract.get("paths", {}) if isinstance(contract.get("paths"), dict) else {}
         list_path = str(paths.get("list", f"/{_pluralize(_snake_case(obj_name))}"))
@@ -772,13 +795,25 @@ def _render_query_routes(ir: Dict[str, Any]) -> str:
         params = _extract_path_params(get_by_id_path)
         lines.append(f"  router.get('{_express_path(get_by_id_path)}', async (req: Request, res: Response, next: NextFunction) => {{")
         lines.append("    try {")
-        if params:
+        if params and len(params) == 1 and params[0] == "id" and len(pk_props) == 1:
             lines.append("      const id = {")
-            for param in params:
-                lines.append(f"        {_camel_case(param)}: String(req.params['{param}']),")
+            lines.append(f"        {pk_props[0]}: String(req.params['id']),")
+            lines.append("      };")
+        elif params:
+            lines.append("      const id = {")
+            for idx, param in enumerate(params):
+                prop = _camel_case(param)
+                if idx < len(pk_props):
+                    prop = pk_props[idx]
+                lines.append(f"        {prop}: String(req.params['{param}']),")
             lines.append("      };")
         else:
-            lines.append("      const id = { id: String(req.params.id) };")
+            if pk_props:
+                lines.append("      const id = {")
+                lines.append(f"        {pk_props[0]}: String(req.params.id),")
+                lines.append("      };")
+            else:
+                lines.append("      const id = { id: String(req.params.id) };")
         lines.append(f"      const item = await repositories.{repo_prop}.getById(id);")
         lines.append("      if (!item) {")
         lines.append("        res.status(404).json({ error: 'not_found' });")
@@ -841,16 +876,8 @@ def _render_index_file(ir: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _prisma_type_for_field(
-    field: Dict[str, Any],
-    *,
-    type_by_id: Dict[str, Dict[str, Any]],
-    object_by_id: Dict[str, Dict[str, Any]],
-) -> Tuple[str, List[str]]:
-    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+def _prisma_scalar_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
     kind = str(type_desc.get("kind", ""))
-    required = _is_required(field)
-
     if kind == "base":
         base_map = {
             "string": "String",
@@ -866,41 +893,46 @@ def _prisma_type_for_field(
             "date": "DateTime",
             "duration": "String",
         }
-        prisma_type = base_map.get(str(type_desc.get("name", "string")), "String")
-        return (prisma_type, [])
-
+        return base_map.get(str(type_desc.get("name", "string")), "String")
     if kind == "custom":
         base = _resolve_custom_base(type_by_id, type_desc)
-        return _prisma_type_for_field({"type": {"kind": "base", "name": base}, "cardinality": field.get("cardinality")}, type_by_id=type_by_id, object_by_id=object_by_id)
+        return _prisma_scalar_type_for_descriptor({"kind": "base", "name": base}, type_by_id)
+    return "String"
 
+
+def _prisma_column_type_for_field(field: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    kind = str(type_desc.get("kind", ""))
+    if kind in {"base", "custom"}:
+        return _prisma_scalar_type_for_descriptor(type_desc, type_by_id)
     if kind == "struct":
-        return ("Json", [])
-
+        return "Json"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
-        element_kind = str(element.get("kind", ""))
-        if element_kind in {"base", "custom"}:
-            elem_type, _ = _prisma_type_for_field({"type": element, "cardinality": {"min": 1, "max": 1}}, type_by_id=type_by_id, object_by_id=object_by_id)
-            return (f"{elem_type}[]", [])
-        return ("Json", [])
+        if str(element.get("kind", "")) in {"base", "custom"}:
+            return f"{_prisma_scalar_type_for_descriptor(element, type_by_id)}[]"
+        return "Json"
+    return "String"
 
-    if kind == "object_ref":
-        target_id = str(type_desc.get("target_object_id", ""))
-        target = object_by_id.get(target_id, {})
-        target_name = _pascal_case(str(target.get("name", "Object")))
-        target_pk = _object_primary_key_fields(target)
-        if not target_pk:
-            return ("String", [])
-        target_pk_field = target_pk[0]
-        target_pk_name = str(target_pk_field.get("name", "id"))
-        fk_name = f"{str(field.get('name', 'ref'))}_{target_pk_name}"
-        fk_desc = target_pk_field.get("type", {}) if isinstance(target_pk_field.get("type"), dict) else {"kind": "base", "name": "string"}
-        fk_type, _ = _prisma_type_for_field({"type": fk_desc, "cardinality": {"min": 1, "max": 1}}, type_by_id=type_by_id, object_by_id=object_by_id)
-        relation_line = f"  {str(field.get('name', 'ref'))} {target_name}{'' if required else '?'} @relation(fields: [{fk_name}], references: [{target_pk_name}])"
-        fk_line = f"  {fk_name} {fk_type}{'' if required else '?'}"
-        return ("<ref>", [fk_line, relation_line])
 
-    return ("String", [])
+def _prisma_ref_columns(
+    field: Dict[str, Any],
+    *,
+    object_by_id: Dict[str, Dict[str, Any]],
+    type_by_id: Dict[str, Dict[str, Any]],
+) -> List[Tuple[str, str, str]]:
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    target_id = str(type_desc.get("target_object_id", ""))
+    target_obj = object_by_id.get(target_id, {})
+    target_pk_fields = _object_primary_key_fields(target_obj)
+    field_name = str(field.get("name", "ref"))
+
+    result: List[Tuple[str, str, str]] = []
+    for pk_field in target_pk_fields:
+        pk_name = str(pk_field.get("name", "id"))
+        pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {"kind": "base", "name": "string"}
+        result.append((f"{field_name}_{pk_name}", _prisma_scalar_type_for_descriptor(pk_desc, type_by_id), pk_name))
+    return result
 
 
 def _render_prisma_schema(ir: Dict[str, Any]) -> str:
@@ -914,7 +946,7 @@ def _render_prisma_schema(ir: Dict[str, Any]) -> str:
         "}",
         "",
         "datasource db {",
-        "  provider = \"postgresql\"",
+        "  provider = env(\"DATABASE_PROVIDER\")",
         "  url      = env(\"DATABASE_URL\")",
         "}",
         "",
@@ -926,36 +958,61 @@ def _render_prisma_schema(ir: Dict[str, Any]) -> str:
         model_name = _pascal_case(str(obj.get("name", "Object")))
         lines.append(f"model {model_name} {{")
 
-        extra_lines: List[str] = []
-        primary_ids = set(obj.get("keys", {}).get("primary", {}).get("field_ids", []))
+        relation_lines: List[str] = []
+        primary_ids = list(obj.get("keys", {}).get("primary", {}).get("field_ids", []))
+        primary_id_set = set(primary_ids)
+        display_ids = set(obj.get("keys", {}).get("display", {}).get("field_ids", []))
+        expanded_primary_columns: List[str] = []
+        display_columns: List[str] = []
         for field in list(obj.get("fields", [])):
             if not isinstance(field, dict):
                 continue
+            field_id = str(field.get("id", ""))
             field_name = str(field.get("name", "field"))
-            field_type, relation_lines = _prisma_type_for_field(field, type_by_id=type_by_id, object_by_id=object_by_id)
-            if field_type != "<ref>":
-                required = _is_required(field)
-                suffix = "" if required else "?"
-                annotations: List[str] = []
-                if str(field.get("id", "")) in primary_ids and len(primary_ids) == 1:
-                    annotations.append("@id")
-                lines.append(f"  {field_name} {field_type}{suffix}{(' ' + ' '.join(annotations)) if annotations else ''}")
-            extra_lines.extend(relation_lines)
+            required = _is_required(field)
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            if str(type_desc.get("kind", "")) == "object_ref":
+                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_name = _pascal_case(str(target_obj.get("name", "Object")))
+                fk_cols = [item[0] for item in ref_cols]
+                ref_keys = [item[2] for item in ref_cols]
+                for fk_col, fk_type, _ in ref_cols:
+                    lines.append(f"  {fk_col} {fk_type}{'' if required else '?'}")
+                    if field_id in primary_id_set:
+                        expanded_primary_columns.append(fk_col)
+                    if field_id in display_ids:
+                        display_columns.append(fk_col)
+                relation_lines.append(
+                    f"  {field_name} {target_name}{'' if required else '?'} @relation(fields: [{', '.join(fk_cols)}], references: [{', '.join(ref_keys)}])"
+                )
+                continue
 
-        for relation_line in extra_lines:
+            field_type = _prisma_column_type_for_field(field, type_by_id)
+            annotations: List[str] = []
+            if len(primary_ids) == 1 and primary_ids[0] == field_id:
+                annotations.append("@id")
+            lines.append(f"  {field_name} {field_type}{'' if required else '?'}{(' ' + ' '.join(annotations)) if annotations else ''}")
+            if field_id in primary_id_set:
+                expanded_primary_columns.append(field_name)
+            if field_id in display_ids:
+                display_columns.append(field_name)
+
+        if obj.get("states"):
+            initial_state = next(
+                (str(state.get("name", "")) for state in obj.get("states", []) if isinstance(state, dict) and bool(state.get("initial"))),
+                "",
+            )
+            default_hint = f' @default("{initial_state}")' if initial_state else ""
+            lines.append(f"  current_state String{default_hint}")
+
+        for relation_line in relation_lines:
             lines.append(relation_line)
 
-        if len(primary_ids) > 1:
-            by_id = _field_index(list(obj.get("fields", [])))
-            cols = [by_id[item]["name"] for item in obj.get("keys", {}).get("primary", {}).get("field_ids", []) if item in by_id]
-            lines.append(f"  @@id([{', '.join(cols)}])")
-
-        display_ids = list(obj.get("keys", {}).get("display", {}).get("field_ids", []))
-        if display_ids:
-            by_id = _field_index(list(obj.get("fields", [])))
-            cols = [by_id[item]["name"] for item in display_ids if item in by_id]
-            if cols:
-                lines.append(f"  @@index([{', '.join(cols)}], map: \"idx_{_snake_case(model_name)}_display\")")
+        if len(primary_ids) != 1 and expanded_primary_columns:
+            lines.append(f"  @@id([{', '.join(expanded_primary_columns)}])")
+        if display_columns:
+            lines.append(f"  @@index([{', '.join(display_columns)}], map: \"idx_{_snake_case(model_name)}_display\")")
 
         lines.append("}")
         lines.append("")
@@ -964,41 +1021,283 @@ def _render_prisma_schema(ir: Dict[str, Any]) -> str:
 
 
 def _render_prisma_adapter(ir: Dict[str, Any]) -> str:
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    query_contract_by_object_id = {
+        str(item.get("object_id", "")): item
+        for item in ir.get("query_contracts", [])
+        if isinstance(item, dict)
+    }
+
     lines = [
         "// GENERATED FILE: do not edit directly.",
         "",
+        "import type { PrismaClient } from '@prisma/client';",
         "import type * as Domain from './domain';",
         "import type * as Filters from './query';",
         "import type * as Persistence from './persistence';",
         "",
+        "function normalizePage(page: number, size: number): { page: number; size: number } {",
+        "  const normalizedPage = Number.isFinite(page) && page >= 0 ? Math.trunc(page) : 0;",
+        "  const normalizedSize = Number.isFinite(size) && size > 0 ? Math.trunc(size) : 20;",
+        "  return { page: normalizedPage, size: normalizedSize };",
+        "}",
+        "",
+        "function totalPages(totalElements: number, size: number): number {",
+        "  if (size <= 0) return 0;",
+        "  return Math.ceil(totalElements / size);",
+        "}",
+        "",
         "export class PrismaGeneratedRepositories implements Persistence.GeneratedRepositories {",
     ]
-
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        lines.append(f"  {_camel_case(obj_name)}: Persistence.{obj_name}Repository;")
+    lines.append("")
+    lines.append("  constructor(private readonly client: PrismaClient) {")
     for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
         if not isinstance(obj, dict):
             continue
         obj_name = _pascal_case(str(obj.get("name", "Object")))
         repo_name = f"{obj_name}PrismaRepository"
-        lines.append(f"  {_camel_case(obj_name)}: Persistence.{obj_name}Repository = new {repo_name}();")
+        lines.append(f"    this.{_camel_case(obj_name)} = new {repo_name}(client);")
+    lines.append("  }")
     lines.append("}")
     lines.append("")
 
     for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
         if not isinstance(obj, dict):
             continue
+        obj_id = str(obj.get("id", ""))
         obj_name = _pascal_case(str(obj.get("name", "Object")))
+        repo_var = _camel_case(obj_name)
+        pk_fields = _object_primary_key_fields(obj)
+        fields_by_id = _field_index(list(obj.get("fields", [])))
+        query_contract = query_contract_by_object_id.get(obj_id, {})
+        query_filters = list(query_contract.get("filters", [])) if isinstance(query_contract, dict) else []
+
+        lines.append(f"function {repo_var}Where(filter: Filters.{obj_name}QueryFilter | undefined): any {{")
+        lines.append("  if (!filter) return {};")
+        lines.append("  const and: any[] = [];")
+        for filter_item in query_filters:
+            if not isinstance(filter_item, dict):
+                continue
+            field_id = str(filter_item.get("field_id", ""))
+            filter_name = _camel_case(str(filter_item.get("field_name", "field")))
+            operators = [str(op) for op in filter_item.get("operators", []) if isinstance(op, str)]
+            lines.append(f"  const {filter_name}Filter = filter.{filter_name};")
+
+            if field_id == "__current_state__":
+                if "eq" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.eq !== undefined) and.push({{ current_state: {filter_name}Filter.eq }});")
+                if "in" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.in?.length) and.push({{ current_state: {{ in: {filter_name}Filter.in }} }});")
+                continue
+
+            field = fields_by_id.get(field_id, {})
+            if not field:
+                continue
+            field_name = str(field.get("name", "field"))
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            if str(type_desc.get("kind", "")) == "object_ref":
+                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
+                if "eq" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.eq !== undefined) {{")
+                    where_pairs = ", ".join([f"{col}: {filter_name}Filter.eq.{_camel_case(pk_name)}" for col, _, pk_name in ref_cols])
+                    lines.append(f"    and.push({{ {where_pairs} }});")
+                    lines.append("  }")
+                if "in" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.in?.length) {{")
+                    lines.append("    and.push({")
+                    lines.append(f"      OR: {filter_name}Filter.in.map((entry) => ({{")
+                    for col, _, pk_name in ref_cols:
+                        lines.append(f"        {col}: entry.{_camel_case(pk_name)},")
+                    lines.append("      })),")
+                    lines.append("    });")
+                    lines.append("  }")
+                continue
+
+            if "eq" in operators:
+                lines.append(f"  if ({filter_name}Filter?.eq !== undefined) and.push({{ {field_name}: {filter_name}Filter.eq }});")
+            if "in" in operators:
+                lines.append(f"  if ({filter_name}Filter?.in?.length) and.push({{ {field_name}: {{ in: {filter_name}Filter.in }} }});")
+            if "contains" in operators:
+                lines.append(
+                    f"  if (typeof {filter_name}Filter?.contains === 'string' && {filter_name}Filter.contains.length > 0) "
+                    f"and.push({{ {field_name}: {{ contains: {filter_name}Filter.contains }} }});"
+                )
+            if "gte" in operators:
+                lines.append(f"  if ({filter_name}Filter?.gte !== undefined) and.push({{ {field_name}: {{ gte: {filter_name}Filter.gte }} }});")
+            if "lte" in operators:
+                lines.append(f"  if ({filter_name}Filter?.lte !== undefined) and.push({{ {field_name}: {{ lte: {filter_name}Filter.lte }} }});")
+        lines.append("  if (and.length === 0) return {};")
+        lines.append("  return { AND: and };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}IdFromDomain(item: Domain.{obj_name}): Persistence.{obj_name}Id {{")
+        lines.append("  return {")
+        for pk_field in pk_fields:
+            pk_name = _camel_case(str(pk_field.get("name", "id")))
+            lines.append(f"    {pk_name}: item.{pk_name},")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        unique_parts: List[Tuple[str, str]] = []
+        for pk_field in pk_fields:
+            pk_name_raw = str(pk_field.get("name", "id"))
+            pk_name = _camel_case(pk_name_raw)
+            pk_type_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+            if str(pk_type_desc.get("kind", "")) == "object_ref":
+                ref_cols = _prisma_ref_columns(pk_field, object_by_id=object_by_id, type_by_id=type_by_id)
+                for col, _, ref_pk in ref_cols:
+                    unique_parts.append((col, f"id.{pk_name}.{_camel_case(ref_pk)}"))
+            else:
+                unique_parts.append((pk_name_raw, f"id.{pk_name}"))
+
+        lines.append(f"function {repo_var}UniqueWhere(id: Persistence.{obj_name}Id): any {{")
+        if len(unique_parts) == 1:
+            lines.append(f"  return {{ {unique_parts[0][0]}: {unique_parts[0][1]} }};")
+        elif unique_parts:
+            alias = "_".join([part[0] for part in unique_parts])
+            lines.append(f"  return {{ {alias}: {{")
+            for col, expr in unique_parts:
+                lines.append(f"    {col}: {expr},")
+            lines.append("  } };")
+        else:
+            lines.append("  return {};")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}RowToDomain(row: any): Domain.{obj_name} {{")
+        lines.append("  return {")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_name = str(field.get("name", "field"))
+            prop_name = _camel_case(field_name)
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            required = _is_required(field)
+            if str(type_desc.get("kind", "")) == "object_ref":
+                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
+                null_guard = " and ".join([f"row.{col} == null" for col, _, _ in ref_cols]) if ref_cols else "false"
+                if required:
+                    lines.append(f"    {prop_name}: {{")
+                    for col, _, pk_name in ref_cols:
+                        lines.append(f"      {_camel_case(pk_name)}: row.{col},")
+                    lines.append("    },")
+                else:
+                    lines.append(f"    {prop_name}: {null_guard} ? undefined : {{")
+                    for col, _, pk_name in ref_cols:
+                        lines.append(f"      {_camel_case(pk_name)}: row.{col},")
+                    lines.append("    },")
+                continue
+            if required:
+                lines.append(f"    {prop_name}: row.{field_name},")
+            else:
+                lines.append(f"    {prop_name}: row.{field_name} ?? undefined,")
+        if obj.get("states"):
+            lines.append("    currentState: row.current_state,")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}DomainToRow(item: Domain.{obj_name}): any {{")
+        lines.append("  return {")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_name = str(field.get("name", "field"))
+            prop_name = _camel_case(field_name)
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            required = _is_required(field)
+            if str(type_desc.get("kind", "")) == "object_ref":
+                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
+                for col, _, pk_name in ref_cols:
+                    if required:
+                        lines.append(f"    {col}: item.{prop_name}.{_camel_case(pk_name)},")
+                    else:
+                        lines.append(f"    {col}: item.{prop_name}?.{_camel_case(pk_name)} ?? null,")
+                continue
+            if required:
+                lines.append(f"    {field_name}: item.{prop_name},")
+            else:
+                lines.append(f"    {field_name}: item.{prop_name} ?? null,")
+        if obj.get("states"):
+            lines.append("    current_state: item.currentState,")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
         lines.append(f"class {obj_name}PrismaRepository implements Persistence.{obj_name}Repository {{")
-        lines.append(f"  async list(_page: number, _size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
-        lines.append("    throw new Error('Prisma adapter scaffolding generated; implement repository binding logic.');")
+        lines.append("  private readonly delegate: any;")
+        lines.append("")
+        lines.append("  constructor(client: PrismaClient) {")
+        lines.append(f"    this.delegate = (client as any).{repo_var};")
         lines.append("  }")
-        lines.append(f"  async getById(_id: Persistence.{obj_name}Id): Promise<Domain.{obj_name} | null> {{")
-        lines.append("    throw new Error('Prisma adapter scaffolding generated; implement repository binding logic.');")
+        lines.append("")
+        lines.append(f"  async list(page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
+        lines.append("    const normalized = normalizePage(page, size);")
+        lines.append("    const [rows, totalElements] = await Promise.all([")
+        lines.append("      this.delegate.findMany({")
+        lines.append("        skip: normalized.page * normalized.size,")
+        lines.append("        take: normalized.size,")
+        if unique_parts:
+            lines.append("        orderBy: [")
+            for col, _ in unique_parts:
+                lines.append(f"          {{ {col}: 'asc' }},")
+            lines.append("        ],")
+        lines.append("      }),")
+        lines.append("      this.delegate.count(),")
+        lines.append("    ]);")
+        lines.append("    return {")
+        lines.append(f"      items: rows.map({repo_var}RowToDomain),")
+        lines.append("      page: normalized.page,")
+        lines.append("      size: normalized.size,")
+        lines.append("      totalElements,")
+        lines.append("      totalPages: totalPages(totalElements, normalized.size),")
+        lines.append("    };")
         lines.append("  }")
-        lines.append(f"  async query(_filter: Filters.{obj_name}QueryFilter, _page: number, _size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
-        lines.append("    throw new Error('Prisma adapter scaffolding generated; implement repository binding logic.');")
+        lines.append("")
+        lines.append(f"  async getById(id: Persistence.{obj_name}Id): Promise<Domain.{obj_name} | null> {{")
+        lines.append(f"    const row = await this.delegate.findUnique({{ where: {repo_var}UniqueWhere(id) }});")
+        lines.append(f"    return row ? {repo_var}RowToDomain(row) : null;")
         lines.append("  }")
-        lines.append(f"  async save(_item: Domain.{obj_name}): Promise<Domain.{obj_name}> {{")
-        lines.append("    throw new Error('Prisma adapter scaffolding generated; implement repository binding logic.');")
+        lines.append("")
+        lines.append(f"  async query(filter: Filters.{obj_name}QueryFilter, page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
+        lines.append("    const normalized = normalizePage(page, size);")
+        lines.append(f"    const where = {repo_var}Where(filter);")
+        lines.append("    const [rows, totalElements] = await Promise.all([")
+        lines.append("      this.delegate.findMany({")
+        lines.append("        where,")
+        lines.append("        skip: normalized.page * normalized.size,")
+        lines.append("        take: normalized.size,")
+        if unique_parts:
+            lines.append("        orderBy: [")
+            for col, _ in unique_parts:
+                lines.append(f"          {{ {col}: 'asc' }},")
+            lines.append("        ],")
+        lines.append("      }),")
+        lines.append("      this.delegate.count({ where }),")
+        lines.append("    ]);")
+        lines.append("    return {")
+        lines.append(f"      items: rows.map({repo_var}RowToDomain),")
+        lines.append("      page: normalized.page,")
+        lines.append("      size: normalized.size,")
+        lines.append("      totalElements,")
+        lines.append("      totalPages: totalPages(totalElements, normalized.size),")
+        lines.append("    };")
+        lines.append("  }")
+        lines.append("")
+        lines.append(f"  async save(item: Domain.{obj_name}): Promise<Domain.{obj_name}> {{")
+        lines.append(f"    const payload = {repo_var}DomainToRow(item);")
+        lines.append(
+            f"    const persisted = await this.delegate.upsert({{ where: {repo_var}UniqueWhere({repo_var}IdFromDomain(item)), create: payload, update: payload }});"
+        )
+        lines.append(f"    return {repo_var}RowToDomain(persisted);")
         lines.append("  }")
         lines.append("}")
         lines.append("")
@@ -1006,16 +1305,23 @@ def _render_prisma_adapter(ir: Dict[str, Any]) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def _typeorm_column_type(field: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
-    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+def _ts_scalar_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
+    kind = str(type_desc.get("kind", ""))
+    if kind == "base":
+        return _ts_base_type(str(type_desc.get("name", "string")))
+    if kind == "custom":
+        base = _resolve_custom_base(type_by_id, type_desc)
+        return _ts_base_type(base)
+    return "string"
+
+
+def _typeorm_column_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
     kind = str(type_desc.get("kind", ""))
     if kind == "base":
         base = str(type_desc.get("name", "string"))
     elif kind == "custom":
         base = _resolve_custom_base(type_by_id, type_desc)
-    elif kind == "list":
-        return "simple-json"
-    elif kind == "struct":
+    elif kind in {"list", "struct"}:
         return "simple-json"
     elif kind == "object_ref":
         return "varchar"
@@ -1063,36 +1369,55 @@ def _render_typeorm_entities(ir: Dict[str, Any]) -> str:
         for field in list(obj.get("fields", [])):
             if not isinstance(field, dict):
                 continue
+            field_id = str(field.get("id", ""))
             field_name_raw = str(field.get("name", "field"))
             field_name = _camel_case(field_name_raw)
-            nullable = "true" if not _is_required(field) else "false"
-            col_type = _typeorm_column_type(field, type_by_id)
-            is_primary = str(field.get("id", "")) in primary_ids
-
+            required = _is_required(field)
+            nullable = "true" if not required else "false"
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
-            if str(type_desc.get("kind", "")) == "object_ref":
-                target_id = str(type_desc.get("target_object_id", ""))
-                target_obj = object_by_id.get(target_id, {})
+            kind = str(type_desc.get("kind", ""))
+
+            if kind == "object_ref":
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
                 target_name = _pascal_case(str(target_obj.get("name", "Object")))
                 target_pk_fields = _object_primary_key_fields(target_obj)
-                target_pk = target_pk_fields[0] if target_pk_fields else {"name": "id"}
-                fk_name = f"{field_name}{_pascal_case(str(target_pk.get('name', 'id')))}"
-                lines.append(f"  @Column({{ type: '{col_type}', nullable: {nullable}, name: '{_snake_case(fk_name)}' }})")
-                lines.append(f"  {fk_name}!: string;")
-                lines.append("")
+                join_defs: List[str] = []
+                for target_pk in target_pk_fields:
+                    target_pk_name = str(target_pk.get("name", "id"))
+                    fk_col_raw = f"{field_name_raw}_{target_pk_name}"
+                    fk_prop = _camel_case(fk_col_raw)
+                    fk_desc = target_pk.get("type", {}) if isinstance(target_pk.get("type"), dict) else {"kind": "base", "name": "string"}
+                    fk_type = _typeorm_column_type_for_descriptor(fk_desc, type_by_id)
+                    fk_ts_type = _ts_scalar_type_for_descriptor(fk_desc, type_by_id)
+                    if field_id in primary_ids:
+                        lines.append(f"  @PrimaryColumn({{ type: '{fk_type}', name: '{fk_col_raw}' }})")
+                    else:
+                        lines.append(f"  @Column({{ type: '{fk_type}', nullable: {nullable}, name: '{fk_col_raw}' }})")
+                    lines.append(f"  {fk_prop}{'?' if not required else ''}: {fk_ts_type};")
+                    lines.append("")
+                    join_defs.append(f"    {{ name: '{fk_col_raw}', referencedColumnName: '{_camel_case(target_pk_name)}' }},")
                 lines.append(f"  @ManyToOne(() => {target_name}Entity, {{ nullable: {nullable} }})")
-                lines.append(
-                    f"  @JoinColumn({{ name: '{_snake_case(fk_name)}', referencedColumnName: '{_camel_case(str(target_pk.get('name', 'id')))}' }})"
-                )
-                lines.append(f"  {field_name}!: {target_name}Entity;")
+                lines.append("  @JoinColumn([")
+                lines.extend(join_defs)
+                lines.append("  ])")
+                lines.append(f"  {field_name}{'?' if not required else '!'}: {target_name}Entity;")
                 lines.append("")
                 continue
 
-            if is_primary:
+            col_type = _typeorm_column_type_for_descriptor(type_desc, type_by_id)
+            ts_type = _ts_scalar_type_for_descriptor(type_desc, type_by_id)
+            if col_type == "simple-json":
+                ts_type = "unknown"
+            if field_id in primary_ids:
                 lines.append(f"  @PrimaryColumn({{ type: '{col_type}', name: '{field_name_raw}' }})")
             else:
                 lines.append(f"  @Column({{ type: '{col_type}', nullable: {nullable}, name: '{field_name_raw}' }})")
-            lines.append(f"  {field_name}{'?' if not _is_required(field) else ''}: {_ts_base_type('string') if col_type == 'varchar' else 'unknown'};")
+            lines.append(f"  {field_name}{'?' if not required else ''}: {ts_type};")
+            lines.append("")
+
+        if obj.get("states"):
+            lines.append("  @Column({ type: 'varchar', nullable: false, name: 'current_state' })")
+            lines.append("  currentState: string;")
             lines.append("")
 
         lines.append("}")
@@ -1102,12 +1427,41 @@ def _render_typeorm_entities(ir: Dict[str, Any]) -> str:
 
 
 def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    query_contract_by_object_id = {
+        str(item.get("object_id", "")): item
+        for item in ir.get("query_contracts", [])
+        if isinstance(item, dict)
+    }
+    entity_imports = sorted(
+        {
+            f"{_pascal_case(str(item.get('name', 'Object')))}Entity"
+            for item in ir.get("objects", [])
+            if isinstance(item, dict)
+        }
+    )
+
     lines = [
         "// GENERATED FILE: do not edit directly.",
         "",
+        "import { DataSource, type SelectQueryBuilder } from 'typeorm';",
         "import type * as Domain from './domain';",
         "import type * as Filters from './query';",
         "import type * as Persistence from './persistence';",
+        "import {",
+        "  " + ",\n  ".join(entity_imports),
+        "} from './typeorm-entities';",
+        "",
+        "function normalizePage(page: number, size: number): { page: number; size: number } {",
+        "  const normalizedPage = Number.isFinite(page) && page >= 0 ? Math.trunc(page) : 0;",
+        "  const normalizedSize = Number.isFinite(size) && size > 0 ? Math.trunc(size) : 20;",
+        "  return { page: normalizedPage, size: normalizedSize };",
+        "}",
+        "",
+        "function totalPages(totalElements: number, size: number): number {",
+        "  if (size <= 0) return 0;",
+        "  return Math.ceil(totalElements / size);",
+        "}",
         "",
         "export class TypeOrmGeneratedRepositories implements Persistence.GeneratedRepositories {",
     ]
@@ -1115,27 +1469,252 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
         if not isinstance(obj, dict):
             continue
         obj_name = _pascal_case(str(obj.get("name", "Object")))
-        repo_name = f"{obj_name}TypeOrmRepository"
-        lines.append(f"  {_camel_case(obj_name)}: Persistence.{obj_name}Repository = new {repo_name}();")
+        lines.append(f"  {_camel_case(obj_name)}: Persistence.{obj_name}Repository;")
+    lines.append("")
+    lines.append("  constructor(private readonly dataSource: DataSource) {")
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        lines.append(f"    this.{_camel_case(obj_name)} = new {obj_name}TypeOrmRepository(dataSource);")
+    lines.append("  }")
     lines.append("}")
     lines.append("")
 
     for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
         if not isinstance(obj, dict):
             continue
+        obj_id = str(obj.get("id", ""))
         obj_name = _pascal_case(str(obj.get("name", "Object")))
+        entity_name = f"{obj_name}Entity"
+        repo_var = _camel_case(obj_name)
+        fields_by_id = _field_index(list(obj.get("fields", [])))
+        pk_fields = _object_primary_key_fields(obj)
+        query_contract = query_contract_by_object_id.get(obj_id, {})
+        query_filters = list(query_contract.get("filters", [])) if isinstance(query_contract, dict) else []
+
+        lines.append(f"function {repo_var}EntityToDomain(entity: any): Domain.{obj_name} {{")
+        lines.append("  return {")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_name = str(field.get("name", "field"))
+            prop_name = _camel_case(field_name)
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            required = _is_required(field)
+            if str(type_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                fk_props = [_camel_case(f"{field_name}_{str(pk.get('name', 'id'))}") for pk in target_pk_fields]
+                null_guard = " and ".join([f"entity.{fk_prop} == null" for fk_prop in fk_props]) if fk_props else "false"
+                if required:
+                    lines.append(f"    {prop_name}: {{")
+                    for pk_field, fk_prop in zip(target_pk_fields, fk_props):
+                        lines.append(f"      {_camel_case(str(pk_field.get('name', 'id')))}: entity.{fk_prop},")
+                    lines.append("    },")
+                else:
+                    lines.append(f"    {prop_name}: {null_guard} ? undefined : {{")
+                    for pk_field, fk_prop in zip(target_pk_fields, fk_props):
+                        lines.append(f"      {_camel_case(str(pk_field.get('name', 'id')))}: entity.{fk_prop},")
+                    lines.append("    },")
+                continue
+            if required:
+                lines.append(f"    {prop_name}: entity.{prop_name},")
+            else:
+                lines.append(f"    {prop_name}: entity.{prop_name} ?? undefined,")
+        if obj.get("states"):
+            lines.append("    currentState: entity.currentState,")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}DomainToEntity(item: Domain.{obj_name}): {entity_name} {{")
+        lines.append(f"  const entity = new {entity_name}();")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_name = str(field.get("name", "field"))
+            prop_name = _camel_case(field_name)
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            required = _is_required(field)
+            if str(type_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                for target_pk in target_pk_fields:
+                    target_prop = _camel_case(str(target_pk.get("name", "id")))
+                    fk_prop = _camel_case(f"{field_name}_{str(target_pk.get('name', 'id'))}")
+                    if required:
+                        lines.append(f"  entity.{fk_prop} = item.{prop_name}.{target_prop};")
+                    else:
+                        lines.append(f"  entity.{fk_prop} = item.{prop_name}?.{target_prop} ?? null;")
+                continue
+            lines.append(f"  entity.{prop_name} = item.{prop_name}{'' if required else ' ?? null'};")
+        if obj.get("states"):
+            lines.append("  entity.currentState = item.currentState;")
+        lines.append("  return entity;")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}PrimaryWhere(id: Persistence.{obj_name}Id): Record<string, unknown> {{")
+        lines.append("  return {")
+        for pk_field in pk_fields:
+            pk_name = str(pk_field.get("name", "id"))
+            pk_prop = _camel_case(pk_name)
+            pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+            if str(pk_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(pk_desc.get("target_object_id", "")), {})
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                for target_pk in target_pk_fields:
+                    target_prop = _camel_case(str(target_pk.get("name", "id")))
+                    fk_col_name = f"{pk_name}_{str(target_pk.get('name', 'id'))}"
+                    fk_prop = _camel_case(fk_col_name)
+                    lines.append(f"    {fk_prop}: id.{pk_prop}.{target_prop},")
+            else:
+                lines.append(f"    {pk_prop}: id.{pk_prop},")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}ApplyFilter(qb: SelectQueryBuilder<{entity_name}>, filter: Filters.{obj_name}QueryFilter | undefined): void {{")
+        lines.append("  if (!filter) return;")
+        for filter_item in query_filters:
+            if not isinstance(filter_item, dict):
+                continue
+            field_id = str(filter_item.get("field_id", ""))
+            filter_name = _camel_case(str(filter_item.get("field_name", "field")))
+            operators = [str(op) for op in filter_item.get("operators", []) if isinstance(op, str)]
+            lines.append(f"  const {filter_name}Filter = filter.{filter_name};")
+
+            if field_id == "__current_state__":
+                if "eq" in operators:
+                    lines.append(
+                        f"  if ({filter_name}Filter?.eq !== undefined) qb.andWhere('record.current_state = :{filter_name}_eq', {{ {filter_name}_eq: {filter_name}Filter.eq }});"
+                    )
+                if "in" in operators:
+                    lines.append(
+                        f"  if ({filter_name}Filter?.in?.length) qb.andWhere('record.current_state IN (:...{filter_name}_in)', {{ {filter_name}_in: {filter_name}Filter.in }});"
+                    )
+                continue
+
+            field = fields_by_id.get(field_id, {})
+            if not field:
+                continue
+            field_name = str(field.get("name", "field"))
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+
+            if str(type_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                if "eq" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.eq !== undefined) {{")
+                    for target_pk in target_pk_fields:
+                        target_prop = _camel_case(str(target_pk.get("name", "id")))
+                        fk_col = f"{field_name}_{str(target_pk.get('name', 'id'))}"
+                        param = f"{filter_name}_eq_{target_prop}"
+                        lines.append(
+                            f"    qb.andWhere('record.{fk_col} = :{param}', {{ {param}: {filter_name}Filter.eq.{target_prop} }});"
+                        )
+                    lines.append("  }")
+                if "in" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.in?.length) {{")
+                    lines.append("    const clauses: string[] = [];")
+                    lines.append("    const params: Record<string, unknown> = {};")
+                    lines.append(f"    {filter_name}Filter.in.forEach((entry, idx) => {{")
+                    lines.append("      const inner: string[] = [];")
+                    for target_pk in target_pk_fields:
+                        target_prop = _camel_case(str(target_pk.get("name", "id")))
+                        fk_col = f"{field_name}_{str(target_pk.get('name', 'id'))}"
+                        lines.append(f"      inner.push(`record.{fk_col} = :{filter_name}_in_${{idx}}_{target_prop}`);")
+                        lines.append(f"      params['{filter_name}_in_' + idx + '_{target_prop}'] = entry.{target_prop};")
+                    lines.append("      clauses.push('(' + inner.join(' AND ') + ')');")
+                    lines.append("    });")
+                    lines.append("    if (clauses.length > 0) qb.andWhere('(' + clauses.join(' OR ') + ')', params);")
+                    lines.append("  }")
+                continue
+
+            if "eq" in operators:
+                lines.append(
+                    f"  if ({filter_name}Filter?.eq !== undefined) qb.andWhere('record.{field_name} = :{filter_name}_eq', {{ {filter_name}_eq: {filter_name}Filter.eq }});"
+                )
+            if "in" in operators:
+                lines.append(
+                    f"  if ({filter_name}Filter?.in?.length) qb.andWhere('record.{field_name} IN (:...{filter_name}_in)', {{ {filter_name}_in: {filter_name}Filter.in }});"
+                )
+            if "contains" in operators:
+                lines.append(
+                    f"  if (typeof {filter_name}Filter?.contains === 'string' && {filter_name}Filter.contains.length > 0) "
+                    f"qb.andWhere('record.{field_name} LIKE :{filter_name}_contains', {{ {filter_name}_contains: `%${{{filter_name}Filter.contains}}%` }});"
+                )
+            if "gte" in operators:
+                lines.append(
+                    f"  if ({filter_name}Filter?.gte !== undefined) qb.andWhere('record.{field_name} >= :{filter_name}_gte', {{ {filter_name}_gte: {filter_name}Filter.gte }});"
+                )
+            if "lte" in operators:
+                lines.append(
+                    f"  if ({filter_name}Filter?.lte !== undefined) qb.andWhere('record.{field_name} <= :{filter_name}_lte', {{ {filter_name}_lte: {filter_name}Filter.lte }});"
+                )
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}ApplyOrderBy(qb: SelectQueryBuilder<{entity_name}>): void {{")
+        for pk_field in pk_fields:
+            pk_name = str(pk_field.get("name", "id"))
+            pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+            if str(pk_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(pk_desc.get("target_object_id", "")), {})
+                target_pks = _object_primary_key_fields(target_obj)
+                for target_pk in target_pks:
+                    lines.append(f"  qb.addOrderBy('record.{pk_name}_{str(target_pk.get('name', 'id'))}', 'ASC');")
+            else:
+                lines.append(f"  qb.addOrderBy('record.{pk_name}', 'ASC');")
+        lines.append("}")
+        lines.append("")
+
         lines.append(f"class {obj_name}TypeOrmRepository implements Persistence.{obj_name}Repository {{")
-        lines.append(f"  async list(_page: number, _size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
-        lines.append("    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');")
+        lines.append(f"  private readonly repo = this.dataSource.getRepository({entity_name});")
+        lines.append("")
+        lines.append("  constructor(private readonly dataSource: DataSource) {}")
+        lines.append("")
+        lines.append(f"  async list(page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
+        lines.append("    const normalized = normalizePage(page, size);")
+        lines.append("    const qb = this.repo.createQueryBuilder('record');")
+        lines.append(f"    {repo_var}ApplyOrderBy(qb);")
+        lines.append("    qb.skip(normalized.page * normalized.size).take(normalized.size);")
+        lines.append("    const [rows, totalElements] = await qb.getManyAndCount();")
+        lines.append("    return {")
+        lines.append(f"      items: rows.map({repo_var}EntityToDomain),")
+        lines.append("      page: normalized.page,")
+        lines.append("      size: normalized.size,")
+        lines.append("      totalElements,")
+        lines.append("      totalPages: totalPages(totalElements, normalized.size),")
+        lines.append("    };")
         lines.append("  }")
-        lines.append(f"  async getById(_id: Persistence.{obj_name}Id): Promise<Domain.{obj_name} | null> {{")
-        lines.append("    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');")
+        lines.append("")
+        lines.append(f"  async getById(id: Persistence.{obj_name}Id): Promise<Domain.{obj_name} | null> {{")
+        lines.append(f"    const row = await this.repo.findOneBy({repo_var}PrimaryWhere(id) as any);")
+        lines.append(f"    return row ? {repo_var}EntityToDomain(row) : null;")
         lines.append("  }")
-        lines.append(f"  async query(_filter: Filters.{obj_name}QueryFilter, _page: number, _size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
-        lines.append("    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');")
+        lines.append("")
+        lines.append(f"  async query(filter: Filters.{obj_name}QueryFilter, page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
+        lines.append("    const normalized = normalizePage(page, size);")
+        lines.append("    const qb = this.repo.createQueryBuilder('record');")
+        lines.append(f"    {repo_var}ApplyFilter(qb, filter);")
+        lines.append(f"    {repo_var}ApplyOrderBy(qb);")
+        lines.append("    qb.skip(normalized.page * normalized.size).take(normalized.size);")
+        lines.append("    const [rows, totalElements] = await qb.getManyAndCount();")
+        lines.append("    return {")
+        lines.append(f"      items: rows.map({repo_var}EntityToDomain),")
+        lines.append("      page: normalized.page,")
+        lines.append("      size: normalized.size,")
+        lines.append("      totalElements,")
+        lines.append("      totalPages: totalPages(totalElements, normalized.size),")
+        lines.append("    };")
         lines.append("  }")
-        lines.append(f"  async save(_item: Domain.{obj_name}): Promise<Domain.{obj_name}> {{")
-        lines.append("    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');")
+        lines.append("")
+        lines.append(f"  async save(item: Domain.{obj_name}): Promise<Domain.{obj_name}> {{")
+        lines.append(f"    const entity = {repo_var}DomainToEntity(item);")
+        lines.append("    const saved = await this.repo.save(entity as any);")
+        lines.append(f"    return {repo_var}EntityToDomain(saved);")
         lines.append("  }")
         lines.append("}")
         lines.append("")

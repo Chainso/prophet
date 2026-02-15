@@ -1,40 +1,234 @@
 // GENERATED FILE: do not edit directly.
 
+import { DataSource, type SelectQueryBuilder } from 'typeorm';
 import type * as Domain from './domain';
 import type * as Filters from './query';
 import type * as Persistence from './persistence';
+import {
+  OrderEntity,
+  UserEntity
+} from './typeorm-entities';
+
+function normalizePage(page: number, size: number): { page: number; size: number } {
+  const normalizedPage = Number.isFinite(page) && page >= 0 ? Math.trunc(page) : 0;
+  const normalizedSize = Number.isFinite(size) && size > 0 ? Math.trunc(size) : 20;
+  return { page: normalizedPage, size: normalizedSize };
+}
+
+function totalPages(totalElements: number, size: number): number {
+  if (size <= 0) return 0;
+  return Math.ceil(totalElements / size);
+}
 
 export class TypeOrmGeneratedRepositories implements Persistence.GeneratedRepositories {
-  order: Persistence.OrderRepository = new OrderTypeOrmRepository();
-  user: Persistence.UserRepository = new UserTypeOrmRepository();
+  order: Persistence.OrderRepository;
+  user: Persistence.UserRepository;
+
+  constructor(private readonly dataSource: DataSource) {
+    this.order = new OrderTypeOrmRepository(dataSource);
+    this.user = new UserTypeOrmRepository(dataSource);
+  }
+}
+
+function orderEntityToDomain(entity: any): Domain.Order {
+  return {
+    orderId: entity.orderId,
+    customer: {
+      userId: entity.customerUserId,
+    },
+    totalAmount: entity.totalAmount,
+    discountCode: entity.discountCode ?? undefined,
+    tags: entity.tags ?? undefined,
+    shippingAddress: entity.shippingAddress ?? undefined,
+    currentState: entity.currentState,
+  };
+}
+
+function orderDomainToEntity(item: Domain.Order): OrderEntity {
+  const entity = new OrderEntity();
+  entity.orderId = item.orderId;
+  entity.customerUserId = item.customer.userId;
+  entity.totalAmount = item.totalAmount;
+  entity.discountCode = item.discountCode ?? null;
+  entity.tags = item.tags ?? null;
+  entity.shippingAddress = item.shippingAddress ?? null;
+  entity.currentState = item.currentState;
+  return entity;
+}
+
+function orderPrimaryWhere(id: Persistence.OrderId): Record<string, unknown> {
+  return {
+    orderId: id.orderId,
+  };
+}
+
+function orderApplyFilter(qb: SelectQueryBuilder<OrderEntity>, filter: Filters.OrderQueryFilter | undefined): void {
+  if (!filter) return;
+  const customerFilter = filter.customer;
+  if (customerFilter?.eq !== undefined) {
+    qb.andWhere('record.customer_user_id = :customer_eq_userId', { customer_eq_userId: customerFilter.eq.userId });
+  }
+  if (customerFilter?.in?.length) {
+    const clauses: string[] = [];
+    const params: Record<string, unknown> = {};
+    customerFilter.in.forEach((entry, idx) => {
+      const inner: string[] = [];
+      inner.push(`record.customer_user_id = :customer_in_${idx}_userId`);
+      params['customer_in_' + idx + '_userId'] = entry.userId;
+      clauses.push('(' + inner.join(' AND ') + ')');
+    });
+    if (clauses.length > 0) qb.andWhere('(' + clauses.join(' OR ') + ')', params);
+  }
+  const discountCodeFilter = filter.discountCode;
+  if (discountCodeFilter?.eq !== undefined) qb.andWhere('record.discount_code = :discountCode_eq', { discountCode_eq: discountCodeFilter.eq });
+  if (discountCodeFilter?.in?.length) qb.andWhere('record.discount_code IN (:...discountCode_in)', { discountCode_in: discountCodeFilter.in });
+  if (typeof discountCodeFilter?.contains === 'string' && discountCodeFilter.contains.length > 0) qb.andWhere('record.discount_code LIKE :discountCode_contains', { discountCode_contains: `%${discountCodeFilter.contains}%` });
+  const orderIdFilter = filter.orderId;
+  if (orderIdFilter?.eq !== undefined) qb.andWhere('record.order_id = :orderId_eq', { orderId_eq: orderIdFilter.eq });
+  if (orderIdFilter?.in?.length) qb.andWhere('record.order_id IN (:...orderId_in)', { orderId_in: orderIdFilter.in });
+  if (typeof orderIdFilter?.contains === 'string' && orderIdFilter.contains.length > 0) qb.andWhere('record.order_id LIKE :orderId_contains', { orderId_contains: `%${orderIdFilter.contains}%` });
+  const totalAmountFilter = filter.totalAmount;
+  if (totalAmountFilter?.eq !== undefined) qb.andWhere('record.total_amount = :totalAmount_eq', { totalAmount_eq: totalAmountFilter.eq });
+  if (totalAmountFilter?.in?.length) qb.andWhere('record.total_amount IN (:...totalAmount_in)', { totalAmount_in: totalAmountFilter.in });
+  if (totalAmountFilter?.gte !== undefined) qb.andWhere('record.total_amount >= :totalAmount_gte', { totalAmount_gte: totalAmountFilter.gte });
+  if (totalAmountFilter?.lte !== undefined) qb.andWhere('record.total_amount <= :totalAmount_lte', { totalAmount_lte: totalAmountFilter.lte });
+  const currentStateFilter = filter.currentState;
+  if (currentStateFilter?.eq !== undefined) qb.andWhere('record.current_state = :currentState_eq', { currentState_eq: currentStateFilter.eq });
+  if (currentStateFilter?.in?.length) qb.andWhere('record.current_state IN (:...currentState_in)', { currentState_in: currentStateFilter.in });
+}
+
+function orderApplyOrderBy(qb: SelectQueryBuilder<OrderEntity>): void {
+  qb.addOrderBy('record.order_id', 'ASC');
 }
 
 class OrderTypeOrmRepository implements Persistence.OrderRepository {
-  async list(_page: number, _size: number): Promise<Persistence.Page<Domain.Order>> {
-    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');
+  private readonly repo = this.dataSource.getRepository(OrderEntity);
+
+  constructor(private readonly dataSource: DataSource) {}
+
+  async list(page: number, size: number): Promise<Persistence.Page<Domain.Order>> {
+    const normalized = normalizePage(page, size);
+    const qb = this.repo.createQueryBuilder('record');
+    orderApplyOrderBy(qb);
+    qb.skip(normalized.page * normalized.size).take(normalized.size);
+    const [rows, totalElements] = await qb.getManyAndCount();
+    return {
+      items: rows.map(orderEntityToDomain),
+      page: normalized.page,
+      size: normalized.size,
+      totalElements,
+      totalPages: totalPages(totalElements, normalized.size),
+    };
   }
-  async getById(_id: Persistence.OrderId): Promise<Domain.Order | null> {
-    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');
+
+  async getById(id: Persistence.OrderId): Promise<Domain.Order | null> {
+    const row = await this.repo.findOneBy(orderPrimaryWhere(id) as any);
+    return row ? orderEntityToDomain(row) : null;
   }
-  async query(_filter: Filters.OrderQueryFilter, _page: number, _size: number): Promise<Persistence.Page<Domain.Order>> {
-    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');
+
+  async query(filter: Filters.OrderQueryFilter, page: number, size: number): Promise<Persistence.Page<Domain.Order>> {
+    const normalized = normalizePage(page, size);
+    const qb = this.repo.createQueryBuilder('record');
+    orderApplyFilter(qb, filter);
+    orderApplyOrderBy(qb);
+    qb.skip(normalized.page * normalized.size).take(normalized.size);
+    const [rows, totalElements] = await qb.getManyAndCount();
+    return {
+      items: rows.map(orderEntityToDomain),
+      page: normalized.page,
+      size: normalized.size,
+      totalElements,
+      totalPages: totalPages(totalElements, normalized.size),
+    };
   }
-  async save(_item: Domain.Order): Promise<Domain.Order> {
-    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');
+
+  async save(item: Domain.Order): Promise<Domain.Order> {
+    const entity = orderDomainToEntity(item);
+    const saved = await this.repo.save(entity as any);
+    return orderEntityToDomain(saved);
   }
 }
 
+function userEntityToDomain(entity: any): Domain.User {
+  return {
+    userId: entity.userId,
+    email: entity.email,
+  };
+}
+
+function userDomainToEntity(item: Domain.User): UserEntity {
+  const entity = new UserEntity();
+  entity.userId = item.userId;
+  entity.email = item.email;
+  return entity;
+}
+
+function userPrimaryWhere(id: Persistence.UserId): Record<string, unknown> {
+  return {
+    userId: id.userId,
+  };
+}
+
+function userApplyFilter(qb: SelectQueryBuilder<UserEntity>, filter: Filters.UserQueryFilter | undefined): void {
+  if (!filter) return;
+  const emailFilter = filter.email;
+  if (emailFilter?.eq !== undefined) qb.andWhere('record.email = :email_eq', { email_eq: emailFilter.eq });
+  if (emailFilter?.in?.length) qb.andWhere('record.email IN (:...email_in)', { email_in: emailFilter.in });
+  if (typeof emailFilter?.contains === 'string' && emailFilter.contains.length > 0) qb.andWhere('record.email LIKE :email_contains', { email_contains: `%${emailFilter.contains}%` });
+  const userIdFilter = filter.userId;
+  if (userIdFilter?.eq !== undefined) qb.andWhere('record.user_id = :userId_eq', { userId_eq: userIdFilter.eq });
+  if (userIdFilter?.in?.length) qb.andWhere('record.user_id IN (:...userId_in)', { userId_in: userIdFilter.in });
+  if (typeof userIdFilter?.contains === 'string' && userIdFilter.contains.length > 0) qb.andWhere('record.user_id LIKE :userId_contains', { userId_contains: `%${userIdFilter.contains}%` });
+}
+
+function userApplyOrderBy(qb: SelectQueryBuilder<UserEntity>): void {
+  qb.addOrderBy('record.user_id', 'ASC');
+}
+
 class UserTypeOrmRepository implements Persistence.UserRepository {
-  async list(_page: number, _size: number): Promise<Persistence.Page<Domain.User>> {
-    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');
+  private readonly repo = this.dataSource.getRepository(UserEntity);
+
+  constructor(private readonly dataSource: DataSource) {}
+
+  async list(page: number, size: number): Promise<Persistence.Page<Domain.User>> {
+    const normalized = normalizePage(page, size);
+    const qb = this.repo.createQueryBuilder('record');
+    userApplyOrderBy(qb);
+    qb.skip(normalized.page * normalized.size).take(normalized.size);
+    const [rows, totalElements] = await qb.getManyAndCount();
+    return {
+      items: rows.map(userEntityToDomain),
+      page: normalized.page,
+      size: normalized.size,
+      totalElements,
+      totalPages: totalPages(totalElements, normalized.size),
+    };
   }
-  async getById(_id: Persistence.UserId): Promise<Domain.User | null> {
-    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');
+
+  async getById(id: Persistence.UserId): Promise<Domain.User | null> {
+    const row = await this.repo.findOneBy(userPrimaryWhere(id) as any);
+    return row ? userEntityToDomain(row) : null;
   }
-  async query(_filter: Filters.UserQueryFilter, _page: number, _size: number): Promise<Persistence.Page<Domain.User>> {
-    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');
+
+  async query(filter: Filters.UserQueryFilter, page: number, size: number): Promise<Persistence.Page<Domain.User>> {
+    const normalized = normalizePage(page, size);
+    const qb = this.repo.createQueryBuilder('record');
+    userApplyFilter(qb, filter);
+    userApplyOrderBy(qb);
+    qb.skip(normalized.page * normalized.size).take(normalized.size);
+    const [rows, totalElements] = await qb.getManyAndCount();
+    return {
+      items: rows.map(userEntityToDomain),
+      page: normalized.page,
+      size: normalized.size,
+      totalElements,
+      totalPages: totalPages(totalElements, normalized.size),
+    };
   }
-  async save(_item: Domain.User): Promise<Domain.User> {
-    throw new Error('TypeORM adapter scaffolding generated; implement repository binding logic.');
+
+  async save(item: Domain.User): Promise<Domain.User> {
+    const entity = userDomainToEntity(item);
+    const saved = await this.repo.save(entity as any);
+    return userEntityToDomain(saved);
   }
 }

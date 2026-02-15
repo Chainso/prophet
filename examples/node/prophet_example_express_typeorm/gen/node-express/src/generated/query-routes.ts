@@ -27,7 +27,7 @@ export function buildGeneratedQueryRouter(repositories: GeneratedRepositories): 
   router.get('/orders/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = {
-        id: String(req.params['id']),
+        orderId: String(req.params['id']),
       };
       const item = await repositories.order.getById(id);
       if (!item) {
@@ -66,7 +66,7 @@ export function buildGeneratedQueryRouter(repositories: GeneratedRepositories): 
   router.get('/users/:id', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const id = {
-        id: String(req.params['id']),
+        userId: String(req.params['id']),
       };
       const item = await repositories.user.getById(id);
       if (!item) {

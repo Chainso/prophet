@@ -4,17 +4,18 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = env("DATABASE_PROVIDER")
   url      = env("DATABASE_URL")
 }
 
 model Order {
   order_id String @id
+  customer_user_id String
   total_amount Decimal
   discount_code String?
   tags String[]?
   shipping_address Json?
-  customer_user_id String
+  current_state String @default("created")
   customer User @relation(fields: [customer_user_id], references: [user_id])
 }
 

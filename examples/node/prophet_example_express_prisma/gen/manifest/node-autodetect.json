@@ -3,11 +3,23 @@
   "project_kind": "node",
   "stack_id": "node_express_prisma",
   "confidence": "high",
+  "confidence_score": 90,
   "package_manager": "unknown",
   "module_mode": "module",
   "tsconfig": "tsconfig.json",
+  "tsconfig_details": {
+    "rootDir": "",
+    "outDir": "dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
   "entrypoint": "dist/server.js",
   "monorepo": false,
+  "versions": {
+    "express": "^4.19.2",
+    "prisma": "^5.22.0",
+    "typeorm": ""
+  },
   "signals": {
     "has_package_json": true,
     "has_express": true,
@@ -18,5 +30,15 @@
     "express dependency detected",
     "prisma dependency/schema detected"
   ],
-  "warnings": []
+  "warnings": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "express dependency detected"
+    },
+    {
+      "level": "info",
+      "message": "prisma dependency/schema detected"
+    }
+  ]
 }

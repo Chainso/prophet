@@ -3,11 +3,23 @@
   "project_kind": "node",
   "stack_id": "node_express_typeorm",
   "confidence": "high",
+  "confidence_score": 90,
   "package_manager": "unknown",
   "module_mode": "module",
   "tsconfig": "tsconfig.json",
+  "tsconfig_details": {
+    "rootDir": "",
+    "outDir": "dist",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
   "entrypoint": "dist/server.js",
   "monorepo": false,
+  "versions": {
+    "express": "^4.19.2",
+    "prisma": "",
+    "typeorm": "^0.3.20"
+  },
   "signals": {
     "has_package_json": true,
     "has_express": true,
@@ -18,5 +30,15 @@
     "express dependency detected",
     "typeorm dependency/entities detected"
   ],
-  "warnings": []
+  "warnings": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "express dependency detected"
+    },
+    {
+      "level": "info",
+      "message": "typeorm dependency/entities detected"
+    }
+  ]
 }
