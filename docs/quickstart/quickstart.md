@@ -1,6 +1,6 @@
 # Prophet Quickstart
 
-This guide is for first-time users who want to generate and run a working Spring Boot integration with Prophet.
+This guide is for first-time users who want to generate and run working Prophet integrations.
 
 ## 1. Install CLI
 
@@ -20,7 +20,7 @@ python3 -m venv .venv --system-site-packages
 
 If `prophet` is not on your PATH, use `.venv/bin/prophet` in commands below.
 
-## 2. Generate From the Example Ontology
+## 2. Java Quickstart (Spring + JPA)
 
 ```bash
 cd examples/java/prophet_example_spring
@@ -71,9 +71,38 @@ Action APIs:
 - `POST /actions/approveOrder`
 - `POST /actions/shipOrder`
 
+## 6. Node Quickstart (Express + Prisma)
+
+```bash
+cd examples/node/prophet_example_express_prisma
+prophet gen
+```
+
+Expected outcome:
+- `gen/node-express/src/generated/**`
+- `gen/node-express/prisma/schema.prisma`
+- `gen/openapi/openapi.yaml`
+- `gen/manifest/node-autodetect.json`
+
+Generated Node actions use default handler stubs that throw until implemented.
+
+## 7. Node Quickstart (Express + TypeORM)
+
+```bash
+cd examples/node/prophet_example_express_typeorm
+prophet gen
+```
+
+Expected outcome:
+- `gen/node-express/src/generated/**`
+- `gen/node-express/src/generated/typeorm-entities.ts`
+- `gen/openapi/openapi.yaml`
+- `gen/manifest/node-autodetect.json`
+
 ## Next Reads
 
 - Full CLI reference: [CLI](../reference/cli.md)
 - DSL reference: [DSL](../reference/dsl.md)
 - Spring integration details: [Spring Boot](../reference/spring-boot.md)
+- Node integration details: [Node/Express](../reference/node-express.md)
 - Troubleshooting: [Troubleshooting](../reference/troubleshooting.md)

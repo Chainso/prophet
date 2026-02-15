@@ -1,0 +1,21 @@
+schema_version: 1
+project:
+  name: prophet_example_express_typeorm
+  ontology_file: ontology/local/main.prophet
+  version_source: ontology
+generation:
+  stack:
+    id: node_express_typeorm
+  targets:
+    - sql
+    - openapi
+    - node_express
+    - typeorm
+    - manifest
+  out_dir: gen
+compatibility:
+  baseline_ir: .prophet/baselines/main.ir.json
+  strict_enums: false
+determinism:
+  canonical_sort: true
+  include_timestamps: false

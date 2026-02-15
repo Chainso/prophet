@@ -18,6 +18,11 @@
 - `--skip-unchanged`: skip no-op generation using `.prophet/cache/generation.json`
 - `--verify-clean`: fail if committed/generated files drift from current generator output
 
+Node stacks also apply package.json script auto-wiring for:
+- `prophet:gen`
+- `prophet:check`
+- `prophet:validate`
+
 ## `prophet clean` Flags
 
 - `--verbose`

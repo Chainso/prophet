@@ -34,6 +34,8 @@ From a `.prophet` ontology file, Prophet can generate:
 - SQL schema files
 - OpenAPI contracts
 - Spring Boot integration code (DTOs, JPA entities/repositories, query and action endpoints)
+- Node/Express integration code (typed contracts, zod validation, routes, action/event scaffolding)
+- Prisma schema/adapters and TypeORM entity/adapter scaffolding for Node targets
 - Flyway/Liquibase migration artifacts
 - generation manifests for ownership and extension hooks
 
@@ -67,11 +69,17 @@ python3 -m venv .venv --system-site-packages
 - Full user reference: [Reference Index](docs/reference/index.md)
 - Developer docs: [Developer Index](docs/developer/index.md)
 
-## Current Supported Golden Path
+## Supported Stacks
 
-The primary production path today is:
+Implemented stacks:
 - `java` + `spring_boot` + `jpa`
-- Example project: [Spring Example](examples/java/prophet_example_spring)
+- `node` + `express` + `prisma`
+- `node` + `express` + `typeorm`
+
+Examples:
+- [Spring Example](examples/java/prophet_example_spring)
+- [Express + Prisma Example](examples/node/prophet_example_express_prisma)
+- [Express + TypeORM Example](examples/node/prophet_example_express_typeorm)
 
 ## License
 

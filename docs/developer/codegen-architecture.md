@@ -4,8 +4,10 @@
 
 Supported stacks are declared in a schema-validated manifest contract.
 
-Current implemented stack:
+Current implemented stacks:
 - `java_spring_jpa`
+- `node_express_prisma`
+- `node_express_typeorm`
 
 Planned stacks can exist in manifest as non-implemented entries for roadmap visibility and validation.
 

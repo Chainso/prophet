@@ -33,15 +33,24 @@ compatibility:
   - `spring_boot`
   - `flyway`
   - `liquibase`
+  - `node_express`
+  - `prisma`
+  - `typeorm`
   - `manifest`
 - `stack`: stack selection
   - `id: java_spring_jpa`
+  - `id: node_express_prisma`
+  - `id: node_express_typeorm`
   - or tuple form (`language/framework/orm`)
 - `spring_boot.base_package`: Java package base
 - `spring_boot.boot_version`: host Spring Boot line
 
 Generated Spring package root is:
 - `<base_package>.<ontology_name>`
+
+Node autodetection notes:
+- If no explicit stack is set, Prophet inspects `package.json` and lockfiles to auto-select Node Express stacks.
+- For Node projects, default Java init targets are automatically rewritten to Node targets when stack autodetection succeeds.
 
 ## `compatibility`
 

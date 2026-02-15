@@ -1,0 +1,39 @@
+// GENERATED FILE: do not edit directly.
+
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+
+@Entity('orders')
+export class OrderEntity {
+  @PrimaryColumn({ type: 'varchar', name: 'order_id' })
+  orderId: string;
+
+  @Column({ type: 'varchar', nullable: false, name: 'customer_user_id' })
+  customerUserId!: string;
+
+  @ManyToOne(() => UserEntity, { nullable: false })
+  @JoinColumn({ name: 'customer_user_id', referencedColumnName: 'userId' })
+  customer!: UserEntity;
+
+  @Column({ type: 'numeric', nullable: false, name: 'total_amount' })
+  totalAmount: unknown;
+
+  @Column({ type: 'varchar', nullable: true, name: 'discount_code' })
+  discountCode?: string;
+
+  @Column({ type: 'simple-json', nullable: true, name: 'tags' })
+  tags?: unknown;
+
+  @Column({ type: 'simple-json', nullable: true, name: 'shipping_address' })
+  shippingAddress?: unknown;
+
+}
+
+@Entity('users')
+export class UserEntity {
+  @PrimaryColumn({ type: 'varchar', name: 'user_id' })
+  userId: string;
+
+  @Column({ type: 'varchar', nullable: false, name: 'email' })
+  email: string;
+
+}

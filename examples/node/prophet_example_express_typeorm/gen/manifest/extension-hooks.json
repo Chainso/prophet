@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "stack": "node_express_typeorm",
+  "hooks": [
+    {
+      "kind": "action_handler",
+      "action_id": "act_approve_order",
+      "action_name": "approveOrder",
+      "typescript_interface": "generated.ApproveOrderActionHandler",
+      "default_implementation": "generated.ApproveOrderActionHandlerDefault"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_create_order",
+      "action_name": "createOrder",
+      "typescript_interface": "generated.CreateOrderActionHandler",
+      "default_implementation": "generated.CreateOrderActionHandlerDefault"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_ship_order",
+      "action_name": "shipOrder",
+      "typescript_interface": "generated.ShipOrderActionHandler",
+      "default_implementation": "generated.ShipOrderActionHandlerDefault"
+    }
+  ]
+}

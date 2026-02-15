@@ -13,6 +13,7 @@ This section is the canonical user-facing reference for Prophet.
 
 - Generation targets and outputs: [Generation](generation.md)
 - Spring Boot integration: [Spring Boot](spring-boot.md)
+- Node/Express integration: [Node/Express](node-express.md)
 - Migration artifacts: [Migrations](migrations.md)
 
 ## Safety and Operations

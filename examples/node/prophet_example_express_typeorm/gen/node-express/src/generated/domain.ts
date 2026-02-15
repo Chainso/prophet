@@ -1,0 +1,40 @@
+// GENERATED FILE: do not edit directly.
+
+export type Money = number;
+
+export interface OrderRef {
+  orderId: string;
+}
+
+export interface UserRef {
+  userId: string;
+}
+
+export interface Address {
+  line1: string;
+  city: string;
+  countryCode: string;
+}
+
+export interface ApprovalContext {
+  approver: UserRef;
+  watchers?: UserRef[];
+  reason?: string;
+}
+
+export type OrderState = "created" | "approved" | "shipped";
+
+export interface Order {
+  orderId: string;
+  customer: UserRef;
+  totalAmount: number;
+  discountCode?: string;
+  tags?: string[];
+  shippingAddress?: Address;
+  currentState: OrderState;
+}
+
+export interface User {
+  userId: string;
+  email: string;
+}

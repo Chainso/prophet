@@ -27,6 +27,21 @@
 - `gen/spring-boot/src/main/java/**`
 - `gen/spring-boot/src/main/resources/**`
 
+## Node/Express Stack Outputs
+
+- `gen/node-express/package.json`
+- `gen/node-express/tsconfig.json`
+- `gen/node-express/src/generated/**`
+- `gen/manifest/node-autodetect.json` (when Node autodetection is active)
+
+Prisma stack adds:
+- `gen/node-express/prisma/schema.prisma`
+- `gen/node-express/src/generated/prisma-adapters.ts`
+
+TypeORM stack adds:
+- `gen/node-express/src/generated/typeorm-entities.ts`
+- `gen/node-express/src/generated/typeorm-adapters.ts`
+
 ## Migration Outputs
 
 - Flyway init: `gen/migrations/flyway/V1__prophet_init.sql`
