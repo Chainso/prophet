@@ -4,23 +4,27 @@ import type { Application } from 'express';
 import { buildActionRouter } from './action-routes.js';
 import { buildQueryRouter } from './query-routes.js';
 import { ActionExecutionService } from './action-service.js';
-import { EventEmitterNoOp, type EventEmitter } from './events.js';
+import { NoOpEventPublisher, type EventPublisher } from './events.js';
 import type { ActionContext, ActionHandlers } from './action-handlers.js';
 import type { Repositories } from './persistence.js';
 
 export interface MountDependencies {
   repositories: Repositories;
   handlers: ActionHandlers;
-  eventEmitter?: EventEmitter;
+  eventPublisher?: EventPublisher;
+  eventSource?: string;
+  eventAttributes?: Record<string, string>;
 }
 
 export function mountProphet(app: Application, deps: MountDependencies): void {
-  const eventEmitter = deps.eventEmitter ?? new EventEmitterNoOp();
+  const eventPublisher = deps.eventPublisher ?? new NoOpEventPublisher();
   const context: ActionContext = {
     repositories: deps.repositories,
-    eventEmitter,
+    eventPublisher,
+    eventSource: deps.eventSource ?? 'commerce_local',
+    eventAttributes: deps.eventAttributes,
   };
-  const service = new ActionExecutionService(deps.handlers, eventEmitter);
+  const service = new ActionExecutionService(deps.handlers, eventPublisher);
   app.use(buildActionRouter(service, context));
   app.use(buildQueryRouter(deps.repositories));
 }

@@ -11,7 +11,7 @@
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "5ea2864c0484289d71c022196ec64fca2bbb07436e0a1e472e2580d99ba838c4"
+      "sha256": "6a9a750e88e28442521cc231ceba03b196a3720b60c139f8eedbefa8e07edc97"
     },
     {
       "path": "gen/manifest/python-autodetect.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "70d678b0a578614b3aa9056ac14f7bc2e6767e71d2e34e207e2b2384428f14ee"
+      "sha256": "7b27e922d681be12a196455db4b09aed5be3d965f38a1ca75e8acbb6a41fa857"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
@@ -31,11 +31,11 @@
     },
     {
       "path": "gen/python/src/generated/action_handlers.py",
-      "sha256": "cfdc4379be3a89642b2d2452d864872738e4062a078d16e18a656ca43acbf57d"
+      "sha256": "bd42c6074eebd9b6e0514e5f1a2ef11c198988833eafdf0dabdbead95addb6af"
     },
     {
       "path": "gen/python/src/generated/action_service.py",
-      "sha256": "8fd949339dfa39725449ff5de9f10a202f6ea79aa1025f884b5bb0e4d4629974"
+      "sha256": "5e8b4eef05d8ada775d019f8e5b4c649551dff03cc148fee9d837656a54212a2"
     },
     {
       "path": "gen/python/src/generated/actions.py",
@@ -47,11 +47,11 @@
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "5c3e82bf8a18ecea4738e147b9c1237a24b0cf944ac955a65e3ea9bee260b3c6"
+      "sha256": "272ed32beca869de2e53cbaa37588d53c3ef7ddbf368faa998cbca21ed13c2c9"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "653a1da504149be2c09748dfd1948e0e4a849cab71cb0a7f78f2f1c77135aaf2"
+      "sha256": "6ca5136e99e577269772350bed147f2065a5ef0faa173ee02dac7c338c83282b"
     },
     {
       "path": "gen/python/src/generated/fastapi_routes.py",

@@ -2,36 +2,41 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Optional, Protocol
 
 from .actions import *
-from .events import EventEmitter
+from .events import ActionOutcome
+from .events import ActionOutcomeValue
+from .events import EventPublisher
 from .persistence import Repositories
 
 @dataclass
 class ActionContext:
     repositories: Repositories
-    eventEmitter: EventEmitter
+    eventPublisher: EventPublisher
+    traceId: Optional[str] = None
+    eventSource: Optional[str] = None
+    eventAttributes: Optional[dict[str, str]] = None
 
 class ApproveOrderActionHandler(Protocol):
-    def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ApproveOrderResult: ...
+    def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcomeValue[ApproveOrderResult]: ...
 
 class ApproveOrderActionHandlerDefault:
-    def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ApproveOrderResult:
+    def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcome[ApproveOrderResult]:
         raise NotImplementedError('No implementation registered for action: approveOrder')
 
 class CreateOrderActionHandler(Protocol):
-    def handle(self, input: CreateOrderCommand, context: ActionContext) -> CreateOrderResult: ...
+    def handle(self, input: CreateOrderCommand, context: ActionContext) -> ActionOutcomeValue[CreateOrderResult]: ...
 
 class CreateOrderActionHandlerDefault:
-    def handle(self, input: CreateOrderCommand, context: ActionContext) -> CreateOrderResult:
+    def handle(self, input: CreateOrderCommand, context: ActionContext) -> ActionOutcome[CreateOrderResult]:
         raise NotImplementedError('No implementation registered for action: createOrder')
 
 class ShipOrderActionHandler(Protocol):
-    def handle(self, input: ShipOrderCommand, context: ActionContext) -> ShipOrderResult: ...
+    def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcomeValue[ShipOrderResult]: ...
 
 class ShipOrderActionHandlerDefault:
-    def handle(self, input: ShipOrderCommand, context: ActionContext) -> ShipOrderResult:
+    def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcome[ShipOrderResult]:
         raise NotImplementedError('No implementation registered for action: shipOrder')
 
 class ActionHandlers(Protocol):

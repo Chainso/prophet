@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "express": "^4.19.2",
+    "@prophet/events-runtime": "^0.1.0",
     "zod": "^3.23.8",
     "mongoose": "^8.7.0"
   },

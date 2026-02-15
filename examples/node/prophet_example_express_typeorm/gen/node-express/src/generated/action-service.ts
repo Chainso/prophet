@@ -2,30 +2,56 @@
 
 import type * as Actions from './actions.js';
 import type { ActionContext, ActionHandlers } from './action-handlers.js';
-import type { EventEmitter } from './events.js';
+import { createEventId } from '@prophet/events-runtime';
+import {
+  createApproveOrderResultEvent,
+  createCreateOrderResultEvent,
+  createShipOrderResultEvent,
+  publishDomainEvents,
+  toActionOutcome,
+  type EventPublisher
+} from './events.js';
 
 export class ActionExecutionService {
   constructor(
     private readonly handlers: ActionHandlers,
-    private readonly eventEmitter: EventEmitter,
+    private readonly eventPublisher: EventPublisher,
   ) {}
 
   async approveOrder(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<Actions.ApproveOrderResult> {
-    const output = await this.handlers.approveOrder.handle(input, context);
-    await this.eventEmitter.emitApproveOrderResult(output);
-    return output;
+    const result = await this.handlers.approveOrder.handle(input, context);
+    const outcome = toActionOutcome<Actions.ApproveOrderResult>(result);
+    const events = [createApproveOrderResultEvent(outcome.output), ...outcome.additionalEvents];
+    await publishDomainEvents(this.eventPublisher, events, {
+      traceId: context.traceId ?? createEventId(),
+      source: context.eventSource ?? 'commerce_local',
+      attributes: context.eventAttributes,
+    });
+    return outcome.output;
   }
 
   async createOrder(input: Actions.CreateOrderCommand, context: ActionContext): Promise<Actions.CreateOrderResult> {
-    const output = await this.handlers.createOrder.handle(input, context);
-    await this.eventEmitter.emitCreateOrderResult(output);
-    return output;
+    const result = await this.handlers.createOrder.handle(input, context);
+    const outcome = toActionOutcome<Actions.CreateOrderResult>(result);
+    const events = [createCreateOrderResultEvent(outcome.output), ...outcome.additionalEvents];
+    await publishDomainEvents(this.eventPublisher, events, {
+      traceId: context.traceId ?? createEventId(),
+      source: context.eventSource ?? 'commerce_local',
+      attributes: context.eventAttributes,
+    });
+    return outcome.output;
   }
 
   async shipOrder(input: Actions.ShipOrderCommand, context: ActionContext): Promise<Actions.ShipOrderResult> {
-    const output = await this.handlers.shipOrder.handle(input, context);
-    await this.eventEmitter.emitShipOrderResult(output);
-    return output;
+    const result = await this.handlers.shipOrder.handle(input, context);
+    const outcome = toActionOutcome<Actions.ShipOrderResult>(result);
+    const events = [createShipOrderResultEvent(outcome.output), ...outcome.additionalEvents];
+    await publishDomainEvents(this.eventPublisher, events, {
+      traceId: context.traceId ?? createEventId(),
+      source: context.eventSource ?? 'commerce_local',
+      attributes: context.eventAttributes,
+    });
+    return outcome.output;
   }
 
 }

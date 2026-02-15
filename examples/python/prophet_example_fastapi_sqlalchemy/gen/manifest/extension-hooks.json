@@ -19,6 +19,11 @@
       "action_id": "act_ship_order",
       "action_name": "shipOrder",
       "python_protocol": "generated.action_handlers.ShipOrderActionHandler"
+    },
+    {
+      "kind": "event_publisher",
+      "python_protocol": "prophet_events_runtime.EventPublisher",
+      "generated_publish_helper": "generated.events.publish_domain_events"
     }
   ]
 }

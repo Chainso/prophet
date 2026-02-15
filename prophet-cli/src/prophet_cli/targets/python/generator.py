@@ -147,6 +147,13 @@ def generate_outputs(context: GenerationContext, deps: PythonDeps) -> Dict[str, 
                 "python_protocol": f"generated.action_handlers.{_pascal_case(action_name)}ActionHandler",
             }
         )
+    extension_hooks.append(
+        {
+            "kind": "event_publisher",
+            "python_protocol": "prophet_events_runtime.EventPublisher",
+            "generated_publish_helper": "generated.events.publish_domain_events",
+        }
+    )
 
     outputs[f"{out_dir}/manifest/extension-hooks.json"] = json.dumps(
         {

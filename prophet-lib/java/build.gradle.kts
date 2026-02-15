@@ -1,5 +1,6 @@
 plugins {
     `java-library`
+    `maven-publish`
 }
 
 group = "io.prophet"
@@ -21,4 +22,13 @@ tasks.withType<Test> {
 
 dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.0")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            artifactId = "prophet-events-runtime"
+        }
+    }
 }

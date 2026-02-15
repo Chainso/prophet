@@ -101,6 +101,13 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
                 "default_implementation_class": f"{base_package}.generated.actions.handlers.defaults.{interface_name}Default",
             }
         )
+    extension_hooks.append(
+        {
+            "kind": "event_publisher",
+            "java_interface": "io.prophet.events.runtime.EventPublisher",
+            "generated_publish_helper": f"{base_package}.generated.events.EventPublishingSupport",
+        }
+    )
     outputs[f"{out_dir}/manifest/extension-hooks.json"] = json.dumps(
         {
             "schema_version": 1,

@@ -31,7 +31,7 @@ from generated.actions import (
     ShipOrderResult,
 )
 from generated.domain import Order, OrderRef, User
-from generated.events import EventEmitterNoOp
+from generated.events import EventPublisherNoOp
 from generated.fastapi_routes import build_generated_router
 from generated.sqlalchemy_adapters import SqlAlchemyRepositories
 
@@ -120,9 +120,9 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 SqlAlchemyModels.Base.metadata.create_all(engine)
 
 repositories = SqlAlchemyRepositories(lambda: SessionLocal())
-event_emitter = EventEmitterNoOp()
-context = ActionContext(repositories=repositories, eventEmitter=event_emitter)
-service = ActionExecutionService(ActionHandlers(), event_emitter)
+event_publisher = EventPublisherNoOp()
+context = ActionContext(repositories=repositories, eventPublisher=event_publisher)
+service = ActionExecutionService(ActionHandlers())
 
 app = FastAPI(title="prophet_example_fastapi_sqlalchemy")
 app.include_router(build_generated_router(service, context, repositories))

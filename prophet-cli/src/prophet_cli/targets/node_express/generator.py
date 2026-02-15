@@ -116,6 +116,13 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
                 "default_implementation": f"generated.{handler_name}Default",
             }
         )
+    extension_hooks.append(
+        {
+            "kind": "event_publisher",
+            "typescript_interface": "@prophet/events-runtime.EventPublisher",
+            "generated_publish_helper": "generated.events.publishDomainEvents",
+        }
+    )
 
     outputs[f"{out_dir}/manifest/extension-hooks.json"] = json.dumps(
         {

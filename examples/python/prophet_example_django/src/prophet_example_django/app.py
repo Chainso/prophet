@@ -32,7 +32,7 @@ from generated.actions import (
 from generated.django_adapters import DjangoRepositories
 from generated.django_views import configure_generated_views
 from generated.domain import Order, OrderRef, User
-from generated.events import EventEmitterNoOp
+from generated.events import EventPublisherNoOp
 
 _INITIALIZED = False
 
@@ -140,8 +140,8 @@ def initialize_generated_runtime() -> None:
 
     _ensure_generated_schema()
     repositories = DjangoRepositories()
-    event_emitter = EventEmitterNoOp()
-    context = ActionContext(repositories=repositories, eventEmitter=event_emitter)
-    service = ActionExecutionService(ActionHandlers(), event_emitter)
+    event_publisher = EventPublisherNoOp()
+    context = ActionContext(repositories=repositories, eventPublisher=event_publisher)
+    service = ActionExecutionService(ActionHandlers())
     configure_generated_views(service, context, repositories)
     _INITIALIZED = True

@@ -54,7 +54,7 @@ def _render_event_emitter(ir: Dict[str, Any]) -> str:
                 f"        schema_version: '{schema_version}',",
                 "        occurred_at: nowIso(),",
                 "        source: metadata.source,",
-                "        payload: event.payload as Record<string, unknown>,",
+                "        payload: event.payload as unknown as Record<string, unknown>,",
                 "        attributes: metadata.attributes,",
                 "      };",
             ]

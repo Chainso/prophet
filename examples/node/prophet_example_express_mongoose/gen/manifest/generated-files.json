@@ -11,7 +11,7 @@
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "b0c6f1499ee54209120391c6525276a93a7c410d3549f0e0b17f906dc3228560"
+      "sha256": "fbfdb716756841eb2e5c953e25de18a421a264a6767059c99a943052a9e1bc3d"
     },
     {
       "path": "gen/manifest/node-autodetect.json",
@@ -19,19 +19,19 @@
     },
     {
       "path": "gen/node-express/package.json",
-      "sha256": "458736bc2d5e0e4bd721492ba2de1a05dd018b768419cacf09c6879859bfecfd"
+      "sha256": "12c46218623121eb57aeb007f29e5e9b42af18a8b898fda40c33e45a8e7249dc"
     },
     {
       "path": "gen/node-express/src/generated/action-handlers.ts",
-      "sha256": "06be2787c1b146e2e8b39baa2ffe892cac5be1ac27eae1942b00b411c47fed1c"
+      "sha256": "85f735126110351ba3e72833c141cddf0ac0165600dfd8240a4e81adcfa949bc"
     },
     {
       "path": "gen/node-express/src/generated/action-routes.ts",
-      "sha256": "795252cd833e7ccbbdb472bac8f145fa60568ed3787f818ccf9cfa4b37d6278a"
+      "sha256": "9ccb98c2d88ad232ce501ee1fe27d708f99c08fcc5fa84e635e6ddd3ec5e883e"
     },
     {
       "path": "gen/node-express/src/generated/action-service.ts",
-      "sha256": "211e610c7f560574b6ae4b1bbcfeb5957fcc6faf35d4733ad0ef9d57a5a11849"
+      "sha256": "faf0cc148a2d63279e77a68624ceda464301f4f89d9fda6f16a657f24611d985"
     },
     {
       "path": "gen/node-express/src/generated/actions.ts",
@@ -47,11 +47,11 @@
     },
     {
       "path": "gen/node-express/src/generated/events.ts",
-      "sha256": "efd5c0285594e04a8fb4584b5710d49fa64d75f38bce81655010ffd34890b654"
+      "sha256": "b56269dd04521a3df66b50857f0141a12ff87c6a321a46eaad47a03980a0a4d2"
     },
     {
       "path": "gen/node-express/src/generated/index.ts",
-      "sha256": "14103530e475a7a2f060483970602911a6621c10d7e75e90cc342fc92697501e"
+      "sha256": "bf668d1d01616b07848c9036d5012e7d41fe0dfcf5f19c9b7539fb72dd5b2675"
     },
     {
       "path": "gen/node-express/src/generated/mongoose-adapters.ts",

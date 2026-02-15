@@ -5,7 +5,7 @@ import com.example.prophet.commerce_local.generated.domain.OrderRef;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Emit 'PaymentCaptured'.
+ * Event payload for 'PaymentCaptured'.
  */
 @Generated("prophet-cli")
 public record PaymentCaptured(

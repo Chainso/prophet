@@ -22,6 +22,11 @@
       "action_name": "shipOrder",
       "typescript_interface": "generated.ShipOrderActionHandler",
       "default_implementation": "generated.ShipOrderActionHandlerDefault"
+    },
+    {
+      "kind": "event_publisher",
+      "typescript_interface": "@prophet/events-runtime.EventPublisher",
+      "generated_publish_helper": "generated.events.publishDomainEvents"
     }
   ]
 }

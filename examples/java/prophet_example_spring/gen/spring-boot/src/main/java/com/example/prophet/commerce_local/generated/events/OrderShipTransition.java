@@ -4,7 +4,7 @@ import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.domain.OrderRef;
 
 /**
- * Emit 'OrderShipTransition'.
+ * Event payload for 'OrderShipTransition'.
  */
 @Generated("prophet-cli")
 public record OrderShipTransition(

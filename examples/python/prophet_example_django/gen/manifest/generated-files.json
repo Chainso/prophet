@@ -11,7 +11,7 @@
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "644608f0feceaf118a5471071b6ec6c8518c59255453cc26f2111f2a22fa9202"
+      "sha256": "b698d92a008635ee8476118d05c83ad4de8b8c831d5af40a6e47ccbc66cc5cd3"
     },
     {
       "path": "gen/manifest/python-autodetect.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "03099d11f7c2aa97a8a5d9cc8955ccab8e3f960edb644a22c6aa26f9a36ae698"
+      "sha256": "605efb87c0c2e1c709d8033b39fdade6efe7bc7c7379c119f2f76e0f069296c1"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
@@ -31,11 +31,11 @@
     },
     {
       "path": "gen/python/src/generated/action_handlers.py",
-      "sha256": "afbe74074a638225ee88e4cb51262e5255c2ec26159384496d64cbbaa6de00c8"
+      "sha256": "72d2ebb14f641132e937e865604de70f7cd98547b26a1a29a2a70ee83c86fdd8"
     },
     {
       "path": "gen/python/src/generated/action_service.py",
-      "sha256": "d4cc97c713591c4aa29d28e4358f94096638998cdb26baef3dc6688a3277df8b"
+      "sha256": "7325f71d223d5fcda1edad35e842392e07a625427a4db09521ba579cef669ca7"
     },
     {
       "path": "gen/python/src/generated/actions.py",
@@ -63,11 +63,11 @@
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "5c3e82bf8a18ecea4738e147b9c1237a24b0cf944ac955a65e3ea9bee260b3c6"
+      "sha256": "272ed32beca869de2e53cbaa37588d53c3ef7ddbf368faa998cbca21ed13c2c9"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "1345c18925ce74f3634676143389f65105c72df41952b675a572ab38f289003f"
+      "sha256": "6ca5136e99e577269772350bed147f2065a5ef0faa173ee02dac7c338c83282b"
     },
     {
       "path": "gen/python/src/generated/persistence.py",

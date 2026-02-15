@@ -5,7 +5,14 @@ import com.example.prophet.commerce_local.generated.actions.ShipOrderCommand;
 import com.example.prophet.commerce_local.generated.actions.ShipOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.ShipOrderActionHandler;
 import com.example.prophet.commerce_local.generated.actions.services.ShipOrderActionService;
-import com.example.prophet.commerce_local.generated.events.GeneratedEventEmitter;
+import com.example.prophet.commerce_local.generated.events.ActionOutcome;
+import com.example.prophet.commerce_local.generated.events.DomainEvent;
+import com.example.prophet.commerce_local.generated.events.EventPublishingSupport;
+import com.example.prophet.commerce_local.generated.events.ShipOrderResultEvent;
+import io.prophet.events.runtime.EventIds;
+import io.prophet.events.runtime.EventPublisher;
+import java.util.ArrayList;
+import java.util.List;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
@@ -13,14 +20,14 @@ import org.springframework.stereotype.Component;
 @Generated("prophet-cli")
 public class ShipOrderActionServiceDefault implements ShipOrderActionService {
     private final ObjectProvider<ShipOrderActionHandler> handlerProvider;
-    private final GeneratedEventEmitter eventEmitter;
+    private final EventPublisher eventPublisher;
 
     public ShipOrderActionServiceDefault(
         ObjectProvider<ShipOrderActionHandler> handlerProvider,
-        GeneratedEventEmitter eventEmitter
+        EventPublisher eventPublisher
     ) {
         this.handlerProvider = handlerProvider;
-        this.eventEmitter = eventEmitter;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -29,8 +36,17 @@ public class ShipOrderActionServiceDefault implements ShipOrderActionService {
         if (handler == null) {
             throw new UnsupportedOperationException("No handler bean provided for action 'shipOrder'");
         }
-        ShipOrderResult result = handler.handle(request);
-        eventEmitter.emitShipOrderResult(result);
-        return result;
+        ActionOutcome<ShipOrderResult> outcome = handler.handleOutcome(request);
+        List<DomainEvent> events = new ArrayList<>();
+        events.add(new ShipOrderResultEvent(outcome.output()));
+        events.addAll(outcome.additionalEvents());
+        EventPublishingSupport.publishAll(
+            eventPublisher,
+            events,
+            EventIds.createEventId(),
+            "commerce_local",
+            null
+        ).toCompletableFuture().join();
+        return outcome.output();
     }
 }

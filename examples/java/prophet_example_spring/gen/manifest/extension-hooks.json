@@ -22,6 +22,11 @@
       "action_name": "shipOrder",
       "java_interface": "com.example.prophet.commerce_local.generated.actions.handlers.ShipOrderActionHandler",
       "default_implementation_class": "com.example.prophet.commerce_local.generated.actions.handlers.defaults.ShipOrderActionHandlerDefault"
+    },
+    {
+      "kind": "event_publisher",
+      "java_interface": "io.prophet.events.runtime.EventPublisher",
+      "generated_publish_helper": "com.example.prophet.commerce_local.generated.events.EventPublishingSupport"
     }
   ]
 }

@@ -30,7 +30,7 @@ from generated.actions import (
     ShipOrderResult,
 )
 from generated.domain import Order, OrderRef, User
-from generated.events import EventEmitterNoOp
+from generated.events import EventPublisherNoOp
 from generated.fastapi_routes import build_generated_router
 from generated.sqlmodel_adapters import SqlModelRepositories
 
@@ -118,9 +118,9 @@ engine = create_engine("sqlite:///./dev.db", connect_args={"check_same_thread": 
 SqlModelModels.SQLModel.metadata.create_all(engine)
 
 repositories = SqlModelRepositories(lambda: Session(engine))
-event_emitter = EventEmitterNoOp()
-context = ActionContext(repositories=repositories, eventEmitter=event_emitter)
-service = ActionExecutionService(ActionHandlers(), event_emitter)
+event_publisher = EventPublisherNoOp()
+context = ActionContext(repositories=repositories, eventPublisher=event_publisher)
+service = ActionExecutionService(ActionHandlers())
 
 app = FastAPI(title="prophet_example_fastapi_sqlmodel")
 app.include_router(build_generated_router(service, context, repositories))

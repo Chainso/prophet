@@ -22,6 +22,7 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     base_package = state["base_package"]
     package_path = state["package_path"]
     schema_version = str(state.get("ontology_version", "1.0.0"))
+    action_output_names = {str(item.get("name", "")) for item in action_outputs if isinstance(item, dict)}
 
     # action contract records
     action_shapes = sorted(action_inputs + action_outputs, key=lambda x: x["id"])
@@ -131,8 +132,12 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     files[f"src/main/java/{package_path}/generated/events/DomainEvent.java"] = domain_event_interface
 
     for event_name, payload_type in domain_event_specs:
+        wrapper_imports = ""
+        if payload_type in action_output_names:
+            wrapper_imports = f"import {base_package}.generated.actions.{payload_type};\n\n"
         wrapper_src = (
             f"package {base_package}.generated.events;\n\n"
+            + wrapper_imports
             + f"public record {event_name}Event({payload_type} payload) implements DomainEvent {{\n"
             + "}\n"
         )

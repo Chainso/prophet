@@ -2,39 +2,42 @@
 
 import type * as Actions from './actions.js';
 import type { Repositories } from './persistence.js';
-import type { EventEmitter } from './events.js';
+import type { ActionOutcome, ActionOutcomeValue, EventPublisher } from './events.js';
 
 export interface ActionContext {
   repositories: Repositories;
-  eventEmitter: EventEmitter;
+  eventPublisher: EventPublisher;
+  traceId?: string;
+  eventSource?: string;
+  eventAttributes?: Record<string, string>;
 }
 
 export interface ApproveOrderActionHandler {
-  handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<Actions.ApproveOrderResult>;
+  handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<ActionOutcomeValue<Actions.ApproveOrderResult>>;
 }
 
 export class ApproveOrderActionHandlerDefault implements ApproveOrderActionHandler {
-  async handle(_input: Actions.ApproveOrderCommand): Promise<Actions.ApproveOrderResult> {
+  async handle(_input: Actions.ApproveOrderCommand): Promise<ActionOutcome<Actions.ApproveOrderResult>> {
     throw new Error('No implementation registered for action: approveOrder');
   }
 }
 
 export interface CreateOrderActionHandler {
-  handle(input: Actions.CreateOrderCommand, context: ActionContext): Promise<Actions.CreateOrderResult>;
+  handle(input: Actions.CreateOrderCommand, context: ActionContext): Promise<ActionOutcomeValue<Actions.CreateOrderResult>>;
 }
 
 export class CreateOrderActionHandlerDefault implements CreateOrderActionHandler {
-  async handle(_input: Actions.CreateOrderCommand): Promise<Actions.CreateOrderResult> {
+  async handle(_input: Actions.CreateOrderCommand): Promise<ActionOutcome<Actions.CreateOrderResult>> {
     throw new Error('No implementation registered for action: createOrder');
   }
 }
 
 export interface ShipOrderActionHandler {
-  handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<Actions.ShipOrderResult>;
+  handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<ActionOutcomeValue<Actions.ShipOrderResult>>;
 }
 
 export class ShipOrderActionHandlerDefault implements ShipOrderActionHandler {
-  async handle(_input: Actions.ShipOrderCommand): Promise<Actions.ShipOrderResult> {
+  async handle(_input: Actions.ShipOrderCommand): Promise<ActionOutcome<Actions.ShipOrderResult>> {
     throw new Error('No implementation registered for action: shipOrder');
   }
 }

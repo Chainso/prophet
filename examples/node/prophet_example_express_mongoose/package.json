@@ -12,6 +12,7 @@
     "prophet:validate": "prophet validate"
   },
   "dependencies": {
+    "@prophet/events-runtime": "file:../../../prophet-lib/javascript",
     "express": "^4.19.2",
     "mongoose": "^8.7.0",
     "zod": "^3.23.8"
