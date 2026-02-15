@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.11.2",
+  "toolchain_version": "0.12.0",
   "stack": {
     "id": "java_spring_jpa",
     "language": "java",
     "framework": "spring_boot",
     "orm": "jpa"
   },
-  "ir_hash": "15ce6a2bc9d38f1f7e0923409a6334f2939d50fd25000bdcbe2befd971aed171",
+  "ir_hash": "18c51c21f01e8e4b1848a440e224be2b78aa3e3999bc69dd6c17bbd8fb3e4e90",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -35,7 +35,7 @@
     },
     {
       "path": "gen/spring-boot/build.gradle.kts",
-      "sha256": "88f1e9b219ef11f032bf507a66f60c2e604c50d3bb18c90c92644352ab46e4e4"
+      "sha256": "5525949fc1d6ea01e8c0a4d683e576352b5be4f9759583ec762feea9b4deca3e"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/actions/ApproveOrderCommand.java",

@@ -12,15 +12,15 @@ GEN_SRC = ROOT / "gen" / "python" / "src"
 if str(GEN_SRC) not in sys.path:
     sys.path.insert(0, str(GEN_SRC))
 
-from generated import django_models as GeneratedModels
+from generated import django_models as Models
 from generated.action_handlers import (
     ApproveOrderActionHandler,
     CreateOrderActionHandler,
-    GeneratedActionContext,
-    GeneratedActionHandlers,
+    ActionContext,
+    ActionHandlers,
     ShipOrderActionHandler,
 )
-from generated.action_service import GeneratedActionExecutionService
+from generated.action_service import ActionExecutionService
 from generated.actions import (
     ApproveOrderCommand,
     ApproveOrderResult,
@@ -29,16 +29,16 @@ from generated.actions import (
     ShipOrderCommand,
     ShipOrderResult,
 )
-from generated.django_adapters import DjangoGeneratedRepositories
+from generated.django_adapters import DjangoRepositories
 from generated.django_views import configure_generated_views
 from generated.domain import Order, OrderRef, User
-from generated.events import GeneratedEventEmitterNoOp
+from generated.events import EventEmitterNoOp
 
 _INITIALIZED = False
 
 
 class CreateOrderHandler(CreateOrderActionHandler):
-    def handle(self, input: CreateOrderCommand, context: GeneratedActionContext) -> CreateOrderResult:
+    def handle(self, input: CreateOrderCommand, context: ActionContext) -> CreateOrderResult:
         context.repositories.user.save(
             User(
                 userId=input.customer.userId,
@@ -61,7 +61,7 @@ class CreateOrderHandler(CreateOrderActionHandler):
 
 
 class ApproveOrderHandler(ApproveOrderActionHandler):
-    def handle(self, input: ApproveOrderCommand, context: GeneratedActionContext) -> ApproveOrderResult:
+    def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ApproveOrderResult:
         existing = context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
@@ -81,7 +81,7 @@ class ApproveOrderHandler(ApproveOrderActionHandler):
 
 
 class ShipOrderHandler(ShipOrderActionHandler):
-    def handle(self, input: ShipOrderCommand, context: GeneratedActionContext) -> ShipOrderResult:
+    def handle(self, input: ShipOrderCommand, context: ActionContext) -> ShipOrderResult:
         existing = context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
@@ -105,7 +105,7 @@ class ShipOrderHandler(ShipOrderActionHandler):
         )
 
 
-class ActionHandlers(GeneratedActionHandlers):
+class ActionHandlers(ActionHandlers):
     createOrder: CreateOrderActionHandler
     approveOrder: ApproveOrderActionHandler
     shipOrder: ShipOrderActionHandler
@@ -118,7 +118,7 @@ class ActionHandlers(GeneratedActionHandlers):
 
 def _generated_model_classes() -> list[type[models.Model]]:
     result: list[type[models.Model]] = []
-    for value in vars(GeneratedModels).values():
+    for value in vars(Models).values():
         if isinstance(value, type) and issubclass(value, models.Model) and value is not models.Model:
             result.append(value)
     return sorted(result, key=lambda item: item.__name__)
@@ -139,9 +139,9 @@ def initialize_generated_runtime() -> None:
         return
 
     _ensure_generated_schema()
-    repositories = DjangoGeneratedRepositories()
-    event_emitter = GeneratedEventEmitterNoOp()
-    context = GeneratedActionContext(repositories=repositories, eventEmitter=event_emitter)
-    service = GeneratedActionExecutionService(ActionHandlers(), event_emitter)
+    repositories = DjangoRepositories()
+    event_emitter = EventEmitterNoOp()
+    context = ActionContext(repositories=repositories, eventEmitter=event_emitter)
+    service = ActionExecutionService(ActionHandlers(), event_emitter)
     configure_generated_views(service, context, repositories)
     _INITIALIZED = True

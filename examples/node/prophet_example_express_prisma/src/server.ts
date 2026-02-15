@@ -7,16 +7,16 @@ import { mountProphet } from '../gen/node-express/src/generated/index.js';
 import {
   type ApproveOrderActionHandler,
   type CreateOrderActionHandler,
-  type GeneratedActionContext,
+  type ActionContext,
   type ShipOrderActionHandler,
 } from '../gen/node-express/src/generated/action-handlers.js';
 import type * as Actions from '../gen/node-express/src/generated/actions.js';
 import type * as Domain from '../gen/node-express/src/generated/domain.js';
-import { PrismaGeneratedRepositories } from '../gen/node-express/src/generated/prisma-adapters.js';
+import { PrismaRepositories } from '../gen/node-express/src/generated/prisma-adapters.js';
 import type { Server } from 'node:http';
 
 class CreateOrderHandler implements CreateOrderActionHandler {
-  async handle(input: Actions.CreateOrderCommand, context: GeneratedActionContext): Promise<Actions.CreateOrderResult> {
+  async handle(input: Actions.CreateOrderCommand, context: ActionContext): Promise<Actions.CreateOrderResult> {
     await context.repositories.user.save({
       userId: input.customer.userId,
       email: `${input.customer.userId}@example.local`,
@@ -41,7 +41,7 @@ class CreateOrderHandler implements CreateOrderActionHandler {
 }
 
 class ApproveOrderHandler implements ApproveOrderActionHandler {
-  async handle(input: Actions.ApproveOrderCommand, context: GeneratedActionContext): Promise<Actions.ApproveOrderResult> {
+  async handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<Actions.ApproveOrderResult> {
     const existing = await context.repositories.order.getById({ orderId: input.order.orderId });
     if (!existing) {
       throw new Error(`order not found: ${input.order.orderId}`);
@@ -59,7 +59,7 @@ class ApproveOrderHandler implements ApproveOrderActionHandler {
 }
 
 class ShipOrderHandler implements ShipOrderActionHandler {
-  async handle(input: Actions.ShipOrderCommand, context: GeneratedActionContext): Promise<Actions.ShipOrderResult> {
+  async handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<Actions.ShipOrderResult> {
     const existing = await context.repositories.order.getById({ orderId: input.order.orderId });
     if (!existing) {
       throw new Error(`order not found: ${input.order.orderId}`);
@@ -89,7 +89,7 @@ export async function createAppRuntime(): Promise<AppRuntime> {
   const prismaClient = new PrismaClient();
 
   mountProphet(app, {
-    repositories: new PrismaGeneratedRepositories(prismaClient),
+    repositories: new PrismaRepositories(prismaClient),
     handlers: {
       createOrder: new CreateOrderHandler(),
       approveOrder: new ApproveOrderHandler(),

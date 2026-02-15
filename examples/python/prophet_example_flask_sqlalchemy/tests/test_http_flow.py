@@ -77,7 +77,10 @@ class FlaskSqlAlchemyHttpFlowTest(unittest.TestCase):
 
         query = self.client.post(
             "/orders/query?page=0&size=10",
-            json={"currentState": {"eq": "shipped"}},
+            json={
+                "currentState": {"eq": "shipped"},
+                "orderId": {"eq": order_id},
+            },
         )
         self.assertEqual(query.status_code, 200, query.get_data(as_text=True))
         queried = query.get_json()

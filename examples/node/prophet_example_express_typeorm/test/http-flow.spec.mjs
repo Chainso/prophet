@@ -66,6 +66,7 @@ describe('Prophet Express TypeORM HTTP flow', function () {
 
     const queried = await client.post('/orders/query?page=0&size=10').send({
       currentState: { eq: 'shipped' },
+      orderId: { eq: orderId },
     });
     assert.equal(queried.status, 200);
     assert.ok(Array.isArray(queried.body.items));

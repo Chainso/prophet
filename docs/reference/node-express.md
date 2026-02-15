@@ -76,8 +76,8 @@ On `prophet gen` for Node stacks, Prophet adds scripts to host `package.json` wh
 ## Action and Event Behavior
 
 - Generated action routes are available under `/actions/<actionName>`.
-- Generated action service emits action output events by default through `GeneratedEventEmitter`.
-- A `GeneratedEventEmitterNoOp` is provided for zero-config integration.
+- Generated action service emits action output events by default through `EventEmitter`.
+- An `EventEmitterNoOp` is provided for zero-config integration.
 - Default handler stubs throw until replaced by user-owned implementations.
 
 ## Query Behavior

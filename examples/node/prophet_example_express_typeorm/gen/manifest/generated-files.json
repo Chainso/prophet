@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.11.2",
+  "toolchain_version": "0.12.0",
   "stack": {
     "id": "node_express_typeorm",
     "language": "node",
     "framework": "express",
     "orm": "typeorm"
   },
-  "ir_hash": "8546d7f5abcb688f9915eb1c3090c12b3b83540e98758faf2a17abad50bb4b6e",
+  "ir_hash": "4dbd237e65c9febd5f8c4a2a0cd81fbc1776a2c84f72651726bdd9f5f795de9e",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,63 +23,63 @@
     },
     {
       "path": "gen/node-express/src/generated/action-handlers.ts",
-      "sha256": "f9d68d7ed6be74481446f0c531a3f77f93a90d66a7a960301035222620723faf"
+      "sha256": "06be2787c1b146e2e8b39baa2ffe892cac5be1ac27eae1942b00b411c47fed1c"
     },
     {
       "path": "gen/node-express/src/generated/action-routes.ts",
-      "sha256": "a29ee4ec08e4eea93d4bf704d9398d85da754e256c650af4d921e3e9433ba4fa"
+      "sha256": "795252cd833e7ccbbdb472bac8f145fa60568ed3787f818ccf9cfa4b37d6278a"
     },
     {
       "path": "gen/node-express/src/generated/action-service.ts",
-      "sha256": "c029dc3ec30be92984547fe2a0a1e4af6819753687b5385e6fe4524ff7783ca2"
+      "sha256": "211e610c7f560574b6ae4b1bbcfeb5957fcc6faf35d4733ad0ef9d57a5a11849"
     },
     {
       "path": "gen/node-express/src/generated/actions.ts",
-      "sha256": "2162a2e88443473f05bee85e002e92eed86e4e5f9fa60ae4833c9d5635753f81"
+      "sha256": "277cd9326152035d83f8c69f22d412590bbcd7e87da6dd5e15277afe523fd733"
     },
     {
       "path": "gen/node-express/src/generated/domain.ts",
-      "sha256": "f338e5d1fa2f260754d575bd2b09246d95faebb9ca1cc0904054bb478f2ecc84"
+      "sha256": "2e24bc86c352c12c54928fb1e578d8ae4a1486d3b015c9cb6ef3346a9bf9f634"
     },
     {
       "path": "gen/node-express/src/generated/event-contracts.ts",
-      "sha256": "274cbcd8840355bb2e182a5e9edc9d539ae93204fbb7bc9f5c924002a596848c"
+      "sha256": "6fb7aee5d9a5893d220a6fcf056127baf3b2652052ec1531db1944f78be82e8a"
     },
     {
       "path": "gen/node-express/src/generated/events.ts",
-      "sha256": "82f49c5eedc40c1a8281d00050734b23c3ec5175d95d6811cff29fa8b3c9634b"
+      "sha256": "efd5c0285594e04a8fb4584b5710d49fa64d75f38bce81655010ffd34890b654"
     },
     {
       "path": "gen/node-express/src/generated/index.ts",
-      "sha256": "ce43ab51555ee9dab9e4f0fa22b0cc5b314552bdd7d161ab59520e0a49a68ca9"
+      "sha256": "14103530e475a7a2f060483970602911a6621c10d7e75e90cc342fc92697501e"
     },
     {
       "path": "gen/node-express/src/generated/persistence.ts",
-      "sha256": "380b02c6f8ad2061bbe60a0945e55f59a1f3e8b14bd6b84aea39a9232915e6a3"
+      "sha256": "ba7d0ef8ec898d115835deb18c088d6705d32182b88ecc4fe1e0da3a77f911bb"
     },
     {
       "path": "gen/node-express/src/generated/query-routes.ts",
-      "sha256": "541880ca95fec19c4a57657f16da9c755dbc3b3016de3ff131f23dbb111dd753"
+      "sha256": "7b336947f8080fa0d4ef3378f6b051795d57a80b3d9e62bc5bb8bfadc5b242ba"
     },
     {
       "path": "gen/node-express/src/generated/query.ts",
-      "sha256": "4a2dfcad15a2c73e6edae22ed070c2eb042e36bfc0b293a34fdb1c8c13d79d98"
+      "sha256": "bb3c6d113e7e44245c16a57bb25aa104ad47df243a2f1cd310ecc3254f5c0126"
     },
     {
       "path": "gen/node-express/src/generated/typeorm-adapters.ts",
-      "sha256": "d75e5e6de6fd8dec7b6c06d52fd0c8adc2f676a2c2b798c15151705887e86b2d"
+      "sha256": "a409ae0bdd3b71b63aaa21debd4255eea057486ffda1b9f60a6c806e015734e9"
     },
     {
       "path": "gen/node-express/src/generated/typeorm-entities.ts",
-      "sha256": "dd72d5dcc6e2eb17b1878ff2b954e0c9ea24361bb6096c0a0e4dc57251c9eb63"
+      "sha256": "f7e411226a5a858c834c27f525a1a5b8d6e16c1da6e2c96622dfa796edb47ec4"
     },
     {
       "path": "gen/node-express/src/generated/validation.ts",
-      "sha256": "0fdfef9d081d310b22ca696e6b1ef1183813fe0d5a711117dd7db50a009414e6"
+      "sha256": "be49064f44eda855e7580a19af45f0282bda6d4279787b045596c7653d41a7c9"
     },
     {
       "path": "gen/node-express/tsconfig.json",
-      "sha256": "79fdd5ed1b64da729943d7289291efecab86f495b3c92eb4eeff40b6f3851b2a"
+      "sha256": "6ff6220b34e697e44b1e652ec0eb2cd3302f690f5fb7d7b1b3927d2f05aee974"
     },
     {
       "path": "gen/openapi/openapi.yaml",

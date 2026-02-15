@@ -16,11 +16,11 @@ from generated import sqlmodel_models as SqlModelModels
 from generated.action_handlers import (
     ApproveOrderActionHandler,
     CreateOrderActionHandler,
-    GeneratedActionContext,
-    GeneratedActionHandlers,
+    ActionContext,
+    ActionHandlers,
     ShipOrderActionHandler,
 )
-from generated.action_service import GeneratedActionExecutionService
+from generated.action_service import ActionExecutionService
 from generated.actions import (
     ApproveOrderCommand,
     ApproveOrderResult,
@@ -30,13 +30,13 @@ from generated.actions import (
     ShipOrderResult,
 )
 from generated.domain import Order, OrderRef, User
-from generated.events import GeneratedEventEmitterNoOp
+from generated.events import EventEmitterNoOp
 from generated.fastapi_routes import build_generated_router
-from generated.sqlmodel_adapters import SqlModelGeneratedRepositories
+from generated.sqlmodel_adapters import SqlModelRepositories
 
 
 class CreateOrderHandler(CreateOrderActionHandler):
-    async def handle(self, input: CreateOrderCommand, context: GeneratedActionContext) -> CreateOrderResult:
+    async def handle(self, input: CreateOrderCommand, context: ActionContext) -> CreateOrderResult:
         await context.repositories.user.save(
             User(
                 userId=input.customer.userId,
@@ -59,7 +59,7 @@ class CreateOrderHandler(CreateOrderActionHandler):
 
 
 class ApproveOrderHandler(ApproveOrderActionHandler):
-    async def handle(self, input: ApproveOrderCommand, context: GeneratedActionContext) -> ApproveOrderResult:
+    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ApproveOrderResult:
         existing = await context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
@@ -79,7 +79,7 @@ class ApproveOrderHandler(ApproveOrderActionHandler):
 
 
 class ShipOrderHandler(ShipOrderActionHandler):
-    async def handle(self, input: ShipOrderCommand, context: GeneratedActionContext) -> ShipOrderResult:
+    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ShipOrderResult:
         existing = await context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
@@ -103,7 +103,7 @@ class ShipOrderHandler(ShipOrderActionHandler):
         )
 
 
-class ActionHandlers(GeneratedActionHandlers):
+class ActionHandlers(ActionHandlers):
     createOrder: CreateOrderActionHandler
     approveOrder: ApproveOrderActionHandler
     shipOrder: ShipOrderActionHandler
@@ -117,10 +117,10 @@ class ActionHandlers(GeneratedActionHandlers):
 engine = create_engine("sqlite:///./dev.db", connect_args={"check_same_thread": False})
 SqlModelModels.SQLModel.metadata.create_all(engine)
 
-repositories = SqlModelGeneratedRepositories(lambda: Session(engine))
-event_emitter = GeneratedEventEmitterNoOp()
-context = GeneratedActionContext(repositories=repositories, eventEmitter=event_emitter)
-service = GeneratedActionExecutionService(ActionHandlers(), event_emitter)
+repositories = SqlModelRepositories(lambda: Session(engine))
+event_emitter = EventEmitterNoOp()
+context = ActionContext(repositories=repositories, eventEmitter=event_emitter)
+service = ActionExecutionService(ActionHandlers(), event_emitter)
 
 app = FastAPI(title="prophet_example_fastapi_sqlmodel")
 app.include_router(build_generated_router(service, context, repositories))

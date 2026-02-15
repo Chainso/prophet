@@ -55,8 +55,8 @@ Autodetection fails closed for ambiguous framework signals or missing ORM signal
 ## Action and Event Behavior
 
 - Generated action endpoints are mounted per framework.
-- Generated action service emits action-output events through `GeneratedEventEmitter`.
-- `GeneratedEventEmitterNoOp` is provided for zero-config local wiring.
+- Generated action service emits action-output events through `EventEmitter`.
+- `EventEmitterNoOp` is provided for zero-config local wiring.
 - Default action handler implementations raise `NotImplementedError` until replaced by user code.
 
 ## Query Behavior

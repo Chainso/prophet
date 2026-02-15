@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.11.2",
+  "toolchain_version": "0.12.0",
   "stack": {
     "id": "python_fastapi_sqlalchemy",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "15ce6a2bc9d38f1f7e0923409a6334f2939d50fd25000bdcbe2befd971aed171",
+  "ir_hash": "18c51c21f01e8e4b1848a440e224be2b78aa3e3999bc69dd6c17bbd8fb3e4e90",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,55 +23,55 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "1b0e93b03102b8ba8efff0fbf13ce301758ae60a77c5f8870febadcdffca019e"
+      "sha256": "d935041c105b8b62e629b12cb9d35ba8a203c0b588c7921442d224d36c88556a"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
-      "sha256": "695dca7649f37cbc8b155b7f1c6bf7d1b9661e7398b74941a484383e0084be2e"
+      "sha256": "2c82589b0e624ed358067481b07547fa51d710f584cac7e7868a254d3d9a1196"
     },
     {
       "path": "gen/python/src/generated/action_handlers.py",
-      "sha256": "4155130de3dc43597c7de9c15e5b88284ab0944e1d2b015dc93a39941ded6e53"
+      "sha256": "cfdc4379be3a89642b2d2452d864872738e4062a078d16e18a656ca43acbf57d"
     },
     {
       "path": "gen/python/src/generated/action_service.py",
-      "sha256": "f007b7739907323a0ed625498b495afa3b75959a63f4c5a8a509f53f3d41c3c5"
+      "sha256": "8fd949339dfa39725449ff5de9f10a202f6ea79aa1025f884b5bb0e4d4629974"
     },
     {
       "path": "gen/python/src/generated/actions.py",
-      "sha256": "d91ccd0f8d7ac7319a5213d11108cec9ddff6fcc60769af5cf29857e2356af07"
+      "sha256": "5bf5d35df2dfc3ca7744e731ff41b2c47ffa7e338667965727e1020a6a9038af"
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "b9fcf93230ea5a4f233f1750ff7cce57df46d19a441af5b51375cc02404e1e6c"
+      "sha256": "be2c3c2d63f820364b68e343c9759285551cc00e3a22edc42034a5142fa1bd5e"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "769415911e02b9e89a5eab5b49c5626068431a8fb30f1991b144412bc11a1f83"
+      "sha256": "5c3e82bf8a18ecea4738e147b9c1237a24b0cf944ac955a65e3ea9bee260b3c6"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "3d40cb098e9248fd5a0b8c59b6ebd95214231fe65dc3f90710d967e73dc4a165"
+      "sha256": "653a1da504149be2c09748dfd1948e0e4a849cab71cb0a7f78f2f1c77135aaf2"
     },
     {
       "path": "gen/python/src/generated/fastapi_routes.py",
-      "sha256": "6441bcd14ffd0e611b62b44d10a581c33cd100106ae9ec760b388e2106c33157"
+      "sha256": "ce089753a16e1d07491df7fa46b62a7f2b11e2b898abddfbddbb27eae6d92434"
     },
     {
       "path": "gen/python/src/generated/persistence.py",
-      "sha256": "b40320fb8c4f3d332cd9ef4067eda18b5ebe148a5db644c8d48c1a90023cb8e4"
+      "sha256": "c083250565a4c6e5e7faa72d41d9a4c79efce453b5c482a4676ffa2462595389"
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "b1cfec1067b64fba41f1d3567125bf7e43407af2b887b8b4b3b19bcd6b7a20ed"
+      "sha256": "9307ff37825006e777d89b1ca01b2d138a35c71f826dc1b271b088ab005c0e0e"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_adapters.py",
-      "sha256": "e9a0374ec8bcfbf29e7fdd1d2e119139a0df54e5952e7fe47e0b194f9e91a4d3"
+      "sha256": "35d850497a8c82e7f9f118a73eadf784b1d6571c1135e152e2233d5c3b3365c7"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_models.py",
-      "sha256": "059217039cfb0567ed8c21c11c31fd03187ae2b460975a103e9175dba1981113"
+      "sha256": "80dd7a035b0ca48eba2d8c0b406e2fdf34b3e5bae52c2aa58b4bd09296ea2832"
     },
     {
       "path": "gen/sql/schema.sql",

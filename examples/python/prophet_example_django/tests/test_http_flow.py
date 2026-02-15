@@ -98,7 +98,12 @@ class DjangoHttpFlowTest(unittest.TestCase):
 
         query = self.client.post(
             "/orders/query?page=0&size=10",
-            data=json.dumps({"currentState": {"eq": "shipped"}}),
+            data=json.dumps(
+                {
+                    "currentState": {"eq": "shipped"},
+                    "orderId": {"eq": order_id},
+                }
+            ),
             content_type="application/json",
         )
         self.assertEqual(query.status_code, 200, query.content.decode())
