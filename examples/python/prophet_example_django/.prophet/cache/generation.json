@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.11.0",
+  "toolchain_version": "0.11.2",
   "stack_id": "python_django_django_orm",
-  "signature": "d911a82d31e05abfa8b07b8cda57cf8d71716ca5c56103a533507d2b1a4fe188",
-  "ir_hash": "bd2ebd340f8ed4dea302f0a8904e5959867a2cffb3142e9700b279f24fb237e3",
+  "signature": "1778d788c1e78f23bc82198b64c53075457eb37460a166757f8013401d1cf910",
+  "ir_hash": "15ce6a2bc9d38f1f7e0923409a6334f2939d50fd25000bdcbe2befd971aed171",
   "out_dir": "gen"
 }

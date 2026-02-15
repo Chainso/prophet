@@ -4,6 +4,13 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.2] - 2026-02-15
+
+### Changed
+- Updated top-level README supported stack documentation to a single table including stack IDs and example links.
+- Refreshed tracked example generated artifacts/manifests/IR snapshots to align with current release toolchain outputs.
+- Toolchain/package version advanced to `0.11.2`.
+
 ## [0.11.1] - 2026-02-15
 
 ### Added
