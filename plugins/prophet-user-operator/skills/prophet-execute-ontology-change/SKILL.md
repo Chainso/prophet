@@ -1,6 +1,8 @@
 ---
 name: prophet-execute-ontology-change
 description: Execute Prophet ontology changes directly by editing DSL source files, validating, planning, regenerating artifacts, and verifying integration outcomes. Use when users ask to add, change, or refactor domain models, actions, signals, triggers, refs, structs, keys, or query behavior.
+license: See LICENSE for complete terms
+allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:*) Bash(prophet:stacks:*) Bash(prophet:hooks:*) Bash(prophet:version:check:*) Bash(prophet:generate:--verify-clean:*) Bash(prophet:gen:--verify-clean:*)
 ---
 
 # Prophet Execute Ontology Change

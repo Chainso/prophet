@@ -1,6 +1,8 @@
 ---
 name: prophet-execute-release-maintenance
 description: Execute Prophet maintainer release and repository maintenance tasks directly, including version bumps, regeneration consistency, validation gates, changelog updates, tagging, and push readiness. Use for maintainer-only work in the Prophet repository.
+license: See LICENSE for complete terms
+allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:*) Bash(prophet:stacks:*) Bash(prophet:hooks:*) Bash(prophet:version:check:*) Bash(prophet:generate:--verify-clean:*) Bash(prophet:gen:--verify-clean:*)
 ---
 
 # Prophet Execute Release Maintenance

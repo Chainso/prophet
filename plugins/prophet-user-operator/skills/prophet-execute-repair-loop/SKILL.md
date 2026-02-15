@@ -1,6 +1,8 @@
 ---
 name: prophet-execute-repair-loop
 description: Execute a full Prophet repair loop by diagnosing failures, fixing root causes in source-of-truth files, regenerating outputs, and re-verifying until green. Use when users report validation errors, compatibility drift, generation issues, compile failures, or runtime faults in generated integrations.
+license: See LICENSE for complete terms
+allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:*) Bash(prophet:stacks:*) Bash(prophet:hooks:*) Bash(prophet:version:check:*) Bash(prophet:generate:--verify-clean:*) Bash(prophet:gen:--verify-clean:*)
 ---
 
 # Prophet Execute Repair Loop

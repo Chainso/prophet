@@ -1,6 +1,8 @@
 ---
 name: prophet-execute-integration-update
 description: Execute Prophet integration updates directly by regenerating artifacts and implementing required user-owned extension points in Java, Node, or Python applications. Use when users ask to wire generated code, implement handlers, integrate emitters, or make generated APIs runnable end-to-end.
+license: See LICENSE for complete terms
+allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:*) Bash(prophet:stacks:*) Bash(prophet:hooks:*) Bash(prophet:version:check:*) Bash(prophet:generate:--verify-clean:*) Bash(prophet:gen:--verify-clean:*)
 ---
 
 # Prophet Execute Integration Update
