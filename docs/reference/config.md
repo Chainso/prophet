@@ -37,12 +37,24 @@ compatibility:
   - `prisma`
   - `typeorm`
   - `mongoose`
+  - `python`
+  - `fastapi`
+  - `flask`
+  - `django`
+  - `sqlalchemy`
+  - `sqlmodel`
+  - `django_orm`
   - `manifest`
 - `stack`: stack selection
   - `id: java_spring_jpa`
   - `id: node_express_prisma`
   - `id: node_express_typeorm`
   - `id: node_express_mongoose`
+  - `id: python_fastapi_sqlalchemy`
+  - `id: python_fastapi_sqlmodel`
+  - `id: python_flask_sqlalchemy`
+  - `id: python_flask_sqlmodel`
+  - `id: python_django_django_orm`
   - or tuple form (`language/framework/orm`)
 - `spring_boot.base_package`: Java package base
 - `spring_boot.boot_version`: host Spring Boot line
@@ -57,6 +69,11 @@ Node autodetection notes:
 - If no explicit stack is set, Prophet inspects `package.json` and lockfiles to auto-select Node Express stacks.
 - For Node projects, default Java init targets are automatically rewritten to Node targets when stack autodetection succeeds.
 - Autodetection fails closed when a safe Node stack cannot be inferred; set `generation.stack.id` explicitly in that case.
+
+Python autodetection notes:
+- If no explicit stack is set, Prophet inspects `pyproject.toml`, `requirements*.txt`, and `manage.py` to auto-select Python stacks.
+- For Python projects, default Java init targets are automatically rewritten to Python targets when stack autodetection succeeds.
+- Autodetection fails closed when framework signals are ambiguous or ORM signals are missing; set `generation.stack.id` explicitly in that case.
 
 Node DB configuration notes:
 - Prisma stack:

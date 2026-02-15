@@ -8,6 +8,10 @@
 # Python bytecode
 *.py[cod]
 *$py.class
+**/__pycache__/
+examples/python/**/.venv/
+examples/python/**/.mypy_cache/
+examples/python/**/.pytest_cache/
 
 # Node dependencies
 **/node_modules/
@@ -18,3 +22,9 @@ examples/node/**/*.sqlite
 examples/node/**/*.sqlite-*
 examples/node/**/dev.db
 examples/node/**/dev.db-*
+
+# Local test/demo SQLite databases (Python examples)
+examples/python/**/*.sqlite
+examples/python/**/*.sqlite-*
+examples/python/**/dev.db
+examples/python/**/dev.db-*

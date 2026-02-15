@@ -99,6 +99,45 @@ generation:
 #   id: node_express_mongoose
 ```
 
+## `Python autodetect failed to resolve a safe generation stack`
+
+Cause:
+- Python project signals were detected, but Prophet could not infer one safe Python stack.
+- Common cases: multiple frameworks detected (for example FastAPI + Flask), or framework detected without ORM signal.
+
+Fix:
+- Set `generation.stack.id` explicitly in `prophet.yaml`:
+
+```yaml
+generation:
+  stack:
+    id: python_fastapi_sqlalchemy
+# or
+#   id: python_fastapi_sqlmodel
+# or
+#   id: python_flask_sqlalchemy
+# or
+#   id: python_flask_sqlmodel
+# or
+#   id: python_django_django_orm
+```
+
+## Python generated import/module errors
+
+Cause:
+- Example dependencies are not installed in the active environment.
+
+Fix:
+
+```bash
+pip install -r requirements.txt
+prophet gen
+```
+
+For Django examples, ensure both paths are on `PYTHONPATH`:
+- `src`
+- `gen/python/src`
+
 ## Node `package.json` script rewiring concerns
 
 Behavior:

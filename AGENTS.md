@@ -15,6 +15,11 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
    - [examples/java/prophet_example_spring](examples/java/prophet_example_spring)
    - [examples/node/prophet_example_express_prisma](examples/node/prophet_example_express_prisma)
    - [examples/node/prophet_example_express_typeorm](examples/node/prophet_example_express_typeorm)
+   - [examples/python/prophet_example_fastapi_sqlalchemy](examples/python/prophet_example_fastapi_sqlalchemy)
+   - [examples/python/prophet_example_fastapi_sqlmodel](examples/python/prophet_example_fastapi_sqlmodel)
+   - [examples/python/prophet_example_flask_sqlalchemy](examples/python/prophet_example_flask_sqlalchemy)
+   - [examples/python/prophet_example_flask_sqlmodel](examples/python/prophet_example_flask_sqlmodel)
+   - [examples/python/prophet_example_django](examples/python/prophet_example_django)
 4. Read [Developer Index](docs/developer/index.md) before changing internal architecture.
 
 ## Critical Rules
@@ -57,6 +62,20 @@ cd ../prophet_example_express_typeorm
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen
 npm install
 npm run build
+```
+
+Python example generation + checks:
+
+```bash
+cd examples/python/prophet_example_fastapi_sqlalchemy
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
+python3 -m compileall src gen/python/src/generated
+
+cd ../prophet_example_django
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
+python3 -m compileall src gen/python/src/generated
 ```
 
 ## Where to Edit

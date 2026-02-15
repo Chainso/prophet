@@ -109,6 +109,55 @@ jobs:
         working-directory: examples/node/prophet_example_express_typeorm
         run: prophet check --show-reasons
 
+      - name: Generate artifacts for Node Mongoose example
+        working-directory: examples/node/prophet_example_express_mongoose
+        run: prophet gen
+
+      - name: Install Node Mongoose example dependencies
+        working-directory: examples/node/prophet_example_express_mongoose
+        run: npm ci
+
+      - name: Build Node Mongoose TypeScript
+        working-directory: examples/node/prophet_example_express_mongoose
+        run: npm run build
+
+      - name: Verify Node Mongoose generated outputs are committed
+        working-directory: examples/node/prophet_example_express_mongoose
+        run: prophet generate --verify-clean
+
+      - name: Run Node Mongoose consolidated Prophet check
+        working-directory: examples/node/prophet_example_express_mongoose
+        run: prophet check --show-reasons
+
+      - name: Validate Python examples
+        run: |
+          for d in \
+            examples/python/prophet_example_fastapi_sqlalchemy \
+            examples/python/prophet_example_fastapi_sqlmodel \
+            examples/python/prophet_example_flask_sqlalchemy \
+            examples/python/prophet_example_flask_sqlmodel \
+            examples/python/prophet_example_django
+          do
+            echo "== validating $d =="
+            (cd "$d" && prophet gen && prophet generate --verify-clean && prophet check --show-reasons)
+            python -m pip install -r "$d/requirements.txt"
+            python -m compileall "$d/src" "$d/gen/python/src/generated"
+          done
+
+      - name: Smoke import Python generated app wiring
+        run: |
+          PYTHONPATH=examples/python/prophet_example_fastapi_sqlalchemy/src:examples/python/prophet_example_fastapi_sqlalchemy/gen/python/src \
+            python -c "import app"
+          PYTHONPATH=examples/python/prophet_example_fastapi_sqlmodel/src:examples/python/prophet_example_fastapi_sqlmodel/gen/python/src \
+            python -c "import app"
+          PYTHONPATH=examples/python/prophet_example_flask_sqlalchemy/src:examples/python/prophet_example_flask_sqlalchemy/gen/python/src \
+            python -c "import app"
+          PYTHONPATH=examples/python/prophet_example_flask_sqlmodel/src:examples/python/prophet_example_flask_sqlmodel/gen/python/src \
+            python -c "import app"
+          PYTHONPATH=examples/python/prophet_example_django/src:examples/python/prophet_example_django/gen/python/src \
+            DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
+            python -c "import django; django.setup(); from prophet_example_django.app import initialize_generated_runtime; initialize_generated_runtime()"
+
       - name: Ensure repo has no tracked-file drift
         run: git diff --exit-code
 

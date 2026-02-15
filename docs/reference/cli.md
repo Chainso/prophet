@@ -24,6 +24,7 @@ Node stacks also apply package.json script auto-wiring for:
 - `prophet:validate`
 
 Node autodetection runs before generation and fails closed when a safe stack cannot be inferred.
+Python autodetection also runs before generation and fails closed when a safe Python stack cannot be inferred.
 
 ## `prophet clean` Flags
 

@@ -49,6 +49,41 @@ Mongoose stack adds:
 - `gen/node-express/src/generated/mongoose-adapters.ts`
 - generated Mongoose repositories implement list/query/getById/save against `Model` bindings
 
+## Python Stack Outputs
+
+- `gen/python/pyproject.toml`
+- `gen/python/src/generated/domain.py`
+- `gen/python/src/generated/actions.py`
+- `gen/python/src/generated/event_contracts.py`
+- `gen/python/src/generated/events.py`
+- `gen/python/src/generated/query.py`
+- `gen/python/src/generated/persistence.py`
+- `gen/python/src/generated/action_handlers.py`
+- `gen/python/src/generated/action_service.py`
+- `gen/manifest/python-autodetect.json` (when Python autodetection is active)
+
+FastAPI stacks add:
+- `gen/python/src/generated/fastapi_routes.py`
+
+Flask stacks add:
+- `gen/python/src/generated/flask_routes.py`
+
+Django stack adds:
+- `gen/python/src/generated/django_urls.py`
+- `gen/python/src/generated/django_views.py`
+
+SQLAlchemy stacks add:
+- `gen/python/src/generated/sqlalchemy_models.py`
+- `gen/python/src/generated/sqlalchemy_adapters.py`
+
+SQLModel stacks add:
+- `gen/python/src/generated/sqlmodel_models.py`
+- `gen/python/src/generated/sqlmodel_adapters.py`
+
+Django ORM stack adds:
+- `gen/python/src/generated/django_models.py`
+- `gen/python/src/generated/django_adapters.py`
+
 ## Migration Outputs
 
 - Flyway init: `gen/migrations/flyway/V1__prophet_init.sql`

@@ -35,9 +35,13 @@ From a `.prophet` ontology file, Prophet can generate:
 - OpenAPI contracts
 - Spring Boot integration code (DTOs, JPA entities/repositories, query and action endpoints)
 - Node/Express integration code (typed contracts, zod validation, action/query routes, event emitter interfaces)
+- Python integration code (typed dataclass contracts, action/query routes, event emitter interfaces)
 - Prisma schema + repository adapters for Node targets
 - TypeORM entities + repository adapters for Node targets (wired through your application-owned `DataSource`)
 - Mongoose models + repository adapters for Node targets (wired through your application-owned Mongoose connection)
+- SQLAlchemy adapters + models for Python targets
+- SQLModel adapters + models for Python targets
+- Django adapters + models for Python targets
 - Flyway/Liquibase migration artifacts
 - Generation manifests for ownership and extension hooks
 
@@ -78,12 +82,22 @@ Implemented stacks:
 - `node` + `express` + `prisma`
 - `node` + `express` + `typeorm`
 - `node` + `express` + `mongoose`
+- `python` + `fastapi` + `sqlalchemy`
+- `python` + `fastapi` + `sqlmodel`
+- `python` + `flask` + `sqlalchemy`
+- `python` + `flask` + `sqlmodel`
+- `python` + `django` + `django_orm`
 
 Examples:
 - [Spring Example](examples/java/prophet_example_spring)
 - [Express + Prisma Example](examples/node/prophet_example_express_prisma)
 - [Express + TypeORM Example](examples/node/prophet_example_express_typeorm)
 - [Express + Mongoose Example](examples/node/prophet_example_express_mongoose)
+- [FastAPI + SQLAlchemy Example](examples/python/prophet_example_fastapi_sqlalchemy)
+- [FastAPI + SQLModel Example](examples/python/prophet_example_fastapi_sqlmodel)
+- [Flask + SQLAlchemy Example](examples/python/prophet_example_flask_sqlalchemy)
+- [Flask + SQLModel Example](examples/python/prophet_example_flask_sqlmodel)
+- [Django + Django ORM Example](examples/python/prophet_example_django)
 
 ## License
 

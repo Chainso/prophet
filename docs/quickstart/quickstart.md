@@ -129,10 +129,62 @@ Expected outcome:
 - `gen/manifest/node-autodetect.json`
 - running Express app with MongoDB-backed generated repositories
 
+## 9. Python Quickstart (FastAPI + SQLAlchemy)
+
+```bash
+cd examples/python/prophet_example_fastapi_sqlalchemy
+prophet gen
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/uvicorn src.app:app --host 0.0.0.0 --port 8080
+```
+
+Expected outcome:
+- `gen/python/src/generated/**`
+- `gen/python/src/generated/fastapi_routes.py`
+- `gen/python/src/generated/sqlalchemy_adapters.py`
+- `gen/manifest/python-autodetect.json`
+- running FastAPI app with generated routes + concrete example handlers
+
+## 10. Python Quickstart (Flask + SQLModel)
+
+```bash
+cd examples/python/prophet_example_flask_sqlmodel
+prophet gen
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+FLASK_APP=src.app:app .venv/bin/flask run --host 0.0.0.0 --port 8080
+```
+
+Expected outcome:
+- `gen/python/src/generated/**`
+- `gen/python/src/generated/flask_routes.py`
+- `gen/python/src/generated/sqlmodel_adapters.py`
+- running Flask app with generated routes + concrete example handlers
+
+## 11. Python Quickstart (Django + Django ORM)
+
+```bash
+cd examples/python/prophet_example_django
+prophet gen
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
+PYTHONPATH=src:gen/python/src \
+.venv/bin/python manage.py runserver 0.0.0.0:8080
+```
+
+Expected outcome:
+- `gen/python/src/generated/**`
+- `gen/python/src/generated/django_urls.py`
+- `gen/python/src/generated/django_adapters.py`
+- running Django app with generated routes + concrete example handlers
+
 ## Next Reads
 
 - Full CLI reference: [CLI](../reference/cli.md)
 - DSL reference: [DSL](../reference/dsl.md)
 - Spring integration details: [Spring Boot](../reference/spring-boot.md)
 - Node integration details: [Node/Express](../reference/node-express.md)
+- Python integration details: [Python](../reference/python.md)
 - Troubleshooting: [Troubleshooting](../reference/troubleshooting.md)

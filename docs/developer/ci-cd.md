@@ -9,6 +9,12 @@ Main jobs:
   - Express + Prisma (generate, npm ci, prisma generate, ts build, verify-clean, check)
   - Express + TypeORM (generate, npm ci, ts build, verify-clean, check)
   - Express + Mongoose (generate, npm ci, ts build, verify-clean, check)
+- Python integration validation matrix:
+  - FastAPI + SQLAlchemy (generate, verify-clean, check, compile, import smoke)
+  - FastAPI + SQLModel (generate, verify-clean, check, compile, import smoke)
+  - Flask + SQLAlchemy (generate, verify-clean, check, compile, import smoke)
+  - Flask + SQLModel (generate, verify-clean, check, compile, import smoke)
+  - Django + Django ORM (generate, verify-clean, check, compile, import smoke)
 
 Guardrails:
 - workflow concurrency cancellation for redundant runs
@@ -30,5 +36,6 @@ Release validation also covers:
 - Node Prisma generation + compile checks
 - Node TypeORM generation + compile checks
 - Node Mongoose generation + compile checks
+- Python FastAPI/Flask/Django generation + compile/import checks (via CI workflow matrix)
 
 Requires GitHub environment `pypi` and PyPI trusted publisher config.
