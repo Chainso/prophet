@@ -47,7 +47,10 @@ class PythonTargetTests(unittest.TestCase):
         self.assertIn("gen/manifest/generated-files.json", outputs)
         self.assertIn("input_model = _coerce_value(", outputs["gen/python/src/generated/fastapi_routes.py"])
         self.assertIn("filter_model = _coerce_value(", outputs["gen/python/src/generated/fastapi_routes.py"])
+        self.assertNotIn("asyncio.to_thread", outputs["gen/python/src/generated/sqlalchemy_adapters.py"])
         self.assertIn("@dataclass(kw_only=True)", outputs["gen/python/src/generated/domain.py"])
+        self.assertNotIn("nullable=false", outputs["gen/python/src/generated/sqlalchemy_models.py"])
+        self.assertIn("nullable=False", outputs["gen/python/src/generated/sqlalchemy_models.py"])
         self.assertIn("class SqlAlchemyGeneratedRepositories", outputs["gen/python/src/generated/sqlalchemy_adapters.py"])
         self.assertNotIn("..common", outputs["gen/python/src/generated/sqlalchemy_adapters.py"])
         self.assertIn("async def execute_createOrder", outputs["gen/python/src/generated/action_service.py"])
@@ -68,6 +71,7 @@ class PythonTargetTests(unittest.TestCase):
         self.assertIn("gen/python/src/generated/sqlmodel_adapters.py", outputs)
         self.assertIn("class SqlModelGeneratedRepositories", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
         self.assertIn("async def list", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
+        self.assertNotIn("asyncio.to_thread", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
         self.assertNotIn("nullable=false", outputs["gen/python/src/generated/sqlmodel_models.py"])
         self.assertIn("nullable=False", outputs["gen/python/src/generated/sqlmodel_models.py"])
 
@@ -88,6 +92,8 @@ class PythonTargetTests(unittest.TestCase):
         self.assertIn("def action_createOrder", outputs["gen/python/src/generated/flask_routes.py"])
         self.assertIn("input_model = _coerce_value(", outputs["gen/python/src/generated/flask_routes.py"])
         self.assertIn("filter_model = _coerce_value(", outputs["gen/python/src/generated/flask_routes.py"])
+        self.assertNotIn("nullable=false", outputs["gen/python/src/generated/sqlalchemy_models.py"])
+        self.assertIn("nullable=False", outputs["gen/python/src/generated/sqlalchemy_models.py"])
         self.assertIn("def list(self, page: int, size: int)", outputs["gen/python/src/generated/sqlalchemy_adapters.py"])
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
@@ -129,6 +135,11 @@ class PythonTargetTests(unittest.TestCase):
         self.assertIn("filter_model = _coerce_value(", outputs["gen/python/src/generated/django_views.py"])
         self.assertNotIn("null=false", outputs["gen/python/src/generated/django_models.py"])
         self.assertIn("null=False", outputs["gen/python/src/generated/django_models.py"])
+        django_urls = outputs["gen/python/src/generated/django_urls.py"]
+        self.assertLess(
+            django_urls.index("path('orders/query', views.query_order),"),
+            django_urls.index("path('orders/<str:id>', views.get_order),"),
+        )
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "python_django_django_orm")

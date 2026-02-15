@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.10.0",
+  "toolchain_version": "0.11.0",
   "stack": {
     "id": "python_django_django_orm",
     "language": "python",
     "framework": "django",
     "orm": "django_orm"
   },
-  "ir_hash": "052fc6d27d2c39524f7fc6db1980236aa7c2d206ffa40d2526db63747878ccee",
+  "ir_hash": "bd2ebd340f8ed4dea302f0a8904e5959867a2cffb3142e9700b279f24fb237e3",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -15,7 +15,7 @@
     },
     {
       "path": "gen/manifest/python-autodetect.json",
-      "sha256": "e6b5b3fba1172ae6199535cf886ad2111c3b7a999d9e2b65fd82016cc6e98235"
+      "sha256": "28c537d4c6c892ee997406412ff65705459ab018bf685283171f1dc094a73e55"
     },
     {
       "path": "gen/openapi/openapi.yaml",
@@ -51,7 +51,7 @@
     },
     {
       "path": "gen/python/src/generated/django_urls.py",
-      "sha256": "9fd1ccf1a4d21aec34035c13a6f6c095a508dbb7971e5a0d346ae2ff622d56b8"
+      "sha256": "c7bd77cd76eccdd4998e02cbca2555d52a130aaa82610e294f4fbf8656d204f7"
     },
     {
       "path": "gen/python/src/generated/django_views.py",

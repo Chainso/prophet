@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.10.0",
+  "toolchain_version": "0.11.0",
   "stack": {
     "id": "python_fastapi_sqlalchemy",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "052fc6d27d2c39524f7fc6db1980236aa7c2d206ffa40d2526db63747878ccee",
+  "ir_hash": "bd2ebd340f8ed4dea302f0a8904e5959867a2cffb3142e9700b279f24fb237e3",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -15,7 +15,7 @@
     },
     {
       "path": "gen/manifest/python-autodetect.json",
-      "sha256": "53510d80d22c4781400cc4aaa2ccf9f73496358a3d2837191922d23ea6513e34"
+      "sha256": "bf5669824141394a9b7396a9f8655464b0210d059ab87db02824bfa3da88c5a1"
     },
     {
       "path": "gen/openapi/openapi.yaml",
@@ -67,11 +67,11 @@
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_adapters.py",
-      "sha256": "614e526500f0d15a6340554311750b2b4e648113f977493984e81fdc2d28b3b4"
+      "sha256": "e9a0374ec8bcfbf29e7fdd1d2e119139a0df54e5952e7fe47e0b194f9e91a4d3"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_models.py",
-      "sha256": "5ecf1884b61c1f9c7f1717c21197f028dcf94eabf38f72d0398f0978d7fade91"
+      "sha256": "059217039cfb0567ed8c21c11c31fd03187ae2b460975a103e9175dba1981113"
     },
     {
       "path": "gen/sql/schema.sql",

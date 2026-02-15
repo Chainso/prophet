@@ -114,7 +114,7 @@ class ActionHandlers(GeneratedActionHandlers):
         self.shipOrder = ShipOrderHandler()
 
 
-engine = create_engine("sqlite:///./dev.db")
+engine = create_engine("sqlite:///./dev.db", connect_args={"check_same_thread": False})
 SqlModelModels.SQLModel.metadata.create_all(engine)
 
 repositories = SqlModelGeneratedRepositories(lambda: Session(engine))

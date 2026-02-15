@@ -8,6 +8,8 @@ Primary contributor docs now live under:
 - [docs/developer/testing.md](docs/developer/testing.md)
 - [docs/developer/ci-cd.md](docs/developer/ci-cd.md)
 - [docs/developer/releasing.md](docs/developer/releasing.md)
+- [docs/reference/index.md](docs/reference/index.md)
+- [docs/quickstart/quickstart.md](docs/quickstart/quickstart.md)
 
 ## Quick Setup
 
@@ -23,6 +25,7 @@ From repo root:
 
 ```bash
 python3 -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
+./scripts/test-all.sh
 python3 -m build prophet-cli
 python3 -m twine check prophet-cli/dist/*
 ```
@@ -34,6 +37,23 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew :prophet_generated:compileJava compileJava
 ./gradlew test
+```
+
+From Python examples (framework test clients + pytest):
+
+```bash
+cd examples/python/prophet_example_fastapi_sqlalchemy
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+PYTHONPATH=src:gen/python/src .venv/bin/python -m pytest -q tests
+```
+
+From Node examples (Mocha + Supertest):
+
+```bash
+cd examples/node/prophet_example_express_prisma
+npm install
+npm run test:integration
 ```
 
 ## Open Items (Good First/Next Contributions)

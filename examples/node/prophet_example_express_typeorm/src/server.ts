@@ -1,7 +1,9 @@
 import express from 'express';
 import 'reflect-metadata';
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { DataSource } from 'typeorm';
+import type { Server } from 'node:http';
 
 import { mountProphet } from '../gen/node-express/src/generated/index.js';
 import {
@@ -77,7 +79,12 @@ class ShipOrderHandler implements ShipOrderActionHandler {
   }
 }
 
-async function bootstrap(): Promise<void> {
+export interface AppRuntime {
+  app: express.Express;
+  close: () => Promise<void>;
+}
+
+export async function createAppRuntime(): Promise<AppRuntime> {
   const dataSource = new DataSource({
     type: 'sqlite',
     database: './prophet_example.sqlite',
@@ -98,10 +105,44 @@ async function bootstrap(): Promise<void> {
     },
   });
 
-  app.listen(8080, () => {
-    // eslint-disable-next-line no-console
-    console.log('prophet_example_express_typeorm listening on :8080');
-  });
+  return {
+    app,
+    close: async () => {
+      await dataSource.destroy();
+    },
+  };
 }
 
-void bootstrap();
+export async function startServer(port: number): Promise<{ server: Server; close: () => Promise<void> }> {
+  const runtime = await createAppRuntime();
+  const server = runtime.app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`prophet_example_express_typeorm listening on :${port}`);
+  });
+
+  return {
+    server,
+    close: async () => {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        });
+      });
+      await runtime.close();
+    },
+  };
+}
+
+async function main(): Promise<void> {
+  const port = Number.parseInt(process.env.PORT ?? '8080', 10);
+  await startServer(port);
+}
+
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  void main();
+}

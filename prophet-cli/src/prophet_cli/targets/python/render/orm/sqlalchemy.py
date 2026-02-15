@@ -72,7 +72,7 @@ def render_sqlalchemy_models(ir: Dict[str, Any]) -> str:
             if nullable and not is_pk:
                 lines.append(f"    {prop}: Mapped[Optional[{py_hint}]] = mapped_column({col_type}, nullable=True)")
             else:
-                lines.append(f"    {prop}: Mapped[{py_hint}] = mapped_column({col_type}, primary_key={str(is_pk)}, nullable={str(nullable and not is_pk).lower()})")
+                lines.append(f"    {prop}: Mapped[{py_hint}] = mapped_column({col_type}, primary_key={is_pk}, nullable={nullable and not is_pk})")
 
         states = [state for state in obj.get("states", []) if isinstance(state, dict)]
         if states:
@@ -231,16 +231,16 @@ def render_sqlalchemy_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
 
         if async_mode:
             lines.append("    async def list(self, page: int, size: int) -> Persistence.PagedResult:")
-            lines.append("        return await asyncio.to_thread(self._list_sync, page, size)")
+            lines.append("        return self._list_sync(page, size)")
             lines.append("")
             lines.append(f"    async def query(self, filter: {query_filter_name}, page: int, size: int) -> Persistence.PagedResult:")
-            lines.append("        return await asyncio.to_thread(self._query_sync, filter, page, size)")
+            lines.append("        return self._query_sync(filter, page, size)")
             lines.append("")
             lines.append(f"    async def get_by_id(self, id: Domain.{obj_name}Ref) -> Optional[Domain.{obj_name}]:")
-            lines.append("        return await asyncio.to_thread(self._get_by_id_sync, id)")
+            lines.append("        return self._get_by_id_sync(id)")
             lines.append("")
             lines.append(f"    async def save(self, item: Domain.{obj_name}) -> Domain.{obj_name}:")
-            lines.append("        return await asyncio.to_thread(self._save_sync, item)")
+            lines.append("        return self._save_sync(item)")
         else:
             lines.append("    def list(self, page: int, size: int) -> Persistence.PagedResult:")
             lines.append("        return self._list_sync(page, size)")

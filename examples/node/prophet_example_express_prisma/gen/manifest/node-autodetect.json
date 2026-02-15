@@ -13,7 +13,7 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext"
   },
-  "entrypoint": "dist/server.js",
+  "entrypoint": "dist/src/server.js",
   "monorepo": false,
   "versions": {
     "express": "^4.19.2",

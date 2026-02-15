@@ -180,8 +180,8 @@ def render_django_urls(ir: Dict[str, Any]) -> str:
         get_path = _django_path(str(paths.get("get_by_id", f"/{repo_name}s/{{id}}"))).lstrip("/")
         typed_path = str(paths.get("typed_query", f"/{repo_name}s/query")).lstrip("/")
         lines.append(f"    path('{list_path}', views.list_{repo_name}),")
-        lines.append(f"    path('{get_path}', views.get_{repo_name}),")
         lines.append(f"    path('{typed_path}', views.query_{repo_name}),")
+        lines.append(f"    path('{get_path}', views.get_{repo_name}),")
 
     lines.append("]")
     lines.append("")

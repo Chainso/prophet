@@ -115,7 +115,7 @@ class ActionHandlers(GeneratedActionHandlers):
         self.shipOrder = ShipOrderHandler()
 
 
-engine = create_engine("sqlite:///./dev.db", future=True)
+engine = create_engine("sqlite:///./dev.db", future=True, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 SqlAlchemyModels.Base.metadata.create_all(engine)
 

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.10.0",
+  "toolchain_version": "0.11.0",
   "stack": {
     "id": "python_fastapi_sqlmodel",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlmodel"
   },
-  "ir_hash": "052fc6d27d2c39524f7fc6db1980236aa7c2d206ffa40d2526db63747878ccee",
+  "ir_hash": "bd2ebd340f8ed4dea302f0a8904e5959867a2cffb3142e9700b279f24fb237e3",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -15,7 +15,7 @@
     },
     {
       "path": "gen/manifest/python-autodetect.json",
-      "sha256": "643d5416c5f7430365ae6255f45afc691fc65e9cccd983a7fc0c158098c5a5bb"
+      "sha256": "d26ac47bcbdf191b61dc59218802a76c32c92f8fee839ecfdf660f534883a624"
     },
     {
       "path": "gen/openapi/openapi.yaml",
@@ -67,7 +67,7 @@
     },
     {
       "path": "gen/python/src/generated/sqlmodel_adapters.py",
-      "sha256": "7422a03cbf71797fab635d9db33668b2077da2e887bfcfa922e00c5c7941f6a1"
+      "sha256": "9fc7327ca502e7288f6d82d9147f2035a29e3f580f459a1e23630978fc87604c"
     },
     {
       "path": "gen/python/src/generated/sqlmodel_models.py",

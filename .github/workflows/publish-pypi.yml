@@ -16,6 +16,16 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval \"db.adminCommand('ping')\""
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -77,9 +87,19 @@ jobs:
         working-directory: examples/node/prophet_example_express_prisma
         run: npm run prisma:generate
 
+      - name: Push Prisma schema
+        working-directory: examples/node/prophet_example_express_prisma
+        run: npm run prisma:push
+
       - name: Build Node Prisma TypeScript
         working-directory: examples/node/prophet_example_express_prisma
         run: npm run build
+
+      - name: Run Node Prisma HTTP integration test
+        working-directory: examples/node/prophet_example_express_prisma
+        env:
+          PORT: 18080
+        run: npm run test:integration
 
       - name: Verify Node Prisma generated outputs are committed
         working-directory: examples/node/prophet_example_express_prisma
@@ -101,6 +121,12 @@ jobs:
         working-directory: examples/node/prophet_example_express_typeorm
         run: npm run build
 
+      - name: Run Node TypeORM HTTP integration test
+        working-directory: examples/node/prophet_example_express_typeorm
+        env:
+          PORT: 18080
+        run: npm run test:integration
+
       - name: Verify Node TypeORM generated outputs are committed
         working-directory: examples/node/prophet_example_express_typeorm
         run: prophet generate --verify-clean
@@ -120,6 +146,13 @@ jobs:
       - name: Build Node Mongoose TypeScript
         working-directory: examples/node/prophet_example_express_mongoose
         run: npm run build
+
+      - name: Run Node Mongoose HTTP integration test
+        working-directory: examples/node/prophet_example_express_mongoose
+        env:
+          PORT: 18080
+          MONGO_URL: mongodb://127.0.0.1:27017/prophet_example_mongoose_ci
+        run: npm run test:integration
 
       - name: Verify Node Mongoose generated outputs are committed
         working-directory: examples/node/prophet_example_express_mongoose
@@ -157,6 +190,20 @@ jobs:
           PYTHONPATH=examples/python/prophet_example_django/src:examples/python/prophet_example_django/gen/python/src \
             DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
             python -c "import django; django.setup(); from prophet_example_django.app import initialize_generated_runtime; initialize_generated_runtime()"
+
+      - name: Run Python HTTP integration tests
+        run: |
+          PYTHONPATH=examples/python/prophet_example_fastapi_sqlalchemy/src:examples/python/prophet_example_fastapi_sqlalchemy/gen/python/src \
+            python -m unittest discover -s examples/python/prophet_example_fastapi_sqlalchemy/tests -p 'test_*.py' -v
+          PYTHONPATH=examples/python/prophet_example_fastapi_sqlmodel/src:examples/python/prophet_example_fastapi_sqlmodel/gen/python/src \
+            python -m unittest discover -s examples/python/prophet_example_fastapi_sqlmodel/tests -p 'test_*.py' -v
+          PYTHONPATH=examples/python/prophet_example_flask_sqlalchemy/src:examples/python/prophet_example_flask_sqlalchemy/gen/python/src \
+            python -m unittest discover -s examples/python/prophet_example_flask_sqlalchemy/tests -p 'test_*.py' -v
+          PYTHONPATH=examples/python/prophet_example_flask_sqlmodel/src:examples/python/prophet_example_flask_sqlmodel/gen/python/src \
+            python -m unittest discover -s examples/python/prophet_example_flask_sqlmodel/tests -p 'test_*.py' -v
+          PYTHONPATH=examples/python/prophet_example_django/src:examples/python/prophet_example_django/gen/python/src \
+            DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
+            python -m unittest discover -s examples/python/prophet_example_django/tests -p 'test_*.py' -v
 
       - name: Ensure repo has no tracked-file drift
         run: git diff --exit-code

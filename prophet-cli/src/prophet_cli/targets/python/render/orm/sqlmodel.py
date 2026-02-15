@@ -276,16 +276,16 @@ def render_sqlmodel_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
 
         if async_mode:
             lines.append("    async def list(self, page: int, size: int) -> Persistence.PagedResult:")
-            lines.append("        return await asyncio.to_thread(self._list_sync, page, size)")
+            lines.append("        return self._list_sync(page, size)")
             lines.append("")
             lines.append(f"    async def query(self, filter: {query_filter_name}, page: int, size: int) -> Persistence.PagedResult:")
-            lines.append("        return await asyncio.to_thread(self._query_sync, filter, page, size)")
+            lines.append("        return self._query_sync(filter, page, size)")
             lines.append("")
             lines.append(f"    async def get_by_id(self, id: Domain.{obj_name}Ref) -> Optional[Domain.{obj_name}]:")
-            lines.append("        return await asyncio.to_thread(self._get_by_id_sync, id)")
+            lines.append("        return self._get_by_id_sync(id)")
             lines.append("")
             lines.append(f"    async def save(self, item: Domain.{obj_name}) -> Domain.{obj_name}:")
-            lines.append("        return await asyncio.to_thread(self._save_sync, item)")
+            lines.append("        return self._save_sync(item)")
         else:
             lines.append("    def list(self, page: int, size: int) -> Persistence.PagedResult:")
             lines.append("        return self._list_sync(page, size)")

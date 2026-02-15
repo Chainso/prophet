@@ -4,6 +4,35 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-02-15
+
+### Added
+- Added Python example HTTP flow test suites for:
+  - FastAPI + SQLAlchemy,
+  - FastAPI + SQLModel,
+  - Flask + SQLAlchemy,
+  - Flask + SQLModel,
+  - Django + Django ORM.
+- Added Node example Mocha + Supertest HTTP flow suites for:
+  - Express + Prisma,
+  - Express + TypeORM,
+  - Express + Mongoose.
+- Added repository-wide `scripts/test-all.sh` orchestrator for CLI + Java + Node + Python validation.
+- Added user quickstart pages split by ecosystem:
+  - `docs/quickstart/java.md`,
+  - `docs/quickstart/node.md`,
+  - `docs/quickstart/python.md`.
+- Added dedicated runnable examples reference at `docs/reference/examples.md`.
+
+### Changed
+- Hardened CI workflows for Python/Node example validation and PyPI release checks.
+- Updated Python generated runtime rendering to align framework adapters and typed test coverage expectations.
+- Updated top-level and contributor documentation (`README`, `AGENTS.md`, `CONTRIBUTING.md`, developer/reference docs) to reflect:
+  - user-facing onboarding vs reference split,
+  - pytest + framework test clients for Python examples,
+  - Mocha + Supertest for Node examples.
+- Toolchain/package version advanced to `0.11.0`.
+
 ## [0.10.0] - 2026-02-15
 
 ### Changed

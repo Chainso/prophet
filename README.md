@@ -71,7 +71,11 @@ python3 -m venv .venv --system-site-packages
 
 ## Get Started
 
-- First run guide: [Quickstart](docs/quickstart/quickstart.md)
+- Quickstart overview: [Quickstart](docs/quickstart/quickstart.md)
+- Java quickstart: [Spring + JPA](docs/quickstart/java.md)
+- Node quickstart: [Express](docs/quickstart/node.md)
+- Python quickstart: [FastAPI / Flask / Django](docs/quickstart/python.md)
+- Runnable sample apps: [Examples](docs/reference/examples.md)
 - Full user reference: [Reference Index](docs/reference/index.md)
 - Developer docs: [Developer Index](docs/developer/index.md)
 

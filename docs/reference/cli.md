@@ -50,3 +50,4 @@ prophet <subcommand> --help
 
 For advanced CLI behavior and examples:
 - [prophet-cli/README.md](../../prophet-cli/README.md)
+- [Examples](examples.md)

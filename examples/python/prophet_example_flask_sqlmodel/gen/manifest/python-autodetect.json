@@ -16,7 +16,7 @@
     "has_pyproject": true,
     "has_requirements": true,
     "has_manage_py": false,
-    "dependency_count": 3
+    "dependency_count": 4
   },
   "versions": {
     "fastapi": "",

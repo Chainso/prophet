@@ -11,9 +11,9 @@ class Base(DeclarativeBase):
 
 class OrderModel(Base):
     __tablename__ = 'orders'
-    orderId: Mapped[str] = mapped_column(String, primary_key=True, nullable=false)
-    customer: Mapped[object] = mapped_column(JSON, primary_key=False, nullable=false)
-    totalAmount: Mapped[float] = mapped_column(Float, primary_key=False, nullable=false)
+    orderId: Mapped[str] = mapped_column(String, primary_key=True, nullable=False)
+    customer: Mapped[object] = mapped_column(JSON, primary_key=False, nullable=False)
+    totalAmount: Mapped[float] = mapped_column(Float, primary_key=False, nullable=False)
     discountCode: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     tags: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
     shippingAddress: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
@@ -21,5 +21,5 @@ class OrderModel(Base):
 
 class UserModel(Base):
     __tablename__ = 'users'
-    userId: Mapped[str] = mapped_column(String, primary_key=True, nullable=false)
-    email: Mapped[str] = mapped_column(String, primary_key=False, nullable=false)
+    userId: Mapped[str] = mapped_column(String, primary_key=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, primary_key=False, nullable=False)

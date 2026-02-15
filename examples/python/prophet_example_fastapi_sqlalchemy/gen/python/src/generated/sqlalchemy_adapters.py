@@ -142,16 +142,16 @@ class OrderSqlAlchemyRepository:
         return item
 
     async def list(self, page: int, size: int) -> Persistence.PagedResult:
-        return await asyncio.to_thread(self._list_sync, page, size)
+        return self._list_sync(page, size)
 
     async def query(self, filter: Filters.OrderQueryFilter, page: int, size: int) -> Persistence.PagedResult:
-        return await asyncio.to_thread(self._query_sync, filter, page, size)
+        return self._query_sync(filter, page, size)
 
     async def get_by_id(self, id: Domain.OrderRef) -> Optional[Domain.Order]:
-        return await asyncio.to_thread(self._get_by_id_sync, id)
+        return self._get_by_id_sync(id)
 
     async def save(self, item: Domain.Order) -> Domain.Order:
-        return await asyncio.to_thread(self._save_sync, item)
+        return self._save_sync(item)
 
 def _user_to_model(item: Domain.User) -> Models.UserModel:
     return Models.UserModel(
@@ -231,16 +231,16 @@ class UserSqlAlchemyRepository:
         return item
 
     async def list(self, page: int, size: int) -> Persistence.PagedResult:
-        return await asyncio.to_thread(self._list_sync, page, size)
+        return self._list_sync(page, size)
 
     async def query(self, filter: Filters.UserQueryFilter, page: int, size: int) -> Persistence.PagedResult:
-        return await asyncio.to_thread(self._query_sync, filter, page, size)
+        return self._query_sync(filter, page, size)
 
     async def get_by_id(self, id: Domain.UserRef) -> Optional[Domain.User]:
-        return await asyncio.to_thread(self._get_by_id_sync, id)
+        return self._get_by_id_sync(id)
 
     async def save(self, item: Domain.User) -> Domain.User:
-        return await asyncio.to_thread(self._save_sync, item)
+        return self._save_sync(item)
 
 class SqlAlchemyGeneratedRepositories:
     def __init__(self, session_factory: Callable[[], Session]):

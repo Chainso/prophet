@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.10.0",
+  "toolchain_version": "0.11.0",
   "stack": {
     "id": "python_flask_sqlmodel",
     "language": "python",
     "framework": "flask",
     "orm": "sqlmodel"
   },
-  "ir_hash": "052fc6d27d2c39524f7fc6db1980236aa7c2d206ffa40d2526db63747878ccee",
+  "ir_hash": "bd2ebd340f8ed4dea302f0a8904e5959867a2cffb3142e9700b279f24fb237e3",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -15,7 +15,7 @@
     },
     {
       "path": "gen/manifest/python-autodetect.json",
-      "sha256": "10a23202c77955095c8affa22b7d71a41a2283dcdd8f411c1af15422933797b8"
+      "sha256": "067093ef7a0b5f07845b647fcd6bd7fb4580a75f5d8f6d2b43c99530fdf11cc3"
     },
     {
       "path": "gen/openapi/openapi.yaml",

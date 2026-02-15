@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.10.0",
+  "toolchain_version": "0.11.0",
   "stack": {
     "id": "python_flask_sqlalchemy",
     "language": "python",
     "framework": "flask",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "052fc6d27d2c39524f7fc6db1980236aa7c2d206ffa40d2526db63747878ccee",
+  "ir_hash": "bd2ebd340f8ed4dea302f0a8904e5959867a2cffb3142e9700b279f24fb237e3",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -15,7 +15,7 @@
     },
     {
       "path": "gen/manifest/python-autodetect.json",
-      "sha256": "e7ed795a6ba90ded641939110924ec7bfc790e38f7e4a4faa902efc9798f6074"
+      "sha256": "942c4dceb3b59e02ad35f7276987cd3f68cb9fc68f35de8308604e034342b7bc"
     },
     {
       "path": "gen/openapi/openapi.yaml",
@@ -71,7 +71,7 @@
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_models.py",
-      "sha256": "5ecf1884b61c1f9c7f1717c21197f028dcf94eabf38f72d0398f0978d7fade91"
+      "sha256": "059217039cfb0567ed8c21c11c31fd03187ae2b460975a103e9175dba1981113"
     },
     {
       "path": "gen/sql/schema.sql",

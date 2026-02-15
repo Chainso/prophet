@@ -1,5 +1,6 @@
 import express from 'express';
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { PrismaClient } from '@prisma/client';
 
 import { mountProphet } from '../gen/node-express/src/generated/index.js';
@@ -12,9 +13,7 @@ import {
 import type * as Actions from '../gen/node-express/src/generated/actions.js';
 import type * as Domain from '../gen/node-express/src/generated/domain.js';
 import { PrismaGeneratedRepositories } from '../gen/node-express/src/generated/prisma-adapters.js';
-
-const app = express();
-app.use(express.json());
+import type { Server } from 'node:http';
 
 class CreateOrderHandler implements CreateOrderActionHandler {
   async handle(input: Actions.CreateOrderCommand, context: GeneratedActionContext): Promise<Actions.CreateOrderResult> {
@@ -78,18 +77,64 @@ class ShipOrderHandler implements ShipOrderActionHandler {
   }
 }
 
-const prismaClient = new PrismaClient();
+export interface AppRuntime {
+  app: express.Express;
+  close: () => Promise<void>;
+}
 
-mountProphet(app, {
-  repositories: new PrismaGeneratedRepositories(prismaClient),
-  handlers: {
-    createOrder: new CreateOrderHandler(),
-    approveOrder: new ApproveOrderHandler(),
-    shipOrder: new ShipOrderHandler(),
-  },
-});
+export async function createAppRuntime(): Promise<AppRuntime> {
+  const app = express();
+  app.use(express.json());
 
-app.listen(8080, () => {
-  // eslint-disable-next-line no-console
-  console.log('prophet_example_express_prisma listening on :8080');
-});
+  const prismaClient = new PrismaClient();
+
+  mountProphet(app, {
+    repositories: new PrismaGeneratedRepositories(prismaClient),
+    handlers: {
+      createOrder: new CreateOrderHandler(),
+      approveOrder: new ApproveOrderHandler(),
+      shipOrder: new ShipOrderHandler(),
+    },
+  });
+
+  return {
+    app,
+    close: async () => {
+      await prismaClient.$disconnect();
+    },
+  };
+}
+
+export async function startServer(port: number): Promise<{ server: Server; close: () => Promise<void> }> {
+  const runtime = await createAppRuntime();
+  const server = runtime.app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`prophet_example_express_prisma listening on :${port}`);
+  });
+
+  return {
+    server,
+    close: async () => {
+      await new Promise<void>((resolve, reject) => {
+        server.close((error) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve();
+        });
+      });
+      await runtime.close();
+    },
+  };
+}
+
+async function main(): Promise<void> {
+  const port = Number.parseInt(process.env.PORT ?? '8080', 10);
+  await startServer(port);
+}
+
+const isMain = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMain) {
+  void main();
+}
