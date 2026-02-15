@@ -6,6 +6,7 @@ from prophet_cli.codegen.rendering import camel_case
 from prophet_cli.codegen.rendering import pascal_case
 from prophet_cli.targets.java_common.render.support import render_javadoc_block
 
+
 def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> None:
     actions = state["actions"]
     action_input_by_id = state["action_input_by_id"]
@@ -13,6 +14,7 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
     action_output_event_by_shape_id = state["action_output_event_by_shape_id"]
     base_package = state["base_package"]
     package_path = state["package_path"]
+    default_event_source = str(state.get("ontology_name", "prophet"))
 
     # action handler interfaces
     for action in sorted(actions, key=lambda x: x["id"]):
@@ -24,10 +26,15 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
         handler_src = (
             f"package {base_package}.generated.actions.handlers;\n\n"
             f"import {base_package}.generated.actions.{req_name};\n"
-            f"import {base_package}.generated.actions.{res_name};\n\n"
+            f"import {base_package}.generated.actions.{res_name};\n"
+            f"import {base_package}.generated.events.ActionOutcome;\n"
+            f"import {base_package}.generated.events.ActionOutcomes;\n\n"
             + render_javadoc_block(action_description)
             + f"public interface {handler_name} {{\n"
-            + f"    {res_name} handle({req_name} request);\n"
+            + f"    {res_name} handle({req_name} request);\n\n"
+            + f"    default ActionOutcome<{res_name}> handleOutcome({req_name} request) {{\n"
+            + "        return ActionOutcomes.just(handle(request));\n"
+            + "    }\n"
             + "}\n"
         )
         files[f"src/main/java/{package_path}/generated/actions/handlers/{handler_name}.java"] = handler_src
@@ -68,47 +75,69 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
             f"import {base_package}.generated.actions.{res_name};",
             f"import {base_package}.generated.actions.handlers.{handler_name};",
             f"import {base_package}.generated.actions.services.{service_name};",
-            f"import {base_package}.generated.events.GeneratedEventEmitter;",
+            f"import {base_package}.generated.events.ActionOutcome;",
+            f"import {base_package}.generated.events.DomainEvent;",
+            f"import {base_package}.generated.events.EventPublishingSupport;",
+            "import io.prophet.events.runtime.EventPublisher;",
+            "import io.prophet.events.runtime.EventIds;",
+            "import java.util.ArrayList;",
+            "import java.util.List;",
             "import org.springframework.beans.factory.ObjectProvider;",
             "import org.springframework.stereotype.Component;",
         }
 
         action_output_event = action_output_event_by_shape_id.get(action["output_shape_id"])
-        emit_method_name = None
+        primary_event_wrapper = None
         if action_output_event is not None:
-            emit_method_name = f"emit{pascal_case(str(action_output_event['name']))}"
-        emit_lines: List[str] = []
-        if emit_method_name is not None:
-            emit_lines.append(f"        eventEmitter.{emit_method_name}(result);")
+            primary_event_wrapper = f"{pascal_case(str(action_output_event['name']))}Event"
+            service_default_imports.add(f"import {base_package}.generated.events.{primary_event_wrapper};")
+
+        emit_lines: List[str] = [
+            f"        ActionOutcome<{res_name}> outcome = handler.handleOutcome(request);",
+            "        List<DomainEvent> events = new ArrayList<>();",
+        ]
+        if primary_event_wrapper is not None:
+            emit_lines.append(f"        events.add(new {primary_event_wrapper}(outcome.output()));")
+        emit_lines.extend(
+            [
+                "        events.addAll(outcome.additionalEvents());",
+                "        EventPublishingSupport.publishAll(",
+                "            eventPublisher,",
+                "            events,",
+                "            EventIds.createEventId(),",
+                f"            \"{default_event_source}\",",
+                "            null",
+                "        ).toCompletableFuture().join();",
+            ]
+        )
         emit_section = "\n".join(emit_lines)
-        if emit_section:
-            emit_section = emit_section + "\n"
+
         default_service_src = (
             f"package {base_package}.generated.actions.services.defaults;\n\n"
             + "\n".join(sorted(service_default_imports))
             + "\n\n"
-            "@Component\n"
-            f"public class {default_service_name} implements {service_name} {{\n"
-            f"    private final ObjectProvider<{handler_name}> handlerProvider;\n"
-            "    private final GeneratedEventEmitter eventEmitter;\n\n"
-            f"    public {default_service_name}(\n"
-            f"        ObjectProvider<{handler_name}> handlerProvider,\n"
-            "        GeneratedEventEmitter eventEmitter\n"
-            "    ) {\n"
-            "        this.handlerProvider = handlerProvider;\n"
-            "        this.eventEmitter = eventEmitter;\n"
-            "    }\n\n"
-            "    @Override\n"
-            f"    public {res_name} execute({req_name} request) {{\n"
-            f"        {handler_name} handler = handlerProvider.getIfAvailable();\n"
-            "        if (handler == null) {\n"
-            f"            throw new UnsupportedOperationException(\"No handler bean provided for action '{action['name']}'\");\n"
-            "        }\n"
-            f"        {res_name} result = handler.handle(request);\n"
+            + "@Component\n"
+            + f"public class {default_service_name} implements {service_name} {{\n"
+            + f"    private final ObjectProvider<{handler_name}> handlerProvider;\n"
+            + "    private final EventPublisher eventPublisher;\n\n"
+            + f"    public {default_service_name}(\n"
+            + f"        ObjectProvider<{handler_name}> handlerProvider,\n"
+            + "        EventPublisher eventPublisher\n"
+            + "    ) {\n"
+            + "        this.handlerProvider = handlerProvider;\n"
+            + "        this.eventPublisher = eventPublisher;\n"
+            + "    }\n\n"
+            + "    @Override\n"
+            + f"    public {res_name} execute({req_name} request) {{\n"
+            + f"        {handler_name} handler = handlerProvider.getIfAvailable();\n"
+            + "        if (handler == null) {\n"
+            + f"            throw new UnsupportedOperationException(\"No handler bean provided for action '{action['name']}'\");\n"
+            + "        }\n"
             + emit_section
-            + "        return result;\n"
-            "    }\n"
-            "}\n"
+            + "\n"
+            + "        return outcome.output();\n"
+            + "    }\n"
+            + "}\n"
         )
         files[
             f"src/main/java/{package_path}/generated/actions/services/defaults/{default_service_name}.java"

@@ -31,6 +31,7 @@ java {{
 }}
 
 repositories {{
+    mavenLocal()
     mavenCentral()
 }}
 
@@ -38,6 +39,7 @@ dependencies {{
     implementation(\"org.springframework.boot:spring-boot-starter-web\")
     implementation(\"org.springframework.boot:spring-boot-starter-validation\")
     implementation(\"org.springframework.boot:spring-boot-starter-data-jpa\")
+    implementation(\"io.prophet:prophet-events-runtime:0.1.0\")
     runtimeOnly(\"org.postgresql:postgresql\")
     testImplementation(\"org.springframework.boot:spring-boot-starter-test\")
 }}
@@ -266,6 +268,8 @@ def render_spring_files(
         "action_output_event_by_shape_id": action_output_event_by_shape_id,
         "base_package": base_package,
         "package_path": package_path,
+        "ontology_name": str(ir.get("ontology", {}).get("name", "prophet")),
+        "ontology_version": str(ir.get("ontology", {}).get("version", "1.0.0")),
     }
 
     render_domain_artifacts(files, state)

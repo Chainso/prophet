@@ -67,7 +67,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 - [x] D2: Add `prophet-lib` runtime packages for JavaScript, Python, Java
 - [x] D3: Migrate Node generator to `EventPublisher` + `ActionOutcome` + event wire envelopes
 - [x] D4: Migrate Python generator to `EventPublisher` + `ActionOutcome` + event wire envelopes
-- [ ] D5: Migrate Java generator to async `EventPublisher` + `ActionOutcome` + event wire envelopes
+- [x] D5: Migrate Java generator to async `EventPublisher` + `ActionOutcome` + event wire envelopes
 - [ ] D6: Update examples to compile and run with new generated contracts
 - [ ] D7: Add CI workflows/jobs for `prophet-lib` validation and staged publish
 - [ ] D8: Add local testing + release runbooks for `prophet-lib`
@@ -97,6 +97,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 - 2026-02-15: D2 completed and committed (JS/Python/Java runtime scaffolds added).
 - 2026-02-15: D3 completed and committed (Node generator now publishes via async EventPublisher and event wire envelopes).
 - 2026-02-15: D4 completed and committed (Python generator now uses async EventPublisher contracts with ActionOutcome shorthands).
+- 2026-02-15: D5 completed and committed (Java Spring generator migrated to async EventPublisher with ActionOutcome + domain event wrappers).
 
 ## Notes
 

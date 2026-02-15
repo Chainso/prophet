@@ -7,9 +7,9 @@ from prophet_cli.codegen.rendering import object_ref_target_ids_for_type
 from prophet_cli.codegen.rendering import pascal_case
 from prophet_cli.targets.java_common.render.support import add_java_imports_for_type
 from prophet_cli.targets.java_common.render.support import java_type_for_field
-from prophet_cli.targets.java_common.render.support import render_javadoc_block
 from prophet_cli.targets.java_common.render.support import render_java_record_with_builder
 from prophet_cli.targets.java_common.render.support import struct_target_ids_for_type
+
 
 def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> None:
     action_inputs = state["action_inputs"]
@@ -21,6 +21,7 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     type_by_id = state["type_by_id"]
     base_package = state["base_package"]
     package_path = state["package_path"]
+    schema_version = str(state.get("ontology_version", "1.0.0"))
 
     # action contract records
     action_shapes = sorted(action_inputs + action_outputs, key=lambda x: x["id"])
@@ -52,22 +53,21 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
         )
         files[f"src/main/java/{package_path}/generated/actions/{shape['name']}.java"] = record_src
 
-    # event contract records and emitter contract
-    emitter_specs: List[Tuple[str, str, str, str]] = []
-    emitter_imports: set[str] = set()
+    # event payload contracts and domain event wrappers
+    domain_event_specs: List[Tuple[str, str]] = []
+    domain_event_imports: set[str] = set()
+
     for event in sorted(events, key=lambda x: x["id"]):
         event_kind = str(event.get("kind", "signal"))
         event_name = str(event["name"])
-        method_name = f"emit{pascal_case(event_name)}"
-        method_description = str(event.get("description", "")).strip() or f"Emit '{event_name}'."
 
         if event_kind == "action_output":
             output_shape = action_output_by_id.get(str(event.get("output_shape_id", "")))
             if output_shape is None:
                 continue
-            param_type = str(output_shape["name"])
-            emitter_imports.add(f"import {base_package}.generated.actions.{param_type};")
-            emitter_specs.append((event_name, method_name, param_type, method_description))
+            payload_type = str(output_shape["name"])
+            domain_event_imports.add(f"import {base_package}.generated.actions.{payload_type};")
+            domain_event_specs.append((event_name, payload_type))
             continue
 
         event_fields: List[Tuple[str, str, bool]] = []
@@ -104,52 +104,160 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
             event_imports,
             event_name,
             event_fields,
-            record_description=method_description or None,
+            record_description=str(event.get("description", "")).strip() or f"Event payload for '{event_name}'.",
             field_descriptions=event_field_descriptions,
         )
         files[f"src/main/java/{package_path}/generated/events/{event_name}.java"] = event_record_src
-        emitter_imports.add(f"import {base_package}.generated.events.{event_name};")
-        emitter_specs.append((event_name, method_name, event_name, method_description))
 
-    emitter_methods: List[str] = []
-    for _, method_name, param_type, method_description in emitter_specs:
-        method_doc = render_javadoc_block(method_description, indent="    ").rstrip("\n")
-        if method_doc:
-            emitter_methods.append(method_doc)
-        emitter_methods.append(f"    void {method_name}({param_type} event);")
-        emitter_methods.append("")
-    emitter_src = (
+        if event_kind == "signal":
+            domain_event_imports.add(f"import {base_package}.generated.events.{event_name};")
+            domain_event_specs.append((event_name, event_name))
+
+    if domain_event_specs:
+        permits = ", ".join([f"{name}Event" for name, _ in domain_event_specs])
+        domain_event_interface = (
+            f"package {base_package}.generated.events;\n\n"
+            + "public sealed interface DomainEvent permits "
+            + permits
+            + " {\n"
+            + "}\n"
+        )
+    else:
+        domain_event_interface = (
+            f"package {base_package}.generated.events;\n\n"
+            + "public interface DomainEvent {\n"
+            + "}\n"
+        )
+    files[f"src/main/java/{package_path}/generated/events/DomainEvent.java"] = domain_event_interface
+
+    for event_name, payload_type in domain_event_specs:
+        wrapper_src = (
+            f"package {base_package}.generated.events;\n\n"
+            + f"public record {event_name}Event({payload_type} payload) implements DomainEvent {{\n"
+            + "}\n"
+        )
+        files[f"src/main/java/{package_path}/generated/events/{event_name}Event.java"] = wrapper_src
+
+    action_outcome_src = (
         f"package {base_package}.generated.events;\n\n"
-        + ("".join(f"{line}\n" for line in sorted(emitter_imports)) + "\n" if emitter_imports else "")
-        + "public interface GeneratedEventEmitter {\n"
-        + ("".join(f"{line}\n" for line in emitter_methods) if emitter_methods else "")
+        + "import java.util.List;\n\n"
+        + "public record ActionOutcome<T>(T output, List<DomainEvent> additionalEvents) {\n"
+        + "    public ActionOutcome {\n"
+        + "        additionalEvents = additionalEvents == null ? List.of() : List.copyOf(additionalEvents);\n"
+        + "    }\n"
         + "}\n"
     )
-    files[f"src/main/java/{package_path}/generated/events/GeneratedEventEmitter.java"] = emitter_src
+    files[f"src/main/java/{package_path}/generated/events/ActionOutcome.java"] = action_outcome_src
 
-    no_op_imports = {
-        "import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;",
-        "import org.springframework.stereotype.Component;",
-    }
-    no_op_imports.update(emitter_imports)
-    no_op_methods: List[str] = []
-    for _, method_name, param_type, _ in emitter_specs:
-        no_op_methods.extend(
+    action_outcomes_src = (
+        f"package {base_package}.generated.events;\n\n"
+        + "import java.util.Arrays;\n"
+        + "import java.util.List;\n\n"
+        + "public final class ActionOutcomes {\n"
+        + "    private ActionOutcomes() {}\n\n"
+        + "    public static <T> ActionOutcome<T> just(T output) {\n"
+        + "        return new ActionOutcome<>(output, List.of());\n"
+        + "    }\n\n"
+        + "    public static <T> ActionOutcome<T> withEvents(T output, DomainEvent... additionalEvents) {\n"
+        + "        return new ActionOutcome<>(output, Arrays.asList(additionalEvents));\n"
+        + "    }\n"
+        + "}\n"
+    )
+    files[f"src/main/java/{package_path}/generated/events/ActionOutcomes.java"] = action_outcomes_src
+
+    mapper_lines: List[str] = [
+        f"package {base_package}.generated.events;",
+        "",
+        "import com.fasterxml.jackson.core.type.TypeReference;",
+        "import com.fasterxml.jackson.databind.ObjectMapper;",
+        "import io.prophet.events.runtime.EventTime;",
+        "import io.prophet.events.runtime.EventWireEnvelope;",
+        "import java.util.List;",
+        "import java.util.Map;",
+        "import java.util.concurrent.CompletableFuture;",
+        "import java.util.concurrent.CompletionStage;",
+        "",
+        "public final class EventPublishingSupport {",
+        "    private static final ObjectMapper MAPPER = new ObjectMapper();",
+        "",
+        "    private EventPublishingSupport() {}",
+        "",
+        "    public static EventWireEnvelope toEnvelope(DomainEvent event, String eventId, String traceId, String source, Map<String, String> attributes) {",
+        "        String eventType;",
+        "        Object payloadValue;",
+    ]
+
+    for idx, (event_name, _) in enumerate(domain_event_specs):
+        wrapper_name = f"{event_name}Event"
+        keyword = "if" if idx == 0 else "else if"
+        mapper_lines.extend(
             [
-                "    @Override",
-                f"    public void {method_name}({param_type} event) {{",
-                "    }",
-                "",
+                f"        {keyword} (event instanceof {wrapper_name} typed) {{",
+                f"            eventType = \"{event_name}\";",
+                "            payloadValue = typed.payload();",
+                "        }",
             ]
         )
+    mapper_lines.extend(
+        [
+            "        else {",
+            "            throw new IllegalArgumentException(\"Unsupported domain event: \" + event.getClass().getName());",
+            "        }",
+            "",
+            "        Map<String, Object> payload = MAPPER.convertValue(payloadValue, new TypeReference<Map<String, Object>>() {});",
+            "        return new EventWireEnvelope(",
+            "            eventId,",
+            "            traceId,",
+            "            eventType,",
+            f"            \"{schema_version}\",",
+            "            EventTime.nowIso(),",
+            "            source,",
+            "            payload,",
+            "            attributes",
+            "        );",
+            "    }",
+            "",
+            "    public static CompletionStage<Void> publishAll(",
+            "        io.prophet.events.runtime.EventPublisher eventPublisher,",
+            "        List<DomainEvent> events,",
+            "        String traceId,",
+            "        String source,",
+            "        Map<String, String> attributes",
+            "    ) {",
+            "        if (events == null || events.isEmpty()) {",
+            "            return CompletableFuture.completedFuture(null);",
+            "        }",
+            "        List<EventWireEnvelope> envelopes = events.stream()",
+            "            .map(event -> toEnvelope(event, io.prophet.events.runtime.EventIds.createEventId(), traceId, source, attributes))",
+            "            .toList();",
+            "        return eventPublisher.publishBatch(envelopes);",
+            "    }",
+            "}",
+            "",
+        ]
+    )
+    files[f"src/main/java/{package_path}/generated/events/EventPublishingSupport.java"] = "\n".join(mapper_lines)
+
     no_op_src = (
         f"package {base_package}.generated.events;\n\n"
-        + "\n".join(sorted(no_op_imports))
-        + "\n\n"
+        + "import io.prophet.events.runtime.EventPublisher;\n"
+        + "import io.prophet.events.runtime.EventWireEnvelope;\n"
+        + "import java.util.List;\n"
+        + "import java.util.concurrent.CompletableFuture;\n"
+        + "import java.util.concurrent.CompletionStage;\n"
+        + "import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\n"
+        + "import org.springframework.stereotype.Component;\n\n"
         + "@Component\n"
-        + "@ConditionalOnMissingBean(value = GeneratedEventEmitter.class, ignored = GeneratedEventEmitterNoOp.class)\n"
-        + "public class GeneratedEventEmitterNoOp implements GeneratedEventEmitter {\n"
-        + "".join(f"{line}\n" for line in no_op_methods)
+        + "@ConditionalOnMissingBean(value = EventPublisher.class, ignored = GeneratedEventPublisherNoOp.class)\n"
+        + "public class GeneratedEventPublisherNoOp implements EventPublisher {\n"
+        + "    @Override\n"
+        + "    public CompletionStage<Void> publish(EventWireEnvelope envelope) {\n"
+        + "        return CompletableFuture.completedFuture(null);\n"
+        + "    }\n\n"
+        + "    @Override\n"
+        + "    public CompletionStage<Void> publishBatch(List<EventWireEnvelope> envelopes) {\n"
+        + "        return CompletableFuture.completedFuture(null);\n"
+        + "    }\n"
         + "}\n"
     )
-    files[f"src/main/java/{package_path}/generated/events/GeneratedEventEmitterNoOp.java"] = no_op_src
+    files[f"src/main/java/{package_path}/generated/events/GeneratedEventPublisherNoOp.java"] = no_op_src
