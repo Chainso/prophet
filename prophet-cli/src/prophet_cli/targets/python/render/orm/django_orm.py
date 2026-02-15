@@ -12,8 +12,8 @@ from ..support import _sort_dict_entries
 
 def _django_field_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]], required: bool) -> str:
     kind = str(type_desc.get("kind", ""))
-    nullable = "false" if required else "true"
-    blank = "false" if required else "true"
+    nullable = "False" if required else "True"
+    blank = "False" if required else "True"
     if kind in {"struct", "object_ref", "list"}:
         return f"models.JSONField(null={nullable}, blank={blank})"
 

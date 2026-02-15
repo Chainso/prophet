@@ -47,7 +47,7 @@
     },
     {
       "path": "gen/python/src/generated/django_models.py",
-      "sha256": "06b18e5f7d8ed4d65cc3ba032d2abd46ae395e0756895559b2074b797276f584"
+      "sha256": "645721aa2c0deaa809045f1ebe71df6078f7702885c5a55fd3f9b1bd5d16f308"
     },
     {
       "path": "gen/python/src/generated/django_urls.py",

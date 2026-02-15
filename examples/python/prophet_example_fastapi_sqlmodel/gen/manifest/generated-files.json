@@ -71,7 +71,7 @@
     },
     {
       "path": "gen/python/src/generated/sqlmodel_models.py",
-      "sha256": "35ab7ef5dc159e95a9b7bb5df8cda1ff78a360f59aba6a2e4f530840cb874887"
+      "sha256": "66f87b1ac8db2fdffdb25b05fcc431524373c23b159b7c073aa57f6a3db3c03a"
     },
     {
       "path": "gen/sql/schema.sql",

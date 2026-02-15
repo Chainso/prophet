@@ -76,7 +76,7 @@ def render_sqlmodel_models(ir: Dict[str, Any]) -> str:
                     default_expr = "default_factory=dict" if py_type == "dict" else "default_factory=list"
                 lines.append(
                     f"    {prop}: {type_hint} = Field({default_expr}, "
-                    f"sa_column=Column(JSON, nullable={str(nullable).lower()}, primary_key={str(is_pk)}))"
+                    f"sa_column=Column(JSON, nullable={str(nullable)}, primary_key={str(is_pk)}))"
                 )
                 continue
 

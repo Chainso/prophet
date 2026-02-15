@@ -65,6 +65,8 @@ class PythonTargetTests(unittest.TestCase):
         self.assertIn("gen/python/src/generated/sqlmodel_adapters.py", outputs)
         self.assertIn("class SqlModelGeneratedRepositories", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
         self.assertIn("async def list", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
+        self.assertNotIn("nullable=false", outputs["gen/python/src/generated/sqlmodel_models.py"])
+        self.assertIn("nullable=False", outputs["gen/python/src/generated/sqlmodel_models.py"])
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "python_fastapi_sqlmodel")
@@ -118,6 +120,8 @@ class PythonTargetTests(unittest.TestCase):
         self.assertIn("gen/python/src/generated/django_adapters.py", outputs)
         self.assertIn("class DjangoGeneratedRepositories", outputs["gen/python/src/generated/django_adapters.py"])
         self.assertIn("configure_generated_views", outputs["gen/python/src/generated/django_views.py"])
+        self.assertNotIn("null=false", outputs["gen/python/src/generated/django_models.py"])
+        self.assertIn("null=False", outputs["gen/python/src/generated/django_models.py"])
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "python_django_django_orm")
