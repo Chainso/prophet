@@ -71,7 +71,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 - [x] D6: Update examples to compile and run with new generated contracts
 - [x] D7: Add CI workflows/jobs for `prophet-lib` validation and staged publish
 - [x] D8: Add local testing + release runbooks for `prophet-lib`
-- [ ] D9: Regenerate snapshots/artifacts and run validation suites
+- [x] D9: Regenerate snapshots/artifacts and run validation suites
 
 ## Commit Strategy
 
@@ -101,6 +101,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 - 2026-02-15: D6 completed (examples rewired to EventPublisher contracts; generated outputs regenerated and validated for compile/smoke paths).
 - 2026-02-15: D7 completed (CI now validates prophet-lib runtimes; staged publish workflow added for npm/PyPI/Maven flows).
 - 2026-02-15: D8 completed (added maintainer runbooks for local runtime testing, CI linkage, and staged/public publish procedures).
+- 2026-02-15: D9 completed (`./scripts/test-all.sh` passes end-to-end after updating runtime-aware test harness wiring).
 
 ## Notes
 

@@ -76,6 +76,15 @@ fi
 section "CLI Unit Tests"
 "$VENV_PYTHON" -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
 
+section "Runtime Libraries"
+npm --prefix prophet-lib/javascript test
+PYTHONPATH="${ROOT_DIR}/prophet-lib/python/src" \
+  "$VENV_PYTHON" -m unittest discover -s prophet-lib/python/tests -p 'test_*.py' -v
+pushd examples/java/prophet_example_spring >/dev/null
+./gradlew -p ../../../prophet-lib/java test
+./gradlew -p ../../../prophet-lib/java publishToMavenLocal
+popd >/dev/null
+
 section "Java Spring Example"
 pushd examples/java/prophet_example_spring >/dev/null
 run_prophet_checks "$PWD" "--wire-gradle"
@@ -122,6 +131,7 @@ for dir in "${PYTHON_EXAMPLES[@]}"; do
   pushd "$dir" >/dev/null
 
   run_prophet_checks "$PWD"
+  PYTHON_RUNTIME_PATH="${ROOT_DIR}/prophet-lib/python/src"
   EXAMPLE_PYTHON="$VENV_PYTHON"
   if [[ -x ".venv/bin/python" ]]; then
     EXAMPLE_PYTHON=".venv/bin/python"
@@ -135,10 +145,10 @@ for dir in "${PYTHON_EXAMPLES[@]}"; do
   ensure_python_requirements "$EXAMPLE_PYTHON" "pytest"
 
   if [[ "$dir" == "examples/python/prophet_example_django" ]]; then
-    PYTHONPATH=src:gen/python/src DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
+    PYTHONPATH="${PYTHON_RUNTIME_PATH}:src:gen/python/src" DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
       "$EXAMPLE_PYTHON" -m pytest -q tests
   else
-    PYTHONPATH=src:gen/python/src \
+    PYTHONPATH="${PYTHON_RUNTIME_PATH}:src:gen/python/src" \
       "$EXAMPLE_PYTHON" -m pytest -q tests
   fi
   popd >/dev/null
