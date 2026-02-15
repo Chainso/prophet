@@ -16,7 +16,6 @@ ontology commerce_local {
     field user_id {
       id "fld_user_user_id"
       type string
-      required
       key primary
       description "Stable user identifier."
     }
@@ -24,7 +23,6 @@ ontology commerce_local {
     field email {
       id "fld_user_email"
       type string
-      required
     }
   }
 
@@ -35,7 +33,6 @@ ontology commerce_local {
     field order_id {
       id "fld_order_order_id"
       type string
-      required
       key primary
       description "Stable order identifier."
     }
@@ -43,13 +40,11 @@ ontology commerce_local {
     field customer {
       id "fld_order_customer"
       type ref(User)
-      required
     }
 
     field total_amount {
       id "fld_order_total_amount"
       type Money
-      required
     }
 
     field discount_code {
@@ -102,19 +97,16 @@ ontology commerce_local {
     field line1 {
       id "fld_struct_address_line1"
       type string
-      required
     }
 
     field city {
       id "fld_struct_address_city"
       type string
-      required
     }
 
     field countryCode {
       id "fld_struct_address_country_code"
       type string
-      required
     }
   }
 
@@ -124,7 +116,6 @@ ontology commerce_local {
     field approver {
       id "fld_struct_approval_context_approver"
       type ref(User)
-      required
     }
 
     field watchers {
@@ -151,13 +142,11 @@ ontology commerce_local {
       field customer {
         id "fld_ain_create_order_customer"
         type ref(User)
-        required
       }
 
       field totalAmount {
         id "fld_ain_create_order_total_amount"
         type Money
-        required
       }
 
       field discountCode {
@@ -185,13 +174,11 @@ ontology commerce_local {
       field order {
         id "fld_aout_create_order_order"
         type ref(Order)
-        required
       }
 
       field currentState {
         id "fld_aout_create_order_current_state"
         type string
-        required
       }
     }
   }
@@ -208,7 +195,6 @@ ontology commerce_local {
       field order {
         id "fld_ain_approve_order_order"
         type ref(Order)
-        required
       }
 
       field approvedBy {
@@ -237,13 +223,11 @@ ontology commerce_local {
       field order {
         id "fld_aout_approve_order_order"
         type ref(Order)
-        required
       }
 
       field decision {
         id "fld_aout_approve_order_decision"
         type string
-        required
       }
 
       field warnings {
@@ -265,25 +249,21 @@ ontology commerce_local {
       field order {
         id "fld_ain_ship_order_order"
         type ref(Order)
-        required
       }
 
       field carrier {
         id "fld_ain_ship_order_carrier"
         type string
-        required
       }
 
       field trackingNumber {
         id "fld_ain_ship_order_tracking_number"
         type string
-        required
       }
 
       field packageIds {
         id "fld_ain_ship_order_package_ids"
         type string[]
-        required
       }
     }
 
@@ -293,13 +273,11 @@ ontology commerce_local {
       field order {
         id "fld_aout_ship_order_order"
         type ref(Order)
-        required
       }
 
       field shipmentStatus {
         id "fld_aout_ship_order_status"
         type string
-        required
       }
 
       field labels {
@@ -322,7 +300,6 @@ ontology commerce_local {
     field order {
       id "fld_sig_payment_captured_order"
       type ref(Order)
-      required
     }
   }
 

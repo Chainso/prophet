@@ -4,7 +4,6 @@
 
 ```prophet
 ontology CommerceLocal {
-  id "ontology_commerce_local"
   version "0.1.0"
   # type/object/struct/action/signal/trigger blocks
 }
@@ -25,6 +24,12 @@ ontology CommerceLocal {
 - Strings use double quotes
 - `#` starts a line comment
 - Empty lines are ignored
+
+## IDs
+
+- `id "..."` is optional on ontology elements.
+- When omitted, Prophet generates a stable non-conflicting ID during parse.
+- You can still provide explicit IDs anywhere you need stable external references.
 
 ## Field Types
 
@@ -49,28 +54,29 @@ Display key metadata marker:
 
 `description "..."` and `documentation "..."` are supported synonyms.
 
+## Field Requiredness
+
+- Fields are `required` by default.
+- Use `optional` only when a field should be nullable/omittable.
+- `required` remains supported as an explicit marker.
+
 ## Action Contracts
 
 Actions declare contracts inline with `input { ... }` and `output { ... }`.
 
 ```prophet
 action createOrder {
-  id "act_create_order"
   kind process
 
   input {
     field customer_id {
-      id "fld_create_order_customer_id"
       type string
-      required
     }
   }
 
   output {
     field order_id {
-      id "fld_create_order_result_order_id"
       type string
-      required
     }
   }
 }
@@ -85,16 +91,15 @@ action createOrder {
   - signal name (for example `PaymentCaptured`)
   - derived action output event name `<ActionName>Result` (for example `ApproveOrderResult`)
   - derived transition event name `<Object><Transition>Transition` (for example `OrderApproveTransition`)
+- action input shape names are derived as `<ActionName>Command` (for example `ApproveOrderCommand`).
+- action output shape/event names are derived as `<ActionName>Result` (for example `ApproveOrderResult`).
 
 Signal example:
 
 ```prophet
 signal PaymentCaptured {
-  id "sig_payment_captured"
   field orderId {
-    id "fld_sig_payment_captured_order_id"
     type string
-    required
   }
 }
 ```

@@ -117,6 +117,95 @@ ontology RefConstraint {
         errors = validate_ontology(ontology)
         self.assertTrue(any("single-field primary keys" in item for item in errors))
 
+    def test_fields_default_to_required_when_modifier_is_omitted(self) -> None:
+        ontology_text = """
+ontology RequiredDefaults {
+  version "0.1.0"
+
+  object Customer {
+    field customerId {
+      type string
+      key primary
+    }
+
+    field nickname {
+      type string
+      optional
+    }
+  }
+}
+"""
+        ontology = parse_ontology(ontology_text)
+        errors = validate_ontology(ontology)
+        self.assertEqual(errors, [])
+
+        customer = next(item for item in ontology.objects if item.name == "Customer")
+        field_required = {field.name: field.required for field in customer.fields}
+        self.assertTrue(field_required["customerId"])
+        self.assertFalse(field_required["nickname"])
+
+    def test_missing_ids_are_auto_generated_and_unique(self) -> None:
+        ontology_text = """
+ontology MinimalCommerce {
+  version "0.1.0"
+
+  object Order {
+    field orderId {
+      type string
+      key primary
+    }
+
+    field notes {
+      type string
+      optional
+    }
+  }
+
+  action createOrder {
+    kind process
+
+    input {
+      field notes {
+        type string
+        optional
+      }
+    }
+
+    output {
+      field order {
+        type ref(Order)
+      }
+    }
+  }
+}
+"""
+        ontology = parse_ontology(ontology_text)
+        errors = validate_ontology(ontology)
+        self.assertEqual(errors, [])
+
+        ir = build_ir(ontology, {})
+        ids = [ir["ontology"]["id"]]
+        ids.extend(item["id"] for item in ir.get("objects", []))
+        for obj in ir.get("objects", []):
+            ids.extend(field["id"] for field in obj.get("fields", []))
+            ids.extend(state["id"] for state in obj.get("states", []))
+            ids.extend(transition["id"] for transition in obj.get("transitions", []))
+        ids.extend(item["id"] for item in ir.get("action_inputs", []))
+        for shape in ir.get("action_inputs", []):
+            ids.extend(field["id"] for field in shape.get("fields", []))
+        ids.extend(item["id"] for item in ir.get("action_outputs", []))
+        for shape in ir.get("action_outputs", []):
+            ids.extend(field["id"] for field in shape.get("fields", []))
+        ids.extend(item["id"] for item in ir.get("actions", []))
+
+        self.assertTrue(all(ids))
+        self.assertEqual(len(ids), len(set(ids)))
+
+        input_names = {shape["name"] for shape in ir.get("action_inputs", [])}
+        output_names = {shape["name"] for shape in ir.get("action_outputs", [])}
+        self.assertIn("CreateOrderCommand", input_names)
+        self.assertIn("CreateOrderResult", output_names)
+
 
 if __name__ == "__main__":
     unittest.main()

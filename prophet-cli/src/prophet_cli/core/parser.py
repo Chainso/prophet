@@ -79,10 +79,46 @@ def _pascal_case(value: str) -> str:
     return "".join(chunk[:1].upper() + chunk[1:] for chunk in chunks)
 
 
+def _snake_case(value: str) -> str:
+    if not value:
+        return ""
+    normalized = re.sub(r"[^A-Za-z0-9]+", "_", value)
+    normalized = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", normalized)
+    return normalized.strip("_").lower()
+
+
+def _extract_explicit_ids(lines: List[Tuple[int, str]]) -> set[str]:
+    ids: set[str] = set()
+    for _, line in lines:
+        if re.match(r"^id\s+\".*\"$", line):
+            value = re.match(r'^id\s+\"(.*)\"$', line).group(1)  # type: ignore[union-attr]
+            ids.add(value)
+    return ids
+
+
+class IdAllocator:
+    def __init__(self, reserved_ids: set[str]):
+        self._used_ids = set(reserved_ids)
+
+    def reserve(self, value: str) -> None:
+        self._used_ids.add(value)
+
+    def generate(self, base: str) -> str:
+        slug = _snake_case(base) or "id"
+        candidate = slug
+        suffix = 2
+        while candidate in self._used_ids:
+            candidate = f"{slug}_{suffix}"
+            suffix += 1
+        self._used_ids.add(candidate)
+        return candidate
+
+
 def parse_ontology(text: str) -> Ontology:
     p = Parser(text)
     start = p.expect(r"^ontology\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", "Expected ontology header")
     ont_name = start.group(1)
+    id_allocator = IdAllocator(_extract_explicit_ids(p.lines))
 
     ont_id: Optional[str] = None
     ont_version: Optional[str] = None
@@ -105,6 +141,7 @@ def parse_ontology(text: str) -> Ontology:
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             ont_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(ont_id)
             continue
 
         if re.match(r"^version\s+\".*\"$", line):
@@ -121,25 +158,25 @@ def parse_ontology(text: str) -> Ontology:
         m = re.match(r"^type\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            types.append(parse_type_block(p, m.group(1), ln))
+            types.append(parse_type_block(p, m.group(1), ln, id_allocator))
             continue
 
         m = re.match(r"^object\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            objects.append(parse_object_block(p, m.group(1), ln))
+            objects.append(parse_object_block(p, m.group(1), ln, id_allocator))
             continue
 
         m = re.match(r"^struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            structs.append(parse_struct_block(p, m.group(1), ln))
+            structs.append(parse_struct_block(p, m.group(1), ln, id_allocator))
             continue
 
         m = re.match(r"^action\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            action_def, inline_input, inline_output = parse_action_block(p, m.group(1), ln)
+            action_def, inline_input, inline_output = parse_action_block(p, m.group(1), ln, id_allocator)
             actions.append(action_def)
             if inline_input is not None:
                 action_inputs.append(inline_input)
@@ -150,19 +187,19 @@ def parse_ontology(text: str) -> Ontology:
         m = re.match(r"^signal\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            events.append(parse_signal_block(p, m.group(1), ln))
+            events.append(parse_signal_block(p, m.group(1), ln, id_allocator))
             continue
 
         m = re.match(r"^trigger\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            triggers.append(parse_trigger_block(p, m.group(1), ln))
+            triggers.append(parse_trigger_block(p, m.group(1), ln, id_allocator))
             continue
 
         raise ProphetError(f"Unexpected line {ln}: {line}")
 
     if ont_id is None:
-        raise ProphetError("Ontology missing id")
+        ont_id = id_allocator.generate(f"ont_{ont_name}")
     if ont_version is None:
         raise ProphetError("Ontology missing version")
 
@@ -182,7 +219,7 @@ def parse_ontology(text: str) -> Ontology:
     )
 
 
-def parse_type_block(p: Parser, name: str, block_line: int) -> TypeDef:
+def parse_type_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> TypeDef:
     t_id: Optional[str] = None
     base: Optional[str] = None
     constraints: Dict[str, str] = {}
@@ -196,6 +233,7 @@ def parse_type_block(p: Parser, name: str, block_line: int) -> TypeDef:
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             t_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(t_id)
             continue
 
         m = re.match(r"^base\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
@@ -219,13 +257,13 @@ def parse_type_block(p: Parser, name: str, block_line: int) -> TypeDef:
         raise ProphetError(f"Unexpected type line {ln}: {line}")
 
     if t_id is None:
-        raise ProphetError(f"Type {name} missing id (line {block_line})")
+        t_id = id_allocator.generate(f"type_{name}")
     if base is None:
         raise ProphetError(f"Type {name} missing base (line {block_line})")
     return TypeDef(name=name, id=t_id, base=base, constraints=constraints, description=description, line=block_line)
 
 
-def parse_object_block(p: Parser, name: str, block_line: int) -> ObjectDef:
+def parse_object_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> ObjectDef:
     o_id: Optional[str] = None
     fields: List[FieldDef] = []
     keys: List[KeyDef] = []
@@ -242,12 +280,13 @@ def parse_object_block(p: Parser, name: str, block_line: int) -> ObjectDef:
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             o_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(o_id)
             continue
 
         m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            fields.append(parse_field_block(p, m.group(1), ln))
+            fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"obj_{name}"))
             continue
 
         m = re.match(r"^key\s+([A-Za-z_][A-Za-z0-9_]*)\s*\((.*)\)$", line)
@@ -259,13 +298,13 @@ def parse_object_block(p: Parser, name: str, block_line: int) -> ObjectDef:
         m = re.match(r"^state\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            states.append(parse_state_block(p, m.group(1), ln))
+            states.append(parse_state_block(p, m.group(1), ln, id_allocator, name))
             continue
 
         m = re.match(r"^transition\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            transitions.append(parse_transition_block(p, m.group(1), ln))
+            transitions.append(parse_transition_block(p, m.group(1), ln, id_allocator, name))
             continue
 
         parsed_description = _parse_optional_description_line(line)
@@ -277,7 +316,7 @@ def parse_object_block(p: Parser, name: str, block_line: int) -> ObjectDef:
         raise ProphetError(f"Unexpected object line {ln}: {line}")
 
     if o_id is None:
-        raise ProphetError(f"Object {name} missing id (line {block_line})")
+        o_id = id_allocator.generate(f"obj_{name}")
     return ObjectDef(
         name=name,
         id=o_id,
@@ -290,7 +329,7 @@ def parse_object_block(p: Parser, name: str, block_line: int) -> ObjectDef:
     )
 
 
-def parse_struct_block(p: Parser, name: str, block_line: int) -> StructDef:
+def parse_struct_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> StructDef:
     s_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
@@ -304,12 +343,13 @@ def parse_struct_block(p: Parser, name: str, block_line: int) -> StructDef:
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             s_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(s_id)
             continue
 
         m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            fields.append(parse_field_block(p, m.group(1), ln))
+            fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"struct_{name}"))
             continue
 
         parsed_description = _parse_optional_description_line(line)
@@ -321,14 +361,20 @@ def parse_struct_block(p: Parser, name: str, block_line: int) -> StructDef:
         raise ProphetError(f"Unexpected struct line {ln}: {line}")
 
     if s_id is None:
-        raise ProphetError(f"Struct {name} missing id (line {block_line})")
+        s_id = id_allocator.generate(f"struct_{name}")
     return StructDef(name=name, id=s_id, fields=fields, description=description, line=block_line)
 
 
-def parse_field_block(p: Parser, name: str, block_line: int) -> FieldDef:
+def parse_field_block(
+    p: Parser,
+    name: str,
+    block_line: int,
+    id_allocator: IdAllocator,
+    owner_scope: str,
+) -> FieldDef:
     f_id: Optional[str] = None
     type_raw: Optional[str] = None
-    required: Optional[bool] = None
+    required = True
     key: Optional[str] = None
     description: Optional[str] = None
 
@@ -341,6 +387,7 @@ def parse_field_block(p: Parser, name: str, block_line: int) -> FieldDef:
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             f_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(f_id)
             continue
 
         m = re.match(r"^type\s+(.+)$", line)
@@ -374,11 +421,9 @@ def parse_field_block(p: Parser, name: str, block_line: int) -> FieldDef:
         raise ProphetError(f"Unexpected field line {ln}: {line}")
 
     if f_id is None:
-        raise ProphetError(f"Field {name} missing id (line {block_line})")
+        f_id = id_allocator.generate(f"fld_{owner_scope}_{name}")
     if type_raw is None:
         raise ProphetError(f"Field {name} missing type (line {block_line})")
-    if required is None:
-        raise ProphetError(f"Field {name} missing required/optional (line {block_line})")
 
     return FieldDef(
         name=name,
@@ -391,7 +436,13 @@ def parse_field_block(p: Parser, name: str, block_line: int) -> FieldDef:
     )
 
 
-def parse_state_block(p: Parser, name: str, block_line: int) -> StateDef:
+def parse_state_block(
+    p: Parser,
+    name: str,
+    block_line: int,
+    id_allocator: IdAllocator,
+    object_name: str,
+) -> StateDef:
     s_id: Optional[str] = None
     initial = False
     description: Optional[str] = None
@@ -403,6 +454,7 @@ def parse_state_block(p: Parser, name: str, block_line: int) -> StateDef:
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             s_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(s_id)
             continue
         if line == "initial":
             p.pop()
@@ -416,11 +468,17 @@ def parse_state_block(p: Parser, name: str, block_line: int) -> StateDef:
         raise ProphetError(f"Unexpected state line {ln}: {line}")
 
     if s_id is None:
-        raise ProphetError(f"State {name} missing id (line {block_line})")
+        s_id = id_allocator.generate(f"state_{object_name}_{name}")
     return StateDef(name=name, id=s_id, initial=initial, description=description, line=block_line)
 
 
-def parse_transition_block(p: Parser, name: str, block_line: int) -> TransitionDef:
+def parse_transition_block(
+    p: Parser,
+    name: str,
+    block_line: int,
+    id_allocator: IdAllocator,
+    object_name: str,
+) -> TransitionDef:
     t_id: Optional[str] = None
     from_state: Optional[str] = None
     to_state: Optional[str] = None
@@ -433,6 +491,7 @@ def parse_transition_block(p: Parser, name: str, block_line: int) -> TransitionD
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             t_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(t_id)
             continue
         m = re.match(r"^from\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
         if m:
@@ -451,8 +510,10 @@ def parse_transition_block(p: Parser, name: str, block_line: int) -> TransitionD
             continue
         raise ProphetError(f"Unexpected transition line {ln}: {line}")
 
-    if t_id is None or from_state is None or to_state is None:
-        raise ProphetError(f"Transition {name} missing id/from/to (line {block_line})")
+    if from_state is None or to_state is None:
+        raise ProphetError(f"Transition {name} missing from/to (line {block_line})")
+    if t_id is None:
+        t_id = id_allocator.generate(f"trans_{object_name}_{name}")
     return TransitionDef(
         name=name,
         id=t_id,
@@ -463,7 +524,13 @@ def parse_transition_block(p: Parser, name: str, block_line: int) -> TransitionD
     )
 
 
-def parse_action_shape_block(p: Parser, name: str, block_line: int, block_kind: str) -> ActionShapeDef:
+def parse_action_shape_block(
+    p: Parser,
+    name: str,
+    block_line: int,
+    block_kind: str,
+    id_allocator: IdAllocator,
+) -> ActionShapeDef:
     shape_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
@@ -475,11 +542,12 @@ def parse_action_shape_block(p: Parser, name: str, block_line: int, block_kind: 
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             shape_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(shape_id)
             continue
         m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            fields.append(parse_field_block(p, m.group(1), ln))
+            fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"shape_{name}"))
             continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
@@ -489,7 +557,7 @@ def parse_action_shape_block(p: Parser, name: str, block_line: int, block_kind: 
         raise ProphetError(f"Unexpected {block_kind} line {ln}: {line}")
 
     if shape_id is None:
-        raise ProphetError(f"{block_kind} {name} missing id (line {block_line})")
+        shape_id = id_allocator.generate(f"shape_{name}")
     return ActionShapeDef(name=name, id=shape_id, fields=fields, description=description, line=block_line)
 
 
@@ -497,6 +565,7 @@ def parse_action_block(
     p: Parser,
     name: str,
     block_line: int,
+    id_allocator: IdAllocator,
 ) -> Tuple[ActionDef, Optional[ActionShapeDef], Optional[ActionShapeDef]]:
     a_id: Optional[str] = None
     kind: Optional[str] = None
@@ -513,6 +582,7 @@ def parse_action_block(
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             a_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(a_id)
             continue
         m = re.match(r"^kind\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
         if m:
@@ -524,14 +594,28 @@ def parse_action_block(
             if input_shape is not None:
                 raise ProphetError(f"Action {name} defines input more than once (line {ln})")
             input_shape = f"{_pascal_case(name)}Command"
-            inline_input = parse_inline_action_shape_block(p, input_shape, ln, f"action {name} input")
+            inline_input = parse_inline_action_shape_block(
+                p,
+                input_shape,
+                ln,
+                f"action {name} input",
+                id_allocator,
+                f"ain_{name}",
+            )
             continue
         if line == "output {":
             p.pop()
             if output_shape is not None:
                 raise ProphetError(f"Action {name} defines output more than once (line {ln})")
             output_shape = f"{_pascal_case(name)}Result"
-            inline_output = parse_inline_action_shape_block(p, output_shape, ln, f"action {name} output")
+            inline_output = parse_inline_action_shape_block(
+                p,
+                output_shape,
+                ln,
+                f"action {name} output",
+                id_allocator,
+                f"aout_{name}",
+            )
             continue
         if line.startswith("input "):
             raise ProphetError(
@@ -548,8 +632,10 @@ def parse_action_block(
             continue
         raise ProphetError(f"Unexpected action line {ln}: {line}")
 
-    if a_id is None or kind is None or input_shape is None or output_shape is None:
-        raise ProphetError(f"Action {name} missing id/kind/input/output (line {block_line})")
+    if kind is None or input_shape is None or output_shape is None:
+        raise ProphetError(f"Action {name} missing kind/input/output (line {block_line})")
+    if a_id is None:
+        a_id = id_allocator.generate(f"act_{name}")
     return (
         ActionDef(
             name=name,
@@ -570,6 +656,8 @@ def parse_inline_action_shape_block(
     shape_name: str,
     block_line: int,
     block_label: str,
+    id_allocator: IdAllocator,
+    id_base: str,
 ) -> ActionShapeDef:
     shape_id: Optional[str] = None
     fields: List[FieldDef] = []
@@ -582,11 +670,12 @@ def parse_inline_action_shape_block(
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             shape_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(shape_id)
             continue
         m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            fields.append(parse_field_block(p, m.group(1), ln))
+            fields.append(parse_field_block(p, m.group(1), ln, id_allocator, id_base))
             continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
@@ -596,7 +685,7 @@ def parse_inline_action_shape_block(
         raise ProphetError(f"Unexpected {block_label} line {ln}: {line}")
 
     if shape_id is None:
-        raise ProphetError(f"{block_label} missing id (line {block_line})")
+        shape_id = id_allocator.generate(id_base)
     return ActionShapeDef(
         name=shape_name,
         id=shape_id,
@@ -606,7 +695,7 @@ def parse_inline_action_shape_block(
     )
 
 
-def parse_signal_block(p: Parser, name: str, block_line: int) -> EventDef:
+def parse_signal_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> EventDef:
     e_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
@@ -618,11 +707,12 @@ def parse_signal_block(p: Parser, name: str, block_line: int) -> EventDef:
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             e_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(e_id)
             continue
         m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            fields.append(parse_field_block(p, m.group(1), ln))
+            fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"sig_{name}"))
             continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
@@ -632,7 +722,7 @@ def parse_signal_block(p: Parser, name: str, block_line: int) -> EventDef:
         raise ProphetError(f"Unexpected signal line {ln}: {line}")
 
     if e_id is None:
-        raise ProphetError(f"Signal {name} missing id (line {block_line})")
+        e_id = id_allocator.generate(f"sig_{name}")
     return EventDef(
         name=name,
         id=e_id,
@@ -643,7 +733,7 @@ def parse_signal_block(p: Parser, name: str, block_line: int) -> EventDef:
     )
 
 
-def parse_trigger_block(p: Parser, name: str, block_line: int) -> TriggerDef:
+def parse_trigger_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> TriggerDef:
     t_id: Optional[str] = None
     event_name: Optional[str] = None
     action_name: Optional[str] = None
@@ -656,6 +746,7 @@ def parse_trigger_block(p: Parser, name: str, block_line: int) -> TriggerDef:
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
             t_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(t_id)
             continue
         m = re.match(r"^when\s+event\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
         if m:
@@ -674,8 +765,10 @@ def parse_trigger_block(p: Parser, name: str, block_line: int) -> TriggerDef:
             continue
         raise ProphetError(f"Unexpected trigger line {ln}: {line}")
 
-    if t_id is None or event_name is None or action_name is None:
-        raise ProphetError(f"Trigger {name} missing id/when/invoke (line {block_line})")
+    if event_name is None or action_name is None:
+        raise ProphetError(f"Trigger {name} missing when/invoke (line {block_line})")
+    if t_id is None:
+        t_id = id_allocator.generate(f"trg_{name}")
     return TriggerDef(
         name=name,
         id=t_id,
