@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.8.3",
+  "toolchain_version": "0.8.4",
   "stack": {
     "id": "node_express_typeorm",
     "language": "node",
     "framework": "express",
     "orm": "typeorm"
   },
-  "ir_hash": "ab8ff95463d01ba8f8afda36e784a70c283d5152a492b47212c22485ab2fe393",
+  "ir_hash": "61c3e2510c35ded7045cc6c917816d55432bdcea6302dc8159de54b5c74854a1",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",

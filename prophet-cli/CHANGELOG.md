@@ -4,6 +4,12 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.8.4] - 2026-02-15
+
+### Changed
+- CI/publish Node example dependency installs now use `npm ci` instead of `npm install` to keep lockfiles immutable in validation jobs.
+- Toolchain/package version advanced to `0.8.4`.
+
 ## [0.8.3] - 2026-02-15
 
 ### Fixed
