@@ -107,3 +107,56 @@ jobs:
 
       - name: Ensure repo has no tracked-file drift
         run: git diff --exit-code
+
+  node-examples:
+    runs-on: ubuntu-latest
+    needs: python-package
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: express-prisma
+            dir: examples/node/prophet_example_express_prisma
+          - name: express-typeorm
+            dir: examples/node/prophet_example_express_typeorm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Download package artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: prophet-cli-dist
+          path: dist-artifacts
+
+      - name: Install prophet-cli wheel in venv
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --upgrade pip
+          .venv/bin/pip install dist-artifacts/*.whl
+
+      - name: Generate artifacts for Node example (${{ matrix.name }})
+        working-directory: ${{ matrix.dir }}
+        run: ../../../.venv/bin/prophet gen
+
+      - name: Verify generated outputs are committed (${{ matrix.name }})
+        working-directory: ${{ matrix.dir }}
+        run: ../../../.venv/bin/prophet generate --verify-clean
+
+      - name: Run consolidated Prophet check (${{ matrix.name }})
+        working-directory: ${{ matrix.dir }}
+        run: ../../../.venv/bin/prophet check --show-reasons
+
+      - name: Ensure repo has no tracked-file drift
+        run: git diff --exit-code

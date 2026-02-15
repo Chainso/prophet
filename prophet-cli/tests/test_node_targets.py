@@ -100,6 +100,34 @@ class NodeTargetTests(unittest.TestCase):
             self.assertEqual(report.get("package_manager"), "pnpm")
             self.assertEqual(report.get("confidence"), "high")
 
+    def test_autodetect_can_override_default_java_stack_bootstrap(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-autodetect-default-java-") as tmp:
+            root = Path(tmp)
+            (root / "package.json").write_text(
+                json.dumps(
+                    {
+                        "name": "node-app",
+                        "dependencies": {
+                            "express": "^4.19.2",
+                            "typeorm": "^0.3.20",
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            cfg = {
+                "generation": {
+                    "stack": {"id": "java_spring_jpa"},
+                    "targets": ["sql", "openapi", "spring_boot", "flyway", "liquibase"],
+                }
+            }
+            mutated = apply_node_autodetect(copy.deepcopy(cfg), root)
+            self.assertEqual(mutated["generation"]["stack"]["id"], "node_express_typeorm")
+            self.assertEqual(mutated["generation"]["targets"], ["sql", "openapi", "node_express", "typeorm", "manifest"])
+
     def test_autodetect_reports_ambiguous_orm_choice(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-ambiguous-") as tmp:
             root = Path(tmp)

@@ -63,3 +63,27 @@ prophet gen --wire-gradle
 prophet generate --verify-clean
 git add -A
 ```
+
+## Node stack autodetection ambiguity
+
+Cause:
+- `package.json` indicates `express` with both Prisma and TypeORM signals.
+
+Fix:
+- Set stack explicitly in `prophet.yaml`:
+
+```yaml
+generation:
+  stack:
+    id: node_express_prisma
+# or: node_express_typeorm
+```
+
+## Node `package.json` script rewiring concerns
+
+Behavior:
+- For Node stacks, `prophet gen` adds `prophet:gen`, `prophet:check`, `prophet:validate` scripts when missing.
+- Existing custom script values are not overwritten.
+
+If you need to remove Prophet-managed script entries:
+- Run `prophet clean` in the Node project root.

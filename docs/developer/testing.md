@@ -26,6 +26,24 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ./gradlew test
 ```
 
+## Node Example Validation
+
+Prisma example:
+
+```bash
+cd examples/node/prophet_example_express_prisma
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
+```
+
+TypeORM example:
+
+```bash
+cd examples/node/prophet_example_express_typeorm
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+$(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
+```
+
 ## Packaging Validation
 
 ```bash
