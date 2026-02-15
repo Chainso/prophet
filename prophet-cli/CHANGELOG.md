@@ -4,6 +4,16 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.8.3] - 2026-02-15
+
+### Fixed
+- Node Express transition event contracts now match the simplified transition model and no longer generate `fromState` / `toState` payload fields.
+
+### Changed
+- Java Spring example ontology version updated to `1.0.0` so compatibility checks align with required major bump semantics.
+- README wording updated to use `Generation manifests` capitalization.
+- Toolchain/package version advanced to `0.8.3`.
+
 ## [0.8.2] - 2026-02-15
 
 ### Fixed

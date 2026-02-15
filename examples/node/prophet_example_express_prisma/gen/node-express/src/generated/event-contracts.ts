@@ -2,7 +2,6 @@
 
 import type {
   OrderRef,
-  OrderState,
   UserRef
 } from './domain.js';
 import type {
@@ -23,12 +22,8 @@ export interface PaymentCaptured {
 
 export interface OrderApproveTransition {
   object: OrderRef;
-  fromState: OrderState;
-  toState: OrderState;
 }
 
 export interface OrderShipTransition {
   object: OrderRef;
-  fromState: OrderState;
-  toState: OrderState;
 }

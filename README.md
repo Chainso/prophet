@@ -38,7 +38,7 @@ From a `.prophet` ontology file, Prophet can generate:
 - Prisma schema + repository adapters for Node targets
 - TypeORM entities + repository adapters for Node targets (wired through your application-owned `DataSource`)
 - Flyway/Liquibase migration artifacts
-- generation manifests for ownership and extension hooks
+- Generation manifests for ownership and extension hooks
 
 ## How Prophet Is Used
 

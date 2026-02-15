@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.8.2",
+  "toolchain_version": "0.8.3",
   "stack_id": "node_express_typeorm",
-  "signature": "3496dc9ea9b93b400b8a1996206820b740b6fb43f851043df5c7dcd8b773deb5",
-  "ir_hash": "6637d13b4f7d37f922bc3f311152111cc814d1f177bf07aecbee7ff6ed90fc50",
+  "signature": "f8e80370007c56751a35fb467f2258cddab591a7c4d1e52761db2d831f2be5f4",
+  "ir_hash": "ab8ff95463d01ba8f8afda36e784a70c283d5152a492b47212c22485ab2fe393",
   "out_dir": "gen"
 }

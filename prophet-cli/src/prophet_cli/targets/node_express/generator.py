@@ -324,8 +324,6 @@ def _render_event_contracts(ir: Dict[str, Any]) -> str:
         "import type {",
         "  " + ",\n  ".join(sorted({
             f"{_pascal_case(str(item.get('name', 'Object')))}Ref" for item in ir.get("objects", []) if isinstance(item, dict)
-        } | {
-            f"{_pascal_case(str(item.get('name', 'Object')))}State" for item in ir.get("objects", []) if isinstance(item, dict) and item.get("states")
         })),
         "} from './domain';",
     ]
@@ -367,8 +365,6 @@ def _render_event_contracts(ir: Dict[str, Any]) -> str:
             obj_name = _pascal_case(str(obj.get("name", "Object")))
             lines.append(f"export interface {event_name} {{")
             lines.append(f"  object: {obj_name}Ref;")
-            lines.append(f"  fromState: {obj_name}State;")
-            lines.append(f"  toState: {obj_name}State;")
             lines.append("}")
             lines.append("")
 
