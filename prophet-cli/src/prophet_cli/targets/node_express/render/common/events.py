@@ -1,0 +1,64 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from ..support import _camel_case
+from ..support import _pascal_case
+
+def _render_event_emitter(ir: Dict[str, Any]) -> str:
+    output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
+
+    imported_action_types = sorted({_pascal_case(str(item.get("name", "Output"))) for item in ir.get("action_outputs", []) if isinstance(item, dict)})
+    signal_types = sorted({_pascal_case(str(item.get("name", "Signal"))) for item in ir.get("events", []) if isinstance(item, dict) and str(item.get("kind", "")) == "signal"})
+    transition_types = sorted({_pascal_case(str(item.get("name", "Transition"))) for item in ir.get("events", []) if isinstance(item, dict) and str(item.get("kind", "")) == "transition"})
+
+    lines: List[str] = ["// GENERATED FILE: do not edit directly.", ""]
+
+    if imported_action_types:
+        lines.extend([
+            "import type {",
+            "  " + ",\n  ".join(imported_action_types),
+            "} from './actions';",
+            "",
+        ])
+    if signal_types or transition_types:
+        lines.extend([
+            "import type {",
+            "  " + ",\n  ".join(signal_types + transition_types),
+            "} from './event-contracts';",
+            "",
+        ])
+
+    lines.append("export interface GeneratedEventEmitter {")
+    for event in sorted(ir.get("events", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(event, dict):
+            continue
+        event_name = _pascal_case(str(event.get("name", "Event")))
+        kind = str(event.get("kind", ""))
+        event_type = event_name
+        if kind == "action_output":
+            shape_id = str(event.get("output_shape_id", ""))
+            event_type = _pascal_case(str(output_by_id.get(shape_id, {}).get("name", event_name)))
+        lines.append(f"  emit{event_name}(event: {event_type}): Promise<void>;")
+    lines.append("}")
+    lines.append("")
+
+    lines.append("export class GeneratedEventEmitterNoOp implements GeneratedEventEmitter {")
+    for event in sorted(ir.get("events", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(event, dict):
+            continue
+        event_name = _pascal_case(str(event.get("name", "Event")))
+        kind = str(event.get("kind", ""))
+        event_type = event_name
+        if kind == "action_output":
+            shape_id = str(event.get("output_shape_id", ""))
+            event_type = _pascal_case(str(output_by_id.get(shape_id, {}).get("name", event_name)))
+        lines.append(f"  async emit{event_name}(_event: {event_type}): Promise<void> {{")
+        lines.append("    return;")
+        lines.append("  }")
+    lines.append("}")
+    lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+

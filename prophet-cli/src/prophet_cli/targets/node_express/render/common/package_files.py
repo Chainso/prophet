@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+import json
+
+from prophet_cli.codegen.stacks import StackSpec
+
+def _render_node_package_json(stack: StackSpec) -> str:
+    deps = {
+        "express": "^4.19.2",
+        "zod": "^3.23.8",
+    }
+    if stack.orm == "prisma":
+        deps["@prisma/client"] = "^5.22.0"
+    if stack.orm == "typeorm":
+        deps["typeorm"] = "^0.3.20"
+        deps["reflect-metadata"] = "^0.2.2"
+    if stack.orm == "mongoose":
+        deps["mongoose"] = "^8.7.0"
+
+    payload = {
+        "name": "prophet-generated-node-express",
+        "private": True,
+        "type": "module",
+        "scripts": {
+            "build": "tsc -p tsconfig.json",
+            "check": "tsc -p tsconfig.json --noEmit",
+        },
+        "dependencies": deps,
+        "devDependencies": {
+            "@types/express": "^4.17.21",
+            "typescript": "^5.6.3",
+        },
+    }
+    return json.dumps(payload, indent=2, sort_keys=False) + "\n"
+
+
+def _render_node_tsconfig() -> str:
+    payload = {
+        "compilerOptions": {
+            "target": "ES2022",
+            "module": "NodeNext",
+            "moduleResolution": "NodeNext",
+            "strict": True,
+            "esModuleInterop": True,
+            "skipLibCheck": True,
+            "forceConsistentCasingInFileNames": True,
+            "outDir": "dist",
+        },
+        "include": ["src/**/*.ts"],
+    }
+    return "// GENERATED FILE: do not edit directly.\n" + json.dumps(payload, indent=2, sort_keys=False) + "\n"
+
+

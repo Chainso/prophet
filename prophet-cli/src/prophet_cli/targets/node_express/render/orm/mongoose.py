@@ -1,0 +1,482 @@
+from __future__ import annotations
+
+import re
+from typing import Any, Dict, List, Tuple
+
+from ..support import _camel_case
+from ..support import _field_index
+from ..support import _is_required
+from ..support import _object_primary_key_fields
+from ..support import _pascal_case
+from ..support import _pluralize
+from ..support import _resolve_custom_base
+from ..support import _snake_case
+from ..support import _ts_base_type
+
+def _js_object_key(name: str) -> str:
+    if re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name):
+        return name
+    return f"'{name}'"
+
+
+def _mongoose_schema_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
+    kind = str(type_desc.get("kind", ""))
+    if kind == "base":
+        base = str(type_desc.get("name", "string"))
+    elif kind == "custom":
+        base = _resolve_custom_base(type_by_id, type_desc)
+    elif kind == "struct":
+        return "Schema.Types.Mixed"
+    elif kind == "object_ref":
+        return "Schema.Types.Mixed"
+    elif kind == "list":
+        element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
+        return f"[{_mongoose_schema_type_for_descriptor(element, type_by_id)}]"
+    else:
+        return "Schema.Types.Mixed"
+
+    mapping = {
+        "string": "String",
+        "boolean": "Boolean",
+        "int": "Number",
+        "long": "Number",
+        "short": "Number",
+        "byte": "Number",
+        "double": "Number",
+        "float": "Number",
+        "decimal": "Number",
+        "datetime": "String",
+        "date": "String",
+        "duration": "String",
+    }
+    return mapping.get(base, "Schema.Types.Mixed")
+
+
+def _ts_type_for_mongoose_document_descriptor(
+    type_desc: Dict[str, Any],
+    *,
+    type_by_id: Dict[str, Dict[str, Any]],
+    object_by_id: Dict[str, Dict[str, Any]],
+    struct_by_id: Dict[str, Dict[str, Any]],
+) -> str:
+    kind = str(type_desc.get("kind", ""))
+    if kind == "base":
+        return _ts_base_type(str(type_desc.get("name", "string")))
+    if kind == "custom":
+        base = _resolve_custom_base(type_by_id, type_desc)
+        return _ts_base_type(base)
+    if kind == "struct":
+        struct_id = str(type_desc.get("target_struct_id", ""))
+        if struct_id in struct_by_id:
+            return f"Domain.{_pascal_case(str(struct_by_id[struct_id].get('name', 'Struct')))}"
+        return "Record<string, unknown>"
+    if kind == "object_ref":
+        object_id = str(type_desc.get("target_object_id", ""))
+        if object_id in object_by_id:
+            return f"Domain.{_pascal_case(str(object_by_id[object_id].get('name', 'Object')))}Ref"
+        return "Record<string, unknown>"
+    if kind == "list":
+        element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
+        return (
+            f"{_ts_type_for_mongoose_document_descriptor(element, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)}[]"
+        )
+    return "unknown"
+
+
+def _mongoose_ref_paths_for_field(
+    field: Dict[str, Any],
+    *,
+    object_by_id: Dict[str, Dict[str, Any]],
+) -> List[Tuple[str, str]]:
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    if str(type_desc.get("kind", "")) != "object_ref":
+        return []
+    target_object_id = str(type_desc.get("target_object_id", ""))
+    target_obj = object_by_id.get(target_object_id, {})
+    field_prop = _camel_case(str(field.get("name", "field")))
+    refs: List[Tuple[str, str]] = []
+    for target_pk in _object_primary_key_fields(target_obj):
+        target_prop = _camel_case(str(target_pk.get("name", "id")))
+        refs.append((f"{field_prop}.{target_prop}", target_prop))
+    return refs
+
+
+def _render_mongoose_models(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+
+    lines = [
+        "// GENERATED FILE: do not edit directly.",
+        "",
+        "import { Schema, model, type Model } from 'mongoose';",
+        "import type * as Domain from './domain';",
+        "",
+    ]
+
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        table_name = _pluralize(_snake_case(str(obj.get("name", "object"))))
+
+        lines.append(f"export interface {obj_name}Document extends Record<string, unknown> {{")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_name = _camel_case(str(field.get("name", "field")))
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            ts_type = _ts_type_for_mongoose_document_descriptor(
+                type_desc,
+                type_by_id=type_by_id,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+            )
+            if _is_required(field):
+                lines.append(f"  {field_name}: {ts_type};")
+            else:
+                lines.append(f"  {field_name}?: {ts_type};")
+        if obj.get("states"):
+            lines.append(f"  currentState: Domain.{obj_name}State;")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"const {obj_name}Schema = new Schema<{obj_name}Document>({{")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_name = _camel_case(str(field.get("name", "field")))
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            schema_type = _mongoose_schema_type_for_descriptor(type_desc, type_by_id)
+            required = "true" if _is_required(field) else "false"
+            lines.append(f"  {field_name}: {{ type: {schema_type}, required: {required} }},")
+        if obj.get("states"):
+            initial_state = next(
+                (str(state.get("name", "")) for state in obj.get("states", []) if isinstance(state, dict) and bool(state.get("initial"))),
+                "",
+            )
+            if initial_state:
+                escaped_state = initial_state.replace("\\", "\\\\").replace("'", "\\'")
+                lines.append(f"  currentState: {{ type: String, required: true, default: '{escaped_state}' }},")
+            else:
+                lines.append("  currentState: { type: String, required: true },")
+        lines.append(f"}}, {{ collection: '{table_name}', strict: false }});")
+
+        primary_ids = set(obj.get("keys", {}).get("primary", {}).get("field_ids", []))
+        primary_paths: List[str] = []
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            if str(field.get("id", "")) not in primary_ids:
+                continue
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            if str(type_desc.get("kind", "")) == "object_ref":
+                primary_paths.extend([path for path, _ in _mongoose_ref_paths_for_field(field, object_by_id=object_by_id)])
+            else:
+                primary_paths.append(_camel_case(str(field.get("name", "field"))))
+        if primary_paths:
+            unique_spec = ", ".join([f"{_js_object_key(path)}: 1" for path in primary_paths])
+            lines.append(f"{obj_name}Schema.index({{ {unique_spec} }}, {{ unique: true }});")
+
+        display_ids = set(obj.get("keys", {}).get("display", {}).get("field_ids", []))
+        display_paths: List[str] = []
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            if str(field.get("id", "")) not in display_ids:
+                continue
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            if str(type_desc.get("kind", "")) == "object_ref":
+                display_paths.extend([path for path, _ in _mongoose_ref_paths_for_field(field, object_by_id=object_by_id)])
+            else:
+                display_paths.append(_camel_case(str(field.get("name", "field"))))
+        if display_paths:
+            display_paths = list(dict.fromkeys(display_paths))
+            display_spec = ", ".join([f"{_js_object_key(path)}: 1" for path in display_paths])
+            lines.append(f"{obj_name}Schema.index({{ {display_spec} }});")
+
+        lines.append(f"export const {obj_name}Model: Model<{obj_name}Document> = model<{obj_name}Document>('{obj_name}', {obj_name}Schema);")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _render_mongoose_adapter(ir: Dict[str, Any]) -> str:
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    query_contract_by_object_id = {
+        str(item.get("object_id", "")): item
+        for item in ir.get("query_contracts", [])
+        if isinstance(item, dict)
+    }
+
+    model_imports = sorted(
+        {
+            f"{_pascal_case(str(item.get('name', 'Object')))}Model"
+            for item in ir.get("objects", [])
+            if isinstance(item, dict)
+        }
+    )
+    model_type_imports = sorted(
+        {
+            f"{_pascal_case(str(item.get('name', 'Object')))}Document"
+            for item in ir.get("objects", [])
+            if isinstance(item, dict)
+        }
+    )
+
+    lines = [
+        "// GENERATED FILE: do not edit directly.",
+        "",
+        "import type { FilterQuery, Model } from 'mongoose';",
+        "import type * as Domain from './domain';",
+        "import type * as Filters from './query';",
+        "import type * as Persistence from './persistence';",
+        "import {",
+        "  " + ",\n  ".join(model_imports),
+        "} from './mongoose-models';",
+        "import type {",
+        "  " + ",\n  ".join(model_type_imports),
+        "} from './mongoose-models';",
+        "",
+        "function normalizePage(page: number, size: number): { page: number; size: number } {",
+        "  const normalizedPage = Number.isFinite(page) && page >= 0 ? Math.trunc(page) : 0;",
+        "  const normalizedSize = Number.isFinite(size) && size > 0 ? Math.trunc(size) : 20;",
+        "  return { page: normalizedPage, size: normalizedSize };",
+        "}",
+        "",
+        "function totalPages(totalElements: number, size: number): number {",
+        "  if (size <= 0) return 0;",
+        "  return Math.ceil(totalElements / size);",
+        "}",
+        "",
+        "function escapeRegex(value: string): string {",
+        "  return value.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');",
+        "}",
+        "",
+        "export interface MongooseGeneratedModels {",
+    ]
+
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        lines.append(f"  {_camel_case(obj_name)}?: Model<{obj_name}Document>;")
+    lines.append("}")
+    lines.append("")
+
+    lines.append("export class MongooseGeneratedRepositories implements Persistence.GeneratedRepositories {")
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        lines.append(f"  {_camel_case(obj_name)}: Persistence.{obj_name}Repository;")
+    lines.append("")
+    lines.append("  constructor(models: MongooseGeneratedModels = {}) {")
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        repo_var = _camel_case(obj_name)
+        lines.append(f"    this.{repo_var} = new {obj_name}MongooseRepository(models.{repo_var} ?? {obj_name}Model);")
+    lines.append("  }")
+    lines.append("}")
+    lines.append("")
+
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_id = str(obj.get("id", ""))
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        doc_type = f"{obj_name}Document"
+        repo_var = _camel_case(obj_name)
+        fields_by_id = _field_index(list(obj.get("fields", [])))
+        pk_fields = _object_primary_key_fields(obj)
+        query_contract = query_contract_by_object_id.get(obj_id, {})
+        query_filters = list(query_contract.get("filters", [])) if isinstance(query_contract, dict) else []
+
+        lines.append(f"function {repo_var}Where(filter: Filters.{obj_name}QueryFilter | undefined): FilterQuery<{doc_type}> {{")
+        lines.append("  if (!filter) return {};")
+        lines.append("  const and: Record<string, unknown>[] = [];")
+        for filter_item in query_filters:
+            if not isinstance(filter_item, dict):
+                continue
+            field_id = str(filter_item.get("field_id", ""))
+            filter_name = _camel_case(str(filter_item.get("field_name", "field")))
+            operators = [str(op) for op in filter_item.get("operators", []) if isinstance(op, str)]
+            lines.append(f"  const {filter_name}Filter = filter.{filter_name};")
+
+            if field_id == "__current_state__":
+                if "eq" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.eq !== undefined) and.push({{ currentState: {filter_name}Filter.eq }});")
+                if "in" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.in?.length) and.push({{ currentState: {{ $in: {filter_name}Filter.in }} }});")
+                continue
+
+            field = fields_by_id.get(field_id, {})
+            if not field:
+                continue
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            field_prop = _camel_case(str(field.get("name", "field")))
+            if str(type_desc.get("kind", "")) == "object_ref":
+                ref_paths = _mongoose_ref_paths_for_field(field, object_by_id=object_by_id)
+                if "eq" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.eq !== undefined) {{")
+                    if ref_paths:
+                        eq_pairs = ", ".join(
+                            [f"{_js_object_key(path)}: {filter_name}Filter.eq.{target_prop}" for path, target_prop in ref_paths]
+                        )
+                        lines.append(f"    and.push({{ {eq_pairs} }});")
+                    lines.append("  }")
+                if "in" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.in?.length) {{")
+                    lines.append("    and.push({")
+                    lines.append(f"      $or: {filter_name}Filter.in.map((entry: any) => ({{")
+                    for path, target_prop in ref_paths:
+                        lines.append(f"        {_js_object_key(path)}: entry.{target_prop},")
+                    lines.append("      })),")
+                    lines.append("    });")
+                    lines.append("  }")
+                continue
+
+            if "eq" in operators:
+                lines.append(f"  if ({filter_name}Filter?.eq !== undefined) and.push({{ {field_prop}: {filter_name}Filter.eq }});")
+            if "in" in operators:
+                lines.append(f"  if ({filter_name}Filter?.in?.length) and.push({{ {field_prop}: {{ $in: {filter_name}Filter.in }} }});")
+            if "contains" in operators:
+                lines.append(
+                    f"  if (typeof {filter_name}Filter?.contains === 'string' && {filter_name}Filter.contains.length > 0) "
+                    f"and.push({{ {field_prop}: {{ $regex: escapeRegex({filter_name}Filter.contains), $options: 'i' }} }});"
+                )
+            if "gte" in operators:
+                lines.append(f"  if ({filter_name}Filter?.gte !== undefined) and.push({{ {field_prop}: {{ $gte: {filter_name}Filter.gte }} }});")
+            if "lte" in operators:
+                lines.append(f"  if ({filter_name}Filter?.lte !== undefined) and.push({{ {field_prop}: {{ $lte: {filter_name}Filter.lte }} }});")
+        lines.append("  if (and.length === 0) return {};")
+        lines.append("  return { $and: and };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}IdFromDomain(item: Domain.{obj_name}): Persistence.{obj_name}Id {{")
+        lines.append("  return {")
+        for pk_field in pk_fields:
+            pk_prop = _camel_case(str(pk_field.get("name", "id")))
+            lines.append(f"    {pk_prop}: item.{pk_prop},")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}PrimaryFilter(id: Persistence.{obj_name}Id): Record<string, unknown> {{")
+        lines.append("  return {")
+        for pk_field in pk_fields:
+            pk_prop = _camel_case(str(pk_field.get("name", "id")))
+            pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+            if str(pk_desc.get("kind", "")) == "object_ref":
+                ref_paths = _mongoose_ref_paths_for_field(pk_field, object_by_id=object_by_id)
+                for path, target_prop in ref_paths:
+                    lines.append(f"    {_js_object_key(path)}: id.{pk_prop}.{target_prop},")
+            else:
+                lines.append(f"    {pk_prop}: id.{pk_prop},")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}Sort(): Record<string, 1> {{")
+        lines.append("  return {")
+        for pk_field in pk_fields:
+            pk_prop = _camel_case(str(pk_field.get("name", "id")))
+            pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+            if str(pk_desc.get("kind", "")) == "object_ref":
+                ref_paths = _mongoose_ref_paths_for_field(pk_field, object_by_id=object_by_id)
+                for path, _ in ref_paths:
+                    lines.append(f"    {_js_object_key(path)}: 1,")
+            else:
+                lines.append(f"    {pk_prop}: 1,")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}DocumentToDomain(doc: any): Domain.{obj_name} {{")
+        lines.append("  return {")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            prop_name = _camel_case(str(field.get("name", "field")))
+            if _is_required(field):
+                lines.append(f"    {prop_name}: doc.{prop_name},")
+            else:
+                lines.append(f"    {prop_name}: doc.{prop_name} ?? undefined,")
+        if obj.get("states"):
+            lines.append("    currentState: doc.currentState,")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}DomainToDocument(item: Domain.{obj_name}): Record<string, unknown> {{")
+        lines.append("  return {")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            prop_name = _camel_case(str(field.get("name", "field")))
+            if _is_required(field):
+                lines.append(f"    {prop_name}: item.{prop_name},")
+            else:
+                lines.append(f"    {prop_name}: item.{prop_name} ?? null,")
+        if obj.get("states"):
+            lines.append("    currentState: item.currentState,")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"class {obj_name}MongooseRepository implements Persistence.{obj_name}Repository {{")
+        lines.append(f"  constructor(private readonly model: Model<{doc_type}>) {{}}")
+        lines.append("")
+        lines.append(f"  async list(page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
+        lines.append("    const normalized = normalizePage(page, size);")
+        lines.append("    const [rows, totalElements] = await Promise.all([")
+        lines.append(f"      this.model.find({{}}).sort({repo_var}Sort()).skip(normalized.page * normalized.size).limit(normalized.size).lean().exec(),")
+        lines.append("      this.model.countDocuments({}).exec(),")
+        lines.append("    ]);")
+        lines.append("    return {")
+        lines.append(f"      items: rows.map({repo_var}DocumentToDomain),")
+        lines.append("      page: normalized.page,")
+        lines.append("      size: normalized.size,")
+        lines.append("      totalElements,")
+        lines.append("      totalPages: totalPages(totalElements, normalized.size),")
+        lines.append("    };")
+        lines.append("  }")
+        lines.append("")
+        lines.append(f"  async getById(id: Persistence.{obj_name}Id): Promise<Domain.{obj_name} | null> {{")
+        lines.append(f"    const row = await this.model.findOne({repo_var}PrimaryFilter(id)).lean().exec();")
+        lines.append(f"    return row ? {repo_var}DocumentToDomain(row) : null;")
+        lines.append("  }")
+        lines.append("")
+        lines.append(f"  async query(filter: Filters.{obj_name}QueryFilter, page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
+        lines.append("    const normalized = normalizePage(page, size);")
+        lines.append(f"    const where = {repo_var}Where(filter);")
+        lines.append("    const [rows, totalElements] = await Promise.all([")
+        lines.append(f"      this.model.find(where).sort({repo_var}Sort()).skip(normalized.page * normalized.size).limit(normalized.size).lean().exec(),")
+        lines.append("      this.model.countDocuments(where).exec(),")
+        lines.append("    ]);")
+        lines.append("    return {")
+        lines.append(f"      items: rows.map({repo_var}DocumentToDomain),")
+        lines.append("      page: normalized.page,")
+        lines.append("      size: normalized.size,")
+        lines.append("      totalElements,")
+        lines.append("      totalPages: totalPages(totalElements, normalized.size),")
+        lines.append("    };")
+        lines.append("  }")
+        lines.append("")
+        lines.append(f"  async save(item: Domain.{obj_name}): Promise<Domain.{obj_name}> {{")
+        lines.append(f"    const id = {repo_var}IdFromDomain(item);")
+        lines.append(f"    const payload = {repo_var}DomainToDocument(item);")
+        lines.append(
+            f"    const persisted = await this.model.findOneAndUpdate({repo_var}PrimaryFilter(id), {{ $set: payload }}, {{ upsert: true, new: true, setDefaultsOnInsert: true, lean: true }}).exec();"
+        )
+        lines.append(f"    if (!persisted) return {repo_var}DocumentToDomain(payload);")
+        lines.append(f"    return {repo_var}DocumentToDomain(persisted);")
+        lines.append("  }")
+        lines.append("}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+

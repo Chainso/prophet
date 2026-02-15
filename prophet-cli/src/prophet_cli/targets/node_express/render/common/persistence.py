@@ -1,0 +1,70 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from ..support import _camel_case
+from ..support import _object_primary_key_fields
+from ..support import _pascal_case
+from ..support import _render_property
+from ..support import _ts_type_for_descriptor
+
+def _render_persistence_contracts(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = [
+        "// GENERATED FILE: do not edit directly.",
+        "",
+        "import type * as Domain from './domain';",
+        "import type * as Filters from './query';",
+        "",
+        "export interface Page<T> {",
+        "  items: T[];",
+        "  page: number;",
+        "  size: number;",
+        "  totalElements: number;",
+        "  totalPages: number;",
+        "}",
+        "",
+    ]
+
+    object_contracts: List[Tuple[str, str]] = []
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        id_name = f"{obj_name}Id"
+        repo_name = f"{obj_name}Repository"
+        object_contracts.append((obj_name, repo_name))
+
+        lines.append(f"export interface {id_name} {{")
+        for field in _object_primary_key_fields(obj):
+            field_name = _camel_case(str(field.get("name", "id")))
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            field_type = _ts_type_for_descriptor(
+                type_desc,
+                type_by_id=type_by_id,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+            )
+            lines.append(f"  {field_name}: {field_type};")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"export interface {repo_name} {{")
+        lines.append(f"  list(page: number, size: number): Promise<Page<Domain.{obj_name}>>;")
+        lines.append(f"  getById(id: {id_name}): Promise<Domain.{obj_name} | null>;")
+        lines.append(f"  query(filter: Filters.{obj_name}QueryFilter, page: number, size: number): Promise<Page<Domain.{obj_name}>>;")
+        lines.append(f"  save(item: Domain.{obj_name}): Promise<Domain.{obj_name}>;")
+        lines.append("}")
+        lines.append("")
+
+    lines.append("export interface GeneratedRepositories {")
+    for obj_name, repo_name in object_contracts:
+        lines.append(f"  {_camel_case(obj_name)}: {repo_name};")
+    lines.append("}")
+    lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+

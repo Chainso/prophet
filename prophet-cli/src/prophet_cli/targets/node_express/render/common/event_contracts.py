@@ -1,0 +1,75 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from ..support import _camel_case
+from ..support import _pascal_case
+from ..support import _render_property
+
+def _render_event_contracts(ir: Dict[str, Any]) -> str:
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+    action_output_names = sorted(
+        {
+            _pascal_case(str(item.get("name", "Shape")))
+            for item in ir.get("action_outputs", [])
+            if isinstance(item, dict)
+        }
+    )
+    action_output_aliases = {name: f"{name}ActionOutput" for name in action_output_names}
+
+    lines: List[str] = [
+        "// GENERATED FILE: do not edit directly.",
+        "",
+        "import type {",
+        "  " + ",\n  ".join(sorted({
+            f"{_pascal_case(str(item.get('name', 'Object')))}Ref" for item in ir.get("objects", []) if isinstance(item, dict)
+        })),
+        "} from './domain';",
+    ]
+    if action_output_names:
+        lines.extend(
+            [
+                "import type {",
+                "  " + ",\n  ".join(
+                    [f"{name} as {action_output_aliases[name]}" for name in action_output_names]
+                ),
+                "} from './actions';",
+                "",
+            ]
+        )
+    else:
+        lines.append("")
+
+    for event in sorted(ir.get("events", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(event, dict):
+            continue
+        kind = str(event.get("kind", ""))
+        event_name = _pascal_case(str(event.get("name", "Event")))
+        if kind == "signal":
+            lines.append(f"export interface {event_name} {{")
+            for field in list(event.get("fields", [])):
+                if isinstance(field, dict):
+                    lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
+            lines.append("}")
+            lines.append("")
+        elif kind == "action_output":
+            output_id = str(event.get("output_shape_id", ""))
+            alias = _pascal_case(str(output_by_id.get(output_id, {}).get("name", event_name)))
+            aliased_import = action_output_aliases.get(alias, alias)
+            lines.append(f"export type {event_name} = {aliased_import};")
+            lines.append("")
+        elif kind == "transition":
+            object_id = str(event.get("object_id", ""))
+            obj = object_by_id.get(object_id, {})
+            obj_name = _pascal_case(str(obj.get("name", "Object")))
+            lines.append(f"export interface {event_name} {{")
+            lines.append(f"  object: {obj_name}Ref;")
+            lines.append("}")
+            lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+

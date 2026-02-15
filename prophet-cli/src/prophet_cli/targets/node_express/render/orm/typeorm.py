@@ -1,0 +1,439 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List, Tuple
+
+from ..support import _camel_case
+from ..support import _field_index
+from ..support import _is_required
+from ..support import _object_primary_key_fields
+from ..support import _pascal_case
+from ..support import _pluralize
+from ..support import _resolve_custom_base
+from ..support import _snake_case
+from ..support import _ts_base_type
+from ..support import _ts_type_for_descriptor
+
+def _ts_scalar_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
+    kind = str(type_desc.get("kind", ""))
+    if kind == "base":
+        return _ts_base_type(str(type_desc.get("name", "string")))
+    if kind == "custom":
+        base = _resolve_custom_base(type_by_id, type_desc)
+        return _ts_base_type(base)
+    return "string"
+
+
+def _typeorm_column_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
+    kind = str(type_desc.get("kind", ""))
+    if kind == "base":
+        base = str(type_desc.get("name", "string"))
+    elif kind == "custom":
+        base = _resolve_custom_base(type_by_id, type_desc)
+    elif kind in {"list", "struct"}:
+        return "simple-json"
+    elif kind == "object_ref":
+        return "varchar"
+    else:
+        return "varchar"
+
+    mapping = {
+        "string": "varchar",
+        "boolean": "boolean",
+        "int": "integer",
+        "long": "integer",
+        "short": "integer",
+        "byte": "integer",
+        "double": "double precision",
+        "float": "double precision",
+        "decimal": "numeric",
+        "datetime": "timestamp",
+        "date": "date",
+        "duration": "varchar",
+    }
+    return mapping.get(base, "varchar")
+
+
+def _render_typeorm_entities(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+
+    lines = [
+        "// GENERATED FILE: do not edit directly.",
+        "",
+        "import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';",
+        "",
+    ]
+
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        table_name = _pluralize(_snake_case(str(obj.get("name", "object"))))
+        primary_ids = set(obj.get("keys", {}).get("primary", {}).get("field_ids", []))
+
+        lines.append(f"@Entity('{table_name}')")
+        lines.append(f"export class {obj_name}Entity {{")
+
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_id = str(field.get("id", ""))
+            field_name_raw = str(field.get("name", "field"))
+            field_name = _camel_case(field_name_raw)
+            required = _is_required(field)
+            nullable = "true" if not required else "false"
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            kind = str(type_desc.get("kind", ""))
+
+            if kind == "object_ref":
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_name = _pascal_case(str(target_obj.get("name", "Object")))
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                join_defs: List[str] = []
+                for target_pk in target_pk_fields:
+                    target_pk_name = str(target_pk.get("name", "id"))
+                    fk_col_raw = f"{field_name_raw}_{target_pk_name}"
+                    fk_prop = _camel_case(fk_col_raw)
+                    fk_desc = target_pk.get("type", {}) if isinstance(target_pk.get("type"), dict) else {"kind": "base", "name": "string"}
+                    fk_type = _typeorm_column_type_for_descriptor(fk_desc, type_by_id)
+                    fk_ts_type = _ts_scalar_type_for_descriptor(fk_desc, type_by_id)
+                    if field_id in primary_ids:
+                        lines.append(f"  @PrimaryColumn({{ type: '{fk_type}', name: '{fk_col_raw}' }})")
+                    else:
+                        lines.append(f"  @Column({{ type: '{fk_type}', nullable: {nullable}, name: '{fk_col_raw}' }})")
+                    if required:
+                        lines.append(f"  {fk_prop}!: {fk_ts_type};")
+                    else:
+                        lines.append(f"  {fk_prop}?: {fk_ts_type} | null;")
+                    lines.append("")
+                    join_defs.append(f"    {{ name: '{fk_col_raw}', referencedColumnName: '{_camel_case(target_pk_name)}' }},")
+                lines.append(f"  @ManyToOne(() => {target_name}Entity, {{ nullable: {nullable} }})")
+                lines.append("  @JoinColumn([")
+                lines.extend(join_defs)
+                lines.append("  ])")
+                lines.append(f"  {field_name}{'?' if not required else '!'}: {target_name}Entity;")
+                lines.append("")
+                continue
+
+            col_type = _typeorm_column_type_for_descriptor(type_desc, type_by_id)
+            ts_type = _ts_scalar_type_for_descriptor(type_desc, type_by_id)
+            if col_type == "simple-json":
+                ts_type = "unknown"
+            if field_id in primary_ids:
+                lines.append(f"  @PrimaryColumn({{ type: '{col_type}', name: '{field_name_raw}' }})")
+            else:
+                lines.append(f"  @Column({{ type: '{col_type}', nullable: {nullable}, name: '{field_name_raw}' }})")
+            if required:
+                lines.append(f"  {field_name}!: {ts_type};")
+            else:
+                lines.append(f"  {field_name}?: {ts_type} | null;")
+            lines.append("")
+
+        if obj.get("states"):
+            lines.append("  @Column({ type: 'varchar', nullable: false, name: 'current_state' })")
+            lines.append("  currentState!: string;")
+            lines.append("")
+
+        lines.append("}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    query_contract_by_object_id = {
+        str(item.get("object_id", "")): item
+        for item in ir.get("query_contracts", [])
+        if isinstance(item, dict)
+    }
+    entity_imports = sorted(
+        {
+            f"{_pascal_case(str(item.get('name', 'Object')))}Entity"
+            for item in ir.get("objects", [])
+            if isinstance(item, dict)
+        }
+    )
+
+    lines = [
+        "// GENERATED FILE: do not edit directly.",
+        "",
+        "import { DataSource, type Repository, type SelectQueryBuilder } from 'typeorm';",
+        "import type * as Domain from './domain';",
+        "import type * as Filters from './query';",
+        "import type * as Persistence from './persistence';",
+        "import {",
+        "  " + ",\n  ".join(entity_imports),
+        "} from './typeorm-entities';",
+        "",
+        "function normalizePage(page: number, size: number): { page: number; size: number } {",
+        "  const normalizedPage = Number.isFinite(page) && page >= 0 ? Math.trunc(page) : 0;",
+        "  const normalizedSize = Number.isFinite(size) && size > 0 ? Math.trunc(size) : 20;",
+        "  return { page: normalizedPage, size: normalizedSize };",
+        "}",
+        "",
+        "function totalPages(totalElements: number, size: number): number {",
+        "  if (size <= 0) return 0;",
+        "  return Math.ceil(totalElements / size);",
+        "}",
+        "",
+        "export class TypeOrmGeneratedRepositories implements Persistence.GeneratedRepositories {",
+    ]
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        lines.append(f"  {_camel_case(obj_name)}: Persistence.{obj_name}Repository;")
+    lines.append("")
+    lines.append("  constructor(private readonly dataSource: DataSource) {")
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        lines.append(f"    this.{_camel_case(obj_name)} = new {obj_name}TypeOrmRepository(dataSource);")
+    lines.append("  }")
+    lines.append("}")
+    lines.append("")
+
+    for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(obj, dict):
+            continue
+        obj_id = str(obj.get("id", ""))
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        entity_name = f"{obj_name}Entity"
+        repo_var = _camel_case(obj_name)
+        fields_by_id = _field_index(list(obj.get("fields", [])))
+        pk_fields = _object_primary_key_fields(obj)
+        query_contract = query_contract_by_object_id.get(obj_id, {})
+        query_filters = list(query_contract.get("filters", [])) if isinstance(query_contract, dict) else []
+
+        lines.append(f"function {repo_var}EntityToDomain(entity: any): Domain.{obj_name} {{")
+        lines.append("  return {")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_name = str(field.get("name", "field"))
+            prop_name = _camel_case(field_name)
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            required = _is_required(field)
+            if str(type_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                fk_props = [_camel_case(f"{field_name}_{str(pk.get('name', 'id'))}") for pk in target_pk_fields]
+                null_guard = " and ".join([f"entity.{fk_prop} == null" for fk_prop in fk_props]) if fk_props else "false"
+                if required:
+                    lines.append(f"    {prop_name}: {{")
+                    for pk_field, fk_prop in zip(target_pk_fields, fk_props):
+                        lines.append(f"      {_camel_case(str(pk_field.get('name', 'id')))}: entity.{fk_prop},")
+                    lines.append("    },")
+                else:
+                    lines.append(f"    {prop_name}: {null_guard} ? undefined : {{")
+                    for pk_field, fk_prop in zip(target_pk_fields, fk_props):
+                        lines.append(f"      {_camel_case(str(pk_field.get('name', 'id')))}: entity.{fk_prop},")
+                    lines.append("    },")
+                continue
+            if required:
+                lines.append(f"    {prop_name}: entity.{prop_name},")
+            else:
+                lines.append(f"    {prop_name}: entity.{prop_name} ?? undefined,")
+        if obj.get("states"):
+            lines.append("    currentState: entity.currentState,")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}DomainToEntity(item: Domain.{obj_name}): {entity_name} {{")
+        lines.append(f"  const entity = new {entity_name}();")
+        for field in list(obj.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_name = str(field.get("name", "field"))
+            prop_name = _camel_case(field_name)
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            required = _is_required(field)
+            if str(type_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                for target_pk in target_pk_fields:
+                    target_prop = _camel_case(str(target_pk.get("name", "id")))
+                    fk_prop = _camel_case(f"{field_name}_{str(target_pk.get('name', 'id'))}")
+                    if required:
+                        lines.append(f"  entity.{fk_prop} = item.{prop_name}.{target_prop};")
+                    else:
+                        lines.append(f"  entity.{fk_prop} = item.{prop_name}?.{target_prop} ?? null;")
+                continue
+            lines.append(f"  entity.{prop_name} = item.{prop_name}{'' if required else ' ?? null'};")
+        if obj.get("states"):
+            lines.append("  entity.currentState = item.currentState;")
+        lines.append("  return entity;")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}PrimaryWhere(id: Persistence.{obj_name}Id): Record<string, unknown> {{")
+        lines.append("  return {")
+        for pk_field in pk_fields:
+            pk_name = str(pk_field.get("name", "id"))
+            pk_prop = _camel_case(pk_name)
+            pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+            if str(pk_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(pk_desc.get("target_object_id", "")), {})
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                for target_pk in target_pk_fields:
+                    target_prop = _camel_case(str(target_pk.get("name", "id")))
+                    fk_col_name = f"{pk_name}_{str(target_pk.get('name', 'id'))}"
+                    fk_prop = _camel_case(fk_col_name)
+                    lines.append(f"    {fk_prop}: id.{pk_prop}.{target_prop},")
+            else:
+                lines.append(f"    {pk_prop}: id.{pk_prop},")
+        lines.append("  };")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}ApplyFilter(qb: SelectQueryBuilder<{entity_name}>, filter: Filters.{obj_name}QueryFilter | undefined): void {{")
+        lines.append("  if (!filter) return;")
+        for filter_item in query_filters:
+            if not isinstance(filter_item, dict):
+                continue
+            field_id = str(filter_item.get("field_id", ""))
+            filter_name = _camel_case(str(filter_item.get("field_name", "field")))
+            operators = [str(op) for op in filter_item.get("operators", []) if isinstance(op, str)]
+            lines.append(f"  const {filter_name}Filter = filter.{filter_name};")
+
+            if field_id == "__current_state__":
+                if "eq" in operators:
+                    lines.append(
+                        f"  if ({filter_name}Filter?.eq !== undefined) qb.andWhere('record.current_state = :{filter_name}_eq', {{ {filter_name}_eq: {filter_name}Filter.eq }});"
+                    )
+                if "in" in operators:
+                    lines.append(
+                        f"  if ({filter_name}Filter?.in?.length) qb.andWhere('record.current_state IN (:...{filter_name}_in)', {{ {filter_name}_in: {filter_name}Filter.in }});"
+                    )
+                continue
+
+            field = fields_by_id.get(field_id, {})
+            if not field:
+                continue
+            field_name = str(field.get("name", "field"))
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+
+            if str(type_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(type_desc.get("target_object_id", "")), {})
+                target_pk_fields = _object_primary_key_fields(target_obj)
+                if "eq" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.eq !== undefined) {{")
+                    for target_pk in target_pk_fields:
+                        target_prop = _camel_case(str(target_pk.get("name", "id")))
+                        fk_col = f"{field_name}_{str(target_pk.get('name', 'id'))}"
+                        param = f"{filter_name}_eq_{target_prop}"
+                        lines.append(
+                            f"    qb.andWhere('record.{fk_col} = :{param}', {{ {param}: {filter_name}Filter.eq.{target_prop} }});"
+                        )
+                    lines.append("  }")
+                if "in" in operators:
+                    lines.append(f"  if ({filter_name}Filter?.in?.length) {{")
+                    lines.append("    const clauses: string[] = [];")
+                    lines.append("    const params: Record<string, unknown> = {};")
+                    lines.append(f"    {filter_name}Filter.in.forEach((entry: any, idx: number) => {{")
+                    lines.append("      const inner: string[] = [];")
+                    for target_pk in target_pk_fields:
+                        target_prop = _camel_case(str(target_pk.get("name", "id")))
+                        fk_col = f"{field_name}_{str(target_pk.get('name', 'id'))}"
+                        lines.append(f"      inner.push(`record.{fk_col} = :{filter_name}_in_${{idx}}_{target_prop}`);")
+                        lines.append(f"      params['{filter_name}_in_' + idx + '_{target_prop}'] = entry.{target_prop};")
+                    lines.append("      clauses.push('(' + inner.join(' AND ') + ')');")
+                    lines.append("    });")
+                    lines.append("    if (clauses.length > 0) qb.andWhere('(' + clauses.join(' OR ') + ')', params);")
+                    lines.append("  }")
+                continue
+
+            if "eq" in operators:
+                lines.append(
+                    f"  if ({filter_name}Filter?.eq !== undefined) qb.andWhere('record.{field_name} = :{filter_name}_eq', {{ {filter_name}_eq: {filter_name}Filter.eq }});"
+                )
+            if "in" in operators:
+                lines.append(
+                    f"  if ({filter_name}Filter?.in?.length) qb.andWhere('record.{field_name} IN (:...{filter_name}_in)', {{ {filter_name}_in: {filter_name}Filter.in }});"
+                )
+            if "contains" in operators:
+                lines.append(
+                    f"  if (typeof {filter_name}Filter?.contains === 'string' && {filter_name}Filter.contains.length > 0) "
+                    f"qb.andWhere('record.{field_name} LIKE :{filter_name}_contains', {{ {filter_name}_contains: `%${{{filter_name}Filter.contains}}%` }});"
+                )
+            if "gte" in operators:
+                lines.append(
+                    f"  if ({filter_name}Filter?.gte !== undefined) qb.andWhere('record.{field_name} >= :{filter_name}_gte', {{ {filter_name}_gte: {filter_name}Filter.gte }});"
+                )
+            if "lte" in operators:
+                lines.append(
+                    f"  if ({filter_name}Filter?.lte !== undefined) qb.andWhere('record.{field_name} <= :{filter_name}_lte', {{ {filter_name}_lte: {filter_name}Filter.lte }});"
+                )
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"function {repo_var}ApplyOrderBy(qb: SelectQueryBuilder<{entity_name}>): void {{")
+        for pk_field in pk_fields:
+            pk_name = str(pk_field.get("name", "id"))
+            pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+            if str(pk_desc.get("kind", "")) == "object_ref":
+                target_obj = object_by_id.get(str(pk_desc.get("target_object_id", "")), {})
+                target_pks = _object_primary_key_fields(target_obj)
+                for target_pk in target_pks:
+                    lines.append(f"  qb.addOrderBy('record.{pk_name}_{str(target_pk.get('name', 'id'))}', 'ASC');")
+            else:
+                lines.append(f"  qb.addOrderBy('record.{pk_name}', 'ASC');")
+        lines.append("}")
+        lines.append("")
+
+        lines.append(f"class {obj_name}TypeOrmRepository implements Persistence.{obj_name}Repository {{")
+        lines.append(f"  private readonly repo: Repository<{entity_name}>;")
+        lines.append("")
+        lines.append("  constructor(private readonly dataSource: DataSource) {")
+        lines.append(f"    this.repo = dataSource.getRepository({entity_name});")
+        lines.append("  }")
+        lines.append("")
+        lines.append(f"  async list(page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
+        lines.append("    const normalized = normalizePage(page, size);")
+        lines.append("    const qb = this.repo.createQueryBuilder('record');")
+        lines.append(f"    {repo_var}ApplyOrderBy(qb);")
+        lines.append("    qb.skip(normalized.page * normalized.size).take(normalized.size);")
+        lines.append("    const [rows, totalElements] = await qb.getManyAndCount();")
+        lines.append("    return {")
+        lines.append(f"      items: rows.map({repo_var}EntityToDomain),")
+        lines.append("      page: normalized.page,")
+        lines.append("      size: normalized.size,")
+        lines.append("      totalElements,")
+        lines.append("      totalPages: totalPages(totalElements, normalized.size),")
+        lines.append("    };")
+        lines.append("  }")
+        lines.append("")
+        lines.append(f"  async getById(id: Persistence.{obj_name}Id): Promise<Domain.{obj_name} | null> {{")
+        lines.append(f"    const row = await this.repo.findOneBy({repo_var}PrimaryWhere(id) as any);")
+        lines.append(f"    return row ? {repo_var}EntityToDomain(row) : null;")
+        lines.append("  }")
+        lines.append("")
+        lines.append(f"  async query(filter: Filters.{obj_name}QueryFilter, page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
+        lines.append("    const normalized = normalizePage(page, size);")
+        lines.append("    const qb = this.repo.createQueryBuilder('record');")
+        lines.append(f"    {repo_var}ApplyFilter(qb, filter);")
+        lines.append(f"    {repo_var}ApplyOrderBy(qb);")
+        lines.append("    qb.skip(normalized.page * normalized.size).take(normalized.size);")
+        lines.append("    const [rows, totalElements] = await qb.getManyAndCount();")
+        lines.append("    return {")
+        lines.append(f"      items: rows.map({repo_var}EntityToDomain),")
+        lines.append("      page: normalized.page,")
+        lines.append("      size: normalized.size,")
+        lines.append("      totalElements,")
+        lines.append("      totalPages: totalPages(totalElements, normalized.size),")
+        lines.append("    };")
+        lines.append("  }")
+        lines.append("")
+        lines.append(f"  async save(item: Domain.{obj_name}): Promise<Domain.{obj_name}> {{")
+        lines.append(f"    const entity = {repo_var}DomainToEntity(item);")
+        lines.append("    const saved = await this.repo.save(entity as any);")
+        lines.append(f"    return {repo_var}EntityToDomain(saved);")
+        lines.append("  }")
+        lines.append("}")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+

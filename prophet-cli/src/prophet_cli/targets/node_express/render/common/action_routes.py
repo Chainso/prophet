@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from ..support import _camel_case
+from ..support import _express_path
+from ..support import _pascal_case
+
+def _render_action_routes(ir: Dict[str, Any]) -> str:
+    action_input_by_id = {item["id"]: item for item in ir.get("action_inputs", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = [
+        "// GENERATED FILE: do not edit directly.",
+        "",
+        "import { Router, type Request, type Response, type NextFunction } from 'express';",
+        "import { GeneratedActionExecutionService } from './action-service';",
+        "import type { GeneratedActionContext } from './action-handlers';",
+        "import * as Schemas from './validation';",
+        "",
+        "export function buildGeneratedActionRouter(",
+        "  service: GeneratedActionExecutionService,",
+        "  context: GeneratedActionContext,",
+        "): Router {",
+        "  const router = Router();",
+        "",
+    ]
+
+    for action in sorted(ir.get("actions", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(action, dict):
+            continue
+        action_name = str(action.get("name", "action"))
+        camel = _camel_case(action_name)
+        input_name = _pascal_case(str(action_input_by_id.get(str(action.get("input_shape_id", "")), {}).get("name", "Input")))
+        lines.append(f"  router.post('/actions/{action_name}', async (req: Request, res: Response, next: NextFunction) => {{")
+        lines.append(f"    const parsed = Schemas.{input_name}Schema.safeParse(req.body ?? {{}});")
+        lines.append("    if (!parsed.success) {")
+        lines.append("      res.status(400).json({ error: 'invalid_request', details: parsed.error.format() });")
+        lines.append("      return;")
+        lines.append("    }")
+        lines.append("    try {")
+        lines.append(f"      const output = await service.{camel}(parsed.data, context);")
+        lines.append("      res.json(output);")
+        lines.append("    } catch (error) {")
+        lines.append("      next(error);")
+        lines.append("    }")
+        lines.append("  });")
+        lines.append("")
+
+    lines.extend(["  return router;", "}", ""])
+    return "\n".join(lines).rstrip() + "\n"
+

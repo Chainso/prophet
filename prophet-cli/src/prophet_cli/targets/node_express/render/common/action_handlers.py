@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from ..support import _camel_case
+from ..support import _pascal_case
+
+def _render_action_handlers(ir: Dict[str, Any]) -> str:
+    shape_in_by_id = {item["id"]: item for item in ir.get("action_inputs", []) if isinstance(item, dict) and "id" in item}
+    shape_out_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = [
+        "// GENERATED FILE: do not edit directly.",
+        "",
+        "import type * as Actions from './actions';",
+        "import type { GeneratedRepositories } from './persistence';",
+        "import type { GeneratedEventEmitter } from './events';",
+        "",
+        "export interface GeneratedActionContext {",
+        "  repositories: GeneratedRepositories;",
+        "  eventEmitter: GeneratedEventEmitter;",
+        "}",
+        "",
+    ]
+
+    for action in sorted(ir.get("actions", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(action, dict):
+            continue
+        action_name = _pascal_case(str(action.get("name", "Action")))
+        input_name = _pascal_case(str(shape_in_by_id.get(str(action.get("input_shape_id", "")), {}).get("name", "Input")))
+        output_name = _pascal_case(str(shape_out_by_id.get(str(action.get("output_shape_id", "")), {}).get("name", "Output")))
+
+        iface = f"{action_name}ActionHandler"
+        lines.append(f"export interface {iface} {{")
+        lines.append(f"  handle(input: Actions.{input_name}, context: GeneratedActionContext): Promise<Actions.{output_name}>;")
+        lines.append("}")
+        lines.append("")
+
+        default_impl = f"{iface}Default"
+        lines.append(f"export class {default_impl} implements {iface} {{")
+        lines.append(f"  async handle(_input: Actions.{input_name}): Promise<Actions.{output_name}> {{")
+        lines.append(
+            f"    throw new Error('No implementation registered for action: {str(action.get('name', 'action'))}');"
+        )
+        lines.append("  }")
+        lines.append("}")
+        lines.append("")
+
+    lines.append("export interface GeneratedActionHandlers {")
+    for action in sorted(ir.get("actions", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(action, dict):
+            continue
+        action_name = _pascal_case(str(action.get("name", "Action")))
+        lines.append(f"  {_camel_case(str(action.get('name', 'action')))}: {action_name}ActionHandler;")
+    lines.append("}")
+    lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+

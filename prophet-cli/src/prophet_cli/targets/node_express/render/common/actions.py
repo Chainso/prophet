@@ -1,0 +1,46 @@
+from __future__ import annotations
+
+from typing import Any, Dict
+
+from ..support import _camel_case
+from ..support import _pascal_case
+from ..support import _render_property
+
+def _render_action_contracts(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = ["// GENERATED FILE: do not edit directly.", "", "import type {", "  " + ",\n  ".join(sorted({
+        f"{_pascal_case(str(item.get('name', 'Object')))}Ref" for item in ir.get("objects", []) if isinstance(item, dict)
+    } | {
+        _pascal_case(str(item.get("name", "Struct"))) for item in ir.get("structs", []) if isinstance(item, dict)
+    } | {
+        _pascal_case(str(item.get("name", "CustomType"))) for item in ir.get("types", []) if isinstance(item, dict)
+    })) if (ir.get("objects") or ir.get("structs") or ir.get("types")) else "", "} from './domain';", ""]
+
+    for shape in sorted(ir.get("action_inputs", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(shape, dict):
+            continue
+        name = _pascal_case(str(shape.get("name", "ActionInput")))
+        lines.append(f"export interface {name} {{")
+        for field in list(shape.get("fields", [])):
+            if isinstance(field, dict):
+                lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
+        lines.append("}")
+        lines.append("")
+
+    for shape in sorted(ir.get("action_outputs", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(shape, dict):
+            continue
+        name = _pascal_case(str(shape.get("name", "ActionOutput")))
+        lines.append(f"export interface {name} {{")
+        for field in list(shape.get("fields", [])):
+            if isinstance(field, dict):
+                lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
+        lines.append("}")
+        lines.append("")
+
+    return "\n".join(lines).replace("import type {\n  \n} from './domain';\n\n", "")
+
+

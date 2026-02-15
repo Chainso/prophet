@@ -32,6 +32,29 @@ Code location:
 5. Write outputs + managed-file manifest
 6. Remove stale managed files
 
+## Node Generator Layout
+
+Node/Express generation is organized as an orchestrator plus focused renderer modules:
+
+- Orchestrator:
+  - `prophet-cli/src/prophet_cli/targets/node_express/generator.py`
+- Shared render support:
+  - `prophet-cli/src/prophet_cli/targets/node_express/render/support.py`
+- Common (stack-agnostic) renderers:
+  - `prophet-cli/src/prophet_cli/targets/node_express/render/common/`
+- ORM-specific renderers:
+  - `prophet-cli/src/prophet_cli/targets/node_express/render/orm/prisma.py`
+  - `prophet-cli/src/prophet_cli/targets/node_express/render/orm/typeorm.py`
+  - `prophet-cli/src/prophet_cli/targets/node_express/render/orm/mongoose.py`
+
+The orchestrator is responsible for:
+- target selection and stack gating
+- composing per-file outputs
+- applying NodeNext import normalization
+- emitting extension hook and generated-file manifests
+
+Renderer modules are responsible for converting IR into artifact content only.
+
 ## Ownership and Safety
 
 - Generated files are tracked in `gen/manifest/generated-files.json`
