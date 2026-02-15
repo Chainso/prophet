@@ -191,6 +191,53 @@ dependencies {
             run_cli(root, "validate")
             self.assertEqual(hydrated, ontology_path.read_text(encoding="utf-8"))
 
+    def test_node_autodetect_generation_and_package_wiring(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-cli-node-autodetect-") as tmp:
+            root = Path(tmp)
+            run_cli(root, "init")
+
+            ontology_dst = root / "domain" / "main.prophet"
+            ontology_dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(EXAMPLE_ONTOLOGY, ontology_dst)
+
+            cfg_path = root / "prophet.yaml"
+            cfg_text = cfg_path.read_text(encoding="utf-8")
+            cfg_text = cfg_text.replace(
+                "ontology_file: path/to/your-ontology.prophet",
+                "ontology_file: domain/main.prophet",
+            )
+            cfg_path.write_text(cfg_text, encoding="utf-8")
+
+            (root / "package.json").write_text(
+                json.dumps(
+                    {
+                        "name": "node-autodetect-app",
+                        "type": "module",
+                        "dependencies": {
+                            "express": "^4.19.2",
+                            "@prisma/client": "^5.22.0",
+                        },
+                    },
+                    indent=2,
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (root / "package-lock.json").write_text("{\"lockfileVersion\":3}\n", encoding="utf-8")
+
+            run_cli(root, "gen")
+
+            self.assertTrue((root / "gen" / "node-express" / "src" / "generated" / "index.ts").exists())
+            self.assertTrue((root / "gen" / "node-express" / "prisma" / "schema.prisma").exists())
+            autodetect_report = root / "gen" / "manifest" / "node-autodetect.json"
+            self.assertTrue(autodetect_report.exists())
+
+            package = json.loads((root / "package.json").read_text(encoding="utf-8"))
+            scripts = package.get("scripts", {})
+            self.assertEqual(scripts.get("prophet:gen"), "prophet gen")
+            self.assertEqual(scripts.get("prophet:check"), "prophet check --show-reasons")
+            self.assertEqual(scripts.get("prophet:validate"), "prophet validate")
+
     def test_generate_skip_unchanged_uses_generation_cache(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-cli-skip-unchanged-") as tmp:
             root = Path(tmp)

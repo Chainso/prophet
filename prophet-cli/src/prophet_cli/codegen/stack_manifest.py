@@ -13,9 +13,20 @@ KNOWN_CAPABILITIES = (
     "nested_lists",
     "structs",
     "extension_hooks",
+    "autodetect",
 )
 
-KNOWN_GENERATION_TARGETS = ("sql", "openapi", "spring_boot", "flyway", "liquibase", "manifest")
+KNOWN_GENERATION_TARGETS = (
+    "sql",
+    "openapi",
+    "spring_boot",
+    "flyway",
+    "liquibase",
+    "manifest",
+    "node_express",
+    "prisma",
+    "typeorm",
+)
 
 STACK_MANIFEST_DOCUMENT: Dict[str, Any] = {
     "schema_version": 1,
@@ -37,20 +48,40 @@ STACK_MANIFEST_DOCUMENT: Dict[str, Any] = {
             "language": "node",
             "framework": "express",
             "orm": "typeorm",
-            "status": "planned",
+            "status": "implemented",
             "description": "Node + Express stack targeting relational persistence via TypeORM.",
-            "capabilities": ["action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"],
-            "default_targets": ["sql", "openapi", "manifest"],
+            "capabilities": [
+                "action_endpoints",
+                "typed_query_filters",
+                "pagination",
+                "object_refs",
+                "nested_lists",
+                "structs",
+                "extension_hooks",
+                "autodetect",
+            ],
+            "default_targets": ["sql", "openapi", "node_express", "typeorm", "manifest"],
+            "notes": "Includes generated Express routes, runtime validation contracts, TypeORM entity scaffolding, and autodetect diagnostics.",
         },
         {
             "id": "node_express_prisma",
             "language": "node",
             "framework": "express",
             "orm": "prisma",
-            "status": "planned",
+            "status": "implemented",
             "description": "Node + Express stack targeting relational persistence via Prisma schema generation.",
-            "capabilities": ["action_endpoints", "typed_query_filters", "pagination", "object_refs", "nested_lists", "structs"],
-            "default_targets": ["sql", "openapi", "manifest"],
+            "capabilities": [
+                "action_endpoints",
+                "typed_query_filters",
+                "pagination",
+                "object_refs",
+                "nested_lists",
+                "structs",
+                "extension_hooks",
+                "autodetect",
+            ],
+            "default_targets": ["sql", "openapi", "node_express", "prisma", "manifest"],
+            "notes": "Includes generated Express routes, runtime validation contracts, Prisma schema/adapters, and autodetect diagnostics.",
         },
         {
             "id": "node_express_mongoose",

@@ -48,6 +48,9 @@ from prophet_cli.codegen.artifacts import remove_stale_outputs as _remove_stale_
 from prophet_cli.codegen.artifacts import write_outputs as _write_outputs
 from prophet_cli.targets.java_spring_jpa import JavaSpringJpaDeps
 from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_java_spring_jpa_outputs
+from prophet_cli.targets.node_express import NodeExpressDeps
+from prophet_cli.targets.node_express import generate_outputs as generate_node_express_outputs
+from prophet_cli.targets.node_express.autodetect import apply_node_autodetect
 
 
 TOOLCHAIN_VERSION = "0.8.0"
@@ -4192,9 +4195,22 @@ def _generate_outputs_for_java_spring_jpa(context: GenerationContext) -> Dict[st
     return generate_java_spring_jpa_outputs(context, deps)
 
 
+def _generate_outputs_for_node_express(context: GenerationContext) -> Dict[str, str]:
+    deps = NodeExpressDeps(
+        cfg_get=cfg_get,
+        resolve_stack_spec=resolve_stack_spec,
+        render_sql=lambda reader: render_sql(reader.as_dict()),
+        render_openapi=lambda reader: render_openapi(reader.as_dict()),
+        toolchain_version=TOOLCHAIN_VERSION,
+    )
+    return generate_node_express_outputs(context, deps)
+
+
 def registered_generators() -> Dict[str, StackGenerator]:
     return {
         "java_spring_jpa": _generate_outputs_for_java_spring_jpa,
+        "node_express_prisma": _generate_outputs_for_node_express,
+        "node_express_typeorm": _generate_outputs_for_node_express,
     }
 
 
@@ -4524,6 +4540,90 @@ def unwire_gradle_multi_module(root: Path, cfg: Dict[str, Any]) -> List[str]:
     return messages
 
 
+def wire_node_project(root: Path) -> List[str]:
+    package_json_path = root / "package.json"
+    if not package_json_path.exists():
+        return ["Skipped Node auto-wiring: package.json not found in current directory."]
+
+    try:
+        package = json.loads(package_json_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return [f"Skipped Node auto-wiring: unable to parse package.json ({exc})."]
+
+    if not isinstance(package, dict):
+        return ["Skipped Node auto-wiring: package.json must contain a JSON object."]
+
+    scripts = package.get("scripts", {})
+    if not isinstance(scripts, dict):
+        scripts = {}
+    package["scripts"] = scripts
+
+    messages: List[str] = []
+
+    def ensure_script(name: str, value: str) -> None:
+        existing = scripts.get(name)
+        if existing == value:
+            messages.append(f"package.json script '{name}' already configured.")
+            return
+        if existing is None:
+            scripts[name] = value
+            messages.append(f"Added package.json script '{name}'.")
+            return
+        messages.append(
+            f"Skipped package.json script '{name}' update because it already exists with custom value."
+        )
+
+    ensure_script("prophet:gen", "prophet gen")
+    ensure_script("prophet:check", "prophet check --show-reasons")
+    ensure_script("prophet:validate", "prophet validate")
+
+    package_json_path.write_text(json.dumps(package, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    return messages
+
+
+def unwire_node_project(root: Path) -> List[str]:
+    package_json_path = root / "package.json"
+    if not package_json_path.exists():
+        return ["Skipped Node unwiring: package.json not found in current directory."]
+
+    try:
+        package = json.loads(package_json_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return [f"Skipped Node unwiring: unable to parse package.json ({exc})."]
+
+    if not isinstance(package, dict):
+        return ["Skipped Node unwiring: package.json must contain a JSON object."]
+
+    scripts = package.get("scripts", {})
+    if not isinstance(scripts, dict):
+        return ["Skipped Node unwiring: package.json scripts section is not a JSON object."]
+
+    expected = {
+        "prophet:gen": "prophet gen",
+        "prophet:check": "prophet check --show-reasons",
+        "prophet:validate": "prophet validate",
+    }
+    messages: List[str] = []
+    changed = False
+    for key, expected_value in expected.items():
+        existing = scripts.get(key)
+        if existing is None:
+            messages.append(f"package.json script '{key}' not present.")
+            continue
+        if existing != expected_value:
+            messages.append(f"Skipped removing package.json script '{key}' because it has a custom value.")
+            continue
+        del scripts[key]
+        changed = True
+        messages.append(f"Removed package.json script '{key}'.")
+
+    if changed:
+        package["scripts"] = scripts
+        package_json_path.write_text(json.dumps(package, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+
+    return messages
+
+
 def ontology_path_from_cfg(root: Path, cfg: Dict[str, Any]) -> Path:
     ontology_file = cfg_get(cfg, ["project", "ontology_file"], None)
     if not ontology_file:
@@ -4559,6 +4659,7 @@ class CommandContext:
 
 def load_command_context(root: Path) -> Tuple[CommandContext, List[str]]:
     cfg = load_config(root / "prophet.yaml")
+    cfg = apply_node_autodetect(cfg, root)
     stack = resolve_stack_spec(cfg)
     ontology_path = ontology_path_from_cfg(root, cfg)
     ontology = load_ontology_from_cfg(root, cfg)
@@ -4823,7 +4924,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
         raise ProphetError("--skip-unchanged cannot be used with --verify-clean")
 
     out_dir = str(cfg_get(ctx.cfg, ["generation", "out_dir"], "gen"))
-    targets = list(cfg_get(ctx.cfg, ["generation", "targets"], ["sql", "openapi", "spring_boot", "flyway", "liquibase"]))
+    targets = list(cfg_get(ctx.cfg, ["generation", "targets"], list(ctx.stack.default_targets)))
     baseline_ir = str(cfg_get(ctx.cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     signature = compute_generation_signature(
         toolchain_version=TOOLCHAIN_VERSION,
@@ -4867,9 +4968,17 @@ def cmd_generate(args: argparse.Namespace) -> int:
     sync_example_project(root, ctx.cfg)
 
     gradle_messages: List[str] = []
-    requested_migrations, detected_migrations, enabled_migrations, migration_warnings = resolve_migration_runtime_modes(
-        ctx.cfg, root
-    )
+    node_wiring_messages: List[str] = []
+    requested_migrations: set[str] = set()
+    detected_migrations: set[str] = set()
+    enabled_migrations: set[str] = set()
+    migration_warnings: List[str] = []
+    if ctx.stack.language == "java":
+        requested_migrations, detected_migrations, enabled_migrations, migration_warnings = resolve_migration_runtime_modes(
+            ctx.cfg, root
+        )
+    if ctx.stack.language == "node":
+        node_wiring_messages = wire_node_project(root)
     if args.wire_gradle:
         gradle_messages = wire_gradle_multi_module(root, ctx.cfg)
 
@@ -4878,19 +4987,20 @@ def cmd_generate(args: argparse.Namespace) -> int:
     for rel in sorted(outputs.keys()):
         print(f"- {rel}")
     print("- .prophet/ir/current.ir.json")
-    print("- examples/java/prophet_example_spring (synced if present)")
-    print("")
-    print("Migration auto-detection:")
-    requested_label = ", ".join(sorted(requested_migrations)) if requested_migrations else "none"
-    detected_label = ", ".join(sorted(detected_migrations)) if detected_migrations else "none"
-    enabled_label = ", ".join(sorted(enabled_migrations)) if enabled_migrations else "none"
-    print(f"- requested targets: {requested_label}")
-    print(f"- detected in host Gradle: {detected_label}")
-    print(f"- Spring runtime wiring enabled: {enabled_label}")
-    if migration_warnings:
-        print("- warnings:")
-        for warning in migration_warnings:
-            print(f"  - {warning}")
+    if ctx.stack.language == "java":
+        print("- examples/java/prophet_example_spring (synced if present)")
+        print("")
+        print("Migration auto-detection:")
+        requested_label = ", ".join(sorted(requested_migrations)) if requested_migrations else "none"
+        detected_label = ", ".join(sorted(detected_migrations)) if detected_migrations else "none"
+        enabled_label = ", ".join(sorted(enabled_migrations)) if enabled_migrations else "none"
+        print(f"- requested targets: {requested_label}")
+        print(f"- detected in host Gradle: {detected_label}")
+        print(f"- Spring runtime wiring enabled: {enabled_label}")
+        if migration_warnings:
+            print("- warnings:")
+            for warning in migration_warnings:
+                print(f"  - {warning}")
     if delta_sql:
         print("")
         print("Delta migration:")
@@ -4905,6 +5015,11 @@ def cmd_generate(args: argparse.Namespace) -> int:
         print("")
         print("Gradle wiring:")
         for msg in gradle_messages:
+            print(f"- {msg}")
+    if node_wiring_messages:
+        print("")
+        print("Node auto-wiring:")
+        for msg in node_wiring_messages:
             print(f"- {msg}")
 
     write_generation_cache(
@@ -4929,6 +5044,7 @@ def cmd_clean(args: argparse.Namespace) -> int:
         raise ProphetError("prophet.yaml not found in current directory")
 
     cfg = load_config(cfg_path)
+    cfg = apply_node_autodetect(cfg, root)
     out_dir = root / str(cfg_get(cfg, ["generation", "out_dir"], "gen"))
     baseline_rel = str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline_path = root / baseline_rel
@@ -4938,6 +5054,7 @@ def cmd_clean(args: argparse.Namespace) -> int:
     removed: List[str] = []
     skipped: List[str] = []
     gradle_messages: List[str] = []
+    node_unwire_messages: List[str] = []
     generated_markers = ("-- GENERATED FILE: do not edit directly.", "# GENERATED FILE: do not edit directly.")
 
     def remove_if_generated(path: Path, allow_force: bool = False) -> None:
@@ -5059,6 +5176,12 @@ def cmd_clean(args: argparse.Namespace) -> int:
 
     if not args.keep_gradle_wire:
         gradle_messages = unwire_gradle_multi_module(root, cfg)
+    try:
+        stack = resolve_stack_spec(cfg)
+        if stack.language == "node":
+            node_unwire_messages = unwire_node_project(root)
+    except ProphetError:
+        pass
 
     if removed:
         print("Removed generated artifacts:")
@@ -5077,6 +5200,11 @@ def cmd_clean(args: argparse.Namespace) -> int:
         print("")
         print("Gradle unwiring:")
         for msg in gradle_messages:
+            print(f"- {msg}")
+    if node_unwire_messages:
+        print("")
+        print("Node unwiring:")
+        for msg in node_unwire_messages:
             print(f"- {msg}")
 
     return 0
