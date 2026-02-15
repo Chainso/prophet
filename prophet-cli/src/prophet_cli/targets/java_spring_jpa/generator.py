@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -10,35 +9,15 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.stacks import StackSpec
 from prophet_cli.core.ir_reader import IRReader
+from prophet_cli.targets.java_common.render.support import effective_base_package
+from prophet_cli.targets.java_spring_jpa.render.spring import render_liquibase_prophet_changelog
+from prophet_cli.targets.java_spring_jpa.render.spring import render_liquibase_root_changelog
+from prophet_cli.targets.java_spring_jpa.render.spring import render_spring_files
 
 
 def _pascal_case(value: str) -> str:
     chunks = [part for part in value.replace("-", "_").split("_") if part]
     return "".join(chunk[:1].upper() + chunk[1:] for chunk in chunks)
-
-
-def _snake_case(value: str) -> str:
-    s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", value)
-    s2 = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s1)
-    return s2.replace("-", "_").lower()
-
-
-def _java_package_segment(value: str) -> str:
-    raw = _snake_case(value).strip("_")
-    if not raw:
-        return "ontology"
-    normalized = re.sub(r"[^a-z0-9_]", "_", raw)
-    if normalized[:1].isdigit():
-        return f"o_{normalized}"
-    return normalized
-
-
-def _effective_base_package(base_package: str, ontology_name: str) -> str:
-    segment = _java_package_segment(ontology_name)
-    suffix = f".{segment}"
-    if base_package.endswith(suffix):
-        return base_package
-    return f"{base_package}{suffix}"
 
 
 @dataclass(frozen=True)
@@ -47,10 +26,7 @@ class JavaSpringJpaDeps:
     resolve_stack_spec: Callable[[Dict[str, Any]], StackSpec]
     render_sql: Callable[[IRReader], str]
     compute_delta_from_baseline: Callable[[Path, Dict[str, Any], IRReader], Tuple[Optional[str], List[str], Optional[Path], Optional[str], Dict[str, Any]]]
-    render_liquibase_root_changelog: Callable[[], str]
-    render_liquibase_prophet_changelog: Callable[[bool], str]
     render_openapi: Callable[[IRReader], str]
-    render_spring_files: Callable[[IRReader, Dict[str, Any], Path, str, Optional[str]], Dict[str, str]]
     toolchain_version: str
 
 
@@ -73,8 +49,8 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
         if delta_sql:
             outputs[f"{out_dir}/migrations/flyway/V2__prophet_delta.sql"] = delta_sql
     if "liquibase" in targets:
-        outputs[f"{out_dir}/migrations/liquibase/db.changelog-master.yaml"] = deps.render_liquibase_root_changelog()
-        outputs[f"{out_dir}/migrations/liquibase/prophet/changelog-master.yaml"] = deps.render_liquibase_prophet_changelog(
+        outputs[f"{out_dir}/migrations/liquibase/db.changelog-master.yaml"] = render_liquibase_root_changelog()
+        outputs[f"{out_dir}/migrations/liquibase/prophet/changelog-master.yaml"] = render_liquibase_prophet_changelog(
             bool(delta_sql)
         )
         outputs[f"{out_dir}/migrations/liquibase/prophet/0001-init.sql"] = schema_sql
@@ -97,19 +73,20 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
     if "openapi" in targets:
         outputs[f"{out_dir}/openapi/openapi.yaml"] = deps.render_openapi(context.ir_reader)
     if "spring_boot" in targets:
-        spring_files = deps.render_spring_files(
-            context.ir_reader,
+        spring_files = render_spring_files(
+            context.ir_reader.as_dict(),
             cfg,
-            work_root,
-            schema_sql,
-            delta_sql,
+            root=work_root,
+            generated_schema_sql=schema_sql,
+            delta_schema_sql=delta_sql,
+            toolchain_version=deps.toolchain_version,
         )
         for rel_path, content in spring_files.items():
             outputs[f"{out_dir}/spring-boot/{rel_path}"] = content
 
     configured_base_package = str(deps.cfg_get(cfg, ["generation", "spring_boot", "base_package"], "com.example.prophet"))
     ontology_name = str(context.ir_reader.get("ontology", {}).get("name", "prophet"))
-    base_package = _effective_base_package(configured_base_package, ontology_name)
+    base_package = effective_base_package(configured_base_package, ontology_name)
     extension_hooks = []
     for action in sorted(context.ir_reader.action_contracts(), key=lambda item: item.name):
         action_name = action.name

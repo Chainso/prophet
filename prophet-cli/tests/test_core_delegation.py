@@ -9,6 +9,8 @@ PROJECT_ROOT = THIS_FILE.parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "prophet-cli" / "src"))
 
 from prophet_cli import cli
+from prophet_cli.codegen import rendering as codegen_rendering
+from prophet_cli.targets.java_spring_jpa.render import spring as java_spring_rendering
 from prophet_cli.core import config as core_config
 from prophet_cli.core import compatibility as core_compat
 from prophet_cli.core import ir as core_ir
@@ -26,6 +28,10 @@ class CoreDelegationTests(unittest.TestCase):
         self.assertIs(cli.required_level_to_bump, core_compat.required_level_to_bump)
         self.assertIs(cli.load_config, core_config.load_config)
         self.assertIs(cli.cfg_get, core_config.cfg_get)
+        self.assertIs(cli.render_sql, codegen_rendering.render_sql)
+        self.assertIs(cli.render_openapi, codegen_rendering.render_openapi)
+        self.assertIs(cli.compute_delta_from_baseline, codegen_rendering.compute_delta_from_baseline)
+        self.assertIs(cli.resolve_migration_runtime_modes, java_spring_rendering.resolve_migration_runtime_modes)
 
     def test_cli_build_ir_matches_core_build_ir(self) -> None:
         cfg = cli.load_config(EXAMPLE_ROOT / "prophet.yaml")

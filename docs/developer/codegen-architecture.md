@@ -9,6 +9,11 @@ Current implemented stacks:
 - `node_express_prisma`
 - `node_express_typeorm`
 - `node_express_mongoose`
+- `python_fastapi_sqlalchemy`
+- `python_fastapi_sqlmodel`
+- `python_flask_sqlalchemy`
+- `python_flask_sqlmodel`
+- `python_django_django_orm`
 
 Planned stacks can exist in manifest as non-implemented entries for forward visibility and validation.
 
@@ -54,6 +59,62 @@ The orchestrator is responsible for:
 - emitting extension hook and generated-file manifests
 
 Renderer modules are responsible for converting IR into artifact content only.
+
+## Java Generator Layout
+
+Java/Spring generation now follows the same orchestrator + renderer split:
+
+- Orchestrator:
+  - `prophet-cli/src/prophet_cli/targets/java_spring_jpa/generator.py`
+- Java-common render support (shared across Java targets):
+  - `prophet-cli/src/prophet_cli/targets/java_common/render/support.py`
+- Spring/JPA-specific renderer functions:
+  - `prophet-cli/src/prophet_cli/targets/java_spring_jpa/render/spring.py` (stack orchestrator for Spring artifacts)
+  - `prophet-cli/src/prophet_cli/targets/java_spring_jpa/render/common/` (Spring stack-common render sections)
+  - `prophet-cli/src/prophet_cli/targets/java_spring_jpa/render/orm/` (JPA-specific render sections)
+
+This mirrors the Node/Python split philosophy:
+- common Java render helpers live outside the Spring target package
+- Spring target keeps framework/stack-specific rendering and migration wiring
+
+The CLI delegates generation to stack generators and renderer modules; generation implementation is no longer embedded in `cli.py`.
+
+## Python Generator Layout
+
+Python generation follows the same orchestrator + focused renderer split:
+
+- Orchestrator:
+  - `prophet-cli/src/prophet_cli/targets/python/generator.py`
+- Shared render support:
+  - `prophet-cli/src/prophet_cli/targets/python/render/support.py`
+- Common (stack-agnostic) renderers:
+  - `prophet-cli/src/prophet_cli/targets/python/render/common/`
+- Framework-specific renderers:
+  - `prophet-cli/src/prophet_cli/targets/python/render/framework/fastapi.py`
+  - `prophet-cli/src/prophet_cli/targets/python/render/framework/flask.py`
+  - `prophet-cli/src/prophet_cli/targets/python/render/framework/django.py`
+- ORM-specific renderers:
+  - `prophet-cli/src/prophet_cli/targets/python/render/orm/sqlalchemy.py`
+  - `prophet-cli/src/prophet_cli/targets/python/render/orm/sqlmodel.py`
+  - `prophet-cli/src/prophet_cli/targets/python/render/orm/django_orm.py`
+
+The orchestrator is responsible for:
+- target selection and stack gating
+- composing per-file outputs
+- selecting async/sync contract mode by framework
+- emitting extension hook and generated-file manifests
+- emitting autodetect report manifests when present
+
+## Shared Renderers
+
+Cross-stack rendering that is not stack-orchestrator-specific is centralized in:
+
+- `prophet-cli/src/prophet_cli/codegen/rendering.py`
+
+This module currently owns:
+- canonical SQL schema rendering
+- OpenAPI rendering
+- baseline delta migration rendering and metadata
 
 ## Ownership and Safety
 

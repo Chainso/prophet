@@ -4,6 +4,19 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-02-15
+
+### Changed
+- Refactored stack-neutral rendering utilities into `prophet_cli/codegen/rendering.py` and removed Java-target concerns from shared rendering.
+- Introduced Java-wide shared rendering support in `prophet_cli/targets/java_common/render/support.py`.
+- Reorganized Spring Java rendering into explicit modules:
+  - orchestration in `prophet_cli/targets/java_spring_jpa/render/spring.py`,
+  - stack-common Java artifacts in `prophet_cli/targets/java_spring_jpa/render/common/`,
+  - JPA/ORM-specific artifacts in `prophet_cli/targets/java_spring_jpa/render/orm/`.
+- Simplified Java generator dependency wiring to resolve renderer functions directly from Java target modules.
+- Updated developer architecture docs with Python layout coverage and the revised Java renderer/module structure.
+- Toolchain/package version advanced to `0.13.0`.
+
 ## [0.12.1] - 2026-02-15
 
 ### Changed

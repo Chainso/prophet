@@ -34,7 +34,7 @@ def minimal_ir() -> dict:
 
 class JavaTargetIRReaderTests(unittest.TestCase):
     def test_target_generator_consumes_ir_reader_contract(self) -> None:
-        calls = {"render_sql": 0, "render_openapi": 0, "render_spring": 0, "compute_delta": 0}
+        calls = {"render_sql": 0, "render_openapi": 0, "compute_delta": 0}
         reader = IRReader.from_dict(minimal_ir())
         context = GenerationContext(
             stack_id="java_spring_jpa",
@@ -60,10 +60,7 @@ class JavaTargetIRReaderTests(unittest.TestCase):
             ),
             render_sql=lambda r: _count_and_return(calls, "render_sql", r, "-- sql\n"),
             compute_delta_from_baseline=lambda root, cfg, r: _count_and_delta(calls, "compute_delta", r),
-            render_liquibase_root_changelog=lambda: "root",
-            render_liquibase_prophet_changelog=lambda has_delta: "prophet",
             render_openapi=lambda r: _count_and_return(calls, "render_openapi", r, "openapi: 3.0.3\n"),
-            render_spring_files=lambda r, cfg, root, schema_sql, delta_sql: _count_and_spring(calls, "render_spring", r),
             toolchain_version="0.4.0",
         )
 
@@ -73,7 +70,6 @@ class JavaTargetIRReaderTests(unittest.TestCase):
         self.assertIn("gen/manifest/generated-files.json", outputs)
         self.assertEqual(calls["render_sql"], 1)
         self.assertEqual(calls["render_openapi"], 1)
-        self.assertEqual(calls["render_spring"], 1)
         self.assertEqual(calls["compute_delta"], 1)
 
 
@@ -89,13 +85,6 @@ def _count_and_delta(calls: dict, key: str, reader: IRReader):
         raise AssertionError("expected IRReader")
     calls[key] += 1
     return None, [], None, None, {"safe_auto_apply_count": 0, "manual_review_count": 0, "destructive_count": 0, "findings": []}
-
-
-def _count_and_spring(calls: dict, key: str, reader: IRReader) -> dict[str, str]:
-    if not isinstance(reader, IRReader):
-        raise AssertionError("expected IRReader")
-    calls[key] += 1
-    return {"src/main/resources/application-prophet.yml": "spring:\n  application:\n    name: demo\n"}
 
 
 def _cfg_get(cfg: dict, keys: list[str], default=None):
