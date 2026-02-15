@@ -46,7 +46,7 @@ def _render_detection_report(cfg: Dict[str, Any]) -> Optional[str]:
 
 
 def _render_pyproject_toml(stack: StackSpec) -> str:
-    deps: List[str] = []
+    deps: List[str] = ["prophet-events-runtime>=0.1.0,<1.0"]
     if stack.framework == "fastapi":
         deps.extend(["fastapi>=0.112,<1.0", "uvicorn>=0.30,<1.0"])
     elif stack.framework == "flask":

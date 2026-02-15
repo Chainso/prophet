@@ -16,16 +16,21 @@ def render_action_handlers(ir: Dict[str, Any], *, async_mode: bool) -> str:
         "from __future__ import annotations",
         "",
         "from dataclasses import dataclass",
-        "from typing import Protocol",
+        "from typing import Optional, Protocol",
         "",
         "from .actions import *",
-        "from .events import EventEmitter",
+        "from .events import ActionOutcome",
+        "from .events import ActionOutcomeValue",
+        "from .events import EventPublisher",
         "from .persistence import Repositories",
         "",
         "@dataclass",
         "class ActionContext:",
         "    repositories: Repositories",
-        "    eventEmitter: EventEmitter",
+        "    eventPublisher: EventPublisher",
+        "    traceId: Optional[str] = None",
+        "    eventSource: Optional[str] = None",
+        "    eventAttributes: Optional[dict[str, str]] = None",
         "",
     ]
 
@@ -39,17 +44,19 @@ def render_action_handlers(ir: Dict[str, Any], *, async_mode: bool) -> str:
 
         lines.append(f"class {iface_name}(Protocol):")
         if async_mode:
-            lines.append(f"    async def handle(self, input: {input_name}, context: ActionContext) -> {output_name}: ...")
+            lines.append(
+                f"    async def handle(self, input: {input_name}, context: ActionContext) -> ActionOutcomeValue[{output_name}]: ..."
+            )
         else:
-            lines.append(f"    def handle(self, input: {input_name}, context: ActionContext) -> {output_name}: ...")
+            lines.append(f"    def handle(self, input: {input_name}, context: ActionContext) -> ActionOutcomeValue[{output_name}]: ...")
         lines.append("")
 
         default_name = f"{iface_name}Default"
         lines.append(f"class {default_name}:")
         if async_mode:
-            lines.append(f"    async def handle(self, input: {input_name}, context: ActionContext) -> {output_name}:")
+            lines.append(f"    async def handle(self, input: {input_name}, context: ActionContext) -> ActionOutcome[{output_name}]:")
         else:
-            lines.append(f"    def handle(self, input: {input_name}, context: ActionContext) -> {output_name}:")
+            lines.append(f"    def handle(self, input: {input_name}, context: ActionContext) -> ActionOutcome[{output_name}]:")
         lines.append(f"        raise NotImplementedError('No implementation registered for action: {action_name}')")
         lines.append("")
 

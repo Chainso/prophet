@@ -23,7 +23,13 @@ def render_event_contracts(ir: Dict[str, Any]) -> str:
         "",
     ]
 
-    for event in _sort_dict_entries([item for item in ir.get("events", []) if isinstance(item, dict)]):
+    for event in _sort_dict_entries(
+        [
+            item
+            for item in ir.get("events", [])
+            if isinstance(item, dict) and str(item.get("kind", "")) == "signal"
+        ]
+    ):
         name = _pascal_case(str(event.get("name", "Event")))
         lines.append("@dataclass(kw_only=True)")
         lines.append(f"class {name}:")
