@@ -54,9 +54,51 @@ jobs:
           name: prophet-cli-dist
           path: prophet-cli/dist/*
 
+  prophet-lib-runtimes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Validate JavaScript runtime package
+        working-directory: prophet-lib/javascript
+        run: |
+          npm test
+          npm pack --dry-run
+
+      - name: Validate Python runtime package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          PYTHONPATH=prophet-lib/python/src python -m unittest discover -s prophet-lib/python/tests -p 'test_*.py' -v
+          python -m build prophet-lib/python
+
+      - name: Validate Java runtime package
+        run: |
+          cd examples/java/prophet_example_spring
+          ./gradlew -p ../../../prophet-lib/java test
+          ./gradlew -p ../../../prophet-lib/java publishToMavenLocal
+
   spring-example:
     runs-on: ubuntu-latest
-    needs: python-package
+    needs: [python-package, prophet-lib-runtimes]
 
     steps:
       - name: Checkout
@@ -85,6 +127,10 @@ jobs:
           .venv/bin/pip install --upgrade pip
           .venv/bin/pip install dist-artifacts/*.whl
 
+      - name: Publish prophet-lib Java runtime to local Maven
+        working-directory: examples/java/prophet_example_spring
+        run: ./gradlew -p ../../../prophet-lib/java publishToMavenLocal
+
       - name: Generate artifacts for Spring example
         working-directory: examples/java/prophet_example_spring
         run: ../../../.venv/bin/prophet gen --wire-gradle
@@ -110,7 +156,7 @@ jobs:
 
   node-examples:
     runs-on: ubuntu-latest
-    needs: python-package
+    needs: [python-package, prophet-lib-runtimes]
     services:
       mongo:
         image: mongo:7
@@ -203,31 +249,33 @@ jobs:
 
   python-examples:
     runs-on: ubuntu-latest
-    needs: python-package
+    needs: [python-package, prophet-lib-runtimes]
+    env:
+      PROPHET_EVENTS_RUNTIME_PYTHONPATH: ../../../prophet-lib/python/src
     strategy:
       fail-fast: false
       matrix:
         include:
           - name: fastapi-sqlalchemy
             dir: examples/python/prophet_example_fastapi_sqlalchemy
-            smoke: PYTHONPATH=src:gen/python/src ../../../.venv/bin/python -c "import app"
-            test: PYTHONPATH=src:gen/python/src ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
+            smoke: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src ../../../.venv/bin/python -c "import app"
+            test: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
           - name: fastapi-sqlmodel
             dir: examples/python/prophet_example_fastapi_sqlmodel
-            smoke: PYTHONPATH=src:gen/python/src ../../../.venv/bin/python -c "import app"
-            test: PYTHONPATH=src:gen/python/src ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
+            smoke: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src ../../../.venv/bin/python -c "import app"
+            test: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
           - name: flask-sqlalchemy
             dir: examples/python/prophet_example_flask_sqlalchemy
-            smoke: PYTHONPATH=src:gen/python/src ../../../.venv/bin/python -c "import app"
-            test: PYTHONPATH=src:gen/python/src ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
+            smoke: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src ../../../.venv/bin/python -c "import app"
+            test: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
           - name: flask-sqlmodel
             dir: examples/python/prophet_example_flask_sqlmodel
-            smoke: PYTHONPATH=src:gen/python/src ../../../.venv/bin/python -c "import app"
-            test: PYTHONPATH=src:gen/python/src ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
+            smoke: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src ../../../.venv/bin/python -c "import app"
+            test: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
           - name: django-django-orm
             dir: examples/python/prophet_example_django
-            smoke: PYTHONPATH=src:gen/python/src DJANGO_SETTINGS_MODULE=prophet_example_django.settings ../../../.venv/bin/python -c "import django; django.setup(); from prophet_example_django.app import initialize_generated_runtime; initialize_generated_runtime()"
-            test: PYTHONPATH=src:gen/python/src DJANGO_SETTINGS_MODULE=prophet_example_django.settings ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
+            smoke: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src DJANGO_SETTINGS_MODULE=prophet_example_django.settings ../../../.venv/bin/python -c "import django; django.setup(); from prophet_example_django.app import initialize_generated_runtime; initialize_generated_runtime()"
+            test: PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:src:gen/python/src DJANGO_SETTINGS_MODULE=prophet_example_django.settings ../../../.venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
 
     steps:
       - name: Checkout
