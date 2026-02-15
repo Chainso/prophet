@@ -71,7 +71,7 @@ jobs:
 
       - name: Install Node Prisma example dependencies
         working-directory: examples/node/prophet_example_express_prisma
-        run: npm install
+        run: npm ci
 
       - name: Generate Prisma client
         working-directory: examples/node/prophet_example_express_prisma
@@ -95,7 +95,7 @@ jobs:
 
       - name: Install Node TypeORM example dependencies
         working-directory: examples/node/prophet_example_express_typeorm
-        run: npm install
+        run: npm ci
 
       - name: Build Node TypeORM TypeScript
         working-directory: examples/node/prophet_example_express_typeorm

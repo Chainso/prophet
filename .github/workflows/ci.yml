@@ -154,7 +154,7 @@ jobs:
 
       - name: Install Node example dependencies (${{ matrix.name }})
         working-directory: ${{ matrix.dir }}
-        run: npm install
+        run: npm ci
 
       - name: Generate Prisma client (${{ matrix.name }})
         if: matrix.orm == 'prisma'
