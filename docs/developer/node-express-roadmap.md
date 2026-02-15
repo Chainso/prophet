@@ -9,6 +9,15 @@ Define a contributor-ready roadmap for adding first-class Node.js generation tar
 
 This document is the implementation contract for open source contributors.
 
+## Current Status
+
+Implemented in current tree:
+- Shared Node/Express generation surface (contracts, validation, routes, events)
+- Prisma repository generation (list/query/getById/save), schema generation, composite key handling
+- TypeORM entity + repository generation with query translation parity surface
+- Node autodetect with fail-closed ambiguity handling and diagnostics report
+- Node example projects + CI validation coverage
+
 ## Product Goal
 
 A TypeScript developer should be able to:

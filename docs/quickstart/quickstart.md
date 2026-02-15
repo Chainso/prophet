@@ -76,6 +76,12 @@ Action APIs:
 ```bash
 cd examples/node/prophet_example_express_prisma
 prophet gen
+export DATABASE_PROVIDER=sqlite
+export DATABASE_URL="file:./dev.db"
+npm install
+npm run prisma:generate
+npm run prisma:push
+npm run dev
 ```
 
 Expected outcome:
@@ -83,14 +89,15 @@ Expected outcome:
 - `gen/node-express/prisma/schema.prisma`
 - `gen/openapi/openapi.yaml`
 - `gen/manifest/node-autodetect.json`
-
-Generated Node actions use default handler stubs that throw until implemented.
+- running Express app with generated repositories + concrete example handlers
 
 ## 7. Node Quickstart (Express + TypeORM)
 
 ```bash
 cd examples/node/prophet_example_express_typeorm
 prophet gen
+npm install
+npm run dev
 ```
 
 Expected outcome:
@@ -98,6 +105,7 @@ Expected outcome:
 - `gen/node-express/src/generated/typeorm-entities.ts`
 - `gen/openapi/openapi.yaml`
 - `gen/manifest/node-autodetect.json`
+- running Express app with SQLite-backed TypeORM repositories
 
 ## Next Reads
 

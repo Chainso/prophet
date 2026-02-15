@@ -51,6 +51,7 @@ Generated Spring package root is:
 Node autodetection notes:
 - If no explicit stack is set, Prophet inspects `package.json` and lockfiles to auto-select Node Express stacks.
 - For Node projects, default Java init targets are automatically rewritten to Node targets when stack autodetection succeeds.
+- Autodetection fails closed when a safe Node stack cannot be inferred; set `generation.stack.id` explicitly in that case.
 
 ## `compatibility`
 

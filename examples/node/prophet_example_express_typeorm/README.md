@@ -23,4 +23,10 @@ npm install
 npm run dev
 ```
 
-The generated default handlers throw until you implement action handlers.
+The example boots a local SQLite database (`prophet_example.sqlite`) and wires concrete action handlers in `src/server.ts`.
+Try:
+
+1. `POST /actions/createOrder`
+2. `POST /actions/approveOrder`
+3. `POST /actions/shipOrder`
+4. `POST /orders/query`

@@ -20,7 +20,17 @@ Generated output includes:
 
 ```bash
 npm install
+export DATABASE_PROVIDER=sqlite
+export DATABASE_URL="file:./dev.db"
+npm run prisma:generate
+npm run prisma:push
 npm run dev
 ```
 
-The generated default handlers throw until you implement action handlers.
+The example already wires concrete action handlers (`createOrder`, `approveOrder`, `shipOrder`) in `src/server.ts`.
+Try:
+
+1. `POST /actions/createOrder`
+2. `POST /actions/approveOrder`
+3. `POST /actions/shipOrder`
+4. `POST /orders/query`

@@ -23,6 +23,8 @@ Node stacks also apply package.json script auto-wiring for:
 - `prophet:check`
 - `prophet:validate`
 
+Node autodetection runs before generation and fails closed when a safe stack cannot be inferred.
+
 ## `prophet clean` Flags
 
 - `--verbose`

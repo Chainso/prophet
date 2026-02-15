@@ -79,6 +79,23 @@ generation:
 # or: node_express_typeorm
 ```
 
+## `Node autodetect failed to resolve a safe generation stack`
+
+Cause:
+- Express was detected, but Prophet could not infer a single supported Node ORM target.
+- Common cases: both ORMs detected, or Express detected with neither Prisma nor TypeORM.
+
+Fix:
+- Set `generation.stack.id` explicitly in `prophet.yaml`:
+
+```yaml
+generation:
+  stack:
+    id: node_express_prisma
+# or
+#   id: node_express_typeorm
+```
+
 ## Node `package.json` script rewiring concerns
 
 Behavior:
@@ -87,3 +104,26 @@ Behavior:
 
 If you need to remove Prophet-managed script entries:
 - Run `prophet clean` in the Node project root.
+
+## `tsc: command not found` in Node examples
+
+Cause:
+- Node dependencies are not installed yet.
+
+Fix:
+
+```bash
+npm install
+npm run build
+```
+
+## Prisma compile/runtime errors after generation
+
+Cause:
+- Prisma client not generated for `gen/node-express/prisma/schema.prisma`.
+
+Fix:
+
+```bash
+npx prisma generate --schema gen/node-express/prisma/schema.prisma
+```

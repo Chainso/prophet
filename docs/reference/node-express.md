@@ -54,6 +54,7 @@ When no explicit stack is configured, Prophet can auto-select:
 - `node_express_typeorm`
 
 If both Prisma and TypeORM are detected, Prophet reports ambiguity and expects explicit config.
+Autodetect now fails closed when Express is detected but a safe ORM stack cannot be inferred.
 
 ## Node Auto-Wiring
 
@@ -70,7 +71,7 @@ On `prophet gen` for Node stacks, Prophet adds scripts to host `package.json` wh
 - Generated action routes are available under `/actions/<actionName>`.
 - Generated action service emits action output events by default through `GeneratedEventEmitter`.
 - A `GeneratedEventEmitterNoOp` is provided for zero-config integration.
-- User-owned handler implementations should replace default handler stubs.
+- Default handler stubs throw until replaced by user-owned implementations.
 
 ## Query Behavior
 
@@ -81,6 +82,23 @@ For each object query contract:
 - typed filter route: `POST <typed_query_path>`
 
 Typed filter interfaces are generated in `query.ts`.
+Filter operators are generated per-field from the ontology query contract (not as a global superset).
+
+## Repository Integrations
+
+Prisma generated repositories:
+
+- constructor expects `PrismaClient`
+- generated methods implement paging, typed filtering, `getById`, and `save` via `upsert`
+- Prisma schema includes object refs, state column (`current_state`), and supports composite primary keys
+- datasource provider/url are driven by `DATABASE_PROVIDER` and `DATABASE_URL`
+
+TypeORM generated repositories:
+
+- constructor expects `DataSource`
+- generated entities include columns, relations, and state column (`current_state`)
+- generated methods implement paging, typed filtering, `getById`, and `save`
+- query filtering is translated through `QueryBuilder`
 
 ## Recommended Targets
 

@@ -37,10 +37,12 @@
 Prisma stack adds:
 - `gen/node-express/prisma/schema.prisma`
 - `gen/node-express/src/generated/prisma-adapters.ts`
+- generated Prisma repositories implement list/query/getById/save against `PrismaClient`
 
 TypeORM stack adds:
 - `gen/node-express/src/generated/typeorm-entities.ts`
 - `gen/node-express/src/generated/typeorm-adapters.ts`
+- generated TypeORM repositories implement list/query/getById/save against `DataSource`
 
 ## Migration Outputs
 

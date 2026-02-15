@@ -117,8 +117,10 @@ jobs:
         include:
           - name: express-prisma
             dir: examples/node/prophet_example_express_prisma
+            orm: prisma
           - name: express-typeorm
             dir: examples/node/prophet_example_express_typeorm
+            orm: typeorm
 
     steps:
       - name: Checkout
@@ -149,6 +151,19 @@ jobs:
       - name: Generate artifacts for Node example (${{ matrix.name }})
         working-directory: ${{ matrix.dir }}
         run: ../../../.venv/bin/prophet gen
+
+      - name: Install Node example dependencies (${{ matrix.name }})
+        working-directory: ${{ matrix.dir }}
+        run: npm install
+
+      - name: Generate Prisma client (${{ matrix.name }})
+        if: matrix.orm == 'prisma'
+        working-directory: ${{ matrix.dir }}
+        run: npm run prisma:generate
+
+      - name: Build Node example TypeScript (${{ matrix.name }})
+        working-directory: ${{ matrix.dir }}
+        run: npm run build
 
       - name: Verify generated outputs are committed (${{ matrix.name }})
         working-directory: ${{ matrix.dir }}

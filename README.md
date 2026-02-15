@@ -34,8 +34,8 @@ From a `.prophet` ontology file, Prophet can generate:
 - SQL schema files
 - OpenAPI contracts
 - Spring Boot integration code (DTOs, JPA entities/repositories, query and action endpoints)
-- Node/Express integration code (typed contracts, zod validation, routes, action/event scaffolding)
-- Prisma schema/adapters and TypeORM entity/adapter scaffolding for Node targets
+- Node/Express integration code (typed contracts, zod validation, action/query routes, event emitter interfaces)
+- Prisma schema + repository adapters and TypeORM entities + repository adapters for Node targets
 - Flyway/Liquibase migration artifacts
 - generation manifests for ownership and extension hooks
 

@@ -6,6 +6,8 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/server.js",
     "dev": "tsx src/server.ts",
+    "prisma:generate": "prisma generate --schema gen/node-express/prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema gen/node-express/prisma/schema.prisma",
     "prophet:gen": "prophet gen",
     "prophet:check": "prophet check --show-reasons",
     "prophet:validate": "prophet validate"
