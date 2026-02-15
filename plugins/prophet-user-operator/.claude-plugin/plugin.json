@@ -1,0 +1,8 @@
+{
+  "name": "prophet-user-operator",
+  "description": "Execution-focused Prophet user workflows for ontology changes, integration updates, and repair loops.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Prophet OSS"
+  }
+}

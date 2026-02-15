@@ -4,29 +4,35 @@
 
 ---
 
-Prophet is a tool that turns your business model into working software scaffolding.
+## Overview
 
-Instead of hand-writing the same model in many places, you define it once and Prophet generates the repetitive pieces for you.
+An [ontology](https://en.wikipedia.org/wiki/Ontology_(information_science)) is a formal description of a domain. It defines what things exist, what they are called, what data they carry, and how they relate to each other.
 
-## What Is an Ontology?
+In business terms, an ontology is a shared language for the company. It answers basic but critical questions. What is an order? When is an order approved? What makes a customer active? Which fields are required for a shipment? If different systems answer those questions differently, teams move slower and errors multiply.
 
-In Prophet, an ontology is a structured definition of your domain:
-- what things exist (for example: `Order`, `User`)
-- what data each thing has (fields and types)
-- how those things relate to each other
-- what actions exist and what they accept/return
+Prophet was built to make that shared language explicit. It lets teams drive engineering from the real-world business models of the organization, then generate consistent backend scaffolding from that definition.
 
-Think of it as a single source of truth for your system design.
+## What is Prophet?
 
-## Why This Matters
+Most organizations eventually duplicate the same business model across many places. It gets rewritten in [API contracts](https://en.wikipedia.org/wiki/API), [database schemas](https://en.wikipedia.org/wiki/Database_schema), service code, validation logic, and event payloads. Each copy starts correct. Over time, the copies drift.
 
-Without a source of truth, teams duplicate domain definitions across:
-- API contracts
-- database schemas
-- service code
-- framework wiring
+Prophet treats that as a modeling problem, not just a coding problem. You define the domain as an ontology, and Prophet projects that model into the repetitive integration layer around it. APIs, schema artifacts, runtime contracts, and framework wiring come from one source instead of being hand-maintained in parallel.
 
-That duplication causes drift and bugs. Prophet reduces that by compiling one domain definition into consistent outputs.
+The result is not a rigid platform. Teams can stay polyglot and still keep one coherent domain model across Java, Node, and Python services.
+
+## Why This Matters for Systems Engineering
+
+Reliability problems in large systems often begin as language problems. Team A uses one definition. Team B uses another. Both are reasonable on their own, but the integration breaks.
+
+Prophet helps by giving those boundaries a common contract. Generated outputs stay aligned because they are derived from the same ontology, not maintained by hand in parallel.
+
+That also changes how teams approach change. When the domain evolves, the impact can be reasoned about clearly instead of discovered late.
+
+### From Scaffolding to Coordination
+
+A core value proposition is speed from a minimal model. A small domain DSL can generate most of the scaffolding and wiring that teams usually build by hand: contracts, routes, schema artifacts, and framework integration surfaces. That removes a large amount of repetitive setup work at the start of a project.
+
+The longer-term value is coordination. As systems grow, teams make many local changes that can drift into one global mismatch. Prophet addresses that by encoding domain meaning, not just table shape, so actions, events, queries, and persistence evolve together. You get faster initial delivery and a model that stays understandable over time.
 
 ## What Prophet Generates
 

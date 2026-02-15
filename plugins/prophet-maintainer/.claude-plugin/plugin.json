@@ -1,0 +1,8 @@
+{
+  "name": "prophet-maintainer",
+  "description": "Execution-focused maintainer workflows for Prophet development, release, and repository health.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Prophet OSS"
+  }
+}

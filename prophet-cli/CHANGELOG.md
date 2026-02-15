@@ -4,6 +4,18 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-02-15
+
+### Added
+- Added execution-focused Prophet agent plugin suites:
+  - `plugins/prophet-user-operator` with ontology change, integration update, and repair-loop skills.
+  - `plugins/prophet-maintainer` with maintainer release workflow skill.
+- Added `.agents/skills` symlink to maintainer skill set for local agent discovery.
+
+### Changed
+- Updated top-level README content for improved ontology and Prophet positioning.
+- Toolchain/package version advanced to `0.11.1`.
+
 ## [0.11.0] - 2026-02-15
 
 ### Added
