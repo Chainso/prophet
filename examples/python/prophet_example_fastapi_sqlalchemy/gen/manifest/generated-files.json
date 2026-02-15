@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "toolchain_version": "0.10.0",
+  "stack": {
+    "id": "python_fastapi_sqlalchemy",
+    "language": "python",
+    "framework": "fastapi",
+    "orm": "sqlalchemy"
+  },
+  "ir_hash": "052fc6d27d2c39524f7fc6db1980236aa7c2d206ffa40d2526db63747878ccee",
+  "outputs": [
+    {
+      "path": "gen/manifest/extension-hooks.json",
+      "sha256": "d2c11652567bb91f2a8518bb3c3949c9416fd24c1e9f7aa4fcad9defd85a8b6e"
+    },
+    {
+      "path": "gen/manifest/python-autodetect.json",
+      "sha256": "53510d80d22c4781400cc4aaa2ccf9f73496358a3d2837191922d23ea6513e34"
+    },
+    {
+      "path": "gen/openapi/openapi.yaml",
+      "sha256": "5ab6c9a518cc01212e62f9d1e1026a550bc29abe9393fdb190643e6773ab0082"
+    },
+    {
+      "path": "gen/python/pyproject.toml",
+      "sha256": "1b0e93b03102b8ba8efff0fbf13ce301758ae60a77c5f8870febadcdffca019e"
+    },
+    {
+      "path": "gen/python/src/generated/__init__.py",
+      "sha256": "695dca7649f37cbc8b155b7f1c6bf7d1b9661e7398b74941a484383e0084be2e"
+    },
+    {
+      "path": "gen/python/src/generated/action_handlers.py",
+      "sha256": "4155130de3dc43597c7de9c15e5b88284ab0944e1d2b015dc93a39941ded6e53"
+    },
+    {
+      "path": "gen/python/src/generated/action_service.py",
+      "sha256": "f007b7739907323a0ed625498b495afa3b75959a63f4c5a8a509f53f3d41c3c5"
+    },
+    {
+      "path": "gen/python/src/generated/actions.py",
+      "sha256": "8e6d66b5e9eb6fe886d8319f19c4cdaaf34c7baaf04e5585bf21fd14205b9f73"
+    },
+    {
+      "path": "gen/python/src/generated/domain.py",
+      "sha256": "01e67694147dc8b2af427f4babcf1092fe0441410b8bc2c4eed00c014e9e6226"
+    },
+    {
+      "path": "gen/python/src/generated/event_contracts.py",
+      "sha256": "8c42a09054f99657b60caa3799a1b6adfcdc38dcd51d588a3374e7c0738fbff4"
+    },
+    {
+      "path": "gen/python/src/generated/events.py",
+      "sha256": "3d40cb098e9248fd5a0b8c59b6ebd95214231fe65dc3f90710d967e73dc4a165"
+    },
+    {
+      "path": "gen/python/src/generated/fastapi_routes.py",
+      "sha256": "e9050ebfbd5e69586bb99ef8ef66b0f81fd93d07e806a4bf2d0a7d10d3060ae2"
+    },
+    {
+      "path": "gen/python/src/generated/persistence.py",
+      "sha256": "b40320fb8c4f3d332cd9ef4067eda18b5ebe148a5db644c8d48c1a90023cb8e4"
+    },
+    {
+      "path": "gen/python/src/generated/query.py",
+      "sha256": "c7451ebb2fe82c66a619b14ac74f0848dc8bba0d20937239f9ea0c9affae1630"
+    },
+    {
+      "path": "gen/python/src/generated/sqlalchemy_adapters.py",
+      "sha256": "614e526500f0d15a6340554311750b2b4e648113f977493984e81fdc2d28b3b4"
+    },
+    {
+      "path": "gen/python/src/generated/sqlalchemy_models.py",
+      "sha256": "5ecf1884b61c1f9c7f1717c21197f028dcf94eabf38f72d0398f0978d7fade91"
+    },
+    {
+      "path": "gen/sql/schema.sql",
+      "sha256": "3732275477f589b7aedca1814e648ca9d0f3054db553e13e7ba813ae74b31317"
+    }
+  ]
+}

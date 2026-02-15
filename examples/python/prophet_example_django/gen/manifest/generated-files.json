@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "toolchain_version": "0.10.0",
+  "stack": {
+    "id": "python_django_django_orm",
+    "language": "python",
+    "framework": "django",
+    "orm": "django_orm"
+  },
+  "ir_hash": "052fc6d27d2c39524f7fc6db1980236aa7c2d206ffa40d2526db63747878ccee",
+  "outputs": [
+    {
+      "path": "gen/manifest/extension-hooks.json",
+      "sha256": "644608f0feceaf118a5471071b6ec6c8518c59255453cc26f2111f2a22fa9202"
+    },
+    {
+      "path": "gen/manifest/python-autodetect.json",
+      "sha256": "e6b5b3fba1172ae6199535cf886ad2111c3b7a999d9e2b65fd82016cc6e98235"
+    },
+    {
+      "path": "gen/openapi/openapi.yaml",
+      "sha256": "5ab6c9a518cc01212e62f9d1e1026a550bc29abe9393fdb190643e6773ab0082"
+    },
+    {
+      "path": "gen/python/pyproject.toml",
+      "sha256": "afdde5fc7a435f93f18ed7c9f5cf6827d962043793bebe1156032692d3c868dc"
+    },
+    {
+      "path": "gen/python/src/generated/__init__.py",
+      "sha256": "695dca7649f37cbc8b155b7f1c6bf7d1b9661e7398b74941a484383e0084be2e"
+    },
+    {
+      "path": "gen/python/src/generated/action_handlers.py",
+      "sha256": "d6066fedf58bdc8a9fa4e2e0a43fea994f51b2cf21c71ce3035f7b16b9b62803"
+    },
+    {
+      "path": "gen/python/src/generated/action_service.py",
+      "sha256": "827ccef77d565992475e33f93d9282809d6d7bd554ae4ad33df57010e5eadeee"
+    },
+    {
+      "path": "gen/python/src/generated/actions.py",
+      "sha256": "8e6d66b5e9eb6fe886d8319f19c4cdaaf34c7baaf04e5585bf21fd14205b9f73"
+    },
+    {
+      "path": "gen/python/src/generated/django_adapters.py",
+      "sha256": "0474a96deb7ce2e178be3135a6b64cc150c15a9458186d260af00f6c9059fa59"
+    },
+    {
+      "path": "gen/python/src/generated/django_models.py",
+      "sha256": "06b18e5f7d8ed4d65cc3ba032d2abd46ae395e0756895559b2074b797276f584"
+    },
+    {
+      "path": "gen/python/src/generated/django_urls.py",
+      "sha256": "9fd1ccf1a4d21aec34035c13a6f6c095a508dbb7971e5a0d346ae2ff622d56b8"
+    },
+    {
+      "path": "gen/python/src/generated/django_views.py",
+      "sha256": "b1a001d7c6b208ea854dd8f040dceafba1a55a2236a640d8cf6680c4d0520836"
+    },
+    {
+      "path": "gen/python/src/generated/domain.py",
+      "sha256": "01e67694147dc8b2af427f4babcf1092fe0441410b8bc2c4eed00c014e9e6226"
+    },
+    {
+      "path": "gen/python/src/generated/event_contracts.py",
+      "sha256": "8c42a09054f99657b60caa3799a1b6adfcdc38dcd51d588a3374e7c0738fbff4"
+    },
+    {
+      "path": "gen/python/src/generated/events.py",
+      "sha256": "18294cb49d63bb59f275f494071a775ef8d5b087850a29078cbf159aa12f1c76"
+    },
+    {
+      "path": "gen/python/src/generated/persistence.py",
+      "sha256": "0cddf1104376af2e371098c7606355bc2bfb8eadfb6b8201ea460f03d8b6f1af"
+    },
+    {
+      "path": "gen/python/src/generated/query.py",
+      "sha256": "c7451ebb2fe82c66a619b14ac74f0848dc8bba0d20937239f9ea0c9affae1630"
+    },
+    {
+      "path": "gen/sql/schema.sql",
+      "sha256": "3732275477f589b7aedca1814e648ca9d0f3054db553e13e7ba813ae74b31317"
+    }
+  ]
+}

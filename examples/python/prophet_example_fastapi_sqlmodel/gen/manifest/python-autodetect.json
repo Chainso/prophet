@@ -1,0 +1,43 @@
+{
+  "enabled": true,
+  "project_kind": "python",
+  "stack_id": "python_fastapi_sqlmodel",
+  "confidence": "high",
+  "confidence_score": 90,
+  "package_manager": "pip",
+  "framework_signals": [
+    "fastapi"
+  ],
+  "orm_signals": [
+    "sqlalchemy",
+    "sqlmodel"
+  ],
+  "signals": {
+    "has_pyproject": true,
+    "has_requirements": true,
+    "has_manage_py": false,
+    "dependency_count": 4
+  },
+  "versions": {
+    "fastapi": "present",
+    "flask": "",
+    "django": "",
+    "sqlalchemy": "present",
+    "sqlmodel": "present"
+  },
+  "reasons": [
+    "fastapi signal detected",
+    "sqlmodel dependency detected"
+  ],
+  "warnings": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "fastapi signal detected"
+    },
+    {
+      "level": "info",
+      "message": "sqlmodel dependency detected"
+    }
+  ]
+}

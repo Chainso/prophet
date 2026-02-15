@@ -1,0 +1,25 @@
+# GENERATED FILE: do not edit directly.
+from __future__ import annotations
+
+from typing import Optional
+
+from sqlalchemy import Boolean, Float, Integer, JSON, String
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+class Base(DeclarativeBase):
+    pass
+
+class OrderModel(Base):
+    __tablename__ = 'orders'
+    orderId: Mapped[str] = mapped_column(String, primary_key=True, nullable=false)
+    customer: Mapped[object] = mapped_column(JSON, primary_key=False, nullable=false)
+    totalAmount: Mapped[float] = mapped_column(Float, primary_key=False, nullable=false)
+    discountCode: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    tags: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
+    shippingAddress: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
+    currentState: Mapped[str] = mapped_column(String, nullable=False, default='created')
+
+class UserModel(Base):
+    __tablename__ = 'users'
+    userId: Mapped[str] = mapped_column(String, primary_key=True, nullable=false)
+    email: Mapped[str] = mapped_column(String, primary_key=False, nullable=false)

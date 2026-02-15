@@ -1,0 +1,42 @@
+{
+  "enabled": true,
+  "project_kind": "python",
+  "stack_id": "python_django_django_orm",
+  "confidence": "high",
+  "confidence_score": 90,
+  "package_manager": "pip",
+  "framework_signals": [
+    "django"
+  ],
+  "orm_signals": [
+    "django_orm"
+  ],
+  "signals": {
+    "has_pyproject": true,
+    "has_requirements": true,
+    "has_manage_py": true,
+    "dependency_count": 1
+  },
+  "versions": {
+    "fastapi": "",
+    "flask": "",
+    "django": "present",
+    "sqlalchemy": "",
+    "sqlmodel": ""
+  },
+  "reasons": [
+    "django signal detected",
+    "django ORM selected"
+  ],
+  "warnings": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "django signal detected"
+    },
+    {
+      "level": "info",
+      "message": "django ORM selected"
+    }
+  ]
+}

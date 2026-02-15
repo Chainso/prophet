@@ -1,0 +1,32 @@
+# GENERATED FILE: do not edit directly.
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import List, Optional, Protocol
+
+from .domain import *
+from .query import *
+
+@dataclass
+class PagedResult:
+    content: List[object]
+    page: int
+    size: int
+    totalElements: int
+    totalPages: int
+
+class OrderRepository(Protocol):
+    def list(self, page: int, size: int) -> PagedResult: ...
+    def query(self, filter: OrderQueryFilter, page: int, size: int) -> PagedResult: ...
+    def get_by_id(self, id: OrderRef) -> Optional[Order]: ...
+    def save(self, item: Order) -> Order: ...
+
+class UserRepository(Protocol):
+    def list(self, page: int, size: int) -> PagedResult: ...
+    def query(self, filter: UserQueryFilter, page: int, size: int) -> PagedResult: ...
+    def get_by_id(self, id: UserRef) -> Optional[User]: ...
+    def save(self, item: User) -> User: ...
+
+class GeneratedRepositories(Protocol):
+    order: OrderRepository
+    user: UserRepository

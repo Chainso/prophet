@@ -80,6 +80,7 @@ def render_django_models(ir: Dict[str, Any]) -> str:
 
         lines.append("")
         lines.append("    class Meta:")
+        lines.append("        app_label = 'generated'")
         lines.append(f"        db_table = '{obj_name.lower()}s'")
         if len(primary_ids) > 1:
             field_by_id = {str(item.get('id', '')): item for item in fields}

@@ -1,0 +1,42 @@
+{
+  "enabled": true,
+  "project_kind": "python",
+  "stack_id": "python_fastapi_sqlalchemy",
+  "confidence": "high",
+  "confidence_score": 90,
+  "package_manager": "pip",
+  "framework_signals": [
+    "fastapi"
+  ],
+  "orm_signals": [
+    "sqlalchemy"
+  ],
+  "signals": {
+    "has_pyproject": true,
+    "has_requirements": true,
+    "has_manage_py": false,
+    "dependency_count": 3
+  },
+  "versions": {
+    "fastapi": "present",
+    "flask": "",
+    "django": "",
+    "sqlalchemy": "present",
+    "sqlmodel": ""
+  },
+  "reasons": [
+    "fastapi signal detected",
+    "sqlalchemy dependency detected"
+  ],
+  "warnings": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "fastapi signal detected"
+    },
+    {
+      "level": "info",
+      "message": "sqlalchemy dependency detected"
+    }
+  ]
+}

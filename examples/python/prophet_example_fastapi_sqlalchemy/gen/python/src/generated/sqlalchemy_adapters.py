@@ -1,0 +1,248 @@
+# GENERATED FILE: do not edit directly.
+from __future__ import annotations
+
+import asyncio
+import dataclasses
+
+from typing import Callable, List, Optional
+
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
+
+from . import sqlalchemy_models as Models
+from . import domain as Domain
+from . import persistence as Persistence
+from . import query as Filters
+
+def _serialize(value):
+    if dataclasses.is_dataclass(value):
+        return dataclasses.asdict(value)
+    if isinstance(value, list):
+        return [_serialize(item) for item in value]
+    return value
+
+def _order_to_model(item: Domain.Order) -> Models.OrderModel:
+    return Models.OrderModel(
+        orderId=_serialize(item.orderId),
+        customer=_serialize(item.customer),
+        totalAmount=_serialize(item.totalAmount),
+        discountCode=_serialize(item.discountCode),
+        tags=_serialize(item.tags),
+        shippingAddress=_serialize(item.shippingAddress),
+        currentState=item.currentState,
+    )
+
+def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
+    return Domain.Order(
+        orderId=record.orderId,
+        customer=Domain.UserRef(**record.customer) if isinstance(record.customer, dict) else record.customer,
+        totalAmount=record.totalAmount,
+        discountCode=record.discountCode,
+        tags=record.tags,
+        shippingAddress=Domain.Address(**record.shippingAddress) if isinstance(record.shippingAddress, dict) else record.shippingAddress,
+        currentState=record.currentState,
+    )
+
+class OrderSqlAlchemyRepository:
+    def __init__(self, session_factory: Callable[[], Session]):
+        self._session_factory = session_factory
+
+    def _apply_filter(self, stmt, filter: Filters.OrderQueryFilter):
+        if filter.currentState is not None:
+            if filter.currentState.eq is not None:
+                stmt = stmt.where(Models.OrderModel.currentState == filter.currentState.eq)
+            if getattr(filter.currentState, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.currentState.in_(filter.currentState.inValues))
+            if getattr(filter.currentState, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.currentState.contains(filter.currentState.contains))
+            if getattr(filter.currentState, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.currentState >= filter.currentState.gte)
+            if getattr(filter.currentState, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.currentState <= filter.currentState.lte)
+        if filter.customer is not None:
+            if filter.customer.eq is not None:
+                stmt = stmt.where(Models.OrderModel.customer == filter.customer.eq)
+            if getattr(filter.customer, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.customer.in_(filter.customer.inValues))
+            if getattr(filter.customer, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.customer.contains(filter.customer.contains))
+            if getattr(filter.customer, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.customer >= filter.customer.gte)
+            if getattr(filter.customer, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.customer <= filter.customer.lte)
+        if filter.discountCode is not None:
+            if filter.discountCode.eq is not None:
+                stmt = stmt.where(Models.OrderModel.discountCode == filter.discountCode.eq)
+            if getattr(filter.discountCode, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.discountCode.in_(filter.discountCode.inValues))
+            if getattr(filter.discountCode, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.discountCode.contains(filter.discountCode.contains))
+            if getattr(filter.discountCode, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.discountCode >= filter.discountCode.gte)
+            if getattr(filter.discountCode, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.discountCode <= filter.discountCode.lte)
+        if filter.orderId is not None:
+            if filter.orderId.eq is not None:
+                stmt = stmt.where(Models.OrderModel.orderId == filter.orderId.eq)
+            if getattr(filter.orderId, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.orderId.in_(filter.orderId.inValues))
+            if getattr(filter.orderId, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.orderId.contains(filter.orderId.contains))
+            if getattr(filter.orderId, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.orderId >= filter.orderId.gte)
+            if getattr(filter.orderId, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.orderId <= filter.orderId.lte)
+        if filter.totalAmount is not None:
+            if filter.totalAmount.eq is not None:
+                stmt = stmt.where(Models.OrderModel.totalAmount == filter.totalAmount.eq)
+            if getattr(filter.totalAmount, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.totalAmount.in_(filter.totalAmount.inValues))
+            if getattr(filter.totalAmount, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.totalAmount.contains(filter.totalAmount.contains))
+            if getattr(filter.totalAmount, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.totalAmount >= filter.totalAmount.gte)
+            if getattr(filter.totalAmount, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.totalAmount <= filter.totalAmount.lte)
+        return stmt
+
+    def _list_sync(self, page: int, size: int) -> Persistence.PagedResult:
+        with self._session_factory() as session:
+            stmt = select(Models.OrderModel)
+            total = int(session.scalar(select(func.count()).select_from(Models.OrderModel)) or 0)
+            rows = session.scalars(stmt.offset(page * size).limit(size)).all()
+            content = [_order_to_domain(row) for row in rows]
+            total_pages = (total + size - 1) // size if size > 0 else 0
+            return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)
+
+    def _query_sync(self, filter: Filters.OrderQueryFilter, page: int, size: int) -> Persistence.PagedResult:
+        with self._session_factory() as session:
+            base_stmt = select(Models.OrderModel)
+            stmt = self._apply_filter(base_stmt, filter)
+            rows = session.scalars(stmt.offset(page * size).limit(size)).all()
+            count_stmt = self._apply_filter(select(func.count()).select_from(Models.OrderModel), filter)
+            total = int(session.scalar(count_stmt) or 0)
+            content = [_order_to_domain(row) for row in rows]
+            total_pages = (total + size - 1) // size if size > 0 else 0
+            return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)
+
+    def _get_by_id_sync(self, id: Domain.OrderRef) -> Optional[Domain.Order]:
+        with self._session_factory() as session:
+            stmt = select(Models.OrderModel)
+            stmt = stmt.where(Models.OrderModel.orderId == id.orderId)
+            record = session.scalars(stmt.limit(1)).first()
+            if record is None:
+                return None
+            return _order_to_domain(record)
+
+    def _save_sync(self, item: Domain.Order) -> Domain.Order:
+        with self._session_factory() as session:
+            model = _order_to_model(item)
+            session.merge(model)
+            session.commit()
+        return item
+
+    async def list(self, page: int, size: int) -> Persistence.PagedResult:
+        return await asyncio.to_thread(self._list_sync, page, size)
+
+    async def query(self, filter: Filters.OrderQueryFilter, page: int, size: int) -> Persistence.PagedResult:
+        return await asyncio.to_thread(self._query_sync, filter, page, size)
+
+    async def get_by_id(self, id: Domain.OrderRef) -> Optional[Domain.Order]:
+        return await asyncio.to_thread(self._get_by_id_sync, id)
+
+    async def save(self, item: Domain.Order) -> Domain.Order:
+        return await asyncio.to_thread(self._save_sync, item)
+
+def _user_to_model(item: Domain.User) -> Models.UserModel:
+    return Models.UserModel(
+        userId=_serialize(item.userId),
+        email=_serialize(item.email),
+    )
+
+def _user_to_domain(record: Models.UserModel) -> Domain.User:
+    return Domain.User(
+        userId=record.userId,
+        email=record.email,
+    )
+
+class UserSqlAlchemyRepository:
+    def __init__(self, session_factory: Callable[[], Session]):
+        self._session_factory = session_factory
+
+    def _apply_filter(self, stmt, filter: Filters.UserQueryFilter):
+        if filter.email is not None:
+            if filter.email.eq is not None:
+                stmt = stmt.where(Models.UserModel.email == filter.email.eq)
+            if getattr(filter.email, 'inValues', None):
+                stmt = stmt.where(Models.UserModel.email.in_(filter.email.inValues))
+            if getattr(filter.email, 'contains', None):
+                stmt = stmt.where(Models.UserModel.email.contains(filter.email.contains))
+            if getattr(filter.email, 'gte', None) is not None:
+                stmt = stmt.where(Models.UserModel.email >= filter.email.gte)
+            if getattr(filter.email, 'lte', None) is not None:
+                stmt = stmt.where(Models.UserModel.email <= filter.email.lte)
+        if filter.userId is not None:
+            if filter.userId.eq is not None:
+                stmt = stmt.where(Models.UserModel.userId == filter.userId.eq)
+            if getattr(filter.userId, 'inValues', None):
+                stmt = stmt.where(Models.UserModel.userId.in_(filter.userId.inValues))
+            if getattr(filter.userId, 'contains', None):
+                stmt = stmt.where(Models.UserModel.userId.contains(filter.userId.contains))
+            if getattr(filter.userId, 'gte', None) is not None:
+                stmt = stmt.where(Models.UserModel.userId >= filter.userId.gte)
+            if getattr(filter.userId, 'lte', None) is not None:
+                stmt = stmt.where(Models.UserModel.userId <= filter.userId.lte)
+        return stmt
+
+    def _list_sync(self, page: int, size: int) -> Persistence.PagedResult:
+        with self._session_factory() as session:
+            stmt = select(Models.UserModel)
+            total = int(session.scalar(select(func.count()).select_from(Models.UserModel)) or 0)
+            rows = session.scalars(stmt.offset(page * size).limit(size)).all()
+            content = [_user_to_domain(row) for row in rows]
+            total_pages = (total + size - 1) // size if size > 0 else 0
+            return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)
+
+    def _query_sync(self, filter: Filters.UserQueryFilter, page: int, size: int) -> Persistence.PagedResult:
+        with self._session_factory() as session:
+            base_stmt = select(Models.UserModel)
+            stmt = self._apply_filter(base_stmt, filter)
+            rows = session.scalars(stmt.offset(page * size).limit(size)).all()
+            count_stmt = self._apply_filter(select(func.count()).select_from(Models.UserModel), filter)
+            total = int(session.scalar(count_stmt) or 0)
+            content = [_user_to_domain(row) for row in rows]
+            total_pages = (total + size - 1) // size if size > 0 else 0
+            return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)
+
+    def _get_by_id_sync(self, id: Domain.UserRef) -> Optional[Domain.User]:
+        with self._session_factory() as session:
+            stmt = select(Models.UserModel)
+            stmt = stmt.where(Models.UserModel.userId == id.userId)
+            record = session.scalars(stmt.limit(1)).first()
+            if record is None:
+                return None
+            return _user_to_domain(record)
+
+    def _save_sync(self, item: Domain.User) -> Domain.User:
+        with self._session_factory() as session:
+            model = _user_to_model(item)
+            session.merge(model)
+            session.commit()
+        return item
+
+    async def list(self, page: int, size: int) -> Persistence.PagedResult:
+        return await asyncio.to_thread(self._list_sync, page, size)
+
+    async def query(self, filter: Filters.UserQueryFilter, page: int, size: int) -> Persistence.PagedResult:
+        return await asyncio.to_thread(self._query_sync, filter, page, size)
+
+    async def get_by_id(self, id: Domain.UserRef) -> Optional[Domain.User]:
+        return await asyncio.to_thread(self._get_by_id_sync, id)
+
+    async def save(self, item: Domain.User) -> Domain.User:
+        return await asyncio.to_thread(self._save_sync, item)
+
+class SqlAlchemyGeneratedRepositories:
+    def __init__(self, session_factory: Callable[[], Session]):
+        self.order = OrderSqlAlchemyRepository(session_factory)
+        self.user = UserSqlAlchemyRepository(session_factory)

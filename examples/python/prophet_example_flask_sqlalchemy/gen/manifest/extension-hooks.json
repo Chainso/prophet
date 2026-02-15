@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "stack": "python_flask_sqlalchemy",
+  "hooks": [
+    {
+      "kind": "action_handler",
+      "action_id": "act_approve_order",
+      "action_name": "approveOrder",
+      "python_protocol": "generated.action_handlers.ApproveOrderActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_create_order",
+      "action_name": "createOrder",
+      "python_protocol": "generated.action_handlers.CreateOrderActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_ship_order",
+      "action_name": "shipOrder",
+      "python_protocol": "generated.action_handlers.ShipOrderActionHandler"
+    }
+  ]
+}

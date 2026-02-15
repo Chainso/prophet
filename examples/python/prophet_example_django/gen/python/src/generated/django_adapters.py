@@ -1,0 +1,212 @@
+# GENERATED FILE: do not edit directly.
+from __future__ import annotations
+
+import dataclasses
+
+from typing import Optional
+
+from . import django_models as Models
+from . import domain as Domain
+from . import persistence as Persistence
+from . import query as Filters
+
+def _serialize(value):
+    if dataclasses.is_dataclass(value):
+        return dataclasses.asdict(value)
+    if isinstance(value, list):
+        return [_serialize(item) for item in value]
+    return value
+
+def _order_payload(item: Domain.Order) -> dict:
+    return {
+        'orderId': _serialize(item.orderId),
+        'customer': _serialize(item.customer),
+        'totalAmount': _serialize(item.totalAmount),
+        'discountCode': _serialize(item.discountCode),
+        'tags': _serialize(item.tags),
+        'shippingAddress': _serialize(item.shippingAddress),
+        'currentState': item.currentState,
+    }
+
+def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
+    return Domain.Order(
+        orderId=record.orderId,
+        customer=Domain.UserRef(**record.customer) if isinstance(record.customer, dict) else record.customer,
+        totalAmount=record.totalAmount,
+        discountCode=record.discountCode,
+        tags=record.tags,
+        shippingAddress=Domain.Address(**record.shippingAddress) if isinstance(record.shippingAddress, dict) else record.shippingAddress,
+        currentState=record.currentState,
+    )
+
+class OrderDjangoRepository:
+    _model = Models.OrderModel
+
+    def _apply_filter(self, queryset, filter: Filters.OrderQueryFilter):
+        if filter.currentState is not None:
+            if filter.currentState.eq is not None:
+                queryset = queryset.filter(currentState=filter.currentState.eq)
+            if getattr(filter.currentState, 'inValues', None):
+                queryset = queryset.filter(currentState__in=filter.currentState.inValues)
+            if getattr(filter.currentState, 'contains', None):
+                queryset = queryset.filter(currentState__icontains=filter.currentState.contains)
+            if getattr(filter.currentState, 'gte', None) is not None:
+                queryset = queryset.filter(currentState__gte=filter.currentState.gte)
+            if getattr(filter.currentState, 'lte', None) is not None:
+                queryset = queryset.filter(currentState__lte=filter.currentState.lte)
+        if filter.customer is not None:
+            if filter.customer.eq is not None:
+                queryset = queryset.filter(customer=filter.customer.eq)
+            if getattr(filter.customer, 'inValues', None):
+                queryset = queryset.filter(customer__in=filter.customer.inValues)
+            if getattr(filter.customer, 'contains', None):
+                queryset = queryset.filter(customer__icontains=filter.customer.contains)
+            if getattr(filter.customer, 'gte', None) is not None:
+                queryset = queryset.filter(customer__gte=filter.customer.gte)
+            if getattr(filter.customer, 'lte', None) is not None:
+                queryset = queryset.filter(customer__lte=filter.customer.lte)
+        if filter.discountCode is not None:
+            if filter.discountCode.eq is not None:
+                queryset = queryset.filter(discountCode=filter.discountCode.eq)
+            if getattr(filter.discountCode, 'inValues', None):
+                queryset = queryset.filter(discountCode__in=filter.discountCode.inValues)
+            if getattr(filter.discountCode, 'contains', None):
+                queryset = queryset.filter(discountCode__icontains=filter.discountCode.contains)
+            if getattr(filter.discountCode, 'gte', None) is not None:
+                queryset = queryset.filter(discountCode__gte=filter.discountCode.gte)
+            if getattr(filter.discountCode, 'lte', None) is not None:
+                queryset = queryset.filter(discountCode__lte=filter.discountCode.lte)
+        if filter.orderId is not None:
+            if filter.orderId.eq is not None:
+                queryset = queryset.filter(orderId=filter.orderId.eq)
+            if getattr(filter.orderId, 'inValues', None):
+                queryset = queryset.filter(orderId__in=filter.orderId.inValues)
+            if getattr(filter.orderId, 'contains', None):
+                queryset = queryset.filter(orderId__icontains=filter.orderId.contains)
+            if getattr(filter.orderId, 'gte', None) is not None:
+                queryset = queryset.filter(orderId__gte=filter.orderId.gte)
+            if getattr(filter.orderId, 'lte', None) is not None:
+                queryset = queryset.filter(orderId__lte=filter.orderId.lte)
+        if filter.totalAmount is not None:
+            if filter.totalAmount.eq is not None:
+                queryset = queryset.filter(totalAmount=filter.totalAmount.eq)
+            if getattr(filter.totalAmount, 'inValues', None):
+                queryset = queryset.filter(totalAmount__in=filter.totalAmount.inValues)
+            if getattr(filter.totalAmount, 'contains', None):
+                queryset = queryset.filter(totalAmount__icontains=filter.totalAmount.contains)
+            if getattr(filter.totalAmount, 'gte', None) is not None:
+                queryset = queryset.filter(totalAmount__gte=filter.totalAmount.gte)
+            if getattr(filter.totalAmount, 'lte', None) is not None:
+                queryset = queryset.filter(totalAmount__lte=filter.totalAmount.lte)
+        return queryset
+
+    def list(self, page: int, size: int) -> Persistence.PagedResult:
+        queryset = self._model.objects.all()
+        total = queryset.count()
+        rows = list(queryset[page * size : page * size + size])
+        content = [_order_to_domain(row) for row in rows]
+        total_pages = (total + size - 1) // size if size > 0 else 0
+        return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)
+
+    def query(self, filter: Filters.OrderQueryFilter, page: int, size: int) -> Persistence.PagedResult:
+        queryset = self._apply_filter(self._model.objects.all(), filter)
+        total = queryset.count()
+        rows = list(queryset[page * size : page * size + size])
+        content = [_order_to_domain(row) for row in rows]
+        total_pages = (total + size - 1) // size if size > 0 else 0
+        return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)
+
+    def get_by_id(self, id: Domain.OrderRef) -> Optional[Domain.Order]:
+        lookup = {
+            'orderId': id.orderId,
+        }
+        row = self._model.objects.filter(**lookup).first()
+        if row is None:
+            return None
+        return _order_to_domain(row)
+
+    def save(self, item: Domain.Order) -> Domain.Order:
+        payload = _order_payload(item)
+        lookup = {
+            'orderId': payload['orderId'],
+        }
+        self._model.objects.update_or_create(defaults=payload, **lookup)
+        return item
+
+def _user_payload(item: Domain.User) -> dict:
+    return {
+        'userId': _serialize(item.userId),
+        'email': _serialize(item.email),
+    }
+
+def _user_to_domain(record: Models.UserModel) -> Domain.User:
+    return Domain.User(
+        userId=record.userId,
+        email=record.email,
+    )
+
+class UserDjangoRepository:
+    _model = Models.UserModel
+
+    def _apply_filter(self, queryset, filter: Filters.UserQueryFilter):
+        if filter.email is not None:
+            if filter.email.eq is not None:
+                queryset = queryset.filter(email=filter.email.eq)
+            if getattr(filter.email, 'inValues', None):
+                queryset = queryset.filter(email__in=filter.email.inValues)
+            if getattr(filter.email, 'contains', None):
+                queryset = queryset.filter(email__icontains=filter.email.contains)
+            if getattr(filter.email, 'gte', None) is not None:
+                queryset = queryset.filter(email__gte=filter.email.gte)
+            if getattr(filter.email, 'lte', None) is not None:
+                queryset = queryset.filter(email__lte=filter.email.lte)
+        if filter.userId is not None:
+            if filter.userId.eq is not None:
+                queryset = queryset.filter(userId=filter.userId.eq)
+            if getattr(filter.userId, 'inValues', None):
+                queryset = queryset.filter(userId__in=filter.userId.inValues)
+            if getattr(filter.userId, 'contains', None):
+                queryset = queryset.filter(userId__icontains=filter.userId.contains)
+            if getattr(filter.userId, 'gte', None) is not None:
+                queryset = queryset.filter(userId__gte=filter.userId.gte)
+            if getattr(filter.userId, 'lte', None) is not None:
+                queryset = queryset.filter(userId__lte=filter.userId.lte)
+        return queryset
+
+    def list(self, page: int, size: int) -> Persistence.PagedResult:
+        queryset = self._model.objects.all()
+        total = queryset.count()
+        rows = list(queryset[page * size : page * size + size])
+        content = [_user_to_domain(row) for row in rows]
+        total_pages = (total + size - 1) // size if size > 0 else 0
+        return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)
+
+    def query(self, filter: Filters.UserQueryFilter, page: int, size: int) -> Persistence.PagedResult:
+        queryset = self._apply_filter(self._model.objects.all(), filter)
+        total = queryset.count()
+        rows = list(queryset[page * size : page * size + size])
+        content = [_user_to_domain(row) for row in rows]
+        total_pages = (total + size - 1) // size if size > 0 else 0
+        return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)
+
+    def get_by_id(self, id: Domain.UserRef) -> Optional[Domain.User]:
+        lookup = {
+            'userId': id.userId,
+        }
+        row = self._model.objects.filter(**lookup).first()
+        if row is None:
+            return None
+        return _user_to_domain(row)
+
+    def save(self, item: Domain.User) -> Domain.User:
+        payload = _user_payload(item)
+        lookup = {
+            'userId': payload['userId'],
+        }
+        self._model.objects.update_or_create(defaults=payload, **lookup)
+        return item
+
+class DjangoGeneratedRepositories:
+    def __init__(self):
+        self.order = OrderDjangoRepository()
+        self.user = UserDjangoRepository()

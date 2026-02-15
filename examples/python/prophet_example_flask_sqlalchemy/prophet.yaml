@@ -1,0 +1,22 @@
+schema_version: 1
+project:
+  name: prophet_example_flask_sqlalchemy
+  ontology_file: ontology/local/main.prophet
+  version_source: ontology
+generation:
+  stack:
+    id: python_flask_sqlalchemy
+  targets:
+    - sql
+    - openapi
+    - python
+    - flask
+    - sqlalchemy
+    - manifest
+  out_dir: gen
+compatibility:
+  baseline_ir: .prophet/baselines/main.ir.json
+  strict_enums: false
+determinism:
+  canonical_sort: true
+  include_timestamps: false

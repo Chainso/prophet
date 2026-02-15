@@ -1,0 +1,42 @@
+{
+  "enabled": true,
+  "project_kind": "python",
+  "stack_id": "python_flask_sqlalchemy",
+  "confidence": "high",
+  "confidence_score": 90,
+  "package_manager": "pip",
+  "framework_signals": [
+    "flask"
+  ],
+  "orm_signals": [
+    "sqlalchemy"
+  ],
+  "signals": {
+    "has_pyproject": true,
+    "has_requirements": true,
+    "has_manage_py": false,
+    "dependency_count": 2
+  },
+  "versions": {
+    "fastapi": "",
+    "flask": "present",
+    "django": "",
+    "sqlalchemy": "present",
+    "sqlmodel": ""
+  },
+  "reasons": [
+    "flask signal detected",
+    "sqlalchemy dependency detected"
+  ],
+  "warnings": [],
+  "diagnostics": [
+    {
+      "level": "info",
+      "message": "flask signal detected"
+    },
+    {
+      "level": "info",
+      "message": "sqlalchemy dependency detected"
+    }
+  ]
+}
