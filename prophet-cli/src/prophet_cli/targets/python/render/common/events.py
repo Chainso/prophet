@@ -1,0 +1,56 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from ..support import _pascal_case
+from ..support import _snake_case
+
+
+def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
+    action_output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
+    event_names: List[str] = []
+    for action in sorted([item for item in ir.get("actions", []) if isinstance(item, dict)], key=lambda item: str(item.get("id", ""))):
+        output_shape = action_output_by_id.get(str(action.get("output_shape_id", "")), {})
+        event_names.append(_pascal_case(str(output_shape.get("name", "ActionOutput"))))
+    for event in sorted([item for item in ir.get("events", []) if isinstance(item, dict)], key=lambda item: str(item.get("id", ""))):
+        event_names.append(_pascal_case(str(event.get("name", "Event"))))
+
+    event_names = list(dict.fromkeys(event_names))
+
+    lines: List[str] = [
+        "# GENERATED FILE: do not edit directly.",
+        "from __future__ import annotations",
+        "",
+        "from typing import Protocol",
+        "",
+        "from .actions import *",
+        "from .event_contracts import *",
+        "",
+        "class GeneratedEventEmitter(Protocol):",
+    ]
+
+    if not event_names:
+        lines.append("    pass")
+    else:
+        for name in event_names:
+            method = f"emit_{_snake_case(name)}"
+            if async_mode:
+                lines.append(f"    async def {method}(self, event: {name}) -> None: ...")
+            else:
+                lines.append(f"    def {method}(self, event: {name}) -> None: ...")
+
+    lines.append("")
+    lines.append("class GeneratedEventEmitterNoOp:")
+    if not event_names:
+        lines.append("    pass")
+    else:
+        for name in event_names:
+            method = f"emit_{_snake_case(name)}"
+            if async_mode:
+                lines.append(f"    async def {method}(self, event: {name}) -> None:")
+            else:
+                lines.append(f"    def {method}(self, event: {name}) -> None:")
+            lines.append("        return None")
+
+    lines.append("")
+    return "\n".join(lines).rstrip() + "\n"

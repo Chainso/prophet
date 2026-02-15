@@ -44,9 +44,8 @@ class CliIntegrationTests(unittest.TestCase):
             result = run_cli(root, "stacks")
             self.assertIn("java_spring_jpa", result.stdout)
             self.assertIn("node_express_typeorm", result.stdout)
-            self.assertIn("python_django_orm", result.stdout)
+            self.assertIn("python_django_django_orm", result.stdout)
             self.assertIn("[implemented]", result.stdout)
-            self.assertIn("[planned]", result.stdout)
 
             json_result = run_cli(root, "stacks", "--json")
             payload = json.loads(json_result.stdout)

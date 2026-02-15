@@ -1,0 +1,60 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from ..support import _camel_case
+from ..support import _object_primary_key_fields
+from ..support import _pascal_case
+from ..support import _sort_dict_entries
+
+
+def render_persistence_contracts(ir: Dict[str, Any], *, async_mode: bool) -> str:
+    lines: List[str] = [
+        "# GENERATED FILE: do not edit directly.",
+        "from __future__ import annotations",
+        "",
+        "from dataclasses import dataclass",
+        "from typing import List, Optional, Protocol",
+        "",
+        "from .domain import *",
+        "from .query import *",
+        "",
+        "@dataclass",
+        "class PagedResult:",
+        "    content: List[object]",
+        "    page: int",
+        "    size: int",
+        "    totalElements: int",
+        "    totalPages: int",
+        "",
+    ]
+
+    for obj in _sort_dict_entries([item for item in ir.get("objects", []) if isinstance(item, dict)]):
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        pk_name = f"{obj_name}Ref"
+        query_filter_name = f"{obj_name}QueryFilter"
+        lines.append(f"class {obj_name}Repository(Protocol):")
+        if async_mode:
+            lines.append(f"    async def list(self, page: int, size: int) -> PagedResult: ...")
+            lines.append(f"    async def query(self, filter: {query_filter_name}, page: int, size: int) -> PagedResult: ...")
+            lines.append(f"    async def get_by_id(self, id: {pk_name}) -> Optional[{obj_name}]: ...")
+            lines.append(f"    async def save(self, item: {obj_name}) -> {obj_name}: ...")
+        else:
+            lines.append(f"    def list(self, page: int, size: int) -> PagedResult: ...")
+            lines.append(f"    def query(self, filter: {query_filter_name}, page: int, size: int) -> PagedResult: ...")
+            lines.append(f"    def get_by_id(self, id: {pk_name}) -> Optional[{obj_name}]: ...")
+            lines.append(f"    def save(self, item: {obj_name}) -> {obj_name}: ...")
+        lines.append("")
+
+    lines.append("class GeneratedRepositories(Protocol):")
+    objects = [item for item in ir.get("objects", []) if isinstance(item, dict)]
+    if not objects:
+        lines.append("    pass")
+    else:
+        for obj in _sort_dict_entries(objects):
+            obj_name = _pascal_case(str(obj.get("name", "Object")))
+            prop = _camel_case(obj_name)
+            lines.append(f"    {prop}: {obj_name}Repository")
+
+    lines.append("")
+    return "\n".join(lines).rstrip() + "\n"

@@ -1,0 +1,52 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from ..support import _camel_case
+from ..support import _pascal_case
+from ..support import _snake_case
+from ..support import _sort_dict_entries
+
+
+def render_action_service(ir: Dict[str, Any], *, async_mode: bool) -> str:
+    action_input_by_id = {item["id"]: item for item in ir.get("action_inputs", []) if isinstance(item, dict) and "id" in item}
+    action_output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = [
+        "# GENERATED FILE: do not edit directly.",
+        "from __future__ import annotations",
+        "",
+        "from .action_handlers import GeneratedActionContext",
+        "from .action_handlers import GeneratedActionHandlers",
+        "from .actions import *",
+        "from .events import GeneratedEventEmitter",
+        "",
+        "class GeneratedActionExecutionService:",
+        "    def __init__(self, handlers: GeneratedActionHandlers, eventEmitter: GeneratedEventEmitter):",
+        "        self.handlers = handlers",
+        "        self.eventEmitter = eventEmitter",
+        "",
+    ]
+
+    for action in _sort_dict_entries([item for item in ir.get("actions", []) if isinstance(item, dict)]):
+        action_name = str(action.get("name", "action"))
+        camel = _camel_case(action_name)
+        input_shape = action_input_by_id.get(str(action.get("input_shape_id", "")), {})
+        output_shape = action_output_by_id.get(str(action.get("output_shape_id", "")), {})
+        input_name = _pascal_case(str(input_shape.get("name", "ActionInput")))
+        output_name = _pascal_case(str(output_shape.get("name", "ActionOutput")))
+        emit_method = f"emit_{_snake_case(output_name)}"
+
+        if async_mode:
+            lines.append(f"    async def execute_{camel}(self, input: {input_name}, context: GeneratedActionContext) -> {output_name}:")
+            lines.append(f"        output = await self.handlers.{camel}.handle(input, context)")
+            lines.append(f"        await self.eventEmitter.{emit_method}(output)")
+            lines.append("        return output")
+        else:
+            lines.append(f"    def execute_{camel}(self, input: {input_name}, context: GeneratedActionContext) -> {output_name}:")
+            lines.append(f"        output = self.handlers.{camel}.handle(input, context)")
+            lines.append(f"        self.eventEmitter.{emit_method}(output)")
+            lines.append("        return output")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"

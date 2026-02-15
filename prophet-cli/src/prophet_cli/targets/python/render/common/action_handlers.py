@@ -1,0 +1,68 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from ..support import _camel_case
+from ..support import _pascal_case
+from ..support import _sort_dict_entries
+
+
+def render_action_handlers(ir: Dict[str, Any], *, async_mode: bool) -> str:
+    action_input_by_id = {item["id"]: item for item in ir.get("action_inputs", []) if isinstance(item, dict) and "id" in item}
+    action_output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = [
+        "# GENERATED FILE: do not edit directly.",
+        "from __future__ import annotations",
+        "",
+        "from dataclasses import dataclass",
+        "from typing import Protocol",
+        "",
+        "from .actions import *",
+        "from .events import GeneratedEventEmitter",
+        "from .persistence import GeneratedRepositories",
+        "",
+        "@dataclass",
+        "class GeneratedActionContext:",
+        "    repositories: GeneratedRepositories",
+        "    eventEmitter: GeneratedEventEmitter",
+        "",
+    ]
+
+    for action in _sort_dict_entries([item for item in ir.get("actions", []) if isinstance(item, dict)]):
+        action_name = str(action.get("name", "action"))
+        iface_name = f"{_pascal_case(action_name)}ActionHandler"
+        input_shape = action_input_by_id.get(str(action.get("input_shape_id", "")), {})
+        output_shape = action_output_by_id.get(str(action.get("output_shape_id", "")), {})
+        input_name = _pascal_case(str(input_shape.get("name", "ActionInput")))
+        output_name = _pascal_case(str(output_shape.get("name", "ActionOutput")))
+
+        lines.append(f"class {iface_name}(Protocol):")
+        if async_mode:
+            lines.append(f"    async def handle(self, input: {input_name}, context: GeneratedActionContext) -> {output_name}: ...")
+        else:
+            lines.append(f"    def handle(self, input: {input_name}, context: GeneratedActionContext) -> {output_name}: ...")
+        lines.append("")
+
+        default_name = f"{iface_name}Default"
+        lines.append(f"class {default_name}:")
+        if async_mode:
+            lines.append(f"    async def handle(self, input: {input_name}, context: GeneratedActionContext) -> {output_name}:")
+        else:
+            lines.append(f"    def handle(self, input: {input_name}, context: GeneratedActionContext) -> {output_name}:")
+        lines.append(f"        raise NotImplementedError('No implementation registered for action: {action_name}')")
+        lines.append("")
+
+    lines.append("class GeneratedActionHandlers(Protocol):")
+    actions = [item for item in ir.get("actions", []) if isinstance(item, dict)]
+    if not actions:
+        lines.append("    pass")
+    else:
+        for action in _sort_dict_entries(actions):
+            action_name = str(action.get("name", "action"))
+            prop = _camel_case(action_name)
+            iface_name = f"{_pascal_case(action_name)}ActionHandler"
+            lines.append(f"    {prop}: {iface_name}")
+    lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"

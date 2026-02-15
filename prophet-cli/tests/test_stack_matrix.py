@@ -93,8 +93,13 @@ class StackMatrixTests(unittest.TestCase):
         self.assertIn("description", by_id["java_spring_jpa"])
         self.assertIn("default_targets", by_id["java_spring_jpa"])
         self.assertIn("spring_boot", by_id["java_spring_jpa"]["default_targets"])
-        self.assertFalse(by_id["python_fastapi_sqlalchemy"]["implemented"])
-        self.assertEqual(by_id["python_fastapi_sqlalchemy"]["status"], "planned")
+        self.assertTrue(by_id["python_fastapi_sqlalchemy"]["implemented"])
+        self.assertEqual(by_id["python_fastapi_sqlalchemy"]["status"], "implemented")
+        self.assertIn("python", by_id["python_fastapi_sqlalchemy"]["default_targets"])
+        self.assertTrue(by_id["python_fastapi_sqlmodel"]["implemented"])
+        self.assertTrue(by_id["python_flask_sqlalchemy"]["implemented"])
+        self.assertTrue(by_id["python_flask_sqlmodel"]["implemented"])
+        self.assertTrue(by_id["python_django_django_orm"]["implemented"])
 
 
 if __name__ == "__main__":

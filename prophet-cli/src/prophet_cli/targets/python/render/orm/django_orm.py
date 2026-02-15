@@ -1,0 +1,271 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from ..support import _camel_case
+from ..support import _is_required
+from ..support import _object_primary_key_fields
+from ..support import _pascal_case
+from ..support import _py_type_for_descriptor
+from ..support import _sort_dict_entries
+
+
+def _django_field_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]], required: bool) -> str:
+    kind = str(type_desc.get("kind", ""))
+    nullable = "false" if required else "true"
+    blank = "false" if required else "true"
+    if kind in {"struct", "object_ref", "list"}:
+        return f"models.JSONField(null={nullable}, blank={blank})"
+
+    if kind == "base":
+        base = str(type_desc.get("name", "string"))
+    elif kind == "custom":
+        target = type_by_id.get(str(type_desc.get("target_type_id", "")), {})
+        base = str(target.get("base", "string"))
+    else:
+        return f"models.JSONField(null={nullable}, blank={blank})"
+
+    if base == "boolean":
+        return f"models.BooleanField(null={nullable}, blank={blank})"
+    if base in {"int", "long", "short", "byte"}:
+        return f"models.IntegerField(null={nullable}, blank={blank})"
+    if base in {"double", "float", "decimal"}:
+        return f"models.FloatField(null={nullable}, blank={blank})"
+    return f"models.CharField(max_length=255, null={nullable}, blank={blank})"
+
+
+def render_django_models(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = [
+        "# GENERATED FILE: do not edit directly.",
+        "from __future__ import annotations",
+        "",
+        "from django.db import models",
+        "",
+    ]
+
+    for obj in _sort_dict_entries([item for item in ir.get("objects", []) if isinstance(item, dict)]):
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        fields = [item for item in obj.get("fields", []) if isinstance(item, dict)]
+        primary_ids = [str(fid) for fid in obj.get("keys", {}).get("primary", {}).get("field_ids", [])]
+
+        lines.append(f"class {obj_name}Model(models.Model):")
+        if len(primary_ids) != 1:
+            lines.append("    prophetPk = models.BigAutoField(primary_key=True)")
+
+        for field in fields:
+            field_id = str(field.get("id", ""))
+            prop = _camel_case(str(field.get("name", "field")))
+            required = _is_required(field)
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            decl = _django_field_for_descriptor(type_desc, type_by_id, required)
+            if len(primary_ids) == 1 and field_id == primary_ids[0]:
+                decl = decl[:-1] + ", primary_key=True)"
+            lines.append(f"    {prop} = {decl}")
+
+        if obj.get("states"):
+            initial = next(
+                (
+                    str(item.get("name", ""))
+                    for item in obj.get("states", [])
+                    if isinstance(item, dict) and item.get("initial")
+                ),
+                "",
+            )
+            if initial:
+                lines.append(f"    currentState = models.CharField(max_length=64, default='{initial}')")
+            else:
+                lines.append("    currentState = models.CharField(max_length=64)")
+
+        lines.append("")
+        lines.append("    class Meta:")
+        lines.append(f"        db_table = '{obj_name.lower()}s'")
+        if len(primary_ids) > 1:
+            field_by_id = {str(item.get('id', '')): item for item in fields}
+            composite_names = [
+                _camel_case(str(field_by_id[fid].get("name", "field")))
+                for fid in primary_ids
+                if fid in field_by_id
+            ]
+            if composite_names:
+                quoted = ", ".join([repr(item) for item in composite_names])
+                lines.append(f"        constraints = [models.UniqueConstraint(fields=[{quoted}], name='uniq_{obj_name.lower()}_key')]")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_django_adapters(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+    query_contract_by_object_id = {
+        str(item.get("object_id", "")): item
+        for item in ir.get("query_contracts", [])
+        if isinstance(item, dict)
+    }
+
+    lines: List[str] = [
+        "# GENERATED FILE: do not edit directly.",
+        "from __future__ import annotations",
+        "",
+        "import dataclasses",
+        "",
+        "from typing import Optional",
+        "",
+        "from . import django_models as Models",
+        "from . import domain as Domain",
+        "from . import persistence as Persistence",
+        "from . import query as Filters",
+        "",
+        "def _serialize(value):",
+        "    if dataclasses.is_dataclass(value):",
+        "        return dataclasses.asdict(value)",
+        "    if isinstance(value, list):",
+        "        return [_serialize(item) for item in value]",
+        "    return value",
+        "",
+    ]
+
+    for obj in _sort_dict_entries([item for item in ir.get("objects", []) if isinstance(item, dict)]):
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        fields = [item for item in obj.get("fields", []) if isinstance(item, dict)]
+
+        lines.append(f"def _{obj_name.lower()}_payload(item: Domain.{obj_name}) -> dict:")
+        lines.append("    return {")
+        for field in fields:
+            prop = _camel_case(str(field.get("name", "field")))
+            lines.append(f"        '{prop}': _serialize(item.{prop}),")
+        if obj.get("states"):
+            lines.append("        'currentState': item.currentState,")
+        lines.append("    }")
+        lines.append("")
+
+        lines.append(f"def _{obj_name.lower()}_to_domain(record: Models.{obj_name}Model) -> Domain.{obj_name}:")
+        lines.append(f"    return Domain.{obj_name}(")
+        for field in fields:
+            prop = _camel_case(str(field.get("name", "field")))
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            py_type = _py_type_for_descriptor(
+                type_desc,
+                type_by_id=type_by_id,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+            )
+            kind = str(type_desc.get("kind", ""))
+            if kind in {"object_ref", "struct"}:
+                lines.append(
+                    f"        {prop}=Domain.{py_type}(**record.{prop}) if isinstance(record.{prop}, dict) else record.{prop},"
+                )
+            elif kind == "list":
+                element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
+                element_kind = str(element.get("kind", ""))
+                if element_kind in {"object_ref", "struct"}:
+                    element_type = _py_type_for_descriptor(
+                        element,
+                        type_by_id=type_by_id,
+                        object_by_id=object_by_id,
+                        struct_by_id=struct_by_id,
+                    )
+                    lines.append(
+                        f"        {prop}=[Domain.{element_type}(**entry) if isinstance(entry, dict) else entry for entry in (record.{prop} or [])],"
+                    )
+                else:
+                    lines.append(f"        {prop}=record.{prop},")
+            else:
+                lines.append(f"        {prop}=record.{prop},")
+        if obj.get("states"):
+            lines.append("        currentState=record.currentState,")
+        lines.append("    )")
+        lines.append("")
+
+        repo_name = f"{obj_name}DjangoRepository"
+        query_filter_name = f"Filters.{obj_name}QueryFilter"
+        lines.append(f"class {repo_name}:")
+        lines.append(f"    _model = Models.{obj_name}Model")
+        lines.append("")
+
+        lines.append(f"    def _apply_filter(self, queryset, filter: {query_filter_name}):")
+        contract = query_contract_by_object_id.get(str(obj.get("id", "")), {})
+        for filter_def in sorted(
+            [item for item in contract.get("filters", []) if isinstance(item, dict)],
+            key=lambda item: str(item.get("field_name", "")),
+        ):
+            field_name = _camel_case(str(filter_def.get("field_name", "field")))
+            model_field = "currentState" if str(filter_def.get("field_id", "")) == "__current_state__" else field_name
+            lines.append(f"        if filter.{field_name} is not None:")
+            lines.append(f"            if filter.{field_name}.eq is not None:")
+            lines.append(f"                queryset = queryset.filter({model_field}=filter.{field_name}.eq)")
+            lines.append(f"            if getattr(filter.{field_name}, 'inValues', None):")
+            lines.append(f"                queryset = queryset.filter({model_field}__in=filter.{field_name}.inValues)")
+            lines.append(f"            if getattr(filter.{field_name}, 'contains', None):")
+            lines.append(f"                queryset = queryset.filter({model_field}__icontains=filter.{field_name}.contains)")
+            lines.append(f"            if getattr(filter.{field_name}, 'gte', None) is not None:")
+            lines.append(f"                queryset = queryset.filter({model_field}__gte=filter.{field_name}.gte)")
+            lines.append(f"            if getattr(filter.{field_name}, 'lte', None) is not None:")
+            lines.append(f"                queryset = queryset.filter({model_field}__lte=filter.{field_name}.lte)")
+        lines.append("        return queryset")
+        lines.append("")
+
+        lines.append("    def list(self, page: int, size: int) -> Persistence.PagedResult:")
+        lines.append("        queryset = self._model.objects.all()")
+        lines.append("        total = queryset.count()")
+        lines.append("        rows = list(queryset[page * size : page * size + size])")
+        lines.append(f"        content = [_{obj_name.lower()}_to_domain(row) for row in rows]")
+        lines.append("        total_pages = (total + size - 1) // size if size > 0 else 0")
+        lines.append(
+            "        return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)"
+        )
+        lines.append("")
+
+        lines.append(f"    def query(self, filter: {query_filter_name}, page: int, size: int) -> Persistence.PagedResult:")
+        lines.append("        queryset = self._apply_filter(self._model.objects.all(), filter)")
+        lines.append("        total = queryset.count()")
+        lines.append("        rows = list(queryset[page * size : page * size + size])")
+        lines.append(f"        content = [_{obj_name.lower()}_to_domain(row) for row in rows]")
+        lines.append("        total_pages = (total + size - 1) // size if size > 0 else 0")
+        lines.append(
+            "        return Persistence.PagedResult(content=content, page=page, size=size, totalElements=total, totalPages=total_pages)"
+        )
+        lines.append("")
+
+        pk_fields = _object_primary_key_fields(obj)
+        lines.append(f"    def get_by_id(self, id: Domain.{obj_name}Ref) -> Optional[Domain.{obj_name}]:")
+        if pk_fields:
+            lines.append("        lookup = {")
+            for pk in pk_fields:
+                pk_prop = _camel_case(str(pk.get("name", "id")))
+                lines.append(f"            '{pk_prop}': id.{pk_prop},")
+            lines.append("        }")
+            lines.append("        row = self._model.objects.filter(**lookup).first()")
+            lines.append("        if row is None:")
+            lines.append("            return None")
+            lines.append(f"        return _{obj_name.lower()}_to_domain(row)")
+        else:
+            lines.append("        return None")
+        lines.append("")
+
+        lines.append(f"    def save(self, item: Domain.{obj_name}) -> Domain.{obj_name}:")
+        lines.append(f"        payload = _{obj_name.lower()}_payload(item)")
+        if pk_fields:
+            lines.append("        lookup = {")
+            for pk in pk_fields:
+                pk_prop = _camel_case(str(pk.get("name", "id")))
+                lines.append(f"            '{pk_prop}': payload['{pk_prop}'],")
+            lines.append("        }")
+            lines.append("        self._model.objects.update_or_create(defaults=payload, **lookup)")
+        else:
+            lines.append("        self._model.objects.create(**payload)")
+        lines.append("        return item")
+        lines.append("")
+
+    lines.append("class DjangoGeneratedRepositories:")
+    lines.append("    def __init__(self):")
+    for obj in _sort_dict_entries([item for item in ir.get("objects", []) if isinstance(item, dict)]):
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        prop = _camel_case(obj_name)
+        lines.append(f"        self.{prop} = {obj_name}DjangoRepository()")
+    lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"

@@ -3,11 +3,30 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from prophet_cli.codegen.contracts import GenerationContext
 from prophet_cli.codegen.stacks import StackSpec
 from prophet_cli.core.ir_reader import IRReader
+from prophet_cli.targets.python.render.common.action_handlers import render_action_handlers
+from prophet_cli.targets.python.render.common.action_service import render_action_service
+from prophet_cli.targets.python.render.common.actions import render_action_contracts
+from prophet_cli.targets.python.render.common.domain import render_domain_types
+from prophet_cli.targets.python.render.common.event_contracts import render_event_contracts
+from prophet_cli.targets.python.render.common.events import render_event_emitter
+from prophet_cli.targets.python.render.common.persistence import render_persistence_contracts
+from prophet_cli.targets.python.render.common.query import render_query_contracts
+from prophet_cli.targets.python.render.framework.django import render_django_urls
+from prophet_cli.targets.python.render.framework.django import render_django_views
+from prophet_cli.targets.python.render.framework.fastapi import render_fastapi_routes
+from prophet_cli.targets.python.render.framework.flask import render_flask_routes
+from prophet_cli.targets.python.render.orm.django_orm import render_django_adapters
+from prophet_cli.targets.python.render.orm.django_orm import render_django_models
+from prophet_cli.targets.python.render.orm.sqlalchemy import render_sqlalchemy_adapters
+from prophet_cli.targets.python.render.orm.sqlalchemy import render_sqlalchemy_models
+from prophet_cli.targets.python.render.orm.sqlmodel import render_sqlmodel_adapters
+from prophet_cli.targets.python.render.orm.sqlmodel import render_sqlmodel_models
+from prophet_cli.targets.python.render.support import _pascal_case
 
 
 @dataclass(frozen=True)
@@ -19,7 +38,14 @@ class PythonDeps:
     toolchain_version: str
 
 
-def _render_pyproject(stack: StackSpec) -> str:
+def _render_detection_report(cfg: Dict[str, Any]) -> Optional[str]:
+    autodetect_payload = cfg.get("_python_autodetect")
+    if not isinstance(autodetect_payload, dict):
+        return None
+    return json.dumps(autodetect_payload, indent=2, sort_keys=False) + "\n"
+
+
+def _render_pyproject_toml(stack: StackSpec) -> str:
     deps: List[str] = []
     if stack.framework == "fastapi":
         deps.extend(["fastapi>=0.112,<1.0", "uvicorn>=0.30,<1.0"])
@@ -31,17 +57,34 @@ def _render_pyproject(stack: StackSpec) -> str:
     if stack.orm == "sqlalchemy":
         deps.append("sqlalchemy>=2.0,<3.0")
     elif stack.orm == "sqlmodel":
-        deps.append("sqlmodel>=0.0.22,<1.0")
-        deps.append("sqlalchemy>=2.0,<3.0")
+        deps.extend(["sqlmodel>=0.0.22,<1.0", "sqlalchemy>=2.0,<3.0"])
+    elif stack.orm == "django_orm":
+        deps.append("django>=5.0,<6.0")
 
-    payload = {
-        "name": "prophet-generated-python",
-        "private": True,
-        "requires-python": ">=3.10",
-        "dependencies": deps,
-    }
-    return "# GENERATED FILE: do not edit directly.\n" + json.dumps(payload, indent=2, sort_keys=False) + "\n"
+    lines = [
+        "# GENERATED FILE: do not edit directly.",
+        "[build-system]",
+        "requires = [\"setuptools>=68\", \"wheel\"]",
+        "build-backend = \"setuptools.build_meta\"",
+        "",
+        "[project]",
+        "name = \"prophet-generated-python\"",
+        "version = \"0.0.0\"",
+        "requires-python = \">=3.10\"",
+    ]
+    if deps:
+        lines.append("dependencies = [")
+        for dep in sorted(dict.fromkeys(deps)):
+            lines.append(f"  \"{dep}\",")
+        lines.append("]")
+    else:
+        lines.append("dependencies = []")
+    lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
 
+
+def _render_package_init() -> str:
+    return "# GENERATED FILE: do not edit directly.\n"
 
 def generate_outputs(context: GenerationContext, deps: PythonDeps) -> Dict[str, str]:
     cfg = context.cfg
@@ -51,24 +94,57 @@ def generate_outputs(context: GenerationContext, deps: PythonDeps) -> Dict[str, 
     if not isinstance(targets, list):
         targets = list(stack.default_targets)
 
+    ir = context.ir_reader.as_dict()
     outputs: Dict[str, str] = {}
+
     if "sql" in targets:
         outputs[f"{out_dir}/sql/schema.sql"] = deps.render_sql(context.ir_reader)
     if "openapi" in targets:
         outputs[f"{out_dir}/openapi/openapi.yaml"] = deps.render_openapi(context.ir_reader)
 
+    py_prefix = f"{out_dir}/python"
+    generated_prefix = f"{py_prefix}/src/generated"
+    async_mode = stack.framework == "fastapi"
+
     if "python" in targets:
-        outputs[f"{out_dir}/python/pyproject.json"] = _render_pyproject(stack)
-        outputs[f"{out_dir}/python/src/generated/__init__.py"] = "# GENERATED FILE: do not edit directly.\n"
+        outputs[f"{py_prefix}/pyproject.toml"] = _render_pyproject_toml(stack)
+        outputs[f"{generated_prefix}/__init__.py"] = _render_package_init()
+        outputs[f"{generated_prefix}/domain.py"] = render_domain_types(ir)
+        outputs[f"{generated_prefix}/actions.py"] = render_action_contracts(ir)
+        outputs[f"{generated_prefix}/event_contracts.py"] = render_event_contracts(ir)
+        outputs[f"{generated_prefix}/events.py"] = render_event_emitter(ir, async_mode=async_mode)
+        outputs[f"{generated_prefix}/query.py"] = render_query_contracts(ir)
+        outputs[f"{generated_prefix}/persistence.py"] = render_persistence_contracts(ir, async_mode=async_mode)
+        outputs[f"{generated_prefix}/action_handlers.py"] = render_action_handlers(ir, async_mode=async_mode)
+        outputs[f"{generated_prefix}/action_service.py"] = render_action_service(ir, async_mode=async_mode)
+
+    if stack.framework == "fastapi" and "fastapi" in targets:
+        outputs[f"{generated_prefix}/fastapi_routes.py"] = render_fastapi_routes(ir)
+    if stack.framework == "flask" and "flask" in targets:
+        outputs[f"{generated_prefix}/flask_routes.py"] = render_flask_routes(ir)
+    if stack.framework == "django" and "django" in targets:
+        outputs[f"{generated_prefix}/django_views.py"] = render_django_views(ir)
+        outputs[f"{generated_prefix}/django_urls.py"] = render_django_urls(ir)
+
+    if stack.orm == "sqlalchemy" and "sqlalchemy" in targets:
+        outputs[f"{generated_prefix}/sqlalchemy_models.py"] = render_sqlalchemy_models(ir)
+        outputs[f"{generated_prefix}/sqlalchemy_adapters.py"] = render_sqlalchemy_adapters(ir, async_mode=async_mode)
+    if stack.orm == "sqlmodel" and "sqlmodel" in targets:
+        outputs[f"{generated_prefix}/sqlmodel_models.py"] = render_sqlmodel_models(ir)
+        outputs[f"{generated_prefix}/sqlmodel_adapters.py"] = render_sqlmodel_adapters(ir, async_mode=async_mode)
+    if stack.orm == "django_orm" and "django_orm" in targets:
+        outputs[f"{generated_prefix}/django_models.py"] = render_django_models(ir)
+        outputs[f"{generated_prefix}/django_adapters.py"] = render_django_adapters(ir)
 
     extension_hooks = []
     for action in sorted(context.ir_reader.action_contracts(), key=lambda item: item.name):
+        action_name = action.name
         extension_hooks.append(
             {
                 "kind": "action_handler",
                 "action_id": action.id,
-                "action_name": action.name,
-                "python_protocol": f"generated.action_handlers.{action.name}Handler",
+                "action_name": action_name,
+                "python_protocol": f"generated.action_handlers.{_pascal_case(action_name)}ActionHandler",
             }
         )
 
@@ -81,6 +157,10 @@ def generate_outputs(context: GenerationContext, deps: PythonDeps) -> Dict[str, 
         indent=2,
         sort_keys=False,
     ) + "\n"
+
+    detection_report = _render_detection_report(cfg)
+    if detection_report is not None:
+        outputs[f"{out_dir}/manifest/python-autodetect.json"] = detection_report
 
     manifest_rel = f"{out_dir}/manifest/generated-files.json"
     hashed_outputs = {

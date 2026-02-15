@@ -1,0 +1,248 @@
+from __future__ import annotations
+
+import copy
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+THIS_FILE = Path(__file__).resolve()
+PROJECT_ROOT = THIS_FILE.parents[2]
+sys.path.insert(0, str(PROJECT_ROOT / "prophet-cli" / "src"))
+
+from prophet_cli.cli import build_generated_outputs
+from prophet_cli.cli import build_ir
+from prophet_cli.cli import load_config
+from prophet_cli.cli import parse_ontology
+from prophet_cli.targets.python.autodetect import apply_python_autodetect
+from prophet_cli.targets.python.autodetect import detect_python_stack
+
+EXAMPLE_ROOT = PROJECT_ROOT / "examples" / "java" / "prophet_example_spring"
+
+
+class PythonTargetTests(unittest.TestCase):
+    def _base_cfg(self) -> dict:
+        cfg = load_config(EXAMPLE_ROOT / "prophet.yaml")
+        cfg = copy.deepcopy(cfg)
+        cfg["generation"]["targets"] = ["sql", "openapi", "python", "manifest"]
+        return cfg
+
+    def _ontology(self):
+        return parse_ontology((EXAMPLE_ROOT / "ontology" / "local" / "main.prophet").read_text(encoding="utf-8"))
+
+    def test_python_fastapi_sqlalchemy_stack_generates_expected_artifacts(self) -> None:
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "python_fastapi_sqlalchemy"}
+        cfg["generation"]["targets"] = ["sql", "openapi", "python", "fastapi", "sqlalchemy", "manifest"]
+
+        ir = build_ir(self._ontology(), cfg)
+        with tempfile.TemporaryDirectory(prefix="prophet-python-fastapi-sa-") as tmp:
+            outputs = build_generated_outputs(ir, cfg, root=Path(tmp))
+
+        self.assertIn("gen/python/pyproject.toml", outputs)
+        self.assertIn("gen/python/src/generated/fastapi_routes.py", outputs)
+        self.assertIn("gen/python/src/generated/sqlalchemy_models.py", outputs)
+        self.assertIn("gen/python/src/generated/sqlalchemy_adapters.py", outputs)
+        self.assertIn("gen/manifest/generated-files.json", outputs)
+        self.assertIn("class SqlAlchemyGeneratedRepositories", outputs["gen/python/src/generated/sqlalchemy_adapters.py"])
+        self.assertNotIn("..common", outputs["gen/python/src/generated/sqlalchemy_adapters.py"])
+        self.assertIn("async def execute_createOrder", outputs["gen/python/src/generated/action_service.py"])
+
+        manifest = json.loads(outputs["gen/manifest/generated-files.json"])
+        self.assertEqual(manifest["stack"]["id"], "python_fastapi_sqlalchemy")
+
+    def test_python_fastapi_sqlmodel_stack_generates_expected_artifacts(self) -> None:
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "python_fastapi_sqlmodel"}
+        cfg["generation"]["targets"] = ["sql", "openapi", "python", "fastapi", "sqlmodel", "manifest"]
+
+        ir = build_ir(self._ontology(), cfg)
+        with tempfile.TemporaryDirectory(prefix="prophet-python-fastapi-sm-") as tmp:
+            outputs = build_generated_outputs(ir, cfg, root=Path(tmp))
+
+        self.assertIn("gen/python/src/generated/sqlmodel_models.py", outputs)
+        self.assertIn("gen/python/src/generated/sqlmodel_adapters.py", outputs)
+        self.assertIn("class SqlModelGeneratedRepositories", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
+        self.assertIn("async def list", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
+
+        manifest = json.loads(outputs["gen/manifest/generated-files.json"])
+        self.assertEqual(manifest["stack"]["id"], "python_fastapi_sqlmodel")
+
+    def test_python_flask_sqlalchemy_stack_generates_expected_artifacts(self) -> None:
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "python_flask_sqlalchemy"}
+        cfg["generation"]["targets"] = ["sql", "openapi", "python", "flask", "sqlalchemy", "manifest"]
+
+        ir = build_ir(self._ontology(), cfg)
+        with tempfile.TemporaryDirectory(prefix="prophet-python-flask-sa-") as tmp:
+            outputs = build_generated_outputs(ir, cfg, root=Path(tmp))
+
+        self.assertIn("gen/python/src/generated/flask_routes.py", outputs)
+        self.assertIn("gen/python/src/generated/sqlalchemy_models.py", outputs)
+        self.assertIn("def action_createOrder", outputs["gen/python/src/generated/flask_routes.py"])
+        self.assertIn("def list(self, page: int, size: int)", outputs["gen/python/src/generated/sqlalchemy_adapters.py"])
+
+        manifest = json.loads(outputs["gen/manifest/generated-files.json"])
+        self.assertEqual(manifest["stack"]["id"], "python_flask_sqlalchemy")
+
+    def test_python_flask_sqlmodel_stack_generates_expected_artifacts(self) -> None:
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "python_flask_sqlmodel"}
+        cfg["generation"]["targets"] = ["sql", "openapi", "python", "flask", "sqlmodel", "manifest"]
+
+        ir = build_ir(self._ontology(), cfg)
+        with tempfile.TemporaryDirectory(prefix="prophet-python-flask-sm-") as tmp:
+            outputs = build_generated_outputs(ir, cfg, root=Path(tmp))
+
+        self.assertIn("gen/python/src/generated/flask_routes.py", outputs)
+        self.assertIn("gen/python/src/generated/sqlmodel_models.py", outputs)
+        self.assertIn("gen/python/src/generated/sqlmodel_adapters.py", outputs)
+        self.assertIn("def query(self, filter:", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
+
+        manifest = json.loads(outputs["gen/manifest/generated-files.json"])
+        self.assertEqual(manifest["stack"]["id"], "python_flask_sqlmodel")
+
+    def test_python_django_stack_generates_expected_artifacts(self) -> None:
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "python_django_django_orm"}
+        cfg["generation"]["targets"] = ["sql", "openapi", "python", "django", "django_orm", "manifest"]
+
+        ir = build_ir(self._ontology(), cfg)
+        with tempfile.TemporaryDirectory(prefix="prophet-python-django-") as tmp:
+            outputs = build_generated_outputs(ir, cfg, root=Path(tmp))
+
+        self.assertIn("gen/python/src/generated/django_urls.py", outputs)
+        self.assertIn("gen/python/src/generated/django_views.py", outputs)
+        self.assertIn("gen/python/src/generated/django_models.py", outputs)
+        self.assertIn("gen/python/src/generated/django_adapters.py", outputs)
+        self.assertIn("class DjangoGeneratedRepositories", outputs["gen/python/src/generated/django_adapters.py"])
+        self.assertIn("configure_generated_views", outputs["gen/python/src/generated/django_views.py"])
+
+        manifest = json.loads(outputs["gen/manifest/generated-files.json"])
+        self.assertEqual(manifest["stack"]["id"], "python_django_django_orm")
+
+    def test_autodetect_selects_python_fastapi_sqlmodel(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-autodetect-python-fastapi-") as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "\n".join(
+                    [
+                        "[project]",
+                        "name = 'sample-fastapi'",
+                        "version = '0.0.1'",
+                        "dependencies = [",
+                        "  'fastapi>=0.110',",
+                        "  'sqlmodel>=0.0.22',",
+                        "]",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            report = detect_python_stack(root)
+            self.assertEqual(report.get("stack_id"), "python_fastapi_sqlmodel")
+            self.assertEqual(report.get("confidence"), "high")
+
+            cfg = {
+                "generation": {
+                    "stack": {"id": "java_spring_jpa"},
+                    "targets": ["sql", "openapi", "spring_boot", "flyway", "liquibase"],
+                }
+            }
+            mutated = apply_python_autodetect(copy.deepcopy(cfg), root)
+            self.assertEqual(mutated["generation"]["stack"]["id"], "python_fastapi_sqlmodel")
+            self.assertEqual(mutated["generation"]["targets"], ["sql", "openapi", "python", "fastapi", "sqlmodel", "manifest"])
+
+    def test_autodetect_selects_python_flask_sqlalchemy_from_requirements(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-autodetect-python-flask-") as tmp:
+            root = Path(tmp)
+            (root / "requirements.txt").write_text(
+                "\n".join(
+                    [
+                        "flask>=3.0",
+                        "sqlalchemy>=2.0",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            report = detect_python_stack(root)
+            self.assertEqual(report.get("stack_id"), "python_flask_sqlalchemy")
+            self.assertEqual(report.get("package_manager"), "pip")
+
+    def test_autodetect_selects_python_django_stack(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-autodetect-python-django-") as tmp:
+            root = Path(tmp)
+            (root / "manage.py").write_text("print('django')\n", encoding="utf-8")
+            (root / "pyproject.toml").write_text(
+                "\n".join(
+                    [
+                        "[project]",
+                        "name = 'sample-django'",
+                        "version = '0.0.1'",
+                        "dependencies = [",
+                        "  'django>=5.0',",
+                        "]",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            report = detect_python_stack(root)
+            self.assertEqual(report.get("stack_id"), "python_django_django_orm")
+            self.assertEqual(report.get("confidence"), "high")
+
+    def test_autodetect_reports_ambiguous_framework_signal(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-autodetect-python-ambiguous-") as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "\n".join(
+                    [
+                        "[project]",
+                        "name = 'sample-ambiguous'",
+                        "version = '0.0.1'",
+                        "dependencies = [",
+                        "  'fastapi>=0.110',",
+                        "  'flask>=3.0',",
+                        "  'sqlalchemy>=2.0',",
+                        "]",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            report = detect_python_stack(root)
+            self.assertEqual(report.get("confidence"), "ambiguous")
+            self.assertEqual(report.get("stack_id"), "")
+
+    def test_autodetect_fail_closed_when_framework_detected_without_orm(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="prophet-autodetect-python-fail-closed-") as tmp:
+            root = Path(tmp)
+            (root / "pyproject.toml").write_text(
+                "\n".join(
+                    [
+                        "[project]",
+                        "name = 'sample-fastapi-no-orm'",
+                        "version = '0.0.1'",
+                        "dependencies = [",
+                        "  'fastapi>=0.110',",
+                        "]",
+                        "",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            cfg = {
+                "generation": {
+                    "stack": {},
+                    "targets": ["sql", "openapi", "spring_boot", "flyway", "liquibase"],
+                }
+            }
+            mutated = apply_python_autodetect(copy.deepcopy(cfg), root)
+            self.assertIn("_python_autodetect_error", mutated)
+            self.assertIn("python_fastapi_sqlalchemy", str(mutated.get("_python_autodetect_error", "")))
+
+
+if __name__ == "__main__":
+    unittest.main()

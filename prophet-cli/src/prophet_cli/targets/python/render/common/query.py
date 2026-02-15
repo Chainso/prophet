@@ -1,0 +1,79 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from ..support import _camel_case
+from ..support import _field_index
+from ..support import _pascal_case
+from ..support import _py_type_for_descriptor
+from ..support import _sort_dict_entries
+
+
+def render_query_contracts(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = [
+        "# GENERATED FILE: do not edit directly.",
+        "from __future__ import annotations",
+        "",
+        "from dataclasses import dataclass",
+        "from typing import List, Optional",
+        "",
+        "from .domain import *",
+        "",
+    ]
+
+    for contract in _sort_dict_entries([item for item in ir.get("query_contracts", []) if isinstance(item, dict)]):
+        object_id = str(contract.get("object_id", ""))
+        obj = object_by_id.get(object_id, {})
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        by_field = _field_index([field for field in obj.get("fields", []) if isinstance(field, dict)])
+
+        for filter_def in sorted([item for item in contract.get("filters", []) if isinstance(item, dict)], key=lambda item: str(item.get("field_name", ""))):
+            filter_name = _pascal_case(str(filter_def.get("field_name", "field")))
+            class_name = f"{obj_name}{filter_name}Filter"
+            field_id = str(filter_def.get("field_id", ""))
+            operators = [str(item) for item in filter_def.get("operators", [])]
+            if field_id == "__current_state__":
+                field_type = "str"
+            else:
+                field = by_field.get(field_id, {})
+                type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+                field_type = _py_type_for_descriptor(
+                    type_desc,
+                    type_by_id=type_by_id,
+                    object_by_id=object_by_id,
+                    struct_by_id=struct_by_id,
+                )
+
+            lines.append("@dataclass")
+            lines.append(f"class {class_name}:")
+            if "eq" in operators:
+                lines.append(f"    eq: Optional[{field_type}] = None")
+            if "in" in operators:
+                lines.append(f"    inValues: Optional[List[{field_type}]] = None")
+            if "contains" in operators:
+                lines.append("    contains: Optional[str] = None")
+            if "gte" in operators:
+                lines.append(f"    gte: Optional[{field_type}] = None")
+            if "lte" in operators:
+                lines.append(f"    lte: Optional[{field_type}] = None")
+            if not operators:
+                lines.append("    pass")
+            lines.append("")
+
+        lines.append("@dataclass")
+        lines.append(f"class {obj_name}QueryFilter:")
+        if not contract.get("filters"):
+            lines.append("    pass")
+        else:
+            for filter_def in sorted([item for item in contract.get("filters", []) if isinstance(item, dict)], key=lambda item: str(item.get("field_name", ""))):
+                filter_name = _pascal_case(str(filter_def.get("field_name", "field")))
+                class_name = f"{obj_name}{filter_name}Filter"
+                field_name = _camel_case(str(filter_def.get("field_name", "field")))
+                lines.append(f"    {field_name}: Optional[{class_name}] = None")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"

@@ -51,6 +51,9 @@ from prophet_cli.targets.java_spring_jpa import generate_outputs as generate_jav
 from prophet_cli.targets.node_express import NodeExpressDeps
 from prophet_cli.targets.node_express import generate_outputs as generate_node_express_outputs
 from prophet_cli.targets.node_express.autodetect import apply_node_autodetect
+from prophet_cli.targets.python import apply_python_autodetect
+from prophet_cli.targets.python import PythonDeps
+from prophet_cli.targets.python import generate_outputs as generate_python_outputs
 
 
 TOOLCHAIN_VERSION = "0.10.0"
@@ -4206,12 +4209,28 @@ def _generate_outputs_for_node_express(context: GenerationContext) -> Dict[str, 
     return generate_node_express_outputs(context, deps)
 
 
+def _generate_outputs_for_python(context: GenerationContext) -> Dict[str, str]:
+    deps = PythonDeps(
+        cfg_get=cfg_get,
+        resolve_stack_spec=resolve_stack_spec,
+        render_sql=lambda reader: render_sql(reader.as_dict()),
+        render_openapi=lambda reader: render_openapi(reader.as_dict()),
+        toolchain_version=TOOLCHAIN_VERSION,
+    )
+    return generate_python_outputs(context, deps)
+
+
 def registered_generators() -> Dict[str, StackGenerator]:
     return {
         "java_spring_jpa": _generate_outputs_for_java_spring_jpa,
         "node_express_prisma": _generate_outputs_for_node_express,
         "node_express_typeorm": _generate_outputs_for_node_express,
         "node_express_mongoose": _generate_outputs_for_node_express,
+        "python_fastapi_sqlalchemy": _generate_outputs_for_python,
+        "python_fastapi_sqlmodel": _generate_outputs_for_python,
+        "python_flask_sqlalchemy": _generate_outputs_for_python,
+        "python_flask_sqlmodel": _generate_outputs_for_python,
+        "python_django_django_orm": _generate_outputs_for_python,
     }
 
 
@@ -4661,12 +4680,22 @@ class CommandContext:
 def load_command_context(root: Path) -> Tuple[CommandContext, List[str]]:
     cfg = load_config(root / "prophet.yaml")
     cfg = apply_node_autodetect(cfg, root)
-    autodetect_error = str(cfg.get("_autodetect_error", "")).strip()
-    if autodetect_error:
+    cfg = apply_python_autodetect(cfg, root)
+
+    node_autodetect_error = str(cfg.get("_autodetect_error", "")).strip()
+    if node_autodetect_error:
         raise ProphetError(
             "Node autodetect failed to resolve a safe generation stack. "
-            + autodetect_error
+            + node_autodetect_error
         )
+
+    python_autodetect_error = str(cfg.get("_python_autodetect_error", "")).strip()
+    if python_autodetect_error:
+        raise ProphetError(
+            "Python autodetect failed to resolve a safe generation stack. "
+            + python_autodetect_error
+        )
+
     stack = resolve_stack_spec(cfg)
     ontology_path = ontology_path_from_cfg(root, cfg)
     ontology = load_ontology_from_cfg(root, cfg)
@@ -5052,6 +5081,7 @@ def cmd_clean(args: argparse.Namespace) -> int:
 
     cfg = load_config(cfg_path)
     cfg = apply_node_autodetect(cfg, root)
+    cfg = apply_python_autodetect(cfg, root)
     out_dir = root / str(cfg_get(cfg, ["generation", "out_dir"], "gen"))
     baseline_rel = str(cfg_get(cfg, ["compatibility", "baseline_ir"], ".prophet/baselines/main.ir.json"))
     baseline_path = root / baseline_rel

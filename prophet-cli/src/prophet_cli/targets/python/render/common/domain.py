@@ -1,0 +1,98 @@
+from __future__ import annotations
+
+from typing import Any, Dict, List
+
+from ..support import _object_primary_key_fields
+from ..support import _pascal_case
+from ..support import _py_base_type
+from ..support import _render_dataclass_field
+from ..support import _sort_dict_entries
+
+
+def render_domain_types(ir: Dict[str, Any]) -> str:
+    type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
+
+    lines: List[str] = [
+        "# GENERATED FILE: do not edit directly.",
+        "from __future__ import annotations",
+        "",
+        "from dataclasses import dataclass",
+        "from typing import Any, Dict, List, Literal, Optional",
+        "",
+    ]
+
+    for custom in _sort_dict_entries(list(ir.get("types", []))):
+        name = _pascal_case(str(custom.get("name", "CustomType")))
+        py_type = _py_base_type(str(custom.get("base", "string")))
+        lines.append(f"{name} = {py_type}")
+    if ir.get("types"):
+        lines.append("")
+
+    for obj in _sort_dict_entries(list(ir.get("objects", []))):
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        pk_fields = _object_primary_key_fields(obj)
+        lines.append("@dataclass")
+        lines.append(f"class {obj_name}Ref:")
+        if not pk_fields:
+            lines.append("    value: str")
+        else:
+            for field in pk_fields:
+                lines.append(
+                    _render_dataclass_field(
+                        field,
+                        type_by_id=type_by_id,
+                        object_by_id=object_by_id,
+                        struct_by_id=struct_by_id,
+                    )
+                )
+        lines.append("")
+
+    for struct in _sort_dict_entries(list(ir.get("structs", []))):
+        struct_name = _pascal_case(str(struct.get("name", "Struct")))
+        lines.append("@dataclass")
+        lines.append(f"class {struct_name}:")
+        fields = [field for field in struct.get("fields", []) if isinstance(field, dict)]
+        if not fields:
+            lines.append("    pass")
+        else:
+            for field in fields:
+                lines.append(
+                    _render_dataclass_field(
+                        field,
+                        type_by_id=type_by_id,
+                        object_by_id=object_by_id,
+                        struct_by_id=struct_by_id,
+                    )
+                )
+        lines.append("")
+
+    for obj in _sort_dict_entries(list(ir.get("objects", []))):
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        states = [state for state in obj.get("states", []) if isinstance(state, dict)]
+        if states:
+            members = ", ".join([repr(str(state.get("name", ""))) for state in states])
+            lines.append(f"{obj_name}State = Literal[{members}]")
+            lines.append("")
+
+        lines.append("@dataclass")
+        lines.append(f"class {obj_name}:")
+        fields = [field for field in obj.get("fields", []) if isinstance(field, dict)]
+        if not fields and not states:
+            lines.append("    pass")
+        else:
+            for field in fields:
+                lines.append(
+                    _render_dataclass_field(
+                        field,
+                        type_by_id=type_by_id,
+                        object_by_id=object_by_id,
+                        struct_by_id=struct_by_id,
+                    )
+                )
+            if states:
+                lines.append(f"    currentState: {obj_name}State")
+        lines.append("")
+
+    return "\n".join(lines).rstrip() + "\n"
