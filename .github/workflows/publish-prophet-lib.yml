@@ -153,27 +153,16 @@ jobs:
 
       - name: Publish Python runtime to TestPyPI
         if: ${{ inputs.stage == 'test' }}
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        run: |
-          if [ -z "${TWINE_PASSWORD:-}" ]; then
-            echo "TEST_PYPI_API_TOKEN secret is required for test-stage publish." >&2
-            exit 1
-          fi
-          python -m twine upload --repository-url https://test.pypi.org/legacy/ prophet-lib/python/dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: prophet-lib/python/dist
+          repository-url: https://test.pypi.org/legacy/
 
       - name: Publish Python runtime to PyPI
         if: ${{ inputs.stage == 'public' }}
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          if [ -z "${TWINE_PASSWORD:-}" ]; then
-            echo "PYPI_API_TOKEN secret is required for public publish." >&2
-            exit 1
-          fi
-          python -m twine upload prophet-lib/python/dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: prophet-lib/python/dist
 
   java-runtime:
     runs-on: ubuntu-latest

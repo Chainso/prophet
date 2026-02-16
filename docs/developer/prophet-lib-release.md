@@ -99,27 +99,26 @@ Inputs:
 ### Stage: `test`
 
 - JavaScript: validation + dry-run pack (no registry publish)
-- Python: publish to TestPyPI (`TEST_PYPI_API_TOKEN`)
+- Python: publish to TestPyPI via trusted publishing (OIDC)
 - Java: publish to local Maven (smoke gate for packaging)
 
 ### Stage: `public`
 
 - JavaScript: publish to npm (`NPM_TOKEN`)
-- Python: publish to PyPI (`PYPI_API_TOKEN`)
+- Python: publish to PyPI via trusted publishing (OIDC)
 - Java: publish to Maven Central (`SONATYPE_USERNAME`, `SONATYPE_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`, `MAVEN_GPG_PASSPHRASE`)
 
 ## Required Secrets
 
-Test stage:
-- `TEST_PYPI_API_TOKEN`
-
 Public stage:
 - `NPM_TOKEN`
-- `PYPI_API_TOKEN`
 - `SONATYPE_USERNAME`
 - `SONATYPE_PASSWORD`
 - `MAVEN_GPG_PRIVATE_KEY`
 - `MAVEN_GPG_PASSPHRASE`
+
+Python publish path requirements:
+- Configure trusted publishers for `.github/workflows/publish-prophet-lib.yml` in both TestPyPI and PyPI.
 
 ## Post-Publish Verification
 

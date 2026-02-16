@@ -34,20 +34,25 @@ Notes:
 - This path uses OIDC trusted publishing, not API tokens.
 - Tag pattern trigger is `v*.*.*`.
 
-## 2. Configure `prophet-lib` Runtime Publishing Secrets
+## 2. Configure `prophet-lib` Runtime Publishing
 
 Add these repository secrets in GitHub settings:
 
-Test stage:
-- `TEST_PYPI_API_TOKEN`
-
 Public stage:
 - `NPM_TOKEN`
-- `PYPI_API_TOKEN`
 - `SONATYPE_USERNAME`
 - `SONATYPE_PASSWORD`
 - `MAVEN_GPG_PRIVATE_KEY`
 - `MAVEN_GPG_PASSPHRASE`
+
+For Python runtime publishing, configure trusted publishers in both indexes:
+
+1. In TestPyPI, add a trusted publisher for:
+   - owner/repo: `Chainso/prophet`
+   - workflow: `.github/workflows/publish-prophet-lib.yml`
+2. In PyPI, add a trusted publisher for:
+   - owner/repo: `Chainso/prophet`
+   - workflow: `.github/workflows/publish-prophet-lib.yml`
 
 ## 3. Configure Registry Access
 
@@ -58,10 +63,10 @@ Public stage:
 
 ### PyPI/TestPyPI
 
-- Create API tokens for:
-  - TestPyPI (`TEST_PYPI_API_TOKEN`)
-  - PyPI (`PYPI_API_TOKEN`)
-- Scope tokens to least privilege practical for release automation.
+- Configure trusted publishers for both TestPyPI and PyPI using:
+  - owner/repo: `Chainso/prophet`
+  - workflow: `.github/workflows/publish-prophet-lib.yml`
+- This path uses OIDC and does not require Python package API tokens in GitHub secrets.
 
 ### Maven Central (Sonatype)
 
@@ -115,5 +120,5 @@ For `prophet-cli`, create and push annotated release tag `vX.Y.Z` after validati
 ## Troubleshooting
 
 - Version mismatch failures: align `prophet-lib/VERSION` with all runtime manifests.
-- Missing secret failures: check exact secret names in workflow logs.
+- Missing secret failures: check exact secret names (`NPM_TOKEN`, Sonatype/GPG secrets) in workflow logs.
 - Maven publish/signing failures: verify Sonatype permissions and GPG key/passphrase pair.
