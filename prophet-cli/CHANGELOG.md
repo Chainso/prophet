@@ -4,6 +4,14 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-02-16
+
+### Changed
+- Updated `prophet-lib` JavaScript runtime publishing to use npm trusted publishing (OIDC) instead of token-based auth.
+- Updated runtime publish workflow JavaScript release environment to Node `24` for npm trusted publishing compatibility.
+- Updated maintainer publishing docs/runbooks to remove `NPM_TOKEN` requirements and document npm trusted publisher setup for `@prophet-ontology/events-runtime`.
+- Toolchain/package version advanced to `0.16.0`.
+
 ## [0.15.0] - 2026-02-16
 
 ### Added
