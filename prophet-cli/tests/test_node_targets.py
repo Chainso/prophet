@@ -99,6 +99,21 @@ class NodeTargetTests(unittest.TestCase):
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "node_express_mongoose")
 
+    def test_node_stack_can_generate_turtle_projection(self) -> None:
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "node_express_prisma"}
+        cfg["generation"]["targets"] = ["openapi", "turtle", "node_express", "prisma", "manifest"]
+
+        ir = build_ir(self._ontology(), cfg)
+        with tempfile.TemporaryDirectory(prefix="prophet-node-turtle-") as tmp:
+            outputs = build_generated_outputs(ir, cfg, root=Path(tmp))
+
+        self.assertIn("gen/turtle/ontology.ttl", outputs)
+        turtle = outputs["gen/turtle/ontology.ttl"]
+        self.assertIn("@prefix prophet:", turtle)
+        self.assertIn("prophet:LocalOntology", turtle)
+        self.assertIn("prophet:Process", turtle)
+
     def test_autodetect_selects_node_prisma_and_rewrites_default_targets(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-prisma-") as tmp:
             root = Path(tmp)

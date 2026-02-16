@@ -1,6 +1,6 @@
 # Examples
 
-This page is the runnable sample app catalog.
+This page is the sample catalog (runnable apps + minimal target examples).
 
 Use [Quickstart](../quickstart/quickstart.md) when integrating Prophet into your own project.
 
@@ -155,4 +155,24 @@ From repository root:
 
 ```bash
 ./scripts/test-all.sh
+```
+
+## Minimal Turtle Example
+
+Path:
+- [examples/turtle/prophet_example_turtle_minimal](../../examples/turtle/prophet_example_turtle_minimal)
+
+Generate Turtle output in any Prophet project by enabling `turtle` in `generation.targets`, then running:
+
+```bash
+prophet gen
+```
+
+Expected output:
+- `gen/turtle/ontology.ttl`
+
+Validate the generated Turtle with base SHACL shapes:
+
+```bash
+pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_minimal/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
 ```

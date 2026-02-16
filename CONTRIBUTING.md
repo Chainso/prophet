@@ -30,6 +30,16 @@ python3 -m build prophet-cli
 python3 -m twine check prophet-cli/dist/*
 ```
 
+Turtle target coverage (included in CLI suite):
+
+```bash
+python3 -m unittest prophet-cli/tests/test_turtle_target.py -v
+cd examples/turtle/prophet_example_turtle_minimal
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+cd $(git rev-parse --show-toplevel)
+pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_minimal/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
+```
+
 From [examples/java/prophet_example_spring](examples/java/prophet_example_spring):
 
 ```bash
@@ -56,6 +66,20 @@ cd examples/node/prophet_example_express_prisma
 npm install
 npm run test:integration
 ```
+
+## Documentation Surfaces to Update for Target Changes
+
+When adding/changing generation targets, update these surfaces in the same change:
+- [README.md](README.md)
+- [AGENTS.md](AGENTS.md)
+- [prophet-cli/README.md](prophet-cli/README.md)
+- [docs/reference/config.md](docs/reference/config.md)
+- [docs/reference/generation.md](docs/reference/generation.md)
+- [docs/reference/index.md](docs/reference/index.md)
+- [docs/reference/examples.md](docs/reference/examples.md)
+- [docs/reference/turtle.md](docs/reference/turtle.md)
+- [docs/quickstart/quickstart.md](docs/quickstart/quickstart.md)
+- [docs/developer/codegen-architecture.md](docs/developer/codegen-architecture.md)
 
 ## Open Items (Good First/Next Contributions)
 

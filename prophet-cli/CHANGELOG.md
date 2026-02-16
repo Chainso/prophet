@@ -4,6 +4,19 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.17.0] - 2026-02-16
+
+### Added
+- Added a modular Turtle target implementation under `prophet_cli/targets/turtle/` and wired it as an optional cross-stack generation target.
+- Added Turtle-target conformance coverage with deterministic projection tests plus enforced `pyshacl` validation against `prophet.ttl`.
+- Added a minimal initialized Turtle sample project at `examples/turtle/prophet_example_turtle_minimal`.
+
+### Changed
+- Aligned generated Turtle output to the base Prophet ontology vocabulary (`prophet:` / `std:`) with ontology-derived local prefixes.
+- Reworked Turtle custom type constraints to emit SHACL `NodeShape` resources (`prophet:hasConstraint`) instead of JSON-encoded constraint blobs.
+- Updated reference/quickstart/developer/agent/contributor documentation surfaces for Turtle target behavior, validation commands, and release maintenance expectations.
+- Toolchain/package version advanced to `0.17.0`.
+
 ## [0.16.0] - 2026-02-16
 
 ### Changed

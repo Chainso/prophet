@@ -18,6 +18,11 @@
 - `--skip-unchanged`: skip no-op generation using `.prophet/cache/generation.json`
 - `--verify-clean`: fail if committed/generated files drift from current generator output
 
+To generate Turtle output, include `turtle` in `generation.targets`.
+Output path:
+- `gen/turtle/ontology.ttl`
+- SHACL/conformance details: [Turtle Target Reference](turtle.md)
+
 Node stacks also apply package.json script auto-wiring for:
 - `prophet:gen`
 - `prophet:check`
@@ -50,4 +55,5 @@ prophet <subcommand> --help
 
 For advanced CLI behavior and examples:
 - [prophet-cli/README.md](../../prophet-cli/README.md)
+- [Turtle Target Reference](turtle.md)
 - [Examples](examples.md)

@@ -58,9 +58,10 @@ from prophet_cli.targets.node_express.autodetect import apply_node_autodetect
 from prophet_cli.targets.python import apply_python_autodetect
 from prophet_cli.targets.python import PythonDeps
 from prophet_cli.targets.python import generate_outputs as generate_python_outputs
+from prophet_cli.targets.turtle import render_turtle
 
 
-TOOLCHAIN_VERSION = "0.16.0"
+TOOLCHAIN_VERSION = "0.17.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
@@ -1556,6 +1557,7 @@ def _generate_outputs_for_java_spring_jpa(context: GenerationContext) -> Dict[st
             reader.as_dict(),
         ),
         render_openapi=lambda reader: render_openapi(reader.as_dict()),
+        render_turtle=lambda reader: render_turtle(reader.as_dict()),
         toolchain_version=TOOLCHAIN_VERSION,
     )
     return generate_java_spring_jpa_outputs(context, deps)
@@ -1567,6 +1569,7 @@ def _generate_outputs_for_node_express(context: GenerationContext) -> Dict[str, 
         resolve_stack_spec=resolve_stack_spec,
         render_sql=lambda reader: render_sql(reader.as_dict()),
         render_openapi=lambda reader: render_openapi(reader.as_dict()),
+        render_turtle=lambda reader: render_turtle(reader.as_dict()),
         toolchain_version=TOOLCHAIN_VERSION,
     )
     return generate_node_express_outputs(context, deps)
@@ -1578,6 +1581,7 @@ def _generate_outputs_for_python(context: GenerationContext) -> Dict[str, str]:
         resolve_stack_spec=resolve_stack_spec,
         render_sql=lambda reader: render_sql(reader.as_dict()),
         render_openapi=lambda reader: render_openapi(reader.as_dict()),
+        render_turtle=lambda reader: render_turtle(reader.as_dict()),
         toolchain_version=TOOLCHAIN_VERSION,
     )
     return generate_python_outputs(context, deps)
@@ -3002,7 +3006,7 @@ def build_cli() -> argparse.ArgumentParser:
     p_generate = sub.add_parser(
         "generate",
         formatter_class=HelpFormatter,
-        help="Generate SQL/OpenAPI/Spring/migration artifacts and current IR",
+        help="Generate SQL/OpenAPI/Turtle/stack artifacts and current IR",
         description=(
             "Write deterministic generated artifacts to the configured output directory.\n"
             "Also updates .prophet/ir/current.ir.json and syncs the Spring example project if present."

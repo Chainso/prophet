@@ -27,6 +27,7 @@ class JavaSpringJpaDeps:
     render_sql: Callable[[IRReader], str]
     compute_delta_from_baseline: Callable[[Path, Dict[str, Any], IRReader], Tuple[Optional[str], List[str], Optional[Path], Optional[str], Dict[str, Any]]]
     render_openapi: Callable[[IRReader], str]
+    render_turtle: Callable[[IRReader], str]
     toolchain_version: str
 
 
@@ -72,6 +73,8 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
         outputs[f"{out_dir}/migrations/delta/report.json"] = json.dumps(report, indent=2, sort_keys=False) + "\n"
     if "openapi" in targets:
         outputs[f"{out_dir}/openapi/openapi.yaml"] = deps.render_openapi(context.ir_reader)
+    if "turtle" in targets:
+        outputs[f"{out_dir}/turtle/ontology.ttl"] = deps.render_turtle(context.ir_reader)
     if "spring_boot" in targets:
         spring_files = render_spring_files(
             context.ir_reader.as_dict(),

@@ -150,6 +150,21 @@ class PythonTargetTests(unittest.TestCase):
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "python_django_django_orm")
 
+    def test_python_stack_can_generate_turtle_projection(self) -> None:
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "python_fastapi_sqlalchemy"}
+        cfg["generation"]["targets"] = ["openapi", "turtle", "python", "fastapi", "sqlalchemy", "manifest"]
+
+        ir = build_ir(self._ontology(), cfg)
+        with tempfile.TemporaryDirectory(prefix="prophet-python-turtle-") as tmp:
+            outputs = build_generated_outputs(ir, cfg, root=Path(tmp))
+
+        self.assertIn("gen/turtle/ontology.ttl", outputs)
+        turtle = outputs["gen/turtle/ontology.ttl"]
+        self.assertIn("@prefix prophet:", turtle)
+        self.assertIn("prophet:ActionInput", turtle)
+        self.assertIn("prophet:EventTrigger", turtle)
+
     def test_autodetect_selects_python_fastapi_sqlmodel(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-python-fastapi-") as tmp:
             root = Path(tmp)

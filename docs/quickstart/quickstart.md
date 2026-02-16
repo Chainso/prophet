@@ -85,7 +85,7 @@ Java Spring + JPA:
 generation:
   stack:
     id: java_spring_jpa
-  targets: [sql, openapi, spring_boot, manifest]
+  targets: [sql, openapi, turtle, spring_boot, manifest]
   spring_boot:
     base_package: com.example
 ```
@@ -96,7 +96,7 @@ Node Express + Prisma:
 generation:
   stack:
     id: node_express_prisma
-  targets: [sql, openapi, node_express, prisma, manifest]
+  targets: [sql, openapi, turtle, node_express, prisma, manifest]
 ```
 
 Python FastAPI + SQLAlchemy:
@@ -105,7 +105,7 @@ Python FastAPI + SQLAlchemy:
 generation:
   stack:
     id: python_fastapi_sqlalchemy
-  targets: [sql, openapi, python, fastapi, sqlalchemy, manifest]
+  targets: [sql, openapi, turtle, python, fastapi, sqlalchemy, manifest]
 ```
 
 ## 5. Validate and Generate
@@ -120,7 +120,14 @@ Generated outputs include:
 - `.prophet/ir/current.ir.json`
 - `gen/sql/schema.sql`
 - `gen/openapi/openapi.yaml`
+- `gen/turtle/ontology.ttl` (when `turtle` target is enabled)
 - stack-specific generated runtime code under `gen/**`
+
+Optional Turtle conformance check:
+
+```bash
+pyshacl -s prophet.ttl -d prophet.ttl gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
+```
 
 ## 6. Implement User-Owned Extension Points
 
@@ -152,4 +159,5 @@ prophet gen --verify-clean
 - CLI reference: [CLI](../reference/cli.md)
 - DSL reference: [DSL](../reference/dsl.md)
 - Config reference: [Config](../reference/config.md)
+- Turtle target details: [Turtle](../reference/turtle.md)
 - Integration examples: [Examples](../reference/examples.md)

@@ -29,6 +29,16 @@ python3 -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
 
 Coverage includes parser, IR pipeline, stack detection, compatibility rules, and generation snapshots.
 
+Target-specific smoke checks (example: Turtle projection target):
+
+```bash
+python3 -m unittest prophet-cli/tests/test_turtle_target.py -v
+cd examples/turtle/prophet_example_turtle_minimal
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+cd $(git rev-parse --show-toplevel)
+pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_minimal/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
+```
+
 ## Java Example Tests
 
 From [examples/java/prophet_example_spring](../../examples/java/prophet_example_spring):

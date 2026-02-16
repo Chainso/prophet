@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.16.0",
+  "toolchain_version": "0.17.0",
   "stack": {
     "id": "node_express_typeorm",
     "language": "node",
     "framework": "express",
     "orm": "typeorm"
   },
-  "ir_hash": "5c93676aeea71595d00770be32fc7bd553c242cfa948f49372b3e423b9cbdaaa",
+  "ir_hash": "211bf1175aba3312870caaf0d3030bf894fc8856965ea7741e6f15f504278e60",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/node-express/package.json",
-      "sha256": "b26fbd54f4a868ca418e5b237cdc49a1accc8f5bc771f9e02090d04509d45105"
+      "sha256": "08549a9359c14a55656eda17e46031f96bc0e603a57628ca0702d0debcef22c0"
     },
     {
       "path": "gen/node-express/src/generated/action-handlers.ts",

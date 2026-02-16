@@ -36,6 +36,7 @@ class PythonDeps:
     resolve_stack_spec: Callable[[Dict[str, Any]], StackSpec]
     render_sql: Callable[[IRReader], str]
     render_openapi: Callable[[IRReader], str]
+    render_turtle: Callable[[IRReader], str]
     toolchain_version: str
 
 
@@ -103,6 +104,8 @@ def generate_outputs(context: GenerationContext, deps: PythonDeps) -> Dict[str, 
         outputs[f"{out_dir}/sql/schema.sql"] = deps.render_sql(context.ir_reader)
     if "openapi" in targets:
         outputs[f"{out_dir}/openapi/openapi.yaml"] = deps.render_openapi(context.ir_reader)
+    if "turtle" in targets:
+        outputs[f"{out_dir}/turtle/ontology.ttl"] = deps.render_turtle(context.ir_reader)
 
     py_prefix = f"{out_dir}/python"
     generated_prefix = f"{py_prefix}/src/generated"

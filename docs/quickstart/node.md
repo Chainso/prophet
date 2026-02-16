@@ -10,7 +10,7 @@ Prisma:
 generation:
   stack:
     id: node_express_prisma
-  targets: [sql, openapi, node_express, prisma, manifest]
+  targets: [sql, openapi, turtle, node_express, prisma, manifest]
 ```
 
 TypeORM:
@@ -19,7 +19,7 @@ TypeORM:
 generation:
   stack:
     id: node_express_typeorm
-  targets: [sql, openapi, node_express, typeorm, manifest]
+  targets: [sql, openapi, turtle, node_express, typeorm, manifest]
 ```
 
 Mongoose:
@@ -28,7 +28,7 @@ Mongoose:
 generation:
   stack:
     id: node_express_mongoose
-  targets: [openapi, node_express, mongoose, manifest]
+  targets: [openapi, turtle, node_express, mongoose, manifest]
 ```
 
 If you omit `generation.stack`, Prophet can auto-detect from your `package.json` dependencies.
@@ -42,6 +42,7 @@ prophet gen
 
 Generated Node runtime files are written under:
 - `gen/node-express/src/generated/`
+- `gen/turtle/ontology.ttl` (when `turtle` target is enabled)
 
 ## 3. Install Runtime Dependencies
 
@@ -88,3 +89,4 @@ prophet check --show-reasons
 
 - Node generation details: [Node/Express Reference](../reference/node-express.md)
 - Config details: [Config](../reference/config.md)
+- Turtle target details: [Turtle Target](../reference/turtle.md)

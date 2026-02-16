@@ -34,13 +34,13 @@ def minimal_ir() -> dict:
 
 class JavaTargetIRReaderTests(unittest.TestCase):
     def test_target_generator_consumes_ir_reader_contract(self) -> None:
-        calls = {"render_sql": 0, "render_openapi": 0, "compute_delta": 0}
+        calls = {"render_sql": 0, "render_openapi": 0, "render_turtle": 0, "compute_delta": 0}
         reader = IRReader.from_dict(minimal_ir())
         context = GenerationContext(
             stack_id="java_spring_jpa",
             ir=reader.as_dict(),
             ir_reader=reader,
-            cfg={"generation": {"out_dir": "gen", "targets": ["sql", "openapi", "spring_boot"]}},
+            cfg={"generation": {"out_dir": "gen", "targets": ["sql", "openapi", "turtle", "spring_boot"]}},
             root=Path("."),
         )
 
@@ -54,22 +54,25 @@ class JavaTargetIRReaderTests(unittest.TestCase):
                 status="implemented",
                 implemented=True,
                 description="test stack",
-                default_targets=("sql", "openapi", "spring_boot"),
+                default_targets=("sql", "openapi", "turtle", "spring_boot"),
                 notes="",
                 capabilities={"action_endpoints"},
             ),
             render_sql=lambda r: _count_and_return(calls, "render_sql", r, "-- sql\n"),
             compute_delta_from_baseline=lambda root, cfg, r: _count_and_delta(calls, "compute_delta", r),
             render_openapi=lambda r: _count_and_return(calls, "render_openapi", r, "openapi: 3.0.3\n"),
+            render_turtle=lambda r: _count_and_return(calls, "render_turtle", r, "# turtle\n"),
             toolchain_version="0.4.0",
         )
 
         outputs = generate_outputs(context, deps)
         self.assertIn("gen/sql/schema.sql", outputs)
         self.assertIn("gen/openapi/openapi.yaml", outputs)
+        self.assertIn("gen/turtle/ontology.ttl", outputs)
         self.assertIn("gen/manifest/generated-files.json", outputs)
         self.assertEqual(calls["render_sql"], 1)
         self.assertEqual(calls["render_openapi"], 1)
+        self.assertEqual(calls["render_turtle"], 1)
         self.assertEqual(calls["compute_delta"], 1)
 
 

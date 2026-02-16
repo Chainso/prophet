@@ -11,6 +11,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "prophet-cli" / "src"))
 from prophet_cli import cli
 from prophet_cli.codegen import rendering as codegen_rendering
 from prophet_cli.targets.java_spring_jpa.render import spring as java_spring_rendering
+from prophet_cli.targets.turtle import render_turtle as turtle_rendering
 from prophet_cli.core import config as core_config
 from prophet_cli.core import compatibility as core_compat
 from prophet_cli.core import ir as core_ir
@@ -30,6 +31,7 @@ class CoreDelegationTests(unittest.TestCase):
         self.assertIs(cli.cfg_get, core_config.cfg_get)
         self.assertIs(cli.render_sql, codegen_rendering.render_sql)
         self.assertIs(cli.render_openapi, codegen_rendering.render_openapi)
+        self.assertIs(cli.render_turtle, turtle_rendering)
         self.assertIs(cli.compute_delta_from_baseline, codegen_rendering.compute_delta_from_baseline)
         self.assertIs(cli.resolve_migration_runtime_modes, java_spring_rendering.resolve_migration_runtime_modes)
 

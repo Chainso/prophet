@@ -1,0 +1,111 @@
+ontology support_local {
+  id "ont_support_local"
+  version "0.1.0"
+  description "Minimal support ontology used for Turtle target examples."
+
+  type Email {
+    id "type_email"
+    base string
+    constraint pattern "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+  }
+
+  struct UserRef {
+    id "struct_user_ref"
+
+    field userId {
+      id "fld_struct_user_ref_user_id"
+      type string
+    }
+
+    field email {
+      id "fld_struct_user_ref_email"
+      type Email
+      optional
+    }
+  }
+
+  object Ticket {
+    id "obj_ticket"
+
+    field id {
+      id "fld_ticket_id"
+      type string
+      key primary
+    }
+
+    field title {
+      id "fld_ticket_title"
+      type string
+    }
+
+    field assignee {
+      id "fld_ticket_assignee"
+      type UserRef
+      optional
+    }
+
+    field tags {
+      id "fld_ticket_tags"
+      type string[]
+      optional
+    }
+
+    state New {
+      id "state_ticket_new"
+      initial
+    }
+
+    state Triaged {
+      id "state_ticket_triaged"
+    }
+
+    transition Triage {
+      id "trans_ticket_triage"
+      from New
+      to Triaged
+    }
+  }
+
+  signal TicketCreated {
+    id "sig_ticket_created"
+
+    field ticket {
+      id "fld_sig_ticket_created_ticket"
+      type ref(Ticket)
+    }
+  }
+
+  action triageTicket {
+    id "act_triage_ticket"
+    kind process
+
+    input {
+      id "ain_triage_ticket"
+
+      field ticket {
+        id "fld_ain_triage_ticket_ticket"
+        type ref(Ticket)
+      }
+    }
+
+    output {
+      id "aout_triage_ticket"
+
+      field ticket {
+        id "fld_aout_triage_ticket_ticket"
+        type ref(Ticket)
+      }
+
+      field newState {
+        id "fld_aout_triage_ticket_new_state"
+        type string
+      }
+    }
+  }
+
+  trigger onTicketCreated {
+    id "trg_on_ticket_created"
+    when event TicketCreated
+    invoke triageTicket
+  }
+}

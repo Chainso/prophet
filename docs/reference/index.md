@@ -20,6 +20,7 @@ This section is the canonical user-facing reference for Prophet.
 ## Runtime and Generation
 
 - Generation targets and outputs: [Generation](generation.md)
+- Turtle target: [Turtle](turtle.md)
 - Spring Boot integration: [Spring Boot](spring-boot.md)
 - Node/Express integration: [Node/Express](node-express.md)
 - Python integrations: [Python](python.md)

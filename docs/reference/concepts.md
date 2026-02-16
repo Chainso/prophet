@@ -17,7 +17,7 @@ Event categories in the model:
 
 Prophet compiles `.prophet` files into:
 1. Validated canonical IR (`.prophet/ir/current.ir.json`)
-2. Deterministic generated outputs (`gen/**`)
+2. Deterministic generated outputs (`gen/**`) such as SQL, OpenAPI, Turtle, and stack runtime artifacts
 
 ## Deterministic Generation
 

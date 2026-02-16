@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.16.0",
+  "toolchain_version": "0.17.0",
   "stack_id": "python_fastapi_sqlalchemy",
-  "signature": "9c39012ea0460f12d5692135ed7a680c2caab3ec8b121dc9b85a62cd2603e859",
-  "ir_hash": "46cf912f4716067e6f96dc794e9ea56b02eee2cadf30b9c5d150114d79ef82e8",
+  "signature": "1ef379d6214980b2c941d539f074215ad811be81973417b4dbc5a4e33865cae2",
+  "ir_hash": "ba9584b5e039f3baf60a5fbf21e92c3701df389ad92444770997ef173993e53b",
   "out_dir": "gen"
 }

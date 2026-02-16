@@ -1,0 +1,26 @@
+{
+  "enabled": false,
+  "project_kind": "unknown",
+  "stack_id": "",
+  "confidence": "none",
+  "confidence_score": 0,
+  "package_manager": "unknown",
+  "framework_signals": [],
+  "orm_signals": [],
+  "signals": {
+    "has_pyproject": false,
+    "has_requirements": false,
+    "has_manage_py": false,
+    "dependency_count": 0
+  },
+  "versions": {
+    "fastapi": "",
+    "flask": "",
+    "django": "",
+    "sqlalchemy": "",
+    "sqlmodel": ""
+  },
+  "reasons": [],
+  "warnings": [],
+  "diagnostics": []
+}

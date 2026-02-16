@@ -105,6 +105,18 @@ The orchestrator is responsible for:
 - emitting extension hook and generated-file manifests
 - emitting autodetect report manifests when present
 
+## Turtle Target Layout
+
+Turtle output is implemented as a dedicated renderer module:
+
+- `prophet-cli/src/prophet_cli/targets/turtle/render/turtle.py`
+
+Stack generators treat Turtle like other optional targets and delegate to this renderer when `turtle` is enabled.
+
+Conformance/testing notes:
+- Renderer output is aligned to the base ontology in `prophet.ttl`
+- SHACL conformance is enforced in `prophet-cli/tests/test_turtle_target.py` via `pyshacl`
+
 ## Shared Renderers
 
 Cross-stack rendering that is not stack-orchestrator-specific is centralized in:

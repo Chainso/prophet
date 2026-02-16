@@ -8,7 +8,7 @@ project:
 
 generation:
   out_dir: gen
-  targets: [sql, openapi, spring_boot, flyway, liquibase]
+  targets: [sql, openapi, turtle, spring_boot, flyway, liquibase]
   stack:
     id: java_spring_jpa
   spring_boot:
@@ -30,6 +30,7 @@ compatibility:
 - `targets`: enabled generators
   - `sql`
   - `openapi`
+  - `turtle`
   - `spring_boot`
   - `flyway`
   - `liquibase`
@@ -45,6 +46,7 @@ compatibility:
   - `sqlmodel`
   - `django_orm`
   - `manifest`
+  - target details: [Turtle](turtle.md), [Generation](generation.md)
 - `stack`: stack selection
   - `id: java_spring_jpa`
   - `id: node_express_prisma`

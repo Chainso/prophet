@@ -53,6 +53,12 @@ class StackManifestTests(unittest.TestCase):
             validate_stack_manifest_document(manifest)
         self.assertIn("unknown default_targets values", str(ctx.exception))
 
+    def test_manifest_accepts_turtle_default_target(self) -> None:
+        manifest = copy.deepcopy(STACK_MANIFEST_DOCUMENT)
+        manifest["stacks"][0]["default_targets"].append("turtle")
+        normalized = validate_stack_manifest_document(manifest)
+        self.assertIn("turtle", normalized["stacks"][0]["default_targets"])
+
 
 if __name__ == "__main__":
     unittest.main()

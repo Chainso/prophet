@@ -39,6 +39,7 @@ The longer-term value is coordination. As systems grow, teams make many local ch
 From a `.prophet` ontology file, Prophet can generate:
 - SQL schema files
 - OpenAPI contracts
+- Turtle ontology projections (`gen/turtle/ontology.ttl`)
 - Spring Boot integration code (DTOs, JPA entities/repositories, query and action endpoints)
 - Node/Express integration code (typed contracts, zod validation, action/query routes, event publisher contracts)
 - Python integration code (typed dataclass contracts, action/query routes, event publisher contracts)
@@ -50,6 +51,11 @@ From a `.prophet` ontology file, Prophet can generate:
 - Django adapters + models for Python targets
 - Flyway/Liquibase migration artifacts
 - Generation manifests for ownership and extension hooks
+
+Turtle target conformance notes:
+- Uses `prophet:` vocabulary from `prophet.ttl`
+- Uses a local prefix derived from ontology name (not a hardcoded `example` prefix)
+- Supports SHACL validation via `pyshacl` against `prophet.ttl`
 
 ## How Prophet Is Used
 
@@ -81,6 +87,8 @@ python3 -m venv .venv --system-site-packages
 - Java quickstart: [Spring + JPA](docs/quickstart/java.md)
 - Node quickstart: [Express](docs/quickstart/node.md)
 - Python quickstart: [FastAPI / Flask / Django](docs/quickstart/python.md)
+- Turtle target reference: [Turtle](docs/reference/turtle.md)
+- Minimal Turtle example: [examples/turtle/prophet_example_turtle_minimal](examples/turtle/prophet_example_turtle_minimal)
 - Runnable sample apps: [Examples](docs/reference/examples.md)
 - Full user reference: [Reference Index](docs/reference/index.md)
 - Developer docs: [Developer Index](docs/developer/index.md)
@@ -98,6 +106,9 @@ python3 -m venv .venv --system-site-packages
 | Python | Flask | SQLAlchemy | `python_flask_sqlalchemy` | [Flask + SQLAlchemy Example](examples/python/prophet_example_flask_sqlalchemy) |
 | Python | Flask | SQLModel | `python_flask_sqlmodel` | [Flask + SQLModel Example](examples/python/prophet_example_flask_sqlmodel) |
 | Python | Django | Django ORM | `python_django_django_orm` | [Django + Django ORM Example](examples/python/prophet_example_django) |
+
+Minimal Turtle sample project:
+- [examples/turtle/prophet_example_turtle_minimal](examples/turtle/prophet_example_turtle_minimal)
 
 ## License
 

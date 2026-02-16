@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "stack": "python_fastapi_sqlmodel",
+  "hooks": [
+    {
+      "kind": "action_handler",
+      "action_id": "act_triage_ticket",
+      "action_name": "triageTicket",
+      "python_protocol": "generated.action_handlers.TriageTicketActionHandler"
+    },
+    {
+      "kind": "event_publisher",
+      "python_protocol": "prophet_events_runtime.EventPublisher",
+      "generated_publish_helper": "generated.events.publish_domain_events"
+    }
+  ]
+}

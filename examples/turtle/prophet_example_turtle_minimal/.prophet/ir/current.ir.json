@@ -1,0 +1,305 @@
+{
+  "ir_version": "0.1",
+  "toolchain_version": "0.17.0",
+  "ontology_source_file": "ontology/local/main.prophet",
+  "ontology": {
+    "id": "ont_support_local",
+    "name": "support_local",
+    "version": "0.1.0",
+    "description": "Minimal support ontology used for Turtle target examples."
+  },
+  "types": [
+    {
+      "id": "type_email",
+      "name": "Email",
+      "kind": "custom",
+      "base": "string",
+      "constraints": {
+        "pattern": "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$"
+      }
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj_ticket",
+      "name": "Ticket",
+      "fields": [
+        {
+          "id": "fld_ticket_id",
+          "name": "id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_ticket_title",
+          "name": "title",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ticket_assignee",
+          "name": "assignee",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_user_ref"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ticket_tags",
+          "name": "tags",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 0,
+            "max": "many"
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_ticket_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [
+        {
+          "id": "state_ticket_new",
+          "name": "New",
+          "initial": true
+        },
+        {
+          "id": "state_ticket_triaged",
+          "name": "Triaged",
+          "initial": false
+        }
+      ],
+      "transitions": [
+        {
+          "id": "trans_ticket_triage",
+          "name": "Triage",
+          "from_state_id": "state_ticket_new",
+          "to_state_id": "state_ticket_triaged"
+        }
+      ]
+    }
+  ],
+  "structs": [
+    {
+      "id": "struct_user_ref",
+      "name": "UserRef",
+      "fields": [
+        {
+          "id": "fld_struct_user_ref_user_id",
+          "name": "userId",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_user_ref_email",
+          "name": "email",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_email"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ],
+  "action_inputs": [
+    {
+      "id": "ain_triage_ticket",
+      "name": "TriageTicketCommand",
+      "fields": [
+        {
+          "id": "fld_ain_triage_ticket_ticket",
+          "name": "ticket",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_ticket"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ],
+  "action_outputs": [
+    {
+      "id": "aout_triage_ticket",
+      "name": "TriageTicketResult",
+      "fields": [
+        {
+          "id": "fld_aout_triage_ticket_ticket",
+          "name": "ticket",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_ticket"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_aout_triage_ticket_new_state",
+          "name": "newState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "act_triage_ticket",
+      "name": "triageTicket",
+      "kind": "process",
+      "input_shape_id": "ain_triage_ticket",
+      "output_shape_id": "aout_triage_ticket"
+    }
+  ],
+  "events": [
+    {
+      "id": "sig_ticket_created",
+      "name": "TicketCreated",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_sig_ticket_created_ticket",
+          "name": "ticket",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_ticket"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "aout_triage_ticket",
+      "name": "TriageTicketResult",
+      "kind": "action_output",
+      "output_shape_id": "aout_triage_ticket"
+    },
+    {
+      "id": "trans_ticket_triage",
+      "name": "TicketTriageTransition",
+      "kind": "transition",
+      "object_id": "obj_ticket",
+      "transition_id": "trans_ticket_triage",
+      "from_state_id": "state_ticket_new",
+      "to_state_id": "state_ticket_triaged"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "trg_on_ticket_created",
+      "name": "onTicketCreated",
+      "event_id": "sig_ticket_created",
+      "action_id": "act_triage_ticket"
+    }
+  ],
+  "query_contracts": [
+    {
+      "object_id": "obj_ticket",
+      "object_name": "Ticket",
+      "paths": {
+        "list": "/tickets",
+        "get_by_id": "/tickets/{id}",
+        "typed_query": "/tickets/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_ticket_id",
+          "field_name": "id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_ticket_title",
+          "field_name": "title",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "__current_state__",
+          "field_name": "currentState",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        }
+      ],
+      "contract_hash": "cc784bb5d9ba54121e8fd97e04f065995399be88ca464df2ab24fa4f79ed92a4"
+    }
+  ],
+  "generation_profile": {
+    "golden_stack": "spring_boot"
+  },
+  "compatibility_profile": {
+    "strict_enums": false,
+    "list_scalar_shape_changes_are_breaking": true,
+    "nested_list_shape_changes_are_breaking": true,
+    "struct_field_contract_changes_are_breaking": true,
+    "custom_type_constraint_changes_are_breaking": true
+  },
+  "query_contracts_version": "635e508b8aa15bb4735fc0800288f36cfa730eef732ce60ccae541600797493e",
+  "ir_hash": "06bc05bc9be87605d829757188f567e6a31a3c4f1f2d25331115ca4760d78d0e"
+}

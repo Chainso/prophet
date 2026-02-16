@@ -11,8 +11,13 @@
 - `.prophet/cache/generation.json`
 - `gen/sql/schema.sql`
 - `gen/openapi/openapi.yaml`
+- `gen/turtle/ontology.ttl` (when `turtle` target is enabled)
 - `gen/manifest/generated-files.json`
 - `gen/manifest/extension-hooks.json`
+
+Turtle details:
+- [Turtle Target Reference](turtle.md)
+- output is designed to conform to [`prophet.ttl`](../../prophet.ttl) and can be validated with `pyshacl`
 
 ## Extension Hook Safety
 

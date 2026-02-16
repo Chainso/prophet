@@ -46,6 +46,7 @@ class NodeExpressDeps:
     resolve_stack_spec: Callable[[Dict[str, Any]], StackSpec]
     render_sql: Callable[[IRReader], str]
     render_openapi: Callable[[IRReader], str]
+    render_turtle: Callable[[IRReader], str]
     toolchain_version: str
 
 
@@ -66,6 +67,8 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
 
     if "openapi" in targets:
         outputs[f"{out_dir}/openapi/openapi.yaml"] = deps.render_openapi(context.ir_reader)
+    if "turtle" in targets:
+        outputs[f"{out_dir}/turtle/ontology.ttl"] = deps.render_turtle(context.ir_reader)
 
     node_prefix = f"{out_dir}/node-express"
     if "node_express" in targets:

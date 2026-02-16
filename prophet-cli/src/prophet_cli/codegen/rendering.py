@@ -1024,5 +1024,3 @@ def compute_delta_from_baseline(
         str(baseline_ir.get("ir_hash")) if baseline_ir.get("ir_hash") else None,
         delta_meta,
     )
-
-

@@ -10,7 +10,7 @@ FastAPI + SQLAlchemy:
 generation:
   stack:
     id: python_fastapi_sqlalchemy
-  targets: [sql, openapi, python, fastapi, sqlalchemy, manifest]
+  targets: [sql, openapi, turtle, python, fastapi, sqlalchemy, manifest]
 ```
 
 FastAPI + SQLModel:
@@ -19,7 +19,7 @@ FastAPI + SQLModel:
 generation:
   stack:
     id: python_fastapi_sqlmodel
-  targets: [sql, openapi, python, fastapi, sqlmodel, manifest]
+  targets: [sql, openapi, turtle, python, fastapi, sqlmodel, manifest]
 ```
 
 Flask + SQLAlchemy:
@@ -28,7 +28,7 @@ Flask + SQLAlchemy:
 generation:
   stack:
     id: python_flask_sqlalchemy
-  targets: [sql, openapi, python, flask, sqlalchemy, manifest]
+  targets: [sql, openapi, turtle, python, flask, sqlalchemy, manifest]
 ```
 
 Flask + SQLModel:
@@ -37,7 +37,7 @@ Flask + SQLModel:
 generation:
   stack:
     id: python_flask_sqlmodel
-  targets: [sql, openapi, python, flask, sqlmodel, manifest]
+  targets: [sql, openapi, turtle, python, flask, sqlmodel, manifest]
 ```
 
 Django + Django ORM:
@@ -46,7 +46,7 @@ Django + Django ORM:
 generation:
   stack:
     id: python_django_django_orm
-  targets: [sql, openapi, python, django, django_orm, manifest]
+  targets: [sql, openapi, turtle, python, django, django_orm, manifest]
 ```
 
 If `generation.stack` is omitted, Prophet can auto-detect based on Python dependency and project signals.
@@ -60,6 +60,7 @@ prophet gen
 
 Generated Python runtime files are written under:
 - `gen/python/src/generated/`
+- `gen/turtle/ontology.ttl` (when `turtle` target is enabled)
 
 ## 3. Create Runtime Environment
 
@@ -108,3 +109,4 @@ PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/pytho
 
 - Python generation details: [Python Reference](../reference/python.md)
 - DSL details: [DSL](../reference/dsl.md)
+- Turtle target details: [Turtle Target](../reference/turtle.md)

@@ -15,6 +15,7 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
    - [Java Quickstart](docs/quickstart/java.md)
    - [Node Quickstart](docs/quickstart/node.md)
    - [Python Quickstart](docs/quickstart/python.md)
+   - [Turtle Target Reference](docs/reference/turtle.md)
    - [Reference Index](docs/reference/index.md)
 3. Use the example app matching your target stack:
    - [examples/java/prophet_example_spring](examples/java/prophet_example_spring)
@@ -26,6 +27,7 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
    - [examples/python/prophet_example_flask_sqlalchemy](examples/python/prophet_example_flask_sqlalchemy)
    - [examples/python/prophet_example_flask_sqlmodel](examples/python/prophet_example_flask_sqlmodel)
    - [examples/python/prophet_example_django](examples/python/prophet_example_django)
+   - [examples/turtle/prophet_example_turtle_minimal](examples/turtle/prophet_example_turtle_minimal)
 4. Read [Developer Index](docs/developer/index.md) before changing internal architecture.
 
 ## Critical Rules
@@ -104,6 +106,16 @@ python3 -m venv .venv
 DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
 PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/python/src \
 .venv/bin/python -m pytest -q tests
+```
+
+Turtle target smoke check:
+
+```bash
+python3 -m unittest prophet-cli/tests/test_turtle_target.py -v
+cd examples/turtle/prophet_example_turtle_minimal
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+cd $(git rev-parse --show-toplevel)
+pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_minimal/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
 ```
 
 ## Where to Edit

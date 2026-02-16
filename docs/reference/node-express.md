@@ -7,6 +7,7 @@
 - `node_express_mongoose`
 
 All stacks generate a shared Express runtime surface and stack-specific ORM artifacts.
+When `turtle` target is enabled, all stacks also emit `gen/turtle/ontology.ttl`.
 
 ## Generated Artifacts
 
@@ -146,7 +147,7 @@ Prisma stack:
 generation:
   stack:
     id: node_express_prisma
-  targets: [sql, openapi, node_express, prisma, manifest]
+  targets: [sql, openapi, turtle, node_express, prisma, manifest]
 ```
 
 TypeORM stack:
@@ -155,7 +156,7 @@ TypeORM stack:
 generation:
   stack:
     id: node_express_typeorm
-  targets: [sql, openapi, node_express, typeorm, manifest]
+  targets: [sql, openapi, turtle, node_express, typeorm, manifest]
 ```
 
 Mongoose stack:
@@ -164,5 +165,8 @@ Mongoose stack:
 generation:
   stack:
     id: node_express_mongoose
-  targets: [openapi, node_express, mongoose, manifest]
+  targets: [openapi, turtle, node_express, mongoose, manifest]
 ```
+
+See also:
+- [Turtle Target Reference](turtle.md)

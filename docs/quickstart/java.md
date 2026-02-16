@@ -12,7 +12,7 @@ generation:
   out_dir: gen
   stack:
     id: java_spring_jpa
-  targets: [sql, openapi, spring_boot, manifest]
+  targets: [sql, openapi, turtle, spring_boot, manifest]
   spring_boot:
     base_package: com.example
 
@@ -61,3 +61,4 @@ Default local example setup uses embedded H2. Configure your production datasour
 
 - Spring integration details: [Spring Boot Reference](../reference/spring-boot.md)
 - Query/action contracts: [Generation Reference](../reference/generation.md)
+- Turtle target details: [Turtle Target](../reference/turtle.md)

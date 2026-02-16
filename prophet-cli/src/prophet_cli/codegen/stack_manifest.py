@@ -19,6 +19,7 @@ KNOWN_CAPABILITIES = (
 KNOWN_GENERATION_TARGETS = (
     "sql",
     "openapi",
+    "turtle",
     "spring_boot",
     "flyway",
     "liquibase",

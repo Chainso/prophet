@@ -11,7 +11,7 @@
 1. Parse DSL (path configured via `project.ontology_file`)
 2. Validate model semantics
 3. Build canonical IR (`.prophet/ir/current.ir.json`) including versioned `query_contracts`
-4. Generate deterministic artifacts (`gen/sql`, `gen/openapi`, `gen/migrations`, `gen/spring-boot`)
+4. Generate deterministic artifacts (`gen/sql`, `gen/openapi`, `gen/turtle`, `gen/migrations`, `gen/spring-boot`, `gen/node-express`, `gen/python`)
 5. Check compatibility against baseline IR
 
 Main project repository:
@@ -123,8 +123,16 @@ generation:
     id: java_spring_jpa
 ```
 
-Current generator implementation supports artifact generation for `java_spring_jpa`.
-Other declared stacks are validated and reserved for upcoming target implementations.
+Generator implementations are available for all declared stack ids:
+- `java_spring_jpa`
+- `node_express_prisma`
+- `node_express_typeorm`
+- `node_express_mongoose`
+- `python_fastapi_sqlalchemy`
+- `python_fastapi_sqlmodel`
+- `python_flask_sqlalchemy`
+- `python_flask_sqlmodel`
+- `python_django_django_orm`
 Allowed `generation.stack` keys are: `id`, `language`, `framework`, `orm`.
 
 Equivalent tuple form is also supported:
@@ -144,6 +152,15 @@ Default generated targets:
 - `flyway`
 - `liquibase`
 - `manifest` (generated file ownership + hashes)
+
+Optional cross-stack target:
+- `turtle` -> `gen/turtle/ontology.ttl`
+
+Turtle output details:
+- emits `prophet.ttl`-aligned triples (`prophet:` + `std:` vocabularies)
+- local namespace prefix is derived from ontology name
+- custom type constraints are emitted as SHACL `NodeShape` resources
+- conformance can be checked with `pyshacl` (see [docs/reference/turtle.md](../docs/reference/turtle.md))
 
 When baseline IR differs from current IR, Prophet also emits delta migration artifacts:
 - `gen/migrations/flyway/V2__prophet_delta.sql`
@@ -262,7 +279,7 @@ project:
   ontology_file: path/to/your-ontology.prophet
 generation:
   out_dir: gen
-  targets: [sql, openapi, spring_boot, flyway, liquibase]
+  targets: [sql, openapi, turtle, spring_boot, flyway, liquibase]
   spring_boot:
     base_package: com.example.prophet
     boot_version: 3.3
