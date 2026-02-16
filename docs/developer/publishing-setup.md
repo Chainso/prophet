@@ -59,9 +59,11 @@ For Python runtime publishing, configure trusted publishers in both indexes:
 1. In TestPyPI, add a trusted publisher for:
    - owner/repo: `Chainso/prophet`
    - workflow: `.github/workflows/publish-prophet-lib.yml`
+   - environment: `testpypi`
 2. In PyPI, add a trusted publisher for:
    - owner/repo: `Chainso/prophet`
    - workflow: `.github/workflows/publish-prophet-lib.yml`
+   - environment: `pypi`
 
 ## 3. Configure Registry Access
 
@@ -132,4 +134,7 @@ For `prophet-cli`, create and push annotated release tag `vX.Y.Z` after validati
 
 - Version mismatch failures: align `prophet-lib/VERSION` with all runtime manifests.
 - Missing secret failures: check exact secret names (Sonatype/GPG secrets) in workflow logs.
+- npm `E404` / `Access token expired or revoked`: verify npm trusted publisher for `@prophet-ontology/events-runtime` is configured for this repository/workflow.
+- PyPI `invalid-publisher`: verify trusted publisher entries for `prophet-events-runtime` match repo/workflow and environment (`pypi` or `testpypi`).
+- Sonatype HTTP `402 Payment Required`: verify Sonatype account/namespace entitlement for `io.prophet` and credentials used by this workflow.
 - Maven publish/signing failures: verify Sonatype permissions and GPG key/passphrase pair.

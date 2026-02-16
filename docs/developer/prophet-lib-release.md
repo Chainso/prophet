@@ -121,7 +121,9 @@ JavaScript publish path requirements:
 - Configure npm trusted publisher for package `@prophet-ontology/events-runtime` using workflow `.github/workflows/publish-prophet-lib.yml`.
 
 Python publish path requirements:
-- Configure trusted publishers for `.github/workflows/publish-prophet-lib.yml` in both TestPyPI and PyPI.
+- Configure trusted publishers for `.github/workflows/publish-prophet-lib.yml` in both TestPyPI and PyPI with environments:
+  - TestPyPI: `testpypi`
+  - PyPI: `pypi`
 
 ## Post-Publish Verification
 

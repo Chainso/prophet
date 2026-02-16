@@ -183,7 +183,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Validate JavaScript runtime
         working-directory: prophet-lib/javascript
@@ -203,6 +202,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
+    environment:
+      name: ${{ needs.resolve-publish-config.outputs.stage == 'public' && 'pypi' || 'testpypi' }}
+      url: ${{ needs.resolve-publish-config.outputs.stage == 'public' && 'https://pypi.org/project/prophet-events-runtime/' || 'https://test.pypi.org/project/prophet-events-runtime/' }}
 
     steps:
       - name: Checkout
