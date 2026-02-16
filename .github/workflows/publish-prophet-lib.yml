@@ -271,7 +271,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -z "${SONATYPE_USERNAME:-}" ] || [ -z "${SONATYPE_PASSWORD:-}" ]; then
+          SONATYPE_USERNAME="$(printf '%s' "${SONATYPE_USERNAME:-}" | tr -d '\r\n')"
+          SONATYPE_PASSWORD="$(printf '%s' "${SONATYPE_PASSWORD:-}" | tr -d '\r\n')"
+          SONATYPE_NAMESPACE="$(printf '%s' "${SONATYPE_NAMESPACE:-}" | tr -d '\r\n')"
+          export SONATYPE_USERNAME SONATYPE_PASSWORD SONATYPE_NAMESPACE
+
+          if [ -z "${SONATYPE_USERNAME}" ] || [ -z "${SONATYPE_PASSWORD}" ]; then
             echo "SONATYPE_USERNAME and SONATYPE_PASSWORD are required for public publish." >&2
             exit 1
           fi
@@ -279,24 +284,26 @@ jobs:
             echo "MAVEN_GPG_PRIVATE_KEY is required for public publish." >&2
             exit 1
           fi
-          if [ -z "${SONATYPE_NAMESPACE:-}" ]; then
+          if [ -z "${SONATYPE_NAMESPACE}" ]; then
             echo "SONATYPE_NAMESPACE is required for public publish." >&2
             exit 1
           fi
 
           AUTH_TOKEN="$(printf '%s:%s' "${SONATYPE_USERNAME}" "${SONATYPE_PASSWORD}" | base64 | tr -d '\n')"
           AUTH_CHECK_URL="https://ossrh-staging-api.central.sonatype.com/manual/search/repositories?ip=any&profile_id=${SONATYPE_NAMESPACE}"
-          AUTH_STATUS="$(curl --silent --output /tmp/sonatype-auth-check.json --write-out '%{http_code}' \
+          AUTH_STATUS_BEARER="$(curl --silent --output /tmp/sonatype-auth-check.json --write-out '%{http_code}' \
             -H "Authorization: Bearer ${AUTH_TOKEN}" \
             "${AUTH_CHECK_URL}")"
-          if [ "${AUTH_STATUS}" = "401" ]; then
-            echo "Sonatype authentication failed (401)." >&2
+          AUTH_STATUS_BASIC="$(curl --silent --output /tmp/sonatype-auth-check-basic.json --write-out '%{http_code}' \
+            -u "${SONATYPE_USERNAME}:${SONATYPE_PASSWORD}" \
+            "${AUTH_CHECK_URL}")"
+          if [[ "${AUTH_STATUS_BEARER}" -ge 400 && "${AUTH_STATUS_BASIC}" -ge 400 ]]; then
+            if [ "${AUTH_STATUS_BEARER}" = "401" ] || [ "${AUTH_STATUS_BASIC}" = "401" ]; then
+              echo "Sonatype authentication failed (401)." >&2
+            else
+              echo "Sonatype preflight check failed (bearer=${AUTH_STATUS_BEARER}, basic=${AUTH_STATUS_BASIC}) at ${AUTH_CHECK_URL}" >&2
+            fi
             echo "Ensure SONATYPE_USERNAME/SONATYPE_PASSWORD are Central Portal user token credentials for an account with access to SONATYPE_NAMESPACE=${SONATYPE_NAMESPACE}." >&2
-            exit 1
-          fi
-          if [ "${AUTH_STATUS}" -ge 400 ]; then
-            echo "Sonatype preflight check failed with HTTP ${AUTH_STATUS} at ${AUTH_CHECK_URL}" >&2
-            cat /tmp/sonatype-auth-check.json >&2 || true
             exit 1
           fi
 
@@ -305,7 +312,12 @@ jobs:
 
           # Required by Sonatype Central compatibility publishing:
           # finalize deployment by calling manual upload from the same runner.
-          curl --fail --show-error --silent \
+          if ! curl --fail --show-error --silent \
             -X POST \
             -H "Authorization: Bearer ${AUTH_TOKEN}" \
-            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/${SONATYPE_NAMESPACE}?publishing_type=automatic"
+            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/${SONATYPE_NAMESPACE}?publishing_type=automatic"; then
+            curl --fail --show-error --silent \
+              -X POST \
+              -u "${SONATYPE_USERNAME}:${SONATYPE_PASSWORD}" \
+              "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/${SONATYPE_NAMESPACE}?publishing_type=automatic"
+          fi
