@@ -20,6 +20,10 @@ It covers:
 - `prophet-cli`: [`.github/workflows/publish-pypi.yml`](../../.github/workflows/publish-pypi.yml)
 - `prophet-lib`: [`.github/workflows/publish-prophet-lib.yml`](../../.github/workflows/publish-prophet-lib.yml)
 
+Runtime publish triggers:
+- tag pushes matching `lib-v*.*.*` (automatic `public` stage for all runtime languages)
+- manual dispatch (supports `test` and selective language toggles)
+
 ## 1. Configure `prophet-cli` PyPI Trusted Publishing
 
 1. In PyPI, add a trusted publisher for:
@@ -114,9 +118,9 @@ Run `prophet-lib` test-stage workflow manually:
 ## 6. First Public Publish
 
 1. Re-validate local + CI.
-2. Run Actions -> `Publish prophet-lib runtimes` with:
-   - `stage = public`
-   - matching `release_version`
+2. Choose one public publish path:
+   - preferred automatic path: push annotated tag `lib-vX.Y.Z` (must match `prophet-lib/VERSION`)
+   - manual path: run Actions -> `Publish prophet-lib runtimes` with `stage = public` and matching `release_version`
 3. Verify published versions:
    - `npm view @prophet-ontology/events-runtime version`
    - `pip index versions prophet-events-runtime`

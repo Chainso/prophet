@@ -88,10 +88,11 @@ Runtime coverage added in CI:
 
 ## Publishing
 
-Use manual dispatch of:
-- [`.github/workflows/publish-prophet-lib.yml`](../../.github/workflows/publish-prophet-lib.yml)
+Use [`.github/workflows/publish-prophet-lib.yml`](../../.github/workflows/publish-prophet-lib.yml) via:
+- automatic tag trigger: push `lib-vX.Y.Z` (runs `public` stage and publishes all runtimes)
+- manual dispatch: for staged and/or selective language publishing
 
-Inputs:
+Manual-dispatch inputs:
 - `release_version`: must match `prophet-lib/VERSION`
 - `stage`: `test` or `public`
 - language toggles: `publish_javascript`, `publish_python`, `publish_java`

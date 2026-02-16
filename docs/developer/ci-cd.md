@@ -48,7 +48,10 @@ Requires GitHub environment `pypi` and PyPI trusted publisher config.
 
 ## Runtime Publish Workflow ([.github/workflows/publish-prophet-lib.yml](../../.github/workflows/publish-prophet-lib.yml))
 
-Manual-dispatch runtime publishing for `prophet-lib` packages:
+Runtime publishing for `prophet-lib` packages:
+- triggers:
+  - tag pushes matching `lib-v*.*.*` (auto-public publish for all runtimes)
+  - manual dispatch (staged or selective publish)
 - validates version alignment against `prophet-lib/VERSION`
 - validates each selected runtime package before publish
 - uses OIDC trusted publishing for JavaScript and Python package release

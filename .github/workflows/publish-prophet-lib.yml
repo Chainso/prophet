@@ -1,6 +1,9 @@
 name: Publish prophet-lib runtimes
 
 on:
+  push:
+    tags:
+      - "lib-v*.*.*"
   workflow_dispatch:
     inputs:
       release_version:
@@ -32,15 +35,89 @@ on:
         default: true
 
 concurrency:
-  group: publish-prophet-lib-${{ github.ref }}-${{ inputs.release_version }}-${{ inputs.stage }}
+  group: publish-prophet-lib-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
+  resolve-publish-config:
+    runs-on: ubuntu-latest
+    outputs:
+      release_version: ${{ steps.resolve.outputs.release_version }}
+      stage: ${{ steps.resolve.outputs.stage }}
+      publish_javascript: ${{ steps.resolve.outputs.publish_javascript }}
+      publish_python: ${{ steps.resolve.outputs.publish_python }}
+      publish_java: ${{ steps.resolve.outputs.publish_java }}
+
+    steps:
+      - name: Resolve publish configuration
+        id: resolve
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_RELEASE_VERSION: ${{ inputs.release_version }}
+          INPUT_STAGE: ${{ inputs.stage }}
+          INPUT_PUBLISH_JAVASCRIPT: ${{ inputs.publish_javascript }}
+          INPUT_PUBLISH_PYTHON: ${{ inputs.publish_python }}
+          INPUT_PUBLISH_JAVA: ${{ inputs.publish_java }}
+        run: |
+          set -euo pipefail
+
+          normalize_bool() {
+            case "${1,,}" in
+              true|1|yes) echo "true" ;;
+              false|0|no) echo "false" ;;
+              *)
+                echo "invalid boolean value: $1" >&2
+                exit 1
+                ;;
+            esac
+          }
+
+          if [[ "${EVENT_NAME}" == "workflow_dispatch" ]]; then
+            release_version="${INPUT_RELEASE_VERSION}"
+            stage="${INPUT_STAGE}"
+            publish_javascript="$(normalize_bool "${INPUT_PUBLISH_JAVASCRIPT}")"
+            publish_python="$(normalize_bool "${INPUT_PUBLISH_PYTHON}")"
+            publish_java="$(normalize_bool "${INPUT_PUBLISH_JAVA}")"
+          else
+            if [[ ! "${REF_NAME}" =~ ^lib-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+              echo "unsupported tag '${REF_NAME}' for prophet-lib publish workflow" >&2
+              exit 1
+            fi
+            release_version="${BASH_REMATCH[1]}"
+            stage="public"
+            publish_javascript="true"
+            publish_python="true"
+            publish_java="true"
+          fi
+
+          if [[ -z "${release_version}" ]]; then
+            echo "release_version resolved to an empty value" >&2
+            exit 1
+          fi
+
+          case "${stage}" in
+            test|public) ;;
+            *)
+              echo "invalid stage '${stage}', expected test or public" >&2
+              exit 1
+              ;;
+          esac
+
+          {
+            echo "release_version=${release_version}"
+            echo "stage=${stage}"
+            echo "publish_javascript=${publish_javascript}"
+            echo "publish_python=${publish_python}"
+            echo "publish_java=${publish_java}"
+          } >> "$GITHUB_OUTPUT"
+
   validate-versions:
     runs-on: ubuntu-latest
+    needs: resolve-publish-config
 
     steps:
       - name: Checkout
@@ -48,7 +125,7 @@ jobs:
 
       - name: Validate release version alignment
         env:
-          RELEASE_VERSION: ${{ inputs.release_version }}
+          RELEASE_VERSION: ${{ needs.resolve-publish-config.outputs.release_version }}
         run: |
           python - <<'PY'
           import json
@@ -62,7 +139,7 @@ jobs:
 
           if requested != expected:
               raise SystemExit(
-                  f"workflow input release_version={requested!r} does not match prophet-lib/VERSION={expected!r}"
+                  f"resolved release_version={requested!r} does not match prophet-lib/VERSION={expected!r}"
               )
 
           package_json = json.loads(pathlib.Path("prophet-lib/javascript/package.json").read_text(encoding="utf-8"))
@@ -72,7 +149,7 @@ jobs:
           py_version = pyproject["project"]["version"].strip()
 
           java_build = pathlib.Path("prophet-lib/java/build.gradle.kts").read_text(encoding="utf-8")
-          match = re.search(r'^version\\s*=\\s*"([^"]+)"', java_build, re.MULTILINE)
+          match = re.search(r'^\s*version\s*=\s*"([^"]+)"', java_build, re.MULTILINE)
           if not match:
               raise SystemExit("could not find Java runtime version in prophet-lib/java/build.gradle.kts")
           java_version = match.group(1).strip()
@@ -92,8 +169,8 @@ jobs:
 
   javascript-runtime:
     runs-on: ubuntu-latest
-    needs: validate-versions
-    if: ${{ inputs.publish_javascript }}
+    needs: [resolve-publish-config, validate-versions]
+    if: ${{ needs.resolve-publish-config.outputs.publish_javascript == 'true' }}
     permissions:
       contents: read
       id-token: write
@@ -115,14 +192,14 @@ jobs:
           npm pack --dry-run
 
       - name: Publish JavaScript runtime to npm
-        if: ${{ inputs.stage == 'public' }}
+        if: ${{ needs.resolve-publish-config.outputs.stage == 'public' }}
         working-directory: prophet-lib/javascript
         run: npm publish --access public --provenance
 
   python-runtime:
     runs-on: ubuntu-latest
-    needs: validate-versions
-    if: ${{ inputs.publish_python }}
+    needs: [resolve-publish-config, validate-versions]
+    if: ${{ needs.resolve-publish-config.outputs.publish_python == 'true' }}
     permissions:
       contents: read
       id-token: write
@@ -145,22 +222,22 @@ jobs:
           python -m twine check prophet-lib/python/dist/*
 
       - name: Publish Python runtime to TestPyPI
-        if: ${{ inputs.stage == 'test' }}
+        if: ${{ needs.resolve-publish-config.outputs.stage == 'test' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: prophet-lib/python/dist
           repository-url: https://test.pypi.org/legacy/
 
       - name: Publish Python runtime to PyPI
-        if: ${{ inputs.stage == 'public' }}
+        if: ${{ needs.resolve-publish-config.outputs.stage == 'public' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: prophet-lib/python/dist
 
   java-runtime:
     runs-on: ubuntu-latest
-    needs: validate-versions
-    if: ${{ inputs.publish_java }}
+    needs: [resolve-publish-config, validate-versions]
+    if: ${{ needs.resolve-publish-config.outputs.publish_java == 'true' }}
 
     steps:
       - name: Checkout
@@ -177,12 +254,12 @@ jobs:
         run: ./gradlew -p ../../../prophet-lib/java test
 
       - name: Publish Java runtime to Maven Local (test stage)
-        if: ${{ inputs.stage == 'test' }}
+        if: ${{ needs.resolve-publish-config.outputs.stage == 'test' }}
         working-directory: examples/java/prophet_example_spring
         run: ./gradlew -p ../../../prophet-lib/java publishToMavenLocal
 
       - name: Publish Java runtime to Maven Central
-        if: ${{ inputs.stage == 'public' }}
+        if: ${{ needs.resolve-publish-config.outputs.stage == 'public' }}
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
