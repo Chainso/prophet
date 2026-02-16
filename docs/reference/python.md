@@ -55,8 +55,9 @@ Autodetection fails closed for ambiguous framework signals or missing ORM signal
 ## Action and Event Behavior
 
 - Generated action endpoints are mounted per framework.
-- Generated action service emits action-output events through `EventEmitter`.
-- `EventEmitterNoOp` is provided for zero-config local wiring.
+- Generated action service publishes event wire envelopes through async `EventPublisher` from `prophet-events-runtime`.
+- `EventPublisherNoOp` is provided for zero-config local wiring.
+- Handlers can return either the action output directly or `ActionOutcome` with additional domain events.
 - Default action handler implementations raise `NotImplementedError` until replaced by user code.
 
 ## Query Behavior

@@ -93,7 +93,8 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet gen
 $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-PYTHONPATH=src:gen/python/src .venv/bin/python -m pytest -q tests
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/python/src \
+.venv/bin/python -m pytest -q tests
 
 cd ../prophet_example_django
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen
@@ -101,7 +102,7 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
-PYTHONPATH=src:gen/python/src \
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/python/src \
 .venv/bin/python -m pytest -q tests
 ```
 

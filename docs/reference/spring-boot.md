@@ -47,15 +47,13 @@ List responses are generated DTO envelopes (`*ListResponse`), not raw Spring `Pa
 - default generated handlers throw `UnsupportedOperationException`
 - user implements handler/service beans in user-owned code
 
-## Event Emitter APIs
+## Event Publisher APIs
 
-- generated `GeneratedEventEmitter` interface exposes typed emit methods for:
-  - signals,
-  - transitions,
-  - action outputs.
-- generated `GeneratedEventEmitterNoOp` is registered automatically when no custom emitter bean is provided.
-- generated default action services emit action-output events automatically after successful handler execution.
-- signal and transition emission remains user-controlled via custom emitter usage.
+- generated services depend on `io.prophet.events.runtime.EventPublisher` from `io.prophet:prophet-events-runtime`.
+- generated `GeneratedEventPublisherNoOp` is registered automatically when no custom publisher bean is provided.
+- generated default action services publish action outcomes automatically after successful handler execution.
+- handlers can return either the action output directly or generated `ActionOutcome` with additional domain events.
+- signal and transition emission remains user-controlled via generated event helpers.
 
 ## Ownership Boundaries
 

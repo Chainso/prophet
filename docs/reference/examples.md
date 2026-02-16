@@ -80,6 +80,7 @@ cd examples/python/prophet_example_fastapi_sqlalchemy
 prophet gen
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src \
 .venv/bin/uvicorn src.app:app --host 0.0.0.0 --port 8080
 ```
 
@@ -95,6 +96,7 @@ cd examples/python/prophet_example_fastapi_sqlmodel
 prophet gen
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src \
 .venv/bin/uvicorn src.app:app --host 0.0.0.0 --port 8080
 ```
 
@@ -110,6 +112,7 @@ cd examples/python/prophet_example_flask_sqlalchemy
 prophet gen
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src \
 FLASK_APP=src.app:app .venv/bin/flask run --host 0.0.0.0 --port 8080
 ```
 
@@ -125,6 +128,7 @@ cd examples/python/prophet_example_flask_sqlmodel
 prophet gen
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src \
 FLASK_APP=src.app:app .venv/bin/flask run --host 0.0.0.0 --port 8080
 ```
 
@@ -141,7 +145,7 @@ prophet gen
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
-PYTHONPATH=src:gen/python/src \
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/python/src \
 .venv/bin/python manage.py runserver 0.0.0.0:8080
 ```
 

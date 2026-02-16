@@ -82,24 +82,25 @@ Prophet generates ORM models and repository adapters, but application-owned code
 - SQLModel session lifecycle
 - Django settings/database configuration
 
-## 6. Optional Event Emitter Integration
+## 6. Optional Event Publisher Integration
 
-Generated action services emit action output events through the generated emitter interface.
-Provide your own implementation to publish externally. Default no-op emitter is used otherwise.
+Generated action services publish action outcomes through the generated `EventPublisher` interface.
+Provide your own implementation to publish externally. Default no-op publisher is used otherwise.
 
 ## 7. Run Tests with Framework Test Clients
 
 Use `pytest` and framework-native test clients (no embedded uvicorn in tests):
 
 ```bash
-PYTHONPATH=src:gen/python/src .venv/bin/python -m pytest -q tests
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/python/src \
+.venv/bin/python -m pytest -q tests
 ```
 
 Django:
 
 ```bash
 DJANGO_SETTINGS_MODULE=<your_settings_module> \
-PYTHONPATH=src:gen/python/src \
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/python/src \
 .venv/bin/python -m pytest -q tests
 ```
 

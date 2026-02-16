@@ -45,7 +45,8 @@ From Python examples (framework test clients + pytest):
 cd examples/python/prophet_example_fastapi_sqlalchemy
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-PYTHONPATH=src:gen/python/src .venv/bin/python -m pytest -q tests
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/python/src \
+.venv/bin/python -m pytest -q tests
 ```
 
 From Node examples (Mocha + Supertest):

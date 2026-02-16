@@ -34,12 +34,12 @@ prophet gen --wire-gradle
 ## 3. Implement Action Handlers
 
 Generated handlers are stubs by design. Replace stub implementations in your app-owned code by implementing generated interfaces from:
-- `gen/spring-boot/src/main/java/.../generated/service/handler/`
+- `gen/spring-boot/src/main/java/.../generated/actions/handlers/`
 
-## 4. Optionally Implement Event Emission
+## 4. Optionally Implement Event Publishing
 
-Generated action services emit action outputs through the generated event emitter interface.
-Provide your own emitter bean to connect to your platform event bus. If you do nothing, generated no-op emitter wiring is used.
+Generated action services publish action outcomes through `io.prophet.events.runtime.EventPublisher`.
+Provide your own publisher bean to connect to your platform event bus/API. If you do nothing, generated no-op publisher wiring is used.
 
 ## 5. Run Compile/Test Gates
 

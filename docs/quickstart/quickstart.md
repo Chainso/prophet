@@ -128,7 +128,7 @@ Prophet generates contracts, routes/controllers, repositories, and handler inter
 You implement business logic in generated extension seams:
 - action handler implementations
 - repository wiring and DB connection ownership
-- optional event emitter implementation
+- optional event publisher implementation
 
 Generated default handlers are intentionally non-functional until replaced.
 
