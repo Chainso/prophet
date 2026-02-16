@@ -104,18 +104,20 @@ Inputs:
 
 ### Stage: `public`
 
-- JavaScript: publish to npm (`NPM_TOKEN`)
+- JavaScript: publish to npm via trusted publishing (OIDC)
 - Python: publish to PyPI via trusted publishing (OIDC)
 - Java: publish to Maven Central (`SONATYPE_USERNAME`, `SONATYPE_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`, `MAVEN_GPG_PASSPHRASE`)
 
 ## Required Secrets
 
 Public stage:
-- `NPM_TOKEN`
 - `SONATYPE_USERNAME`
 - `SONATYPE_PASSWORD`
 - `MAVEN_GPG_PRIVATE_KEY`
 - `MAVEN_GPG_PASSPHRASE`
+
+JavaScript publish path requirements:
+- Configure npm trusted publisher for package `@prophet-ontology/events-runtime` using workflow `.github/workflows/publish-prophet-lib.yml`.
 
 Python publish path requirements:
 - Configure trusted publishers for `.github/workflows/publish-prophet-lib.yml` in both TestPyPI and PyPI.

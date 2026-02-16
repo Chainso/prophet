@@ -39,11 +39,16 @@ Notes:
 Add these repository secrets in GitHub settings:
 
 Public stage:
-- `NPM_TOKEN`
 - `SONATYPE_USERNAME`
 - `SONATYPE_PASSWORD`
 - `MAVEN_GPG_PRIVATE_KEY`
 - `MAVEN_GPG_PASSPHRASE`
+
+For JavaScript runtime publishing, configure npm trusted publishing:
+
+1. In npm package settings for `@prophet-ontology/events-runtime`, add a trusted publisher for:
+   - owner/repo: `Chainso/prophet`
+   - workflow: `.github/workflows/publish-prophet-lib.yml`
 
 For Python runtime publishing, configure trusted publishers in both indexes:
 
@@ -58,8 +63,10 @@ For Python runtime publishing, configure trusted publishers in both indexes:
 
 ### npm
 
-- Ensure the npm user/token in `NPM_TOKEN` can publish `@prophet-ontology/events-runtime`.
-- If org-scoped, confirm org permissions and 2FA policy compatibility for automation tokens.
+- Configure npm trusted publishing for `@prophet-ontology/events-runtime` with:
+  - owner/repo: `Chainso/prophet`
+  - workflow: `.github/workflows/publish-prophet-lib.yml`
+- This path uses OIDC and does not require npm tokens in GitHub secrets.
 
 ### PyPI/TestPyPI
 
@@ -120,5 +127,5 @@ For `prophet-cli`, create and push annotated release tag `vX.Y.Z` after validati
 ## Troubleshooting
 
 - Version mismatch failures: align `prophet-lib/VERSION` with all runtime manifests.
-- Missing secret failures: check exact secret names (`NPM_TOKEN`, Sonatype/GPG secrets) in workflow logs.
+- Missing secret failures: check exact secret names (Sonatype/GPG secrets) in workflow logs.
 - Maven publish/signing failures: verify Sonatype permissions and GPG key/passphrase pair.

@@ -51,7 +51,7 @@ Requires GitHub environment `pypi` and PyPI trusted publisher config.
 Manual-dispatch runtime publishing for `prophet-lib` packages:
 - validates version alignment against `prophet-lib/VERSION`
 - validates each selected runtime package before publish
-- uses OIDC trusted publishing for Python package release
+- uses OIDC trusted publishing for JavaScript and Python package release
 - supports two stages:
   - `test`: TestPyPI upload for Python, dry-run packaging for JavaScript, local Maven publish for Java
   - `public`: npm, PyPI, and Maven Central publish paths
