@@ -265,9 +265,12 @@ jobs:
         env:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_NAMESPACE: ${{ secrets.SONATYPE_NAMESPACE }}
           MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
         run: |
+          set -euo pipefail
+
           if [ -z "${SONATYPE_USERNAME:-}" ] || [ -z "${SONATYPE_PASSWORD:-}" ]; then
             echo "SONATYPE_USERNAME and SONATYPE_PASSWORD are required for public publish." >&2
             exit 1
@@ -276,5 +279,15 @@ jobs:
             echo "MAVEN_GPG_PRIVATE_KEY is required for public publish." >&2
             exit 1
           fi
+          NAMESPACE="${SONATYPE_NAMESPACE:-io.github.chainso}"
+
           cd examples/java/prophet_example_spring
           ./gradlew -p ../../../prophet-lib/java publish
+
+          # Required by Sonatype Central compatibility publishing:
+          # finalize deployment by calling manual upload from the same runner.
+          AUTH_TOKEN="$(printf '%s:%s' "${SONATYPE_USERNAME}" "${SONATYPE_PASSWORD}" | base64 | tr -d '\n')"
+          curl --fail --show-error --silent \
+            -X POST \
+            -H "Authorization: Bearer ${AUTH_TOKEN}" \
+            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/${NAMESPACE}?publishing_type=automatic"

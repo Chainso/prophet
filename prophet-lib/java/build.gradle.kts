@@ -62,8 +62,8 @@ publishing {
         if (!sonatypeUsername.isNullOrBlank() && !sonatypePassword.isNullOrBlank()) {
             maven {
                 name = "sonatype"
-                val releasesUrl = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                val snapshotsUrl = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+                val releasesUrl = uri("https://ossrh-staging-api.central.sonatype.com/service/local/staging/deploy/maven2/")
+                val snapshotsUrl = uri("https://central.sonatype.com/repository/maven-snapshots/")
                 url = if (version.toString().endsWith("SNAPSHOT")) snapshotsUrl else releasesUrl
                 credentials {
                     username = sonatypeUsername

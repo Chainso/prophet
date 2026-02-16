@@ -107,13 +107,14 @@ Manual-dispatch inputs:
 
 - JavaScript: publish to npm via trusted publishing (OIDC)
 - Python: publish to PyPI via trusted publishing (OIDC)
-- Java: publish to Maven Central (`SONATYPE_USERNAME`, `SONATYPE_PASSWORD`, `MAVEN_GPG_PRIVATE_KEY`, `MAVEN_GPG_PASSPHRASE`)
+- Java: publish to Maven Central (`SONATYPE_USERNAME`, `SONATYPE_PASSWORD`, optional `SONATYPE_NAMESPACE`, `MAVEN_GPG_PRIVATE_KEY`, `MAVEN_GPG_PASSPHRASE`)
 
 ## Required Secrets
 
 Public stage:
 - `SONATYPE_USERNAME`
 - `SONATYPE_PASSWORD`
+- `SONATYPE_NAMESPACE` (optional, defaults to `io.github.chainso`)
 - `MAVEN_GPG_PRIVATE_KEY`
 - `MAVEN_GPG_PASSPHRASE`
 
