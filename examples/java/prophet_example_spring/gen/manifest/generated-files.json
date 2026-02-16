@@ -35,7 +35,7 @@
     },
     {
       "path": "gen/spring-boot/build.gradle.kts",
-      "sha256": "20dadd2c4b8ef0a07d818360b05057e5ee458a3f2f0e15caa307d90513c21021"
+      "sha256": "ee360dfb234c8fd87c154ba880e9c9b6736d51d22ae202ab89653ca9e29776b7"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/actions/ApproveOrderCommand.java",
