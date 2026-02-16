@@ -10,9 +10,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnMissingBean(value = EventPublisher.class, ignored = GeneratedEventPublisherNoOp.class)
+@ConditionalOnMissingBean(value = EventPublisher.class, ignored = EventPublisherNoOp.class)
 @Generated("prophet-cli")
-public class GeneratedEventPublisherNoOp implements EventPublisher {
+public class EventPublisherNoOp implements EventPublisher {
     @Override
     public CompletionStage<Void> publish(EventWireEnvelope envelope) {
         return CompletableFuture.completedFuture(null);

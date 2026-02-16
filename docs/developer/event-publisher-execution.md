@@ -4,7 +4,7 @@ Status tracking for the end-to-end implementation requested by the user.
 
 ## Objective
 
-Replace legacy generated event-emitter contracts with async-first `EventPublisher` contracts and event wire envelopes across Node, Python, and Java. Add shared non-generated runtimes under `prophet-lib/`, update examples, docs, and CI/publish workflows, and ship via deliverable-by-deliverable commits.
+Replace legacy generated event publishing contracts with async-first `EventPublisher` contracts and event wire envelopes across Node, Python, and Java. Add shared non-generated runtimes under `prophet-lib/`, update examples, docs, and CI/publish workflows, and ship via deliverable-by-deliverable commits.
 
 ## Full Plan
 
@@ -26,7 +26,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 4. Node codegen migration:
    - Generate `DomainEvent` closed sum for action outputs + signals
    - Generate `ActionOutcome<T>` and ergonomic helpers
-   - Replace event-emitter path with `EventPublisher` path
+  - Replace legacy event publishing path with `EventPublisher` path
    - Emit envelopes and publish batched events in deterministic order
 5. Python codegen migration:
    - Same conceptual migration as Node
@@ -35,7 +35,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 6. Java codegen migration:
    - Generate async event publishing path via `CompletionStage`
    - Generate action outcome contracts and envelope mapping utilities
-   - Remove generated per-event emitter interfaces
+  - Remove legacy per-event publishing interfaces
 
 ### Phase 3: Consumer Integration
 
@@ -80,7 +80,7 @@ Replace legacy generated event-emitter contracts with async-first `EventPublishe
 
 ## Acceptance Criteria
 
-- No generated stack uses legacy per-event emitter interfaces.
+- No generated stack uses legacy per-event publishing interfaces.
 - Node/Python/Java generated action flows support:
   - raw output return shorthand
   - `ActionOutcome` return with additional events

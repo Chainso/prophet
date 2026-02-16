@@ -32,6 +32,10 @@ examples/python/**/dev.db-*
 # prophet-lib local build artifacts
 prophet-lib/java/.gradle/
 prophet-lib/java/build/
+prophet-lib/java/.classpath
+prophet-lib/java/.project
+prophet-lib/java/.settings/
+prophet-lib/java/bin/
 prophet-lib/python/build/
 prophet-lib/python/dist/
 prophet-lib/python/*.egg-info/

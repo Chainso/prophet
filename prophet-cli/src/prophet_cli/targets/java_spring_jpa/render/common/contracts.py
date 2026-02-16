@@ -253,8 +253,8 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
         + "import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\n"
         + "import org.springframework.stereotype.Component;\n\n"
         + "@Component\n"
-        + "@ConditionalOnMissingBean(value = EventPublisher.class, ignored = GeneratedEventPublisherNoOp.class)\n"
-        + "public class GeneratedEventPublisherNoOp implements EventPublisher {\n"
+        + "@ConditionalOnMissingBean(value = EventPublisher.class, ignored = EventPublisherNoOp.class)\n"
+        + "public class EventPublisherNoOp implements EventPublisher {\n"
         + "    @Override\n"
         + "    public CompletionStage<Void> publish(EventWireEnvelope envelope) {\n"
         + "        return CompletableFuture.completedFuture(null);\n"
@@ -265,4 +265,4 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
         + "    }\n"
         + "}\n"
     )
-    files[f"src/main/java/{package_path}/generated/events/GeneratedEventPublisherNoOp.java"] = no_op_src
+    files[f"src/main/java/{package_path}/generated/events/EventPublisherNoOp.java"] = no_op_src

@@ -441,7 +441,7 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
         "@Configuration\n"
         f"@EntityScan(basePackages = \"{base_package}.generated.persistence\")\n"
         f"@EnableJpaRepositories(basePackages = \"{base_package}.generated.persistence\")\n"
-        "public class GeneratedPersistenceConfig {\n"
+        "public class PersistenceConfig {\n"
         "}\n"
     )
-    files[f"src/main/java/{package_path}/generated/config/GeneratedPersistenceConfig.java"] = config_src
+    files[f"src/main/java/{package_path}/generated/config/PersistenceConfig.java"] = config_src

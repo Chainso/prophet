@@ -71,10 +71,10 @@ Prophet generates adapters and contracts, but your app owns connection setup:
 - TypeORM: instantiate `DataSource`
 - Mongoose: establish `mongoose.connect(...)`
 
-## 6. Optional Event Emitter Integration
+## 6. Optional Event Publisher Integration
 
-Generated action services emit action output events through the generated emitter interface.
-Provide a custom emitter implementation to publish externally. Default no-op emitter is used if none is provided.
+Generated action services publish event wire envelopes through the generated `EventPublisher` interface.
+Provide a custom publisher implementation to publish externally. Default no-op publisher is used if none is provided.
 
 ## 7. Run Build and Tests
 

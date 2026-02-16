@@ -166,8 +166,8 @@
       "sha256": "03be522342f0459059b13d877097bb596cc4918dd35320a0084a8cba836c5b91"
     },
     {
-      "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/config/GeneratedPersistenceConfig.java",
-      "sha256": "9ec8a51c0b4f9981be78ddacc3c010929136c8bb28664cdbec3e3ce64afa9e6b"
+      "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/config/PersistenceConfig.java",
+      "sha256": "033fe1b8ea09555e86c95a02d99e3a97379c90fe4628d2e9c6fc7b938d2a5ec6"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/Address.java",
@@ -218,12 +218,12 @@
       "sha256": "445fd53552d530264f4159770a6c42904e0b3f2d39b40421543571cc6353194a"
     },
     {
-      "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/EventPublishingSupport.java",
-      "sha256": "74a7cff8899fcc874a45ed3242c01ae96e7313c7502096160d58d9d3688d473a"
+      "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/EventPublisherNoOp.java",
+      "sha256": "d3ffc076941717ccf73349828b35be55eee2ca44eaffdb794175de7ba5cdfbe3"
     },
     {
-      "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/GeneratedEventPublisherNoOp.java",
-      "sha256": "60536ee3c89321f1cc035f88485070d0e048c84cf577926371aa7e8a78c4ef62"
+      "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/EventPublishingSupport.java",
+      "sha256": "74a7cff8899fcc874a45ed3242c01ae96e7313c7502096160d58d9d3688d473a"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/OrderApproveTransition.java",

@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EntityScan(basePackages = "com.example.prophet.commerce_local.generated.persistence")
 @EnableJpaRepositories(basePackages = "com.example.prophet.commerce_local.generated.persistence")
 @Generated("prophet-cli")
-public class GeneratedPersistenceConfig {
+public class PersistenceConfig {
 }
