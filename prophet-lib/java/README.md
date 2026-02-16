@@ -4,9 +4,9 @@
 
 ---
 
-# io.prophet:prophet-events-runtime
+# io.github.chainso:prophet-events-runtime
 
-`io.prophet:prophet-events-runtime` is the shared Java runtime contract used by Prophet-generated Spring action services.
+`io.github.chainso:prophet-events-runtime` is the shared Java runtime contract used by Prophet-generated Spring action services.
 
 Main project repository:
 - https://github.com/Chainso/prophet
@@ -23,16 +23,16 @@ Maven:
 
 ```xml
 <dependency>
-  <groupId>io.prophet</groupId>
+  <groupId>io.github.chainso</groupId>
   <artifactId>prophet-events-runtime</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("io.prophet:prophet-events-runtime:0.1.0")
+implementation("io.github.chainso:prophet-events-runtime:0.2.0")
 ```
 
 ## API

@@ -7,7 +7,7 @@ This runbook covers local validation and publishing for the shared runtime packa
 Runtime packages:
 - JavaScript: `prophet-lib/javascript` (`@prophet-ontology/events-runtime`)
 - Python: `prophet-lib/python` (`prophet-events-runtime`)
-- Java: `prophet-lib/java` (`io.prophet:prophet-events-runtime`)
+- Java: `prophet-lib/java` (`io.github.chainso:prophet-events-runtime`)
 
 Release workflow:
 - [`.github/workflows/publish-prophet-lib.yml`](../../.github/workflows/publish-prophet-lib.yml)
@@ -130,6 +130,6 @@ Python publish path requirements:
 Check package registries:
 - npm: `npm view @prophet-ontology/events-runtime version`
 - PyPI: `pip index versions prophet-events-runtime`
-- Maven Central: verify `io.prophet:prophet-events-runtime:<version>` appears
+- Maven Central: verify `io.github.chainso:prophet-events-runtime:<version>` appears
 
 Then regenerate and compile examples from a clean checkout to confirm installability end-to-end.

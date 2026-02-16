@@ -14,7 +14,7 @@ Replace legacy generated event publishing contracts with async-first `EventPubli
 2. Add `prophet-lib/` with 3 runtime packages:
    - JavaScript: `@prophet-ontology/events-runtime`
    - Python: `prophet-events-runtime`
-   - Java: `io.prophet:prophet-events-runtime`
+   - Java: `io.github.chainso:prophet-events-runtime`
 3. Standardize runtime API shape:
    - `EventWireEnvelope`
    - async `EventPublisher` with `publish` and `publishBatch`

@@ -49,7 +49,7 @@ List responses are generated DTO envelopes (`*ListResponse`), not raw Spring `Pa
 
 ## Event Publisher APIs
 
-- generated services depend on `io.prophet.events.runtime.EventPublisher` from `io.prophet:prophet-events-runtime`.
+- generated services depend on `io.prophet.events.runtime.EventPublisher` from `io.github.chainso:prophet-events-runtime`.
 - generated `EventPublisherNoOp` is registered automatically when no custom publisher bean is provided.
 - generated default action services publish action outcomes automatically after successful handler execution.
 - handlers can return either the action output directly or generated `ActionOutcome` with additional domain events.

@@ -4,7 +4,7 @@ plugins {
     signing
 }
 
-group = "io.prophet"
+group = "io.github.chainso"
 version = "0.2.0"
 
 java {

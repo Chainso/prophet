@@ -19,7 +19,7 @@ Main project repository:
 | --- | --- | --- |
 | JavaScript | `@prophet-ontology/events-runtime` | [`prophet-lib/javascript/README.md`](javascript/README.md) |
 | Python | `prophet-events-runtime` | [`prophet-lib/python/README.md`](python/README.md) |
-| Java | `io.prophet:prophet-events-runtime` | [`prophet-lib/java/README.md`](java/README.md) |
+| Java | `io.github.chainso:prophet-events-runtime` | [`prophet-lib/java/README.md`](java/README.md) |
 
 ## Event Wire Contract
 
