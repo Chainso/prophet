@@ -45,7 +45,7 @@ Add these repository secrets in GitHub settings:
 Public stage:
 - `SONATYPE_USERNAME`
 - `SONATYPE_PASSWORD`
-- `SONATYPE_NAMESPACE` (optional, defaults to `io.github.chainso`)
+- `SONATYPE_NAMESPACE` (required, for example `io.github.chainso`)
 - `MAVEN_GPG_PRIVATE_KEY`
 - `MAVEN_GPG_PASSPHRASE`
 
@@ -86,7 +86,7 @@ For Python runtime publishing, configure trusted publishers in both indexes:
 
 - Ensure group/artifact ownership allows publishing `io.github.chainso:prophet-events-runtime`.
 - Store Sonatype Central Portal user token credentials in `SONATYPE_USERNAME` / `SONATYPE_PASSWORD`.
-- Optionally set `SONATYPE_NAMESPACE` when using a namespace other than `io.github.chainso`.
+- Set `SONATYPE_NAMESPACE` to your verified Central Portal namespace (for example `io.github.chainso`).
 - Export ASCII-armored private signing key into `MAVEN_GPG_PRIVATE_KEY`.
 - Store passphrase in `MAVEN_GPG_PASSPHRASE`.
 
@@ -138,5 +138,5 @@ For `prophet-cli`, create and push annotated release tag `vX.Y.Z` after validati
 - Missing secret failures: check exact secret names (Sonatype/GPG secrets) in workflow logs.
 - npm `E404` / `Access token expired or revoked`: verify npm trusted publisher for `@prophet-ontology/events-runtime` is configured for this repository/workflow.
 - PyPI `invalid-publisher`: verify trusted publisher entries for `prophet-events-runtime` match repo/workflow and environment (`pypi` or `testpypi`).
-- Sonatype HTTP `402 Payment Required`: verify Sonatype Central Portal namespace entitlement and token credentials (`SONATYPE_USERNAME`/`SONATYPE_PASSWORD`) for `io.github.chainso` (or your `SONATYPE_NAMESPACE`).
+- Sonatype HTTP `402 Payment Required`: verify Sonatype Central Portal namespace entitlement and token credentials (`SONATYPE_USERNAME`/`SONATYPE_PASSWORD`) for your `SONATYPE_NAMESPACE`.
 - Maven publish/signing failures: verify Sonatype permissions and GPG key/passphrase pair.

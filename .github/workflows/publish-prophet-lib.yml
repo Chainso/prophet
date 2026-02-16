@@ -279,7 +279,10 @@ jobs:
             echo "MAVEN_GPG_PRIVATE_KEY is required for public publish." >&2
             exit 1
           fi
-          NAMESPACE="${SONATYPE_NAMESPACE:-io.github.chainso}"
+          if [ -z "${SONATYPE_NAMESPACE:-}" ]; then
+            echo "SONATYPE_NAMESPACE is required for public publish." >&2
+            exit 1
+          fi
 
           cd examples/java/prophet_example_spring
           ./gradlew -p ../../../prophet-lib/java publish
@@ -290,4 +293,4 @@ jobs:
           curl --fail --show-error --silent \
             -X POST \
             -H "Authorization: Bearer ${AUTH_TOKEN}" \
-            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/${NAMESPACE}?publishing_type=automatic"
+            "https://ossrh-staging-api.central.sonatype.com/manual/upload/defaultRepository/${SONATYPE_NAMESPACE}?publishing_type=automatic"
