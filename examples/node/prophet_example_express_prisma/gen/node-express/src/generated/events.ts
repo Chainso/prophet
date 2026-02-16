@@ -2,7 +2,7 @@
 
 import type * as Actions from './actions.js';
 import type * as EventContracts from './event-contracts.js';
-import { createEventId, nowIso, NoOpEventPublisher, type EventPublisher, type EventWireEnvelope } from '@prophet/events-runtime';
+import { createEventId, nowIso, NoOpEventPublisher, type EventPublisher, type EventWireEnvelope } from '@prophet-ontology/events-runtime';
 
 export type DomainEvent =
   | { type: 'ApproveOrderResult'; payload: Actions.ApproveOrderResult }

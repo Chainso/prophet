@@ -11,7 +11,7 @@
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "a7bb9e6e86fb847922e423df515dfa5f661d4d78b07393a7f87e37bb76e88a1b"
+      "sha256": "dc0e5814d3d27354988b4e5ac5e3e9ce9b46b2294aa369da9b878ef7fa9edc3f"
     },
     {
       "path": "gen/manifest/node-autodetect.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/node-express/package.json",
-      "sha256": "6147713cfd7f7c58dce1975556348ddd5b1e1f432bac43ea012d27ea039feeb1"
+      "sha256": "6961b1729535b82787249108b2b7ca00560e26fb53831b63484fa8c357055de8"
     },
     {
       "path": "gen/node-express/prisma/schema.prisma",
@@ -31,11 +31,11 @@
     },
     {
       "path": "gen/node-express/src/generated/action-routes.ts",
-      "sha256": "9ccb98c2d88ad232ce501ee1fe27d708f99c08fcc5fa84e635e6ddd3ec5e883e"
+      "sha256": "4e714ea9a2fd78ecb26da0e5fa5507344f0e6ee8c3ed730d73d2b9c0f15ad500"
     },
     {
       "path": "gen/node-express/src/generated/action-service.ts",
-      "sha256": "faf0cc148a2d63279e77a68624ceda464301f4f89d9fda6f16a657f24611d985"
+      "sha256": "13372306024812db1cfeaa547cf86a0ef892339c6ebd6070c70c491f017b81f2"
     },
     {
       "path": "gen/node-express/src/generated/actions.ts",
@@ -51,7 +51,7 @@
     },
     {
       "path": "gen/node-express/src/generated/events.ts",
-      "sha256": "b56269dd04521a3df66b50857f0141a12ff87c6a321a46eaad47a03980a0a4d2"
+      "sha256": "8e2a0139ced4d2113062224c4037e46a9c3c11b71204e776ff9f074d3ad84581"
     },
     {
       "path": "gen/node-express/src/generated/index.ts",

@@ -2,7 +2,7 @@
 
 import type * as Actions from './actions.js';
 import type { ActionContext, ActionHandlers } from './action-handlers.js';
-import { createEventId } from '@prophet/events-runtime';
+import { createEventId } from '@prophet-ontology/events-runtime';
 import {
   createApproveOrderResultEvent,
   createCreateOrderResultEvent,

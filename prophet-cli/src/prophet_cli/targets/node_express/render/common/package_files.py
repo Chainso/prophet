@@ -7,7 +7,7 @@ from prophet_cli.codegen.stacks import StackSpec
 def _render_node_package_json(stack: StackSpec) -> str:
     deps = {
         "express": "^4.19.2",
-        "@prophet/events-runtime": "^0.1.0",
+        "@prophet-ontology/events-runtime": "^0.1.0",
         "zod": "^3.23.8",
     }
     if stack.orm == "prisma":

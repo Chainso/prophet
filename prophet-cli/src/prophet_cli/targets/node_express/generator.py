@@ -119,7 +119,7 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
     extension_hooks.append(
         {
             "kind": "event_publisher",
-            "typescript_interface": "@prophet/events-runtime.EventPublisher",
+            "typescript_interface": "@prophet-ontology/events-runtime.EventPublisher",
             "generated_publish_helper": "generated.events.publishDomainEvents",
         }
     )

@@ -65,7 +65,7 @@ def _render_event_emitter(ir: Dict[str, Any]) -> str:
         "",
         "import type * as Actions from './actions';",
         "import type * as EventContracts from './event-contracts';",
-        "import { createEventId, nowIso, NoOpEventPublisher, type EventPublisher, type EventWireEnvelope } from '@prophet/events-runtime';",
+        "import { createEventId, nowIso, NoOpEventPublisher, type EventPublisher, type EventWireEnvelope } from '@prophet-ontology/events-runtime';",
         "",
     ]
 

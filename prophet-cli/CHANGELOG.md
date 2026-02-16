@@ -8,7 +8,7 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ### Added
 - Added `prophet-lib/` shared runtime packages for generated event publishing:
-  - JavaScript: `@prophet/events-runtime`,
+  - JavaScript: `@prophet-ontology/events-runtime`,
   - Python: `prophet-events-runtime`,
   - Java: `io.prophet:prophet-events-runtime`.
 - Added dedicated runtime publishing setup/runbooks:

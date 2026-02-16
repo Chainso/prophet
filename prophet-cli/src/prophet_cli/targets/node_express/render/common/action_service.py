@@ -21,7 +21,7 @@ def _render_action_service(ir: Dict[str, Any]) -> str:
         "",
         "import type * as Actions from './actions';",
         "import type { ActionContext, ActionHandlers } from './action-handlers';",
-        "import { createEventId } from '@prophet/events-runtime';",
+        "import { createEventId } from '@prophet-ontology/events-runtime';",
         "import {",
         "  " + ",\n  ".join(action_output_creators + ["publishDomainEvents", "toActionOutcome", "type EventPublisher"]),
         "} from './events';",

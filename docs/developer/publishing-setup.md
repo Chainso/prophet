@@ -10,7 +10,7 @@ It covers:
 
 - GitHub admin access for the repository.
 - Maintainer accounts with publish rights in:
-  - npm (for `@prophet/events-runtime`)
+  - npm (for `@prophet-ontology/events-runtime`)
   - PyPI/TestPyPI (`prophet-cli`, `prophet-events-runtime`)
   - Sonatype OSSRH (for `io.prophet:prophet-events-runtime`)
 - GPG key pair for Maven Central signing (ASCII-armored private key).
@@ -58,7 +58,7 @@ For Python runtime publishing, configure trusted publishers in both indexes:
 
 ### npm
 
-- Ensure the npm user/token in `NPM_TOKEN` can publish `@prophet/events-runtime`.
+- Ensure the npm user/token in `NPM_TOKEN` can publish `@prophet-ontology/events-runtime`.
 - If org-scoped, confirm org permissions and 2FA policy compatibility for automation tokens.
 
 ### PyPI/TestPyPI
@@ -111,7 +111,7 @@ Run `prophet-lib` test-stage workflow manually:
    - `stage = public`
    - matching `release_version`
 3. Verify published versions:
-   - `npm view @prophet/events-runtime version`
+   - `npm view @prophet-ontology/events-runtime version`
    - `pip index versions prophet-events-runtime`
    - Maven Central lookup for `io.prophet:prophet-events-runtime`
 

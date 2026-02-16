@@ -12,7 +12,7 @@ Replace legacy generated event publishing contracts with async-first `EventPubli
 
 1. Create this execution tracker and maintain it after every deliverable.
 2. Add `prophet-lib/` with 3 runtime packages:
-   - JavaScript: `@prophet/events-runtime`
+   - JavaScript: `@prophet-ontology/events-runtime`
    - Python: `prophet-events-runtime`
    - Java: `io.prophet:prophet-events-runtime`
 3. Standardize runtime API shape:

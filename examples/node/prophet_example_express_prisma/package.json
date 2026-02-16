@@ -14,7 +14,7 @@
     "prophet:validate": "prophet validate"
   },
   "dependencies": {
-    "@prophet/events-runtime": "file:../../../prophet-lib/javascript",
+    "@prophet-ontology/events-runtime": "file:../../../prophet-lib/javascript",
     "@prisma/client": "^5.22.0",
     "express": "^4.19.2",
     "prisma": "^5.22.0",

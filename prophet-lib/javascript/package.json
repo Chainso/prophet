@@ -1,5 +1,5 @@
 {
-  "name": "@prophet/events-runtime",
+  "name": "@prophet-ontology/events-runtime",
   "version": "0.1.0",
   "private": false,
   "type": "module",

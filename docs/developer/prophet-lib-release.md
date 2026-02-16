@@ -5,7 +5,7 @@ This runbook covers local validation and publishing for the shared runtime packa
 ## Scope
 
 Runtime packages:
-- JavaScript: `prophet-lib/javascript` (`@prophet/events-runtime`)
+- JavaScript: `prophet-lib/javascript` (`@prophet-ontology/events-runtime`)
 - Python: `prophet-lib/python` (`prophet-events-runtime`)
 - Java: `prophet-lib/java` (`io.prophet:prophet-events-runtime`)
 
@@ -123,7 +123,7 @@ Python publish path requirements:
 ## Post-Publish Verification
 
 Check package registries:
-- npm: `npm view @prophet/events-runtime version`
+- npm: `npm view @prophet-ontology/events-runtime version`
 - PyPI: `pip index versions prophet-events-runtime`
 - Maven Central: verify `io.prophet:prophet-events-runtime:<version>` appears
 
