@@ -106,6 +106,15 @@ PYTHONPATH=prophet-lib/python/src python3 -m unittest discover -s prophet-lib/py
 cd examples/java/prophet_example_spring && ./gradlew -p ../../../prophet-lib/java test
 ```
 
+If `prophet-lib/VERSION` changed, refresh generated example fixtures and snapshot manifests before publishing:
+
+```bash
+(cd examples/java/prophet_example_spring && $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle)
+(cd examples/node/prophet_example_express_prisma && $(git rev-parse --show-toplevel)/.venv/bin/prophet gen)
+(cd examples/python/prophet_example_fastapi_sqlalchemy && $(git rev-parse --show-toplevel)/.venv/bin/prophet gen)
+python3 -m unittest prophet-cli/tests/test_codegen_snapshots.py -v
+```
+
 ## 5. First Dry Run (Recommended)
 
 Run `prophet-lib` test-stage workflow manually:
@@ -135,6 +144,7 @@ For `prophet-cli`, create and push annotated release tag `vX.Y.Z` after validati
 ## Troubleshooting
 
 - Version mismatch failures: align `prophet-lib/VERSION` with all runtime manifests.
+- Snapshot mismatch failures in `gen/manifest/generated-files.json`: regenerate example outputs after runtime version bumps and commit updated generated manifests.
 - Missing secret failures: check exact secret names (Sonatype/GPG secrets) in workflow logs.
 - npm `E404` / `Access token expired or revoked`: verify npm trusted publisher for `@prophet-ontology/events-runtime` is configured for this repository/workflow.
 - PyPI `invalid-publisher`: verify trusted publisher entries for `prophet-events-runtime` match repo/workflow and environment (`pypi` or `testpypi`).

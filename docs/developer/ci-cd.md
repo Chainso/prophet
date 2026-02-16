@@ -59,5 +59,8 @@ Runtime publishing for `prophet-lib` packages:
   - `test`: TestPyPI upload for Python, dry-run packaging for JavaScript, local Maven publish for Java
   - `public`: npm, PyPI, and Maven Central publish paths
 
+Release hygiene note:
+- runtime version bumps affect generated dependency pins in example fixtures; refresh generated examples and `gen/manifest/generated-files.json` snapshots before publishing tags.
+
 Reference runbook:
 - [prophet-lib Runtime Runbook](prophet-lib-release.md)

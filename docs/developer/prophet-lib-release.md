@@ -24,6 +24,24 @@ Before publishing, ensure these match exactly:
 
 The publish workflow rejects mismatches.
 
+## Generator Coupling
+
+Generated stack dependencies are coupled to `prophet-lib/VERSION`:
+- Java Spring generator emits `io.github.chainso:prophet-events-runtime:<VERSION>`
+- Node generator emits `@prophet-ontology/events-runtime` at `<VERSION>`
+- Python generator emits `prophet-events-runtime==<VERSION>`
+
+After any runtime version bump, regenerate and commit affected example outputs and manifests before tagging a release.
+
+Recommended refresh commands (from repo root):
+
+```bash
+(cd examples/java/prophet_example_spring && $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle)
+(cd examples/node/prophet_example_express_prisma && $(git rev-parse --show-toplevel)/.venv/bin/prophet gen)
+(cd examples/python/prophet_example_fastapi_sqlalchemy && $(git rev-parse --show-toplevel)/.venv/bin/prophet gen)
+python3 -m unittest prophet-cli/tests/test_codegen_snapshots.py -v
+```
+
 ## Local Validation
 
 Run from repository root.
@@ -75,6 +93,12 @@ $(git rev-parse --show-toplevel)/.venv/bin/python -c "import app"
 ```
 
 For Node examples, `file:` dependency links runtime automatically during `npm install`/`npm ci`.
+
+Snapshot validation for generated fixtures:
+
+```bash
+python3 -m unittest prophet-cli/tests/test_codegen_snapshots.py -v
+```
 
 ## CI Integration
 

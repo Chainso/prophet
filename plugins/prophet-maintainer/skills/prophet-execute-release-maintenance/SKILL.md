@@ -29,20 +29,25 @@ allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:
      - `prophet-lib/javascript/package.json` (`version`),
      - `prophet-lib/python/pyproject.toml` (`[project].version`),
      - `prophet-lib/java/build.gradle.kts` (`version`),
+     - refresh runtime install/version references in runtime READMEs,
      - related release/runbook docs when publish flow changes.
+   - For runtime-lib lane specifically: generated stack fixtures consume runtime version data; plan to regenerate and commit affected example outputs/manifests.
    - For all lanes: prepare release notes draft/body from reviewed commit range.
 3. Regenerate impacted example outputs with current CLI toolchain version:
    - Java example,
    - Node examples,
    - Python examples.
+   - Ensure updated snapshot manifests (for example `gen/manifest/generated-files.json`) are committed when hashes change.
 4. Run validation gates:
    - version sync tests,
    - CLI tests,
+   - codegen snapshot tests (`python3 -m unittest prophet-cli/tests/test_codegen_snapshots.py -v`),
    - repository-wide verification script (`scripts/test-all.sh`) when feasible,
    - runtime publish workflow validation for publish-flow changes (at minimum YAML lint/parse and docs sync).
 5. Verify release cleanliness:
    - manifests and generated artifacts reflect new toolchain version,
    - runtime manifests reflect `prophet-lib/VERSION` for runtime-lib releases,
+   - generated example dependency pins and snapshot manifests reflect the runtime version bump,
    - no unintentional drift remains.
 6. Prepare release VCS actions:
    - commit with comprehensive bullet-point message,
