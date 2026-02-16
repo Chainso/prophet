@@ -4,6 +4,28 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-02-16
+
+### Added
+- Added branded standalone READMEs for published packages with Prophet logo banners and links back to the main repository:
+  - `prophet-cli/README.md`,
+  - `prophet-lib/README.md`,
+  - `prophet-lib/javascript/README.md`,
+  - `prophet-lib/python/README.md`,
+  - `prophet-lib/java/README.md`.
+- Added package-level runtime usage guides for:
+  - JavaScript runtime package (`@prophet-ontology/events-runtime`),
+  - Java runtime package (`io.prophet:prophet-events-runtime`).
+
+### Changed
+- Renamed Node runtime package scope from `@prophet/events-runtime` to `@prophet-ontology/events-runtime` across:
+  - Node generator sources,
+  - generated manifests/artifacts for Node examples,
+  - runtime/developer/reference documentation.
+- Updated `prophet-lib` Python publish workflow to use OIDC trusted publishing for both TestPyPI and PyPI.
+- Updated publishing runbooks/setup docs to remove Python API-token requirements and document trusted publisher configuration.
+- Toolchain/package version advanced to `0.15.0`.
+
 ## [0.14.0] - 2026-02-16
 
 ### Added
