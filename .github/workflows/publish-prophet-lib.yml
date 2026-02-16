@@ -284,12 +284,27 @@ jobs:
             exit 1
           fi
 
+          AUTH_TOKEN="$(printf '%s:%s' "${SONATYPE_USERNAME}" "${SONATYPE_PASSWORD}" | base64 | tr -d '\n')"
+          AUTH_CHECK_URL="https://ossrh-staging-api.central.sonatype.com/manual/search/repositories?ip=any&profile_id=${SONATYPE_NAMESPACE}"
+          AUTH_STATUS="$(curl --silent --output /tmp/sonatype-auth-check.json --write-out '%{http_code}' \
+            -H "Authorization: Bearer ${AUTH_TOKEN}" \
+            "${AUTH_CHECK_URL}")"
+          if [ "${AUTH_STATUS}" = "401" ]; then
+            echo "Sonatype authentication failed (401)." >&2
+            echo "Ensure SONATYPE_USERNAME/SONATYPE_PASSWORD are Central Portal user token credentials for an account with access to SONATYPE_NAMESPACE=${SONATYPE_NAMESPACE}." >&2
+            exit 1
+          fi
+          if [ "${AUTH_STATUS}" -ge 400 ]; then
+            echo "Sonatype preflight check failed with HTTP ${AUTH_STATUS} at ${AUTH_CHECK_URL}" >&2
+            cat /tmp/sonatype-auth-check.json >&2 || true
+            exit 1
+          fi
+
           cd examples/java/prophet_example_spring
           ./gradlew -p ../../../prophet-lib/java publish
 
           # Required by Sonatype Central compatibility publishing:
           # finalize deployment by calling manual upload from the same runner.
-          AUTH_TOKEN="$(printf '%s:%s' "${SONATYPE_USERNAME}" "${SONATYPE_PASSWORD}" | base64 | tr -d '\n')"
           curl --fail --show-error --silent \
             -X POST \
             -H "Authorization: Bearer ${AUTH_TOKEN}" \

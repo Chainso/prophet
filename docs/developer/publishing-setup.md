@@ -139,4 +139,5 @@ For `prophet-cli`, create and push annotated release tag `vX.Y.Z` after validati
 - npm `E404` / `Access token expired or revoked`: verify npm trusted publisher for `@prophet-ontology/events-runtime` is configured for this repository/workflow.
 - PyPI `invalid-publisher`: verify trusted publisher entries for `prophet-events-runtime` match repo/workflow and environment (`pypi` or `testpypi`).
 - Sonatype HTTP `402 Payment Required`: verify Sonatype Central Portal namespace entitlement and token credentials (`SONATYPE_USERNAME`/`SONATYPE_PASSWORD`) for your `SONATYPE_NAMESPACE`.
+- Sonatype HTTP `401 Unauthorized`: ensure `SONATYPE_USERNAME`/`SONATYPE_PASSWORD` are Central Portal user token credentials (not account password / legacy OSSRH token) and that the token-owning account can publish to `SONATYPE_NAMESPACE`.
 - Maven publish/signing failures: verify Sonatype permissions and GPG key/passphrase pair.
