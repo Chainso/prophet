@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/node-express/package.json",
-      "sha256": "6961b1729535b82787249108b2b7ca00560e26fb53831b63484fa8c357055de8"
+      "sha256": "024d6df3b1d5bed123c4e149b3124702a68e289f3b3becc31ea25e6c1fe435dc"
     },
     {
       "path": "gen/node-express/prisma/schema.prisma",

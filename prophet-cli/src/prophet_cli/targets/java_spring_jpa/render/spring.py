@@ -13,8 +13,16 @@ from prophet_cli.targets.java_spring_jpa.render.common import render_contract_ar
 from prophet_cli.targets.java_spring_jpa.render.common import render_domain_artifacts
 from prophet_cli.targets.java_spring_jpa.render.orm import render_jpa_persistence_artifacts
 from prophet_cli.targets.java_spring_jpa.render.orm import render_jpa_query_artifacts
+from prophet_cli.targets.runtime_versions import resolve_java_runtime_group
+from prophet_cli.targets.runtime_versions import resolve_runtime_version
 
-def render_gradle_file(boot_version: str, dependency_management_version: str, toolchain_version: str) -> str:
+def render_gradle_file(
+    boot_version: str,
+    dependency_management_version: str,
+    toolchain_version: str,
+    runtime_group: str,
+    runtime_version: str,
+) -> str:
     return f"""plugins {{
     java
     id(\"org.springframework.boot\") version \"{boot_version}\"
@@ -39,7 +47,7 @@ dependencies {{
     implementation(\"org.springframework.boot:spring-boot-starter-web\")
     implementation(\"org.springframework.boot:spring-boot-starter-validation\")
     implementation(\"org.springframework.boot:spring-boot-starter-data-jpa\")
-    implementation(\"io.prophet:prophet-events-runtime:0.1.0\")
+    implementation(\"{runtime_group}:prophet-events-runtime:{runtime_version}\")
     runtimeOnly(\"org.postgresql:postgresql\")
     testImplementation(\"org.springframework.boot:spring-boot-starter-test\")
 }}
@@ -194,6 +202,8 @@ def render_spring_files(
         cfg_get(cfg, ["generation", "spring_boot", "dependency_management_version"], "1.1.6")
     )
     work_root = root if root is not None else Path.cwd()
+    runtime_group = resolve_java_runtime_group(work_root)
+    runtime_version = resolve_runtime_version(work_root)
     boot_version, dep_mgmt_version = detect_gradle_plugin_versions(
         work_root,
         fallback_boot_version,
@@ -223,7 +233,13 @@ def render_spring_files(
             if shape_id:
                 action_output_event_by_shape_id[shape_id] = event
 
-    files["build.gradle.kts"] = render_gradle_file(boot_version, dep_mgmt_version, toolchain_version)
+    files["build.gradle.kts"] = render_gradle_file(
+        boot_version,
+        dep_mgmt_version,
+        toolchain_version,
+        runtime_group=runtime_group,
+        runtime_version=runtime_version,
+    )
     application_prophet_yml = (
         "prophet:\n"
         f"  ontology-id: {ir['ontology']['id']}\n"

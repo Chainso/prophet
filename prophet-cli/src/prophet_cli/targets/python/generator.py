@@ -27,6 +27,7 @@ from prophet_cli.targets.python.render.orm.sqlalchemy import render_sqlalchemy_m
 from prophet_cli.targets.python.render.orm.sqlmodel import render_sqlmodel_adapters
 from prophet_cli.targets.python.render.orm.sqlmodel import render_sqlmodel_models
 from prophet_cli.targets.python.render.support import _pascal_case
+from prophet_cli.targets.runtime_versions import resolve_runtime_version
 
 
 @dataclass(frozen=True)
@@ -45,8 +46,8 @@ def _render_detection_report(cfg: Dict[str, Any]) -> Optional[str]:
     return json.dumps(autodetect_payload, indent=2, sort_keys=False) + "\n"
 
 
-def _render_pyproject_toml(stack: StackSpec) -> str:
-    deps: List[str] = ["prophet-events-runtime>=0.1.0,<1.0"]
+def _render_pyproject_toml(stack: StackSpec, runtime_version: str) -> str:
+    deps: List[str] = [f"prophet-events-runtime=={runtime_version}"]
     if stack.framework == "fastapi":
         deps.extend(["fastapi>=0.112,<1.0", "uvicorn>=0.30,<1.0"])
     elif stack.framework == "flask":
@@ -96,6 +97,7 @@ def generate_outputs(context: GenerationContext, deps: PythonDeps) -> Dict[str, 
 
     ir = context.ir_reader.as_dict()
     outputs: Dict[str, str] = {}
+    runtime_version = resolve_runtime_version(context.root)
 
     if "sql" in targets:
         outputs[f"{out_dir}/sql/schema.sql"] = deps.render_sql(context.ir_reader)
@@ -107,7 +109,7 @@ def generate_outputs(context: GenerationContext, deps: PythonDeps) -> Dict[str, 
     async_mode = stack.framework == "fastapi"
 
     if "python" in targets:
-        outputs[f"{py_prefix}/pyproject.toml"] = _render_pyproject_toml(stack)
+        outputs[f"{py_prefix}/pyproject.toml"] = _render_pyproject_toml(stack, runtime_version)
         outputs[f"{generated_prefix}/__init__.py"] = _render_package_init()
         outputs[f"{generated_prefix}/domain.py"] = render_domain_types(ir)
         outputs[f"{generated_prefix}/actions.py"] = render_action_contracts(ir)

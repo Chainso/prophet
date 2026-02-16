@@ -28,6 +28,7 @@ from prophet_cli.targets.node_express.render.orm.prisma import _render_prisma_ad
 from prophet_cli.targets.node_express.render.orm.prisma import _render_prisma_schema
 from prophet_cli.targets.node_express.render.orm.typeorm import _render_typeorm_adapter
 from prophet_cli.targets.node_express.render.orm.typeorm import _render_typeorm_entities
+from prophet_cli.targets.runtime_versions import resolve_runtime_version
 from prophet_cli.targets.node_express.render.support import _append_js_extensions_to_relative_imports
 from prophet_cli.targets.node_express.render.support import _pascal_case
 
@@ -58,6 +59,7 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
 
     ir = context.ir_reader.as_dict()
     outputs: Dict[str, str] = {}
+    runtime_version = resolve_runtime_version(context.root)
 
     if "sql" in targets:
         outputs[f"{out_dir}/sql/schema.sql"] = deps.render_sql(context.ir_reader)
@@ -67,7 +69,7 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
 
     node_prefix = f"{out_dir}/node-express"
     if "node_express" in targets:
-        outputs[f"{node_prefix}/package.json"] = _render_node_package_json(stack)
+        outputs[f"{node_prefix}/package.json"] = _render_node_package_json(stack, runtime_version)
         outputs[f"{node_prefix}/tsconfig.json"] = _render_node_tsconfig()
         outputs[f"{node_prefix}/src/generated/domain.ts"] = _render_domain_types(ir)
         outputs[f"{node_prefix}/src/generated/actions.ts"] = _render_action_contracts(ir)
