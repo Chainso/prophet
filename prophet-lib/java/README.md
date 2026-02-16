@@ -25,14 +25,14 @@ Maven:
 <dependency>
   <groupId>io.github.chainso</groupId>
   <artifactId>prophet-events-runtime</artifactId>
-  <version>0.2.2</version>
+  <version>0.2.3</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("io.github.chainso:prophet-events-runtime:0.2.2")
+implementation("io.github.chainso:prophet-events-runtime:0.2.3")
 ```
 
 ## API
