@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Chainso/prophet/main/brand/exports/logo-horizontal-color.png" alt="Prophet logo" />
+</p>
+
+---
+
 # prophet-cli
 
 `prophet-cli` is the tooling package for Prophet's ontology workflow:
@@ -7,6 +13,9 @@
 3. Build canonical IR (`.prophet/ir/current.ir.json`) including versioned `query_contracts`
 4. Generate deterministic artifacts (`gen/sql`, `gen/openapi`, `gen/migrations`, `gen/spring-boot`)
 5. Check compatibility against baseline IR
+
+Main project repository:
+- https://github.com/Chainso/prophet
 
 ## Install
 
