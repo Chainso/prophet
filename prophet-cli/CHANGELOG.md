@@ -4,6 +4,30 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-02-16
+
+### Added
+- Added `prophet-lib/` shared runtime packages for generated event publishing:
+  - JavaScript: `@prophet/events-runtime`,
+  - Python: `prophet-events-runtime`,
+  - Java: `io.prophet:prophet-events-runtime`.
+- Added dedicated runtime publishing setup/runbooks:
+  - `docs/developer/publishing-setup.md`,
+  - `docs/developer/prophet-lib-release.md`.
+- Added staged runtime publish workflow:
+  - `.github/workflows/publish-prophet-lib.yml`.
+
+### Changed
+- Migrated Node, Python, and Java generation from legacy emitter contracts to async-first `EventPublisher` contracts and event wire envelopes.
+- Updated generated action flows to support action-output shorthand and `ActionOutcome` with additional domain events.
+- Updated examples and generated artifacts across Java/Node/Python to use runtime event publisher wiring.
+- Extended CI to validate `prophet-lib` runtimes and to wire runtime dependencies in example validation jobs.
+- Removed `Generated`-prefixed Java codegen concept names for publisher/config classes, relying on generated markers/annotations instead:
+  - `GeneratedEventPublisherNoOp` -> `EventPublisherNoOp`,
+  - `GeneratedPersistenceConfig` -> `PersistenceConfig`.
+- Updated root/quickstart/reference/developer docs and contributor guides for `EventPublisher` terminology and runtime wiring paths.
+- Toolchain/package version advanced to `0.14.0`.
+
 ## [0.13.0] - 2026-02-15
 
 ### Changed

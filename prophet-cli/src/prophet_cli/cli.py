@@ -60,7 +60,7 @@ from prophet_cli.targets.python import PythonDeps
 from prophet_cli.targets.python import generate_outputs as generate_python_outputs
 
 
-TOOLCHAIN_VERSION = "0.13.0"
+TOOLCHAIN_VERSION = "0.14.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
