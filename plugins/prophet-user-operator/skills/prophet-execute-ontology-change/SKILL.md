@@ -214,10 +214,10 @@ Use this as the default decision guide when applying ontology changes.
 2. Apply DSL edits to satisfy user intent.
 3. Preserve current Prophet modeling rules:
    - fields are required by default; use `optional` when needed,
-   - actions use inline `input {}` and `output {}`,
+   - actions use inline `input {}` and one output form: `output {}`, `output signal <SignalName>`, or `output transition <ObjectName>.<TransitionName>`,
    - use `ref(ObjectName)` for object references,
    - use `struct` for embedded value objects,
-   - signals are top-level explicit events; action outputs and transitions are derived.
+   - signals are top-level explicit events; action outputs produce events and may target signals or transitions.
 4. Run validation:
    - `prophet validate`
 5. Run compatibility/impact plan:
