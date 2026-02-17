@@ -1,11 +1,11 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.16.0",
+  "toolchain_version": "0.19.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_support_local",
     "name": "support_local",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Minimal support ontology used for Turtle target examples."
   },
   "types": [
@@ -161,10 +161,20 @@
       ]
     }
   ],
-  "action_outputs": [
+  "actions": [
+    {
+      "id": "act_triage_ticket",
+      "name": "triageTicket",
+      "kind": "process",
+      "input_shape_id": "ain_triage_ticket",
+      "output_event_id": "aout_triage_ticket"
+    }
+  ],
+  "events": [
     {
       "id": "aout_triage_ticket",
       "name": "TriageTicketResult",
+      "kind": "signal",
       "fields": [
         {
           "id": "fld_aout_triage_ticket_ticket",
@@ -191,18 +201,7 @@
           }
         }
       ]
-    }
-  ],
-  "actions": [
-    {
-      "id": "act_triage_ticket",
-      "name": "triageTicket",
-      "kind": "process",
-      "input_shape_id": "ain_triage_ticket",
-      "output_shape_id": "aout_triage_ticket"
-    }
-  ],
-  "events": [
+    },
     {
       "id": "sig_ticket_created",
       "name": "TicketCreated",
@@ -223,15 +222,47 @@
       ]
     },
     {
-      "id": "aout_triage_ticket",
-      "name": "TriageTicketResult",
-      "kind": "action_output",
-      "output_shape_id": "aout_triage_ticket"
-    },
-    {
       "id": "trans_ticket_triage",
       "name": "TicketTriageTransition",
       "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_ticket_triage__pk__fld_ticket_id",
+          "name": "id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_ticket_triage__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_ticket_triage__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
       "object_id": "obj_ticket",
       "transition_id": "trans_ticket_triage",
       "from_state_id": "state_ticket_new",
@@ -279,15 +310,15 @@
           ]
         },
         {
-          "field_id": "__current_state__",
-          "field_name": "currentState",
+          "field_id": "__state__",
+          "field_name": "state",
           "operators": [
             "eq",
             "in"
           ]
         }
       ],
-      "contract_hash": "cc784bb5d9ba54121e8fd97e04f065995399be88ca464df2ab24fa4f79ed92a4"
+      "contract_hash": "4b36f249ed2ae0b6c61056a78462de56613890ba2f8a60c74a91bb97607284d9"
     }
   ],
   "generation_profile": {
@@ -300,6 +331,6 @@
     "struct_field_contract_changes_are_breaking": true,
     "custom_type_constraint_changes_are_breaking": true
   },
-  "query_contracts_version": "635e508b8aa15bb4735fc0800288f36cfa730eef732ce60ccae541600797493e",
-  "ir_hash": "0909c221d0ead63feeb507126114a89af9ecf60be9a201ece16522e2dfcf958e"
+  "query_contracts_version": "fa69e4300b3d10c42435b689a584fc0d9713d0fa7137130dda42950aac6ef377",
+  "ir_hash": "b2f8d0c5773066b38810dfa05dfa3176fd9be983aeafd00c5239ebc0655d5527"
 }

@@ -9,12 +9,3 @@ databaseChangeLog:
             relativeToChangelogFile: true
             splitStatements: true
             stripComments: false
-  - changeSet:
-      id: prophet-0002-delta
-      author: prophet-cli
-      changes:
-        - sqlFile:
-            path: 0002-delta.sql
-            relativeToChangelogFile: true
-            splitStatements: true
-            stripComments: false

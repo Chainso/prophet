@@ -5,7 +5,7 @@
   "ontology": {
     "id": "ont_support_local",
     "name": "support_local",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Minimal support ontology used for Turtle target examples."
   },
   "types": [
@@ -332,5 +332,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "fa69e4300b3d10c42435b689a584fc0d9713d0fa7137130dda42950aac6ef377",
-  "ir_hash": "76fff5cb9b323f56823dff7c0bbbb4d2835a318077ea7f92a4b9fbede4fe3594"
+  "ir_hash": "b2f8d0c5773066b38810dfa05dfa3176fd9be983aeafd00c5239ebc0655d5527"
 }

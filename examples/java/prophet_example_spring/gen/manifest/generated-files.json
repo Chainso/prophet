@@ -14,16 +14,8 @@
       "sha256": "bcd09c97935952cfd567c8f5683f6b6e1acbd336aa22b2f141a271ade518c141"
     },
     {
-      "path": "gen/migrations/delta/report.json",
-      "sha256": "6c9b076c2a01f98b3db3f54ce07722464598dbdb20717bf0598b5096b5e12b4a"
-    },
-    {
       "path": "gen/migrations/flyway/V1__prophet_init.sql",
       "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
-    },
-    {
-      "path": "gen/migrations/flyway/V2__prophet_delta.sql",
-      "sha256": "30a59ccd909449f31846a15f29851df1ce7abc4e08eb0dca5634ea9106de84e7"
     },
     {
       "path": "gen/migrations/liquibase/db.changelog-master.yaml",
@@ -34,12 +26,8 @@
       "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
     },
     {
-      "path": "gen/migrations/liquibase/prophet/0002-delta.sql",
-      "sha256": "30a59ccd909449f31846a15f29851df1ce7abc4e08eb0dca5634ea9106de84e7"
-    },
-    {
       "path": "gen/migrations/liquibase/prophet/changelog-master.yaml",
-      "sha256": "7ffa9da277a3d391c00175f6933536366252310ce4d908736bc951aaeef15ca6"
+      "sha256": "eda5a75fb2e962a3ad8e6fb8933b54cf5f5c2b882c5a70459ad3a2287238b849"
     },
     {
       "path": "gen/openapi/openapi.yaml",

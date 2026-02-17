@@ -1,11 +1,11 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.8.0",
+  "toolchain_version": "0.19.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_commerce_local",
     "name": "commerce_local",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "description": "Commerce ontology for order creation, approval, and shipping."
   },
   "types": [
@@ -99,6 +99,84 @@
           "cardinality": {
             "min": 0,
             "max": 1
+          }
+        },
+        {
+          "id": "fld_order_approved_by_user_id",
+          "name": "approved_by_user_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_order_approval_notes",
+          "name": "approval_notes",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 0,
+            "max": "many"
+          }
+        },
+        {
+          "id": "fld_order_approval_reason",
+          "name": "approval_reason",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_order_shipping_carrier",
+          "name": "shipping_carrier",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_order_shipping_tracking_number",
+          "name": "shipping_tracking_number",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_order_shipping_package_ids",
+          "name": "shipping_package_ids",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 0,
+            "max": "many"
           }
         }
       ],
@@ -466,56 +544,37 @@
       ]
     }
   ],
-  "action_outputs": [
+  "actions": [
     {
-      "id": "aout_approve_order",
-      "name": "ApproveOrderResult",
-      "fields": [
-        {
-          "id": "fld_aout_approve_order_order",
-          "name": "order",
-          "type": {
-            "kind": "object_ref",
-            "target_object_id": "obj_order"
-          },
-          "cardinality": {
-            "min": 1,
-            "max": 1
-          }
-        },
-        {
-          "id": "fld_aout_approve_order_decision",
-          "name": "decision",
-          "type": {
-            "kind": "base",
-            "name": "string"
-          },
-          "cardinality": {
-            "min": 1,
-            "max": 1
-          }
-        },
-        {
-          "id": "fld_aout_approve_order_warnings",
-          "name": "warnings",
-          "type": {
-            "kind": "list",
-            "element": {
-              "kind": "base",
-              "name": "string"
-            }
-          },
-          "cardinality": {
-            "min": 0,
-            "max": "many"
-          }
-        }
-      ],
-      "description": "Approval result contract."
+      "id": "act_approve_order",
+      "name": "approveOrder",
+      "kind": "process",
+      "input_shape_id": "ain_approve_order",
+      "output_event_id": "trans_order_approve",
+      "description": "Approves an existing order."
     },
+    {
+      "id": "act_create_order",
+      "name": "createOrder",
+      "kind": "process",
+      "input_shape_id": "ain_create_order",
+      "output_event_id": "aout_create_order",
+      "description": "Creates a new order."
+    },
+    {
+      "id": "act_ship_order",
+      "name": "shipOrder",
+      "kind": "workflow",
+      "input_shape_id": "ain_ship_order",
+      "output_event_id": "trans_order_ship",
+      "description": "Ships an approved order."
+    }
+  ],
+  "events": [
     {
       "id": "aout_create_order",
       "name": "CreateOrderResult",
+      "kind": "signal",
       "fields": [
         {
           "id": "fld_aout_create_order_order",
@@ -528,112 +587,9 @@
             "min": 1,
             "max": 1
           }
-        },
-        {
-          "id": "fld_aout_create_order_current_state",
-          "name": "currentState",
-          "type": {
-            "kind": "base",
-            "name": "string"
-          },
-          "cardinality": {
-            "min": 1,
-            "max": 1
-          }
         }
       ]
     },
-    {
-      "id": "aout_ship_order",
-      "name": "ShipOrderResult",
-      "fields": [
-        {
-          "id": "fld_aout_ship_order_order",
-          "name": "order",
-          "type": {
-            "kind": "object_ref",
-            "target_object_id": "obj_order"
-          },
-          "cardinality": {
-            "min": 1,
-            "max": 1
-          }
-        },
-        {
-          "id": "fld_aout_ship_order_status",
-          "name": "shipmentStatus",
-          "type": {
-            "kind": "base",
-            "name": "string"
-          },
-          "cardinality": {
-            "min": 1,
-            "max": 1
-          }
-        },
-        {
-          "id": "fld_aout_ship_order_labels",
-          "name": "labels",
-          "type": {
-            "kind": "list",
-            "element": {
-              "kind": "base",
-              "name": "string"
-            }
-          },
-          "cardinality": {
-            "min": 0,
-            "max": "many"
-          }
-        },
-        {
-          "id": "fld_aout_ship_order_label_batches",
-          "name": "labelBatches",
-          "type": {
-            "kind": "list",
-            "element": {
-              "kind": "list",
-              "element": {
-                "kind": "base",
-                "name": "string"
-              }
-            }
-          },
-          "cardinality": {
-            "min": 0,
-            "max": "many"
-          }
-        }
-      ]
-    }
-  ],
-  "actions": [
-    {
-      "id": "act_approve_order",
-      "name": "approveOrder",
-      "kind": "process",
-      "input_shape_id": "ain_approve_order",
-      "output_shape_id": "aout_approve_order",
-      "description": "Approves an existing order."
-    },
-    {
-      "id": "act_create_order",
-      "name": "createOrder",
-      "kind": "process",
-      "input_shape_id": "ain_create_order",
-      "output_shape_id": "aout_create_order",
-      "description": "Creates a new order."
-    },
-    {
-      "id": "act_ship_order",
-      "name": "shipOrder",
-      "kind": "workflow",
-      "input_shape_id": "ain_ship_order",
-      "output_shape_id": "aout_ship_order",
-      "description": "Ships an approved order."
-    }
-  ],
-  "events": [
     {
       "id": "sig_payment_captured",
       "name": "PaymentCaptured",
@@ -654,28 +610,83 @@
       ]
     },
     {
-      "id": "aout_approve_order",
-      "name": "ApproveOrderResult",
-      "kind": "action_output",
-      "output_shape_id": "aout_approve_order",
-      "description": "Approval result contract."
-    },
-    {
-      "id": "aout_create_order",
-      "name": "CreateOrderResult",
-      "kind": "action_output",
-      "output_shape_id": "aout_create_order"
-    },
-    {
-      "id": "aout_ship_order",
-      "name": "ShipOrderResult",
-      "kind": "action_output",
-      "output_shape_id": "aout_ship_order"
-    },
-    {
       "id": "trans_order_approve",
       "name": "OrderApproveTransition",
       "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_order_approve__pk__fld_order_order_id",
+          "name": "order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_order_approve__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_order_approve__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_approve_approved_by_user_id",
+          "name": "approvedByUserId",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_approve_note_count",
+          "name": "noteCount",
+          "type": {
+            "kind": "base",
+            "name": "int"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_approve_approval_reason",
+          "name": "approvalReason",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
       "object_id": "obj_order",
       "transition_id": "trans_order_approve",
       "from_state_id": "state_order_created",
@@ -685,6 +696,83 @@
       "id": "trans_order_ship",
       "name": "OrderShipTransition",
       "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_order_ship__pk__fld_order_order_id",
+          "name": "order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_order_ship__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_order_ship__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_ship_carrier",
+          "name": "carrier",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_ship_tracking_number",
+          "name": "trackingNumber",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_ship_package_ids",
+          "name": "packageIds",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 1,
+            "max": "many"
+          }
+        }
+      ],
       "object_id": "obj_order",
       "transition_id": "trans_order_ship",
       "from_state_id": "state_order_approved",
@@ -695,7 +783,7 @@
     {
       "id": "trg_on_order_approved",
       "name": "onOrderApproved",
-      "event_id": "aout_approve_order",
+      "event_id": "trans_order_approve",
       "action_id": "act_ship_order"
     },
     {
@@ -719,6 +807,24 @@
         "default_size": 20
       },
       "filters": [
+        {
+          "field_id": "fld_order_approval_reason",
+          "field_name": "approval_reason",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_order_approved_by_user_id",
+          "field_name": "approved_by_user_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
         {
           "field_id": "fld_order_customer",
           "field_name": "customer",
@@ -746,6 +852,24 @@
           ]
         },
         {
+          "field_id": "fld_order_shipping_carrier",
+          "field_name": "shipping_carrier",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_order_shipping_tracking_number",
+          "field_name": "shipping_tracking_number",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
           "field_id": "fld_order_total_amount",
           "field_name": "total_amount",
           "operators": [
@@ -756,15 +880,15 @@
           ]
         },
         {
-          "field_id": "__current_state__",
-          "field_name": "currentState",
+          "field_id": "__state__",
+          "field_name": "state",
           "operators": [
             "eq",
             "in"
           ]
         }
       ],
-      "contract_hash": "2c941ff0fc0a80d288af67daa87728330c996d5ed1d09ad4f8c45bdd4917ff74"
+      "contract_hash": "835657e8a16077a44de3aefc9f788abb4e951c7c5049aa2a70105b7997cb9557"
     },
     {
       "object_id": "obj_user",
@@ -811,6 +935,6 @@
     "struct_field_contract_changes_are_breaking": true,
     "custom_type_constraint_changes_are_breaking": true
   },
-  "query_contracts_version": "c813af06b02746404be863b73c3bb60dd5711f0a7ec0844abe7f68056a0c28d5",
-  "ir_hash": "ef85fcce6e633545fadcf1c8f6619e54c7ae510238cb93b21fe4d63ac24eebb2"
+  "query_contracts_version": "026cc621cb86c87effeb4d1c95d64d9f993c65869a205b9346d57dc90f5ad261",
+  "ir_hash": "bf94a5dbe9a5d0fc40d8fe996210a74c675adfc3b235cb05dcbcb0f038feafb9"
 }
