@@ -48,8 +48,13 @@ Primary key declarations:
 - Field-level: `key primary`
 - Object-level single/composite: `key primary (fieldA, fieldB)`
 
-Display key metadata marker:
-- `key display (...)`
+Display key declarations:
+- Field-level: `key display`
+- Object-level single/composite: `key display (fieldA, fieldB)`
+
+Display key generation behavior:
+- SQL/Flyway/Liquibase generators emit a non-unique display index when `key display` is explicitly declared and differs from the primary key columns.
+- Node Prisma and Mongoose generators also emit non-unique display indexes from `key display`.
 
 ## Description Metadata
 

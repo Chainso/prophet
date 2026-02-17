@@ -243,6 +243,11 @@ def render_sql(ir: Dict[str, Any]) -> str:
                 idx_name = f"idx_{table}_{idx_col}"
                 lines.append(f"create index if not exists {idx_name} on {table} ({idx_col});")
 
+        display_columns = display_index_columns_for_object(obj, type_by_id, object_by_id)
+        if display_columns:
+            idx_display = display_index_name_for_object(obj)
+            lines.append(f"create index if not exists {idx_display} on {table} ({', '.join(display_columns)});")
+
         if obj.get("states"):
             idx_state = f"idx_{table}_current_state"
             lines.append(f"create index if not exists {idx_state} on {table} (current_state);")
@@ -309,6 +314,28 @@ def primary_key_field_for_object(obj: Dict[str, Any]) -> Dict[str, Any]:
     return fields[0]
 
 
+def display_key_fields_for_object(obj: Dict[str, Any]) -> List[Dict[str, Any]]:
+    fields = list(obj.get("fields", []))
+    if not fields:
+        return []
+    field_by_id = {f.get("id"): f for f in fields}
+    key_field_ids = (
+        obj.get("keys", {})
+        .get("display", {})
+        .get("field_ids", [])
+        if isinstance(obj.get("keys"), dict)
+        else []
+    )
+    if isinstance(key_field_ids, list) and key_field_ids:
+        resolved = [field_by_id[fid] for fid in key_field_ids if fid in field_by_id]
+        if resolved:
+            return resolved
+    legacy = [f for f in fields if f.get("key") == "display"]
+    if legacy:
+        return legacy
+    return []
+
+
 def field_sql_column_details(
     field: Dict[str, Any],
     type_by_id: Dict[str, Dict[str, Any]],
@@ -328,6 +355,37 @@ def field_sql_column_details(
         fk_ref = (target_table, target_pk_col)
         idx_col = col_name
     return col_name, sql_type, fk_ref, idx_col
+
+
+def key_column_names_for_fields(
+    key_fields: List[Dict[str, Any]],
+    type_by_id: Dict[str, Dict[str, Any]],
+    object_by_id: Dict[str, Dict[str, Any]],
+) -> List[str]:
+    columns: List[str] = []
+    for field in key_fields:
+        col_name, _, _, _ = field_sql_column_details(field, type_by_id, object_by_id)
+        if col_name not in columns:
+            columns.append(col_name)
+    return columns
+
+
+def display_index_columns_for_object(
+    obj: Dict[str, Any],
+    type_by_id: Dict[str, Dict[str, Any]],
+    object_by_id: Dict[str, Dict[str, Any]],
+) -> List[str]:
+    display_columns = key_column_names_for_fields(display_key_fields_for_object(obj), type_by_id, object_by_id)
+    if not display_columns:
+        return []
+    primary_columns = key_column_names_for_fields(primary_key_fields_for_object(obj), type_by_id, object_by_id)
+    if display_columns == primary_columns:
+        return []
+    return display_columns
+
+
+def display_index_name_for_object(obj: Dict[str, Any]) -> str:
+    return f"idx_{table_name_for_object(obj)}_display"
 
 
 def render_create_table_statements_for_object(
@@ -362,6 +420,11 @@ def render_create_table_statements_for_object(
         if idx_col is not None:
             idx_name = f"idx_{table}_{idx_col}"
             index_lines.append(f"create index if not exists {idx_name} on {table} ({idx_col});")
+
+    display_columns = display_index_columns_for_object(obj, type_by_id, object_by_id)
+    if display_columns:
+        idx_display = display_index_name_for_object(obj)
+        index_lines.append(f"create index if not exists {idx_display} on {table} ({', '.join(display_columns)});")
 
     if obj.get("states"):
         enum_vals = ", ".join(f"'{s['name'].upper()}'" for s in obj["states"])
@@ -421,7 +484,9 @@ def render_delta_migration(
 ) -> Tuple[str, List[str], bool, Dict[str, Any]]:
     old_objects = {o["id"]: o for o in old_ir.get("objects", [])}
     new_objects = {o["id"]: o for o in new_ir.get("objects", [])}
+    old_type_by_id = {t["id"]: t for t in old_ir.get("types", [])}
     type_by_id = {t["id"]: t for t in new_ir.get("types", [])}
+    old_object_by_id = {o["id"]: o for o in old_ir.get("objects", [])}
     object_by_id = {o["id"]: o for o in new_ir.get("objects", [])}
 
     statements: List[str] = []
@@ -622,6 +687,36 @@ def render_delta_migration(
                     "wire_shape_change",
                     "destructive",
                     f"wire shape changed: {new_obj['name']}.{new_field['name']} ({old_max} -> {new_max})",
+                )
+
+        old_display_columns = display_index_columns_for_object(old_obj, old_type_by_id, old_object_by_id)
+        new_display_columns = display_index_columns_for_object(new_obj, type_by_id, object_by_id)
+        if old_display_columns != new_display_columns:
+            idx_display = display_index_name_for_object(new_obj)
+            if old_display_columns:
+                statements.append(f"drop index if exists {idx_display};")
+            if new_display_columns:
+                statements.append(f"create index if not exists {idx_display} on {table} ({', '.join(new_display_columns)});")
+            if old_display_columns and new_display_columns:
+                add_finding(
+                    "display_index_changed",
+                    "safe_auto_apply",
+                    f"display index updated: {new_obj['name']}",
+                    f"{old_display_columns} -> {new_display_columns}",
+                )
+            elif new_display_columns:
+                add_finding(
+                    "display_index_added",
+                    "safe_auto_apply",
+                    f"display index added: {new_obj['name']}",
+                    f"{new_display_columns}",
+                )
+            else:
+                add_finding(
+                    "display_index_removed",
+                    "safe_auto_apply",
+                    f"display index removed: {new_obj['name']}",
+                    f"{old_display_columns}",
                 )
 
         old_state_names = sorted(s["name"] for s in old_obj.get("states", []))

@@ -98,6 +98,9 @@ Django ORM stack adds:
   - `gen/migrations/liquibase/prophet/0002-delta.sql`
   - `gen/migrations/delta/report.json`
 
+SQL index note:
+- `key display (...)` declarations generate non-unique SQL indexes named `idx_<table>_display` when display columns differ from primary key columns.
+
 ## Ownership Model
 
 Generated paths are tool-owned.

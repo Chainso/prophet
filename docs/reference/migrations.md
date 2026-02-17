@@ -11,6 +11,7 @@ When current IR differs from baseline IR:
 - generate Flyway delta SQL (`V2__prophet_delta.sql`)
 - generate Liquibase delta SQL (`0002-delta.sql`)
 - generate delta report (`gen/migrations/delta/report.json`)
+- include display-index updates (`idx_<table>_display`) when `key display` declarations are added, removed, or changed
 
 ## Delta Safety Signals
 

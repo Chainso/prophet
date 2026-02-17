@@ -264,7 +264,9 @@ Compatibility rules used by CLI are documented in:
 - Object keys support field-level and object-level declarations:
   - `key primary`
   - `key primary (fieldA, fieldB)` (composite)
-  - `key display (...)` (metadata marker)
+  - `key display (fieldA, fieldB)` (lookup/index hint)
+- SQL/Flyway/Liquibase generation emits a non-unique `idx_<table>_display` index when an explicit display key is declared and it is not identical to the primary key columns.
+- Node Prisma and Mongoose generation also emits non-unique display-key indexes.
 - Generated Java record component order follows DSL field declaration order.
 - Actions are not auto-implemented; generated endpoints call handler beans.
 - Generated action services (`generated.actions.services.*`) are the API boundary used by controllers.

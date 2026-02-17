@@ -103,6 +103,7 @@ Prisma generated repositories:
 - constructor expects `PrismaClient`
 - generated methods implement paging, typed filtering, `getById`, and `save` via `upsert`
 - Prisma schema includes object refs, state column (`current_state`), and supports composite primary keys
+- Prisma schema adds non-unique display-key indexes (`idx_<model>_display`) from `key display (...)`
 - datasource URL is driven by `DATABASE_URL`; provider defaults to `sqlite` and can be configured with:
   - `generation.node_express.prisma.provider` in `prophet.yaml`
 
@@ -118,6 +119,7 @@ Mongoose generated repositories:
 
 - constructor accepts generated model bindings (defaults to generated models)
 - generated models include schema/index scaffolding from ontology object and key definitions
+- generated models add non-unique display-key indexes from `key display (...)`
 - generated methods implement paging, typed filtering, `getById`, and `save` (`findOneAndUpdate` upsert)
 - MongoDB connection/runtime options come from your application-owned `mongoose.connect(...)` configuration
 

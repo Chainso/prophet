@@ -4,6 +4,17 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-02-17
+
+### Added
+- Added SQL/Flyway/Liquibase display-key index generation (`idx_<table>_display`) when an explicit `key display (...)` declaration is present and differs from the primary key columns.
+- Added delta-migration handling for display-key index changes so display index add/remove/change operations are emitted in generated migration SQL.
+- Added SQL renderer test coverage for display-key index generation and display-index delta migration behavior.
+
+### Changed
+- Updated DSL/reference/Node docs to describe display-key indexing behavior across SQL, Prisma, and Mongoose generation paths.
+- Toolchain/package version advanced to `0.19.0`.
+
 ## [0.18.0] - 2026-02-17
 
 ### Added
