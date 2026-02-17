@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.github.chainso"
-version = "0.2.6"
+version = "0.2.7"
 
 java {
     toolchain {

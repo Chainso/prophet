@@ -61,7 +61,7 @@ from prophet_cli.targets.python import generate_outputs as generate_python_outpu
 from prophet_cli.targets.turtle import render_turtle
 
 
-TOOLCHAIN_VERSION = "0.17.0"
+TOOLCHAIN_VERSION = "0.17.1"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 

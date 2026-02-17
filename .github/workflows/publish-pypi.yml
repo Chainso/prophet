@@ -50,6 +50,7 @@ jobs:
       - name: Install prophet-cli (editable)
         run: |
           python -m pip install --upgrade pip
+          python -m pip install pyshacl
           python -m pip install -e ./prophet-cli
 
       - name: Run prophet-cli unit tests

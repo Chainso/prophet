@@ -4,6 +4,13 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.17.1] - 2026-02-17
+
+### Changed
+- Added `pyshacl` installation to CI and publish validation workflows so Turtle SHACL conformance tests run reliably in GitHub Actions.
+- Bumped `prophet-lib` runtime packages to `0.2.7` and refreshed runtime version references.
+- Toolchain/package version advanced to `0.17.1`.
+
 ## [0.17.0] - 2026-02-16
 
 ### Added
