@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.3",
+  "toolchain_version": "0.18.0",
   "stack": {
     "id": "node_express_typeorm",
     "language": "node",
     "framework": "express",
     "orm": "typeorm"
   },
-  "ir_hash": "2123a3f5bf0bbbb631fcb229d97879afdb18db3986170c45a425d86903382335",
+  "ir_hash": "94722fa21361cd89de2f22c7aa7c15e59218bb57a9cc7454f03ab7c6f579e30a",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/node-express/package.json",
-      "sha256": "4221978292c7e6361463330183c89592ecad85330effd73f6d8f34f3782dc8ff"
+      "sha256": "28bca8136057aa70b3d6c6547a351073d0b29ccc92e4041fca156e09c66b3a0b"
     },
     {
       "path": "gen/node-express/src/generated/action-handlers.ts",
@@ -43,11 +43,11 @@
     },
     {
       "path": "gen/node-express/src/generated/event-contracts.ts",
-      "sha256": "6fb7aee5d9a5893d220a6fcf056127baf3b2652052ec1531db1944f78be82e8a"
+      "sha256": "18f832e78a71e4891387d16bb2a7bbdc348e9ce0ad99187021a66dec90364ec7"
     },
     {
       "path": "gen/node-express/src/generated/events.ts",
-      "sha256": "8e2a0139ced4d2113062224c4037e46a9c3c11b71204e776ff9f074d3ad84581"
+      "sha256": "cbb7db74c075284df566e393cd17d5593baf7bb18af12be09f8487d67aa9f066"
     },
     {
       "path": "gen/node-express/src/generated/index.ts",

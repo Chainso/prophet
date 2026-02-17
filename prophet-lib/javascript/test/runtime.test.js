@@ -24,6 +24,13 @@ test('NoOpEventPublisher resolves publish methods', async () => {
     occurred_at: nowIso(),
     source: 'test',
     payload: {},
+    updated_objects: [
+      {
+        object_type: 'Order',
+        object_ref: { orderId: 'ord-1' },
+        object: { orderId: 'ord-1', totalAmount: 42 },
+      },
+    ],
   });
   await publisher.publishBatch([]);
 });

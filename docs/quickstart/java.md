@@ -38,7 +38,8 @@ Generated handlers are stubs by design. Replace stub implementations in your app
 
 ## 4. Optionally Implement Event Publishing
 
-Generated action services publish action outcomes through `io.prophet.events.runtime.EventPublisher`.
+Generated action services publish event wire envelopes through `io.prophet.events.runtime.EventPublisher`.
+Generated event payload ref fields use sealed `<Object>RefOrObject` contracts; for action-output and signal events emitted by generated services, envelopes normalize embedded objects back to refs and include extracted snapshots in `updatedObjects`.
 Provide your own publisher bean to connect to your platform event bus/API. If you do nothing, generated no-op publisher wiring is used.
 
 ## 5. Run Compile/Test Gates

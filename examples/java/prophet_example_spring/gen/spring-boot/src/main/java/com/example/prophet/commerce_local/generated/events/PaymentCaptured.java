@@ -1,7 +1,7 @@
 package com.example.prophet.commerce_local.generated.events;
 
 import javax.annotation.processing.Generated;
-import com.example.prophet.commerce_local.generated.domain.OrderRef;
+import com.example.prophet.commerce_local.generated.domain.OrderRefOrObject;
 import jakarta.validation.constraints.NotNull;
 
 /**
@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
  */
 @Generated("prophet-cli")
 public record PaymentCaptured(
-    @NotNull OrderRef order
+    @NotNull OrderRefOrObject order
 ) {
 
     public static Builder builder() {
@@ -17,9 +17,9 @@ public record PaymentCaptured(
     }
 
     public static final class Builder {
-        private OrderRef order;
+        private OrderRefOrObject order;
 
-        public Builder order(OrderRef value) {
+        public Builder order(OrderRefOrObject value) {
             this.order = value;
             return this;
         }

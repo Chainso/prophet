@@ -5,7 +5,7 @@ import dataclasses
 
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Generic, List, Literal, Optional, Protocol, TypeVar, Union
+from typing import Dict, Generic, List, Literal, Optional, Protocol, TypeVar, Union
 
 from prophet_events_runtime import EventPublisher
 from prophet_events_runtime import EventWireEnvelope
@@ -54,6 +54,12 @@ class PaymentCapturedDomainEvent:
 
 DomainEvent = Union[ApproveOrderResultDomainEvent, CreateOrderResultDomainEvent, ShipOrderResultDomainEvent, PaymentCapturedDomainEvent]
 
+@dataclass(frozen=True)
+class _RefPathBinding:
+    object_type: str
+    path: List[str]
+    primary_keys: List[str]
+
 def just(output: TOutput) -> ActionOutcome[TOutput]:
     return ActionOutcome(output=output, additional_events=[])
 
@@ -84,7 +90,80 @@ def _serialize_payload(payload: object) -> dict[str, object]:
         return payload
     return {'value': str(payload)}
 
+def _clone_json_like(value: object) -> object:
+    if isinstance(value, dict):
+        return {str(key): _clone_json_like(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_clone_json_like(item) for item in value]
+    return value
+
+def _contains_all_primary_keys(candidate: dict[str, object], primary_keys: List[str]) -> bool:
+    return all(key in candidate and candidate[key] is not None for key in primary_keys)
+
+def _is_ref_shape(candidate: dict[str, object], primary_keys: List[str]) -> bool:
+    return all(key in primary_keys for key in candidate.keys())
+
+def _normalize_ref_value(value: object, binding: _RefPathBinding, updated_objects: List[dict[str, object]]) -> object:
+    if not isinstance(value, dict):
+        return value
+    candidate = {str(key): item for key, item in value.items()}
+    if not _contains_all_primary_keys(candidate, binding.primary_keys):
+        return value
+    if _is_ref_shape(candidate, binding.primary_keys):
+        return candidate
+    object_ref: dict[str, object] = {key: candidate[key] for key in binding.primary_keys}
+    updated_objects.append({
+        'object_type': binding.object_type,
+        'object_ref': object_ref,
+        'object': candidate,
+    })
+    return object_ref
+
+def _apply_binding_at_path(current: object, binding: _RefPathBinding, path_index: int, updated_objects: List[dict[str, object]]) -> None:
+    if path_index >= len(binding.path):
+        return
+    segment = binding.path[path_index]
+    if segment == '*':
+        if isinstance(current, list):
+            for item in current:
+                _apply_binding_at_path(item, binding, path_index + 1, updated_objects)
+        return
+    if not isinstance(current, dict):
+        return
+    next_value = current.get(segment)
+    if next_value is None:
+        return
+    if path_index == len(binding.path) - 1:
+        current[segment] = _normalize_ref_value(next_value, binding, updated_objects)
+        return
+    _apply_binding_at_path(next_value, binding, path_index + 1, updated_objects)
+
+def _normalize_payload_refs(payload: dict[str, object], bindings: List[_RefPathBinding]) -> List[dict[str, object]]:
+    updated_objects: List[dict[str, object]] = []
+    for binding in bindings:
+        _apply_binding_at_path(payload, binding, 0, updated_objects)
+    return updated_objects
+
 def _to_event_wire_envelope(event: DomainEvent, metadata: EventPublishMetadata) -> EventWireEnvelope:
+    ref_bindings: List[_RefPathBinding] = []
+    if isinstance(event, ApproveOrderResultDomainEvent):
+        ref_bindings = [
+            _RefPathBinding(object_type='Order', path=['order'], primary_keys=['orderId']),
+        ]
+    elif isinstance(event, CreateOrderResultDomainEvent):
+        ref_bindings = [
+            _RefPathBinding(object_type='Order', path=['order'], primary_keys=['orderId']),
+        ]
+    elif isinstance(event, ShipOrderResultDomainEvent):
+        ref_bindings = [
+            _RefPathBinding(object_type='Order', path=['order'], primary_keys=['orderId']),
+        ]
+    elif isinstance(event, PaymentCapturedDomainEvent):
+        ref_bindings = [
+            _RefPathBinding(object_type='Order', path=['order'], primary_keys=['orderId']),
+        ]
+    payload = _serialize_payload(_clone_json_like(getattr(event, 'payload', {})))
+    updated_objects = _normalize_payload_refs(payload, ref_bindings)
     return EventWireEnvelope(
         event_id=create_event_id(),
         trace_id=metadata.trace_id,
@@ -92,8 +171,9 @@ def _to_event_wire_envelope(event: DomainEvent, metadata: EventPublishMetadata) 
         schema_version='1.0.0',
         occurred_at=now_iso(),
         source=metadata.source,
-        payload=_serialize_payload(getattr(event, 'payload', {})),
+        payload=payload,
         attributes=metadata.attributes,
+        updated_objects=updated_objects or None,
     )
 
 async def publish_domain_events(

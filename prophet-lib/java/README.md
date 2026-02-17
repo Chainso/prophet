@@ -25,14 +25,14 @@ Maven:
 <dependency>
   <groupId>io.github.chainso</groupId>
   <artifactId>prophet-events-runtime</artifactId>
-  <version>0.2.9</version>
+  <version>0.3.0</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("io.github.chainso:prophet-events-runtime:0.2.9")
+implementation("io.github.chainso:prophet-events-runtime:0.3.0")
 ```
 
 ## API
@@ -53,7 +53,8 @@ public record EventWireEnvelope(
     String occurredAt,
     String source,
     Map<String, Object> payload,
-    Map<String, String> attributes
+    Map<String, String> attributes,
+    List<Map<String, Object>> updatedObjects
 ) {}
 ```
 

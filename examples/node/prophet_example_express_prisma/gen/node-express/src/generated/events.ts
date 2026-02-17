@@ -2,13 +2,102 @@
 
 import type * as Actions from './actions.js';
 import type * as EventContracts from './event-contracts.js';
-import { createEventId, nowIso, NoOpEventPublisher, type EventPublisher, type EventWireEnvelope } from '@prophet-ontology/events-runtime';
+import { createEventId, nowIso, NoOpEventPublisher, type EventPublisher, type EventUpdatedObject, type EventWireEnvelope } from '@prophet-ontology/events-runtime';
 
 export type DomainEvent =
   | { type: 'ApproveOrderResult'; payload: Actions.ApproveOrderResult }
   | { type: 'CreateOrderResult'; payload: Actions.CreateOrderResult }
   | { type: 'ShipOrderResult'; payload: Actions.ShipOrderResult }
   | { type: 'PaymentCaptured'; payload: EventContracts.PaymentCaptured }
+
+interface RefPathBinding {
+  objectType: string;
+  path: string[];
+  primaryKeys: string[];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function cloneJsonLike(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => cloneJsonLike(item));
+  }
+  if (isRecord(value)) {
+    const copy: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value)) {
+      copy[key] = cloneJsonLike(item);
+    }
+    return copy;
+  }
+  return value;
+}
+
+function containsAllPrimaryKeys(candidate: Record<string, unknown>, primaryKeys: string[]): boolean {
+  return primaryKeys.every((key) => Object.prototype.hasOwnProperty.call(candidate, key) && candidate[key] != null);
+}
+
+function isRefShape(candidate: Record<string, unknown>, primaryKeys: string[]): boolean {
+  return Object.keys(candidate).every((key) => primaryKeys.includes(key));
+}
+
+function normalizeRefValue(value: unknown, binding: RefPathBinding, updatedObjects: EventUpdatedObject[]): unknown {
+  if (!isRecord(value)) {
+    return value;
+  }
+  if (!containsAllPrimaryKeys(value, binding.primaryKeys)) {
+    return value;
+  }
+  if (isRefShape(value, binding.primaryKeys)) {
+    return value;
+  }
+  const objectRef: Record<string, unknown> = {};
+  for (const key of binding.primaryKeys) {
+    objectRef[key] = value[key];
+  }
+  updatedObjects.push({
+    object_type: binding.objectType,
+    object_ref: objectRef,
+    object: value,
+  });
+  return objectRef;
+}
+
+function applyBindingAtPath(current: unknown, binding: RefPathBinding, pathIndex: number, updatedObjects: EventUpdatedObject[]): void {
+  if (pathIndex >= binding.path.length) {
+    return;
+  }
+  const segment = binding.path[pathIndex];
+  if (segment === '*') {
+    if (Array.isArray(current)) {
+      for (const item of current) {
+        applyBindingAtPath(item, binding, pathIndex + 1, updatedObjects);
+      }
+    }
+    return;
+  }
+  if (!isRecord(current)) {
+    return;
+  }
+  const nextValue = current[segment];
+  if (nextValue == null) {
+    return;
+  }
+  if (pathIndex === binding.path.length - 1) {
+    current[segment] = normalizeRefValue(nextValue, binding, updatedObjects);
+    return;
+  }
+  applyBindingAtPath(nextValue, binding, pathIndex + 1, updatedObjects);
+}
+
+function normalizePayloadRefs(payload: Record<string, unknown>, bindings: RefPathBinding[]): EventUpdatedObject[] {
+  const updatedObjects: EventUpdatedObject[] = [];
+  for (const binding of bindings) {
+    applyBindingAtPath(payload, binding, 0, updatedObjects);
+  }
+  return updatedObjects;
+}
 
 export interface ActionOutcome<TOutput> {
   output: TOutput;
@@ -56,7 +145,11 @@ export function createPaymentCapturedEvent(payload: EventContracts.PaymentCaptur
 
 function toEventWireEnvelope(event: DomainEvent, metadata: EventPublishMetadata): EventWireEnvelope {
   switch (event.type) {
-    case 'ApproveOrderResult':
+    case 'ApproveOrderResult': {
+      const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
+      const updatedObjects = normalizePayloadRefs(payload, [
+          { objectType: 'Order', path: ['order'], primaryKeys: ['orderId'] },
+        ]);
       return {
         event_id: createEventId(),
         trace_id: metadata.traceId,
@@ -64,10 +157,16 @@ function toEventWireEnvelope(event: DomainEvent, metadata: EventPublishMetadata)
         schema_version: '0.1.0',
         occurred_at: nowIso(),
         source: metadata.source,
-        payload: event.payload as unknown as Record<string, unknown>,
+        payload,
         attributes: metadata.attributes,
+        updated_objects: updatedObjects.length ? updatedObjects : undefined,
       };
-    case 'CreateOrderResult':
+    }
+    case 'CreateOrderResult': {
+      const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
+      const updatedObjects = normalizePayloadRefs(payload, [
+          { objectType: 'Order', path: ['order'], primaryKeys: ['orderId'] },
+        ]);
       return {
         event_id: createEventId(),
         trace_id: metadata.traceId,
@@ -75,10 +174,16 @@ function toEventWireEnvelope(event: DomainEvent, metadata: EventPublishMetadata)
         schema_version: '0.1.0',
         occurred_at: nowIso(),
         source: metadata.source,
-        payload: event.payload as unknown as Record<string, unknown>,
+        payload,
         attributes: metadata.attributes,
+        updated_objects: updatedObjects.length ? updatedObjects : undefined,
       };
-    case 'ShipOrderResult':
+    }
+    case 'ShipOrderResult': {
+      const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
+      const updatedObjects = normalizePayloadRefs(payload, [
+          { objectType: 'Order', path: ['order'], primaryKeys: ['orderId'] },
+        ]);
       return {
         event_id: createEventId(),
         trace_id: metadata.traceId,
@@ -86,10 +191,16 @@ function toEventWireEnvelope(event: DomainEvent, metadata: EventPublishMetadata)
         schema_version: '0.1.0',
         occurred_at: nowIso(),
         source: metadata.source,
-        payload: event.payload as unknown as Record<string, unknown>,
+        payload,
         attributes: metadata.attributes,
+        updated_objects: updatedObjects.length ? updatedObjects : undefined,
       };
-    case 'PaymentCaptured':
+    }
+    case 'PaymentCaptured': {
+      const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
+      const updatedObjects = normalizePayloadRefs(payload, [
+          { objectType: 'Order', path: ['order'], primaryKeys: ['orderId'] },
+        ]);
       return {
         event_id: createEventId(),
         trace_id: metadata.traceId,
@@ -97,9 +208,11 @@ function toEventWireEnvelope(event: DomainEvent, metadata: EventPublishMetadata)
         schema_version: '0.1.0',
         occurred_at: nowIso(),
         source: metadata.source,
-        payload: event.payload as unknown as Record<string, unknown>,
+        payload,
         attributes: metadata.attributes,
+        updated_objects: updatedObjects.length ? updatedObjects : undefined,
       };
+    }
     default:
       throw new Error(`Unsupported domain event: ${(event as { type?: string }).type ?? 'unknown'}`);
   }

@@ -118,6 +118,7 @@ def render_java_record_with_builder(
     fields: List[Tuple[str, str, bool]],
     record_description: Optional[str] = None,
     field_descriptions: Optional[Dict[str, str]] = None,
+    implements_types: Optional[List[str]] = None,
 ) -> str:
     record_components: List[str] = []
     component_docs = field_descriptions or {}
@@ -160,13 +161,16 @@ def render_java_record_with_builder(
     )
 
     import_block = "\n".join(sorted(imports))
+    implements_clause = ""
+    if implements_types:
+        implements_clause = " implements " + ", ".join(implements_types)
     source = (
         f"package {package_name};\n\n"
         + (f"{import_block}\n\n" if import_block else "")
         + render_javadoc_block(record_description)
         + f"public record {record_name}(\n"
         + ",\n".join(record_components)
-        + "\n) {\n\n"
+        + f"\n){implements_clause} {{\n\n"
         + "    public static Builder builder() {\n"
         + "        return new Builder();\n"
         + "    }\n\n"
@@ -225,5 +229,3 @@ def annotate_generated_java_files(files: Dict[str, str]) -> None:
 
 def object_has_composite_primary_key(obj: Dict[str, Any]) -> bool:
     return len(primary_key_fields_for_object(obj)) > 1
-
-

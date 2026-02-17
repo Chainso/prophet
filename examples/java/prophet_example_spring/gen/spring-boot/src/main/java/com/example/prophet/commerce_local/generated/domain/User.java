@@ -13,7 +13,7 @@ public record User(
      */
     @NotNull String userId,
     @NotNull String email
-) {
+) implements UserRefOrObject {
 
     public static Builder builder() {
         return new Builder();

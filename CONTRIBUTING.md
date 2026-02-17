@@ -80,6 +80,9 @@ When adding/changing generation targets, update these surfaces in the same chang
 - [docs/reference/turtle.md](docs/reference/turtle.md)
 - [docs/quickstart/quickstart.md](docs/quickstart/quickstart.md)
 - [docs/developer/codegen-architecture.md](docs/developer/codegen-architecture.md)
+- [prophet-lib/README.md](prophet-lib/README.md)
+- [prophet-lib/specs/wire-contract.md](prophet-lib/specs/wire-contract.md)
+- [prophet-lib/specs/wire-event-envelope.schema.json](prophet-lib/specs/wire-event-envelope.schema.json)
 
 ## Open Items (Good First/Next Contributions)
 

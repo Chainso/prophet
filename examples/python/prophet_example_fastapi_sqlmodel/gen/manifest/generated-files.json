@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.3",
+  "toolchain_version": "0.18.0",
   "stack": {
     "id": "python_fastapi_sqlmodel",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlmodel"
   },
-  "ir_hash": "fb727d8cbda2878f1a0c25a6573b0bfbcec31ec3d2c398c0dd83cb46dae67ecf",
+  "ir_hash": "21dc70c7394dd9c73abeb36cd4637b6bcb323d3cd3f7660a57434281b66e6f4e",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "c955c886e7f1a170701de30010024e324467792205ee73e3dcaa8317b87ff9dc"
+      "sha256": "ffad14edf988e1cd2c59d2b238c770945626c6fb672e62decf4afab20528baa2"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
@@ -47,11 +47,11 @@
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "272ed32beca869de2e53cbaa37588d53c3ef7ddbf368faa998cbca21ed13c2c9"
+      "sha256": "ad336e341ece2d1e24204c11f0794a4e73a23c16fefd70322184b13ac320d223"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "6ca5136e99e577269772350bed147f2065a5ef0faa173ee02dac7c338c83282b"
+      "sha256": "205e779303f4d1bae7314114233d56aae16e00e8c932a3ef1701f89c8adfa800"
     },
     {
       "path": "gen/python/src/generated/fastapi_routes.py",

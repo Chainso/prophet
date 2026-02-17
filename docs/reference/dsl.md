@@ -95,6 +95,9 @@ action createOrder {
 - action input shape names are derived as `<ActionName>Command` (for example `ApproveOrderCommand`).
 - action output shape/event names are derived as `<ActionName>Result` (for example `ApproveOrderResult`).
 
+Runtime emission note:
+- Transition events are part of the event model and trigger graph, but generated action services auto-publish action-output and signal events only; transition emission is user-controlled.
+
 Signal example:
 
 ```prophet

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.3",
+  "toolchain_version": "0.18.0",
   "stack": {
     "id": "java_spring_jpa",
     "language": "java",
     "framework": "spring_boot",
     "orm": "jpa"
   },
-  "ir_hash": "fb727d8cbda2878f1a0c25a6573b0bfbcec31ec3d2c398c0dd83cb46dae67ecf",
+  "ir_hash": "21dc70c7394dd9c73abeb36cd4637b6bcb323d3cd3f7660a57434281b66e6f4e",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -35,7 +35,7 @@
     },
     {
       "path": "gen/spring-boot/build.gradle.kts",
-      "sha256": "fa65ff0d8aa0cf1dbf869fb4e02f305bcc6efb0bdf0273985e470d12ad4b2109"
+      "sha256": "0ad3855a98e725e4e8040867dd24c864b3997f3290e33e6c9415bcb5162fc29b"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/actions/ApproveOrderCommand.java",
@@ -179,11 +179,15 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/Order.java",
-      "sha256": "320747a847d825345505821affe7bfb33a7c51e399006d8f557139689245277d"
+      "sha256": "d0482a3d36a53dd5a7e0583a5981b314d473610b5d02c53ea1a81718a5afd625"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/OrderRef.java",
-      "sha256": "b4a67d49832aab2da1920b00d3e4f3a9a61ea3da58fe4edf16e2154d605f590a"
+      "sha256": "8d81d13e64894d2f45bcb1ca04a16a465487ea1ff23c90bd73b1617d4b7ef5f0"
+    },
+    {
+      "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/OrderRefOrObject.java",
+      "sha256": "cd510bd4aaaccb4301be05711e98a80f318060fb8f80d9ef302172db21ffacc1"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/OrderState.java",
@@ -191,11 +195,15 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/User.java",
-      "sha256": "b3507cd0757f6b1020c8e397873874beeb58441552b78341c6b33e2fa8325cd7"
+      "sha256": "8f1c7d9aa2b552785d842fe7a64ac369da6e791dd490a38dd272c2b7fb1f6d4f"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/UserRef.java",
-      "sha256": "d808be713ea6a30ec2bf68c585a58b75b495fd5370884242f608282bc6313c47"
+      "sha256": "e8fee5941c6b078707f794d4b997a9851a22d903f49decd1a126acb094d5b970"
+    },
+    {
+      "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/UserRefOrObject.java",
+      "sha256": "9cf2c7ef8f2e7da1cad938d276d4585d3aae760111678372aab536ed8b3cc19d"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/ActionOutcome.java",
@@ -223,19 +231,19 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/EventPublishingSupport.java",
-      "sha256": "74a7cff8899fcc874a45ed3242c01ae96e7313c7502096160d58d9d3688d473a"
+      "sha256": "95a88706131c4dafe224779130b605b1ee0ca6876ced4b75e77ba9ffa53cbda6"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/OrderApproveTransition.java",
-      "sha256": "6bb1e4c27028b593e5108828e8e51da50e3f3a6f47fa10abb7b69d076229383e"
+      "sha256": "220b56704cdbc5ab810b0a266591687ac3ca5e7a1a20da0a6e726e4d7d15d02d"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/OrderShipTransition.java",
-      "sha256": "107785a553ef2081ee85b86b39a78ace056e1580f9f6793a64cc0aa9a28dd37b"
+      "sha256": "b15ed827a05198b60c80934967122995c6e66a7974b494b9039bfeeff6edd177"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/PaymentCaptured.java",
-      "sha256": "72163f0dd31715769839e50e4facef50271700e456e2f108c598ebe738e4010c"
+      "sha256": "8f8c67f5814f7bd24ea795f1acec48eb603cde307edd2964964f706e9d4c8873"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/PaymentCapturedEvent.java",

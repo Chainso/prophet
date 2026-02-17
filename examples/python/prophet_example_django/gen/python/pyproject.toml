@@ -9,5 +9,5 @@ version = "0.0.0"
 requires-python = ">=3.10"
 dependencies = [
   "django>=5.0,<6.0",
-  "prophet-events-runtime==0.2.9",
+  "prophet-events-runtime==0.3.0",
 ]

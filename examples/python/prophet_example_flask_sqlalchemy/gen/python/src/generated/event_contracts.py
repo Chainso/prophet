@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, List
+from typing import Optional, List, Union
 
 from .domain import *
 
+OrderRefOrObject = Union[OrderRef, Order]
+
 @dataclass(kw_only=True)
 class PaymentCaptured:
-    order: OrderRef
+    order: OrderRefOrObject

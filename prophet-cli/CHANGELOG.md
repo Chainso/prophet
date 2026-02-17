@@ -4,6 +4,17 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-02-17
+
+### Added
+- Added generated event payload ref union contracts so object-ref fields accept either refs or full object snapshots (`<Object>RefOrObject` in Java sealed types, `<Object>Ref | <Object>` in Node/Python contracts).
+- Added event-envelope extraction of embedded object snapshots into `updated_objects` (`updatedObjects` in Java) while normalizing payload fields back to refs.
+
+### Changed
+- Updated generated action-service event publishing flows to normalize ref-or-full payloads for action-output and signal domain events, while keeping transition event emission user-controlled.
+- Bumped `prophet-lib` runtime packages to `0.3.0` and refreshed generated/runtime version references.
+- Toolchain/package version advanced to `0.18.0`.
+
 ## [0.17.3] - 2026-02-17
 
 ### Changed

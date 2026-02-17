@@ -22,7 +22,7 @@ public record Order(
     List<String> tags,
     Address shippingAddress,
     @NotNull OrderState currentState
-) {
+) implements OrderRefOrObject {
 
     public static Builder builder() {
         return new Builder();

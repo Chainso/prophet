@@ -128,6 +128,7 @@ pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_min
 - User docs: [docs/quickstart/](docs/quickstart/) and [docs/reference/](docs/reference/)
 - Developer docs: [docs/developer/](docs/developer/)
 - Contributor guidance/backlog: [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/developer/contributing.md](docs/developer/contributing.md)
+- Runtime wire contract/spec docs: [prophet-lib/specs/wire-contract.md](prophet-lib/specs/wire-contract.md) and [prophet-lib/specs/wire-event-envelope.schema.json](prophet-lib/specs/wire-event-envelope.schema.json)
 
 ## Release Notes
 

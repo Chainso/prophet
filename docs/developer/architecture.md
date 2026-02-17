@@ -15,7 +15,7 @@
 - `prophet_cli/codegen/`
   - generation contracts, stack manifest, pipeline, artifacts, cache
 - `prophet_cli/targets/`
-  - concrete stack generators (currently Java/Spring/JPA)
+  - concrete stack generators (Java/Spring/JPA, Node/Express, Python frameworks)
 
 ## Design Constraints
 

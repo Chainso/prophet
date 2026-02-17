@@ -9,3 +9,8 @@ Canonical envelope fields:
 - `source` (string, required)
 - `payload` (object, required)
 - `attributes` (map<string, string>, optional)
+- `updated_objects` (array<object>, optional)
+  - item shape:
+    - `object_type` (string)
+    - `object_ref` (object)
+    - `object` (object)

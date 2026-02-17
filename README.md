@@ -43,6 +43,7 @@ From a `.prophet` ontology file, Prophet can generate:
 - Spring Boot integration code (DTOs, JPA entities/repositories, query and action endpoints)
 - Node/Express integration code (typed contracts, zod validation, action/query routes, event publisher contracts)
 - Python integration code (typed dataclass contracts, action/query routes, event publisher contracts)
+- Event publisher wire envelopes with optional extracted object snapshots (`updated_objects` / `updatedObjects`) from ref-normalized event payloads
 - Prisma schema + repository adapters for Node targets
 - TypeORM entities + repository adapters for Node targets (wired through your application-owned `DataSource`)
 - Mongoose models + repository adapters for Node targets (wired through your application-owned Mongoose connection)

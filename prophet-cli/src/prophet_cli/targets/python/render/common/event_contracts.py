@@ -1,10 +1,98 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
+from ..support import _camel_case
+from ..support import _is_required
 from ..support import _pascal_case
-from ..support import _render_dataclass_field
+from ..support import _py_type_for_descriptor
 from ..support import _sort_dict_entries
+
+
+def _event_py_type_for_descriptor(
+    type_desc: Dict[str, Any],
+    *,
+    type_by_id: Dict[str, Dict[str, Any]],
+    object_by_id: Dict[str, Dict[str, Any]],
+    struct_by_id: Dict[str, Dict[str, Any]],
+) -> str:
+    kind = str(type_desc.get("kind", ""))
+    if kind == "object_ref":
+        object_id = str(type_desc.get("target_object_id", ""))
+        target = object_by_id.get(object_id)
+        if isinstance(target, dict):
+            return f"{_pascal_case(str(target.get('name', 'Object')))}RefOrObject"
+        return "Dict[str, Any]"
+    if kind == "list":
+        element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
+        return f"List[{_event_py_type_for_descriptor(element, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)}]"
+    return _py_type_for_descriptor(
+        type_desc,
+        type_by_id=type_by_id,
+        object_by_id=object_by_id,
+        struct_by_id=struct_by_id,
+    )
+
+
+def _render_event_dataclass_field(
+    field: Dict[str, Any],
+    *,
+    type_by_id: Dict[str, Dict[str, Any]],
+    object_by_id: Dict[str, Dict[str, Any]],
+    struct_by_id: Dict[str, Dict[str, Any]],
+) -> str:
+    name = _camel_case(str(field.get("name", "field")))
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    py_type = _event_py_type_for_descriptor(
+        type_desc,
+        type_by_id=type_by_id,
+        object_by_id=object_by_id,
+        struct_by_id=struct_by_id,
+    )
+    if _is_required(field):
+        return f"    {name}: {py_type}"
+    return f"    {name}: Optional[{py_type}] = None"
+
+
+def _collect_event_object_names_for_type(
+    type_desc: Dict[str, Any],
+    *,
+    object_by_id: Dict[str, Dict[str, Any]],
+    struct_by_id: Dict[str, Dict[str, Any]],
+) -> Set[str]:
+    kind = str(type_desc.get("kind", ""))
+    if kind == "object_ref":
+        object_id = str(type_desc.get("target_object_id", ""))
+        target = object_by_id.get(object_id)
+        if not isinstance(target, dict):
+            return set()
+        return {_pascal_case(str(target.get("name", "Object")))}
+    if kind == "struct":
+        struct_id = str(type_desc.get("target_struct_id", ""))
+        struct = struct_by_id.get(struct_id)
+        if not isinstance(struct, dict):
+            return set()
+        names: Set[str] = set()
+        for field in list(struct.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_type = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            names.update(
+                _collect_event_object_names_for_type(
+                    field_type,
+                    object_by_id=object_by_id,
+                    struct_by_id=struct_by_id,
+                )
+            )
+        return names
+    if kind == "list":
+        element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
+        return _collect_event_object_names_for_type(
+            element,
+            object_by_id=object_by_id,
+            struct_by_id=struct_by_id,
+        )
+    return set()
 
 
 def render_event_contracts(ir: Dict[str, Any]) -> str:
@@ -12,16 +100,42 @@ def render_event_contracts(ir: Dict[str, Any]) -> str:
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
 
+    event_object_names: Set[str] = set()
+    for event in _sort_dict_entries([item for item in ir.get("events", []) if isinstance(item, dict)]):
+        kind = str(event.get("kind", ""))
+        if kind == "signal":
+            for field in list(event.get("fields", [])):
+                if not isinstance(field, dict):
+                    continue
+                field_type = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+                event_object_names.update(
+                    _collect_event_object_names_for_type(
+                        field_type,
+                        object_by_id=object_by_id,
+                        struct_by_id=struct_by_id,
+                    )
+                )
+        elif kind == "transition":
+            object_id = str(event.get("object_id", ""))
+            target = object_by_id.get(object_id)
+            if isinstance(target, dict):
+                event_object_names.add(_pascal_case(str(target.get("name", "Object"))))
+
     lines: List[str] = [
         "# Code generated by prophet-cli. DO NOT EDIT.",
         "from __future__ import annotations",
         "",
         "from dataclasses import dataclass",
-        "from typing import Optional, List",
+        "from typing import Optional, List, Union",
         "",
         "from .domain import *",
         "",
     ]
+
+    for object_name in sorted(event_object_names):
+        lines.append(f"{object_name}RefOrObject = Union[{object_name}Ref, {object_name}]")
+    if event_object_names:
+        lines.append("")
 
     for event in _sort_dict_entries(
         [
@@ -39,7 +153,7 @@ def render_event_contracts(ir: Dict[str, Any]) -> str:
         else:
             for field in fields:
                 lines.append(
-                    _render_dataclass_field(
+                    _render_event_dataclass_field(
                         field,
                         type_by_id=type_by_id,
                         object_by_id=object_by_id,

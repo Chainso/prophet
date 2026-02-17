@@ -13,6 +13,10 @@ Event categories in the model:
 - Action outputs are events by definition (derived from action output contracts).
 - Object transitions are events by definition (derived from object transition definitions).
 
+Event emission behavior in generated action services:
+- Action-output and signal domain events are auto-published through generated event publisher wiring.
+- Transition events remain user-controlled (explicitly emitted by user code when needed).
+
 ## DSL -> IR -> Artifacts
 
 Prophet compiles `.prophet` files into:

@@ -24,6 +24,19 @@
     "attributes": {
       "type": "object",
       "additionalProperties": { "type": "string" }
+    },
+    "updated_objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["object_type", "object_ref", "object"],
+        "properties": {
+          "object_type": { "type": "string", "minLength": 1 },
+          "object_ref": { "type": "object" },
+          "object": { "type": "object" }
+        }
+      }
     }
   }
 }

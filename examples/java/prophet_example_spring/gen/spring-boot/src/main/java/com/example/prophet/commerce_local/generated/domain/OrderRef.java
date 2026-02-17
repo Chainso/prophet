@@ -12,7 +12,7 @@ public record OrderRef(
      * Primary key for referenced Order.
      */
     @NotNull String orderId
-) {
+) implements OrderRefOrObject {
 
     public static Builder builder() {
         return new Builder();

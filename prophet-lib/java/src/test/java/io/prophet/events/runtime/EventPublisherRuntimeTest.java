@@ -18,7 +18,14 @@ class EventPublisherRuntimeTest {
             EventTime.nowIso(),
             "tests",
             Map.of(),
-            Map.of()
+            Map.of(),
+            List.of(
+                Map.of(
+                    "object_type", "Order",
+                    "object_ref", Map.of("orderId", "ord-1"),
+                    "object", Map.of("orderId", "ord-1", "totalAmount", 42)
+                )
+            )
         );
 
         publisher.publish(envelope).toCompletableFuture().join();

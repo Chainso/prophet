@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.3",
+  "toolchain_version": "0.18.0",
   "stack": {
     "id": "python_fastapi_sqlmodel",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlmodel"
   },
-  "ir_hash": "7b5c536a0f8ce74e138f69fa84690974d559c3a2d7bd02f0c971534196465cac",
+  "ir_hash": "a25280385da0be4b8aa8977274fdf26bdb982c8a5fa685293030a782e59df960",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",

@@ -1,16 +1,114 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
+from ..support import _camel_case
+from ..support import _object_primary_key_fields
 from ..support import _pascal_case
 from ..support import _snake_case
 
 
+def _collect_event_ref_specs_for_type(
+    type_desc: Dict[str, Any],
+    *,
+    object_by_id: Dict[str, Dict[str, Any]],
+    struct_by_id: Dict[str, Dict[str, Any]],
+    path: List[str],
+) -> List[Dict[str, Any]]:
+    kind = str(type_desc.get("kind", ""))
+    if kind == "object_ref":
+        object_id = str(type_desc.get("target_object_id", ""))
+        target = object_by_id.get(object_id)
+        if not isinstance(target, dict):
+            return []
+        pk_fields = _object_primary_key_fields(target)
+        if not pk_fields:
+            return []
+        return [
+            {
+                "object_name": _pascal_case(str(target.get("name", "Object"))),
+                "path": list(path),
+                "primary_keys": [_camel_case(str(field.get("name", "id"))) for field in pk_fields],
+            }
+        ]
+    if kind == "list":
+        element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
+        return _collect_event_ref_specs_for_type(
+            element,
+            object_by_id=object_by_id,
+            struct_by_id=struct_by_id,
+            path=path + ["*"],
+        )
+    if kind == "struct":
+        struct_id = str(type_desc.get("target_struct_id", ""))
+        struct = struct_by_id.get(struct_id)
+        if not isinstance(struct, dict):
+            return []
+        specs: List[Dict[str, Any]] = []
+        for field in list(struct.get("fields", [])):
+            if not isinstance(field, dict):
+                continue
+            field_type = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            specs.extend(
+                _collect_event_ref_specs_for_type(
+                    field_type,
+                    object_by_id=object_by_id,
+                    struct_by_id=struct_by_id,
+                    path=path + [_camel_case(str(field.get("name", "field")))],
+                )
+            )
+        return specs
+    return []
+
+
+def _collect_event_ref_specs_for_fields(
+    fields: List[Dict[str, Any]],
+    *,
+    object_by_id: Dict[str, Dict[str, Any]],
+    struct_by_id: Dict[str, Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    specs: List[Dict[str, Any]] = []
+    for field in fields:
+        if not isinstance(field, dict):
+            continue
+        field_type = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+        specs.extend(
+            _collect_event_ref_specs_for_type(
+                field_type,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+                path=[_camel_case(str(field.get("name", "field")))],
+            )
+        )
+    unique: Dict[Tuple[str, Tuple[str, ...], Tuple[str, ...]], Dict[str, Any]] = {}
+    for spec in specs:
+        key = (
+            str(spec.get("object_name", "")),
+            tuple(str(item) for item in spec.get("primary_keys", [])),
+            tuple(str(item) for item in spec.get("path", [])),
+        )
+        unique[key] = {
+            "object_name": key[0],
+            "primary_keys": list(key[1]),
+            "path": list(key[2]),
+        }
+    return [unique[key] for key in sorted(unique.keys())]
+
+
+def _render_py_list(values: List[str]) -> str:
+    if not values:
+        return "[]"
+    encoded = ", ".join(repr(item) for item in values)
+    return f"[{encoded}]"
+
+
 def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
     action_output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
+    object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
+    struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
     schema_version = str(ir.get("ontology", {}).get("version", "1.0.0"))
 
-    event_specs: List[Dict[str, str]] = []
+    event_specs: List[Dict[str, Any]] = []
     seen_event_names: set[str] = set()
     for event in sorted([item for item in ir.get("events", []) if isinstance(item, dict)], key=lambda item: str(item.get("id", ""))):
         kind = str(event.get("kind", ""))
@@ -22,12 +120,32 @@ def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
         seen_event_names.add(event_name)
         if kind == "action_output":
             shape_id = str(event.get("output_shape_id", ""))
-            payload_type = _pascal_case(str(action_output_by_id.get(shape_id, {}).get("name", event_name)))
+            output_shape = action_output_by_id.get(shape_id, {})
+            payload_type = _pascal_case(str(output_shape.get("name", event_name)))
             payload_source = "Actions"
+            fields = [field for field in output_shape.get("fields", []) if isinstance(field, dict)]
+            ref_specs = _collect_event_ref_specs_for_fields(
+                fields,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+            )
         else:
             payload_type = event_name
             payload_source = "EventContracts"
-        event_specs.append({"name": event_name, "payload_type": payload_type, "payload_source": payload_source})
+            fields = [field for field in event.get("fields", []) if isinstance(field, dict)]
+            ref_specs = _collect_event_ref_specs_for_fields(
+                fields,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+            )
+        event_specs.append(
+            {
+                "name": event_name,
+                "payload_type": payload_type,
+                "payload_source": payload_source,
+                "ref_specs": ref_specs,
+            }
+        )
 
     lines: List[str] = [
         "# Code generated by prophet-cli. DO NOT EDIT.",
@@ -37,7 +155,7 @@ def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
         "",
         "from dataclasses import dataclass",
         "from dataclasses import field",
-        "from typing import Generic, List, Literal, Optional, Protocol, TypeVar, Union",
+        "from typing import Dict, Generic, List, Literal, Optional, Protocol, TypeVar, Union",
         "",
         "from prophet_events_runtime import EventPublisher",
         "from prophet_events_runtime import EventWireEnvelope",
@@ -90,6 +208,12 @@ def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
 
     lines.extend(
         [
+            "@dataclass(frozen=True)",
+            "class _RefPathBinding:",
+            "    object_type: str",
+            "    path: List[str]",
+            "    primary_keys: List[str]",
+            "",
             "def just(output: TOutput) -> ActionOutcome[TOutput]:",
             "    return ActionOutcome(output=output, additional_events=[])",
             "",
@@ -125,7 +249,91 @@ def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
             "        return payload",
             "    return {'value': str(payload)}",
             "",
+            "def _clone_json_like(value: object) -> object:",
+            "    if isinstance(value, dict):",
+            "        return {str(key): _clone_json_like(item) for key, item in value.items()}",
+            "    if isinstance(value, list):",
+            "        return [_clone_json_like(item) for item in value]",
+            "    return value",
+            "",
+            "def _contains_all_primary_keys(candidate: dict[str, object], primary_keys: List[str]) -> bool:",
+            "    return all(key in candidate and candidate[key] is not None for key in primary_keys)",
+            "",
+            "def _is_ref_shape(candidate: dict[str, object], primary_keys: List[str]) -> bool:",
+            "    return all(key in primary_keys for key in candidate.keys())",
+            "",
+            "def _normalize_ref_value(value: object, binding: _RefPathBinding, updated_objects: List[dict[str, object]]) -> object:",
+            "    if not isinstance(value, dict):",
+            "        return value",
+            "    candidate = {str(key): item for key, item in value.items()}",
+            "    if not _contains_all_primary_keys(candidate, binding.primary_keys):",
+            "        return value",
+            "    if _is_ref_shape(candidate, binding.primary_keys):",
+            "        return candidate",
+            "    object_ref: dict[str, object] = {key: candidate[key] for key in binding.primary_keys}",
+            "    updated_objects.append({",
+            "        'object_type': binding.object_type,",
+            "        'object_ref': object_ref,",
+            "        'object': candidate,",
+            "    })",
+            "    return object_ref",
+            "",
+            "def _apply_binding_at_path(current: object, binding: _RefPathBinding, path_index: int, updated_objects: List[dict[str, object]]) -> None:",
+            "    if path_index >= len(binding.path):",
+            "        return",
+            "    segment = binding.path[path_index]",
+            "    if segment == '*':",
+            "        if isinstance(current, list):",
+            "            for item in current:",
+            "                _apply_binding_at_path(item, binding, path_index + 1, updated_objects)",
+            "        return",
+            "    if not isinstance(current, dict):",
+            "        return",
+            "    next_value = current.get(segment)",
+            "    if next_value is None:",
+            "        return",
+            "    if path_index == len(binding.path) - 1:",
+            "        current[segment] = _normalize_ref_value(next_value, binding, updated_objects)",
+            "        return",
+            "    _apply_binding_at_path(next_value, binding, path_index + 1, updated_objects)",
+            "",
+            "def _normalize_payload_refs(payload: dict[str, object], bindings: List[_RefPathBinding]) -> List[dict[str, object]]:",
+            "    updated_objects: List[dict[str, object]] = []",
+            "    for binding in bindings:",
+            "        _apply_binding_at_path(payload, binding, 0, updated_objects)",
+            "    return updated_objects",
+            "",
             "def _to_event_wire_envelope(event: DomainEvent, metadata: EventPublishMetadata) -> EventWireEnvelope:",
+            "    ref_bindings: List[_RefPathBinding] = []",
+        ]
+    )
+
+    for idx, spec in enumerate(event_specs):
+        event_name = str(spec.get("name", "Event"))
+        ref_specs = [item for item in spec.get("ref_specs", []) if isinstance(item, dict)]
+        keyword = "if" if idx == 0 else "elif"
+        lines.append(f"    {keyword} isinstance(event, {event_name}DomainEvent):")
+        if ref_specs:
+            lines.append("        ref_bindings = [")
+            for ref_spec in ref_specs:
+                object_name = str(ref_spec.get("object_name", "Object"))
+                path_literal = _render_py_list([str(item) for item in ref_spec.get("path", [])])
+                primary_keys_literal = _render_py_list([str(item) for item in ref_spec.get("primary_keys", [])])
+                lines.append(
+                    "            _RefPathBinding("
+                    + f"object_type={repr(object_name)}, "
+                    + f"path={path_literal}, "
+                    + f"primary_keys={primary_keys_literal}"
+                    + "),"
+                )
+            lines.append("        ]")
+        else:
+            lines.append("        ref_bindings = []")
+
+    lines.extend(
+        [
+            "    payload = _serialize_payload(_clone_json_like(getattr(event, 'payload', {})))",
+            "    updated_objects = _normalize_payload_refs(payload, ref_bindings)",
             "    return EventWireEnvelope(",
             "        event_id=create_event_id(),",
             "        trace_id=metadata.trace_id,",
@@ -133,8 +341,9 @@ def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
             f"        schema_version='{schema_version}',",
             "        occurred_at=now_iso(),",
             "        source=metadata.source,",
-            "        payload=_serialize_payload(getattr(event, 'payload', {})),",
+            "        payload=payload,",
             "        attributes=metadata.attributes,",
+            "        updated_objects=updated_objects or None,",
             "    )",
             "",
             "async def publish_domain_events(",

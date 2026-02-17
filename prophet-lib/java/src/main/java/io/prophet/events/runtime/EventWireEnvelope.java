@@ -1,5 +1,6 @@
 package io.prophet.events.runtime;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -13,6 +14,7 @@ import java.util.Map;
  * @param source logical source that emitted this event
  * @param payload event payload data
  * @param attributes optional transport metadata
+ * @param updatedObjects optional extracted full object snapshots associated with normalized refs
  */
 public record EventWireEnvelope(
     String eventId,
@@ -22,5 +24,6 @@ public record EventWireEnvelope(
     String occurredAt,
     String source,
     Map<String, Object> payload,
-    Map<String, String> attributes
+    Map<String, String> attributes,
+    List<Map<String, Object>> updatedObjects
 ) {}

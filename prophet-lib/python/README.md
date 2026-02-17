@@ -36,7 +36,7 @@ class EventPublisher(Protocol):
 
 ```python
 from dataclasses import dataclass
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 @dataclass(kw_only=True)
 class EventWireEnvelope:
@@ -48,6 +48,7 @@ class EventWireEnvelope:
     source: str
     payload: Dict[str, object]
     attributes: Optional[Dict[str, str]] = None
+    updated_objects: Optional[List[Dict[str, object]]] = None
 ```
 
 Exports:

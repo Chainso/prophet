@@ -12,7 +12,7 @@ public record UserRef(
      * Primary key for referenced User.
      */
     @NotNull String userId
-) {
+) implements UserRefOrObject {
 
     public static Builder builder() {
         return new Builder();

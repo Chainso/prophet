@@ -29,6 +29,13 @@ class RuntimeTests(unittest.TestCase):
             occurred_at=now_iso(),
             source="tests",
             payload={},
+            updated_objects=[
+                {
+                    "object_type": "Order",
+                    "object_ref": {"orderId": "ord-1"},
+                    "object": {"orderId": "ord-1", "totalAmount": 42},
+                }
+            ],
         )
         publish_sync(publisher, envelope)
         publish_batch_sync(publisher, [envelope])

@@ -78,8 +78,11 @@ On `prophet gen` for Node stacks, Prophet adds scripts to host `package.json` wh
 
 - Generated action routes are available under `/actions/<actionName>`.
 - Generated action service publishes event wire envelopes through async `EventPublisher` from `@prophet-ontology/events-runtime`.
+- Event payload object-ref fields in generated event contracts accept either a `<Object>Ref` or full `<Object>` value.
+- For action-output and signal domain events emitted through generated action services, wire payloads normalize embedded objects back to refs and emit extracted snapshots in `updated_objects`.
 - `NoOpEventPublisher` is provided for zero-config integration.
 - Handlers can return either the action output directly or `ActionOutcome` with additional domain events.
+- Transition events remain user-controlled and are not auto-published by generated action services.
 - Default handler stubs throw until replaced by user-owned implementations.
 
 ## Query Behavior

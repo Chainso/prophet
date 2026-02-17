@@ -1,3 +1,9 @@
+export interface EventUpdatedObject {
+  object_type: string;
+  object_ref: Record<string, unknown>;
+  object: Record<string, unknown>;
+}
+
 export interface EventWireEnvelope {
   event_id: string;
   trace_id: string;
@@ -7,6 +13,7 @@ export interface EventWireEnvelope {
   source: string;
   payload: Record<string, unknown>;
   attributes?: Record<string, string>;
+  updated_objects?: EventUpdatedObject[];
 }
 
 export interface EventPublisher {

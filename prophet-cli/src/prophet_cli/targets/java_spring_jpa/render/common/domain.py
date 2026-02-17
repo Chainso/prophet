@@ -39,6 +39,13 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
                 ref_types[target["id"]] = target
 
     for target in sorted(ref_types.values(), key=lambda x: x["id"]):
+        ref_or_object_name = f"{target['name']}RefOrObject"
+        files[f"src/main/java/{package_path}/generated/domain/{ref_or_object_name}.java"] = (
+            f"package {base_package}.generated.domain;\n\n"
+            + f"public sealed interface {ref_or_object_name} permits {target['name']}Ref, {target['name']} {{\n"
+            + "}\n"
+        )
+
         target_pk = primary_key_field_for_object(target)
         pk_java = java_type_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
         cls = f"{target['name']}Ref"
@@ -50,6 +57,7 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
             ref_fields,
             record_description=f"Reference to {target['name']} by primary key.",
             field_descriptions={camel_case(target_pk["name"]): f"Primary key for referenced {target['name']}."},
+            implements_types=[ref_or_object_name],
         )
 
     # struct domain records
@@ -120,4 +128,5 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
             object_fields,
             record_description=str(obj.get("description", "")) or None,
             field_descriptions=object_field_descriptions,
+            implements_types=[f"{obj['name']}RefOrObject"] if obj["id"] in ref_types else None,
         )

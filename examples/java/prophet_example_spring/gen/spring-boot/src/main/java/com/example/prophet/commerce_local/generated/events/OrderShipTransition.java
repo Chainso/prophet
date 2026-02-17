@@ -1,7 +1,7 @@
 package com.example.prophet.commerce_local.generated.events;
 
 import javax.annotation.processing.Generated;
-import com.example.prophet.commerce_local.generated.domain.OrderRef;
+import com.example.prophet.commerce_local.generated.domain.OrderRefOrObject;
 
 /**
  * Event payload for 'OrderShipTransition'.
@@ -9,9 +9,9 @@ import com.example.prophet.commerce_local.generated.domain.OrderRef;
 @Generated("prophet-cli")
 public record OrderShipTransition(
     /**
-     * Reference to the Order instance associated with this transition.
+     * Reference or full Order instance associated with this transition.
      */
-    OrderRef objectRef
+    OrderRefOrObject objectRef
 ) {
 
     public static Builder builder() {
@@ -19,9 +19,9 @@ public record OrderShipTransition(
     }
 
     public static final class Builder {
-        private OrderRef objectRef;
+        private OrderRefOrObject objectRef;
 
-        public Builder objectRef(OrderRef value) {
+        public Builder objectRef(OrderRefOrObject value) {
             this.objectRef = value;
             return this;
         }

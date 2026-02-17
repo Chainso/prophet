@@ -57,6 +57,9 @@ If you add/change/remove generation targets, update at minimum:
 - `docs/reference/turtle.md`
 - `docs/quickstart/quickstart.md`
 - `docs/developer/codegen-architecture.md`
+- `prophet-lib/README.md`
+- `prophet-lib/specs/wire-contract.md`
+- `prophet-lib/specs/wire-event-envelope.schema.json`
 
 ## Open Items
 

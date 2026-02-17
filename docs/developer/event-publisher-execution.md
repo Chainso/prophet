@@ -34,8 +34,8 @@ Replace legacy generated event publishing contracts with async-first `EventPubli
    - Provide sync wrappers for Flask/Django while retaining async publisher default
 6. Java codegen migration:
    - Generate async event publishing path via `CompletionStage`
-   - Generate action outcome contracts and envelope mapping utilities
-  - Remove legacy per-event publishing interfaces
+   - Generate `ActionOutcome` contracts and envelope mapping utilities
+   - Remove legacy per-event publishing interfaces
 
 ### Phase 3: Consumer Integration
 
@@ -86,7 +86,7 @@ Replace legacy generated event publishing contracts with async-first `EventPubli
   - `ActionOutcome` return with additional events
   - deterministic publish order: primary action output event first, then additional events
 - All published envelopes follow event wire contract fields:
-  - `event_id`, `trace_id`, `event_type`, `schema_version`, `occurred_at`, `source`, `payload`, optional `attributes`
+  - `event_id`, `trace_id`, `event_type`, `schema_version`, `occurred_at`, `source`, `payload`, optional `attributes`, optional `updated_objects`
 - Runtime packages build and test locally.
 - Examples compile/run with new generated contracts.
 - CI includes runtime validation and staged publish workflow.

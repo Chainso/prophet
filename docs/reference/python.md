@@ -57,8 +57,11 @@ Autodetection fails closed for ambiguous framework signals or missing ORM signal
 
 - Generated action endpoints are mounted per framework.
 - Generated action service publishes event wire envelopes through async `EventPublisher` from `prophet-events-runtime`.
+- Event payload object-ref fields in generated event contracts accept either a `<Object>Ref` or full `<Object>` value.
+- For action-output and signal domain events emitted through generated action services, wire payloads normalize embedded objects back to refs and emit extracted snapshots in `updated_objects`.
 - `EventPublisherNoOp` is provided for zero-config local wiring.
 - Handlers can return either the action output directly or `ActionOutcome` with additional domain events.
+- Transition events remain user-controlled and are not auto-published by generated action services.
 - Default action handler implementations raise `NotImplementedError` until replaced by user code.
 
 ## Query Behavior
