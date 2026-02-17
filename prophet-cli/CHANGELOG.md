@@ -4,6 +4,27 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-02-17
+
+### Added
+- Implemented the transition/event redesign end-to-end:
+  - action outputs are modeled as produced events (`signal` or `transition`),
+  - DSL supports `output { ... }`, `output signal <SignalName>`, and `output transition <Object>.<Transition>`,
+  - transition payloads include implicit object primary keys plus `fromState`/`toState`.
+- Added generated per-object transition validator seams across Java/Node/Python and wired runtime `TransitionValidationResult` into default transition handlers.
+- Added generated transition draft flow across stacks so transition handlers return drafts seeded with implicit transition fields.
+
+### Changed
+- Reworked metamodel/core/compiler/codegen to remove legacy action-output modeling and consume `output_event_id` event contracts.
+- Standardized state persistence on internal `__prophet_state` while exposing logical `state` in generated domain/query contracts.
+- Regenerated all example stacks at ontology version `1.0.0` with clean baselines (no example `V2` delta migration artifacts).
+- Bumped `prophet-lib` runtime packages to `0.4.0` and refreshed generated/runtime version references.
+- Toolchain/package version advanced to `0.20.0`.
+
+### Fixed
+- Updated FastAPI example HTTP tests to use async `httpx.ASGITransport` clients for stable execution under current Python runtime behavior.
+- Updated SQLModel generated history timestamp default to timezone-aware UTC (`datetime.now(timezone.utc)`), removing `datetime.utcnow()` deprecation warnings.
+
 ## [0.19.0] - 2026-02-17
 
 ### Added
