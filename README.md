@@ -89,7 +89,6 @@ python3 -m venv .venv --system-site-packages
 - Node quickstart: [Express](docs/quickstart/node.md)
 - Python quickstart: [FastAPI / Flask / Django](docs/quickstart/python.md)
 - Turtle target reference: [Turtle](docs/reference/turtle.md)
-- Minimal Turtle example: [examples/turtle/prophet_example_turtle_minimal](examples/turtle/prophet_example_turtle_minimal)
 - Runnable sample apps: [Examples](docs/reference/examples.md)
 - Full user reference: [Reference Index](docs/reference/index.md)
 - Developer docs: [Developer Index](docs/developer/index.md)
@@ -107,9 +106,7 @@ python3 -m venv .venv --system-site-packages
 | Python | Flask | SQLAlchemy | `python_flask_sqlalchemy` | [Flask + SQLAlchemy Example](examples/python/prophet_example_flask_sqlalchemy) |
 | Python | Flask | SQLModel | `python_flask_sqlmodel` | [Flask + SQLModel Example](examples/python/prophet_example_flask_sqlmodel) |
 | Python | Django | Django ORM | `python_django_django_orm` | [Django + Django ORM Example](examples/python/prophet_example_django) |
-
-Minimal Turtle sample project:
-- [examples/turtle/prophet_example_turtle_minimal](examples/turtle/prophet_example_turtle_minimal)
+| Turtle | SHACL/RDF | Ontology projection | N/A | [Minimal Turtle Example](examples/turtle/prophet_example_turtle_minimal) |
 
 ## License
 
