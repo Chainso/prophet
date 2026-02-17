@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from uuid import uuid4
 
-from fastapi.testclient import TestClient
+import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
 GEN_SRC = ROOT / "gen" / "python" / "src"
@@ -18,17 +18,21 @@ if str(GEN_SRC) not in sys.path:
 import app as example_app
 
 
-class FastApiSqlModelHttpFlowTest(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        cls.client = TestClient(example_app.app)
+class FastApiSqlModelHttpFlowTest(unittest.IsolatedAsyncioTestCase):
+    async def asyncSetUp(self) -> None:
+        self.client = httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=example_app.app),
+            base_url="http://testserver",
+        )
 
-    def test_action_and_query_http_flow(self) -> None:
+    async def asyncTearDown(self) -> None:
+        await self.client.aclose()
+
+    async def test_action_and_query_http_flow(self) -> None:
         run_id = str(uuid4())
         customer_id = f"user-{run_id}"
 
-        create = self.client.post(
+        create = await self.client.post(
             "/actions/createOrder",
             json={
                 "customer": {"userId": customer_id},
@@ -46,7 +50,7 @@ class FastApiSqlModelHttpFlowTest(unittest.TestCase):
         created = create.json()
         order_id = created["order"]["orderId"]
 
-        approve = self.client.post(
+        approve = await self.client.post(
             "/actions/approveOrder",
             json={
                 "order": {"orderId": order_id},
@@ -59,7 +63,7 @@ class FastApiSqlModelHttpFlowTest(unittest.TestCase):
         self.assertEqual(approved["fromState"], "created")
         self.assertEqual(approved["toState"], "approved")
 
-        ship = self.client.post(
+        ship = await self.client.post(
             "/actions/shipOrder",
             json={
                 "order": {"orderId": order_id},
@@ -74,13 +78,13 @@ class FastApiSqlModelHttpFlowTest(unittest.TestCase):
         self.assertEqual(shipped["fromState"], "approved")
         self.assertEqual(shipped["toState"], "shipped")
 
-        fetched = self.client.get(f"/orders/{order_id}")
+        fetched = await self.client.get(f"/orders/{order_id}")
         self.assertEqual(fetched.status_code, 200, fetched.text)
         fetched_json = fetched.json()
         self.assertEqual(fetched_json["orderId"], order_id)
         self.assertEqual(fetched_json["state"], "shipped")
 
-        query = self.client.post(
+        query = await self.client.post(
             "/orders/query?page=0&size=10",
             json={
                 "state": {"eq": "shipped"},
