@@ -2,10 +2,10 @@ package com.example.prophet.commerce_local.generated.actions.services.defaults;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.actions.CreateOrderCommand;
-import com.example.prophet.commerce_local.generated.actions.CreateOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.CreateOrderActionHandler;
 import com.example.prophet.commerce_local.generated.actions.services.CreateOrderActionService;
 import com.example.prophet.commerce_local.generated.events.ActionOutcome;
+import com.example.prophet.commerce_local.generated.events.CreateOrderResult;
 import com.example.prophet.commerce_local.generated.events.CreateOrderResultEvent;
 import com.example.prophet.commerce_local.generated.events.DomainEvent;
 import com.example.prophet.commerce_local.generated.events.EventPublishingSupport;

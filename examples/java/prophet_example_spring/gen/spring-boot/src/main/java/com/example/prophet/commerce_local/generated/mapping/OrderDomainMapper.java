@@ -20,7 +20,7 @@ public class OrderDomainMapper {
             .discountCode(entity.getDiscountCode())
             .tags(entity.getTags())
             .shippingAddress(entity.getShippingAddress())
-            .currentState(entity.getCurrentState())
+            .state(entity.getState())
             .build();
     }
 }

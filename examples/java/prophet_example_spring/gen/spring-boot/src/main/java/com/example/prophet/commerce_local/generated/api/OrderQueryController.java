@@ -1,11 +1,11 @@
 package com.example.prophet.commerce_local.generated.api;
 
 import javax.annotation.processing.Generated;
-import com.example.prophet.commerce_local.generated.api.filters.OrderCurrentStateFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderCustomerFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderDiscountCodeFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderOrderIdFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderQueryFilter;
+import com.example.prophet.commerce_local.generated.api.filters.OrderStateFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderTotalAmountFilter;
 import com.example.prophet.commerce_local.generated.domain.Order;
 import com.example.prophet.commerce_local.generated.domain.OrderState;
@@ -113,13 +113,13 @@ public class OrderQueryController {
                     spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.<String>get("discountCode")), "%" + discountCodeFilter.contains().toLowerCase() + "%"));
                 }
             }
-            if (filter.currentState() != null) {
-                OrderCurrentStateFilter currentStateFilter = filter.currentState();
-                if (currentStateFilter.eq() != null) {
-                    spec = spec.and((root, query, cb) -> cb.equal(root.get("currentState"), currentStateFilter.eq()));
+            if (filter.state() != null) {
+                OrderStateFilter stateFilter = filter.state();
+                if (stateFilter.eq() != null) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("state"), stateFilter.eq()));
                 }
-                if (currentStateFilter.in() != null && !currentStateFilter.in().isEmpty()) {
-                    spec = spec.and((root, query, cb) -> root.get("currentState").in(currentStateFilter.in()));
+                if (stateFilter.in() != null && !stateFilter.in().isEmpty()) {
+                    spec = spec.and((root, query, cb) -> root.get("state").in(stateFilter.in()));
                 }
             }
         }

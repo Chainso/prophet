@@ -10,11 +10,23 @@ class OrderModel(models.Model):
     discountCode = models.CharField(max_length=255, null=True, blank=True)
     tags = models.JSONField(null=True, blank=True)
     shippingAddress = models.JSONField(null=True, blank=True)
-    currentState = models.CharField(max_length=64, default='created')
+    state = models.CharField(max_length=64, default='created', db_column='__prophet_state')
 
     class Meta:
         app_label = 'generated'
         db_table = 'orders'
+
+class OrderStateHistoryModel(models.Model):
+    historyId = models.BigAutoField(primary_key=True, db_column='history_id')
+    orderId = models.CharField(max_length=255, null=False, blank=False)
+    transitionId = models.CharField(max_length=255, db_column='transition_id')
+    fromState = models.CharField(max_length=255, db_column='from_state')
+    toState = models.CharField(max_length=255, db_column='to_state')
+    occurredAt = models.DateTimeField(auto_now_add=True, db_column='occurred_at')
+
+    class Meta:
+        app_label = 'generated'
+        db_table = 'orders_state_history'
 
 class UserModel(models.Model):
     userId = models.CharField(max_length=255, null=False, blank=False, primary_key=True)

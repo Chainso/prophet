@@ -44,24 +44,22 @@ export const ShipOrderCommandSchema = z.object({
   packageIds: z.array(z.string()),
 });
 
-export const ApproveOrderResultSchema = z.object({
-  order: OrderRefSchema,
-  decision: z.string(),
-  warnings: z.array(z.string()).optional(),
-});
-
 export const CreateOrderResultSchema = z.object({
   order: OrderRefSchema,
-  currentState: z.string(),
-});
-
-export const ShipOrderResultSchema = z.object({
-  order: OrderRefSchema,
-  shipmentStatus: z.string(),
-  labels: z.array(z.string()).optional(),
-  labelBatches: z.array(z.array(z.string())).optional(),
 });
 
 export const PaymentCapturedSchema = z.object({
   order: OrderRefSchema,
+});
+
+export const OrderApproveTransitionSchema = z.object({
+  orderId: z.string(),
+  fromState: z.string(),
+  toState: z.string(),
+});
+
+export const OrderShipTransitionSchema = z.object({
+  orderId: z.string(),
+  fromState: z.string(),
+  toState: z.string(),
 });

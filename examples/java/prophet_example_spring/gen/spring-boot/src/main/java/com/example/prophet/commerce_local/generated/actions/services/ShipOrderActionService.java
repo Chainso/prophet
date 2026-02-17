@@ -2,12 +2,12 @@ package com.example.prophet.commerce_local.generated.actions.services;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.actions.ShipOrderCommand;
-import com.example.prophet.commerce_local.generated.actions.ShipOrderResult;
+import com.example.prophet.commerce_local.generated.events.OrderShipTransition;
 
 /**
  * Ships an approved order.
  */
 @Generated("prophet-cli")
 public interface ShipOrderActionService {
-    ShipOrderResult execute(ShipOrderCommand request);
+    OrderShipTransition execute(ShipOrderCommand request);
 }

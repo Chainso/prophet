@@ -9,5 +9,21 @@ from .domain import *
 OrderRefOrObject = Union[OrderRef, Order]
 
 @dataclass(kw_only=True)
+class CreateOrderResult:
+    order: OrderRefOrObject
+
+@dataclass(kw_only=True)
 class PaymentCaptured:
     order: OrderRefOrObject
+
+@dataclass(kw_only=True)
+class OrderApproveTransition:
+    orderId: str
+    fromState: str
+    toState: str
+
+@dataclass(kw_only=True)
+class OrderShipTransition:
+    orderId: str
+    fromState: str
+    toState: str

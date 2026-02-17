@@ -1,17 +1,16 @@
 package com.example.prophet.commerce_local.generated.events;
 
 import javax.annotation.processing.Generated;
-import com.example.prophet.commerce_local.generated.domain.OrderRefOrObject;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * Event payload for 'OrderShipTransition'.
  */
 @Generated("prophet-cli")
 public record OrderShipTransition(
-    /**
-     * Reference or full Order instance associated with this transition.
-     */
-    OrderRefOrObject objectRef
+    @NotNull String orderId,
+    @NotNull String fromState,
+    @NotNull String toState
 ) {
 
     public static Builder builder() {
@@ -19,15 +18,29 @@ public record OrderShipTransition(
     }
 
     public static final class Builder {
-        private OrderRefOrObject objectRef;
+        private String orderId;
+        private String fromState;
+        private String toState;
 
-        public Builder objectRef(OrderRefOrObject value) {
-            this.objectRef = value;
+        public Builder orderId(String value) {
+            this.orderId = value;
+            return this;
+        }
+
+        public Builder fromState(String value) {
+            this.fromState = value;
+            return this;
+        }
+
+        public Builder toState(String value) {
+            this.toState = value;
             return this;
         }
         public OrderShipTransition build() {
             return new OrderShipTransition(
-                objectRef
+                orderId,
+                fromState,
+                toState
             );
         }
     }

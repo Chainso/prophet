@@ -24,16 +24,15 @@ from generated.action_handlers import (
 from generated.action_service import ActionExecutionService
 from generated.actions import (
     ApproveOrderCommand,
-    ApproveOrderResult,
     CreateOrderCommand,
-    CreateOrderResult,
     ShipOrderCommand,
-    ShipOrderResult,
 )
 from generated.domain import Order, OrderRef, User
+from generated.event_contracts import CreateOrderResult, OrderApproveTransition, OrderShipTransition
 from generated.events import EventPublisherNoOp
 from generated.flask_routes import build_generated_blueprint
 from generated.sqlalchemy_adapters import SqlAlchemyRepositories
+from generated.transitions import TransitionServices
 
 
 class CreateOrderHandler(CreateOrderActionHandler):
@@ -53,55 +52,30 @@ class CreateOrderHandler(CreateOrderActionHandler):
                 discountCode=input.discountCode,
                 tags=input.tags,
                 shippingAddress=input.shippingAddress,
-                currentState="created",
+                state="created",
             )
         )
-        return CreateOrderResult(order=OrderRef(orderId=order_id), currentState="created")
+        return CreateOrderResult(order=OrderRef(orderId=order_id))
 
 
 class ApproveOrderHandler(ApproveOrderActionHandler):
-    def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ApproveOrderResult:
+    def handle(self, input: ApproveOrderCommand, context: ActionContext) -> OrderApproveTransition:
         existing = context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
-        context.repositories.order.save(
-            Order(
-                orderId=existing.orderId,
-                customer=existing.customer,
-                totalAmount=existing.totalAmount,
-                discountCode=existing.discountCode,
-                tags=existing.tags,
-                shippingAddress=existing.shippingAddress,
-                currentState="approved",
-            )
-        )
-        warnings = ["notes_attached"] if input.notes else None
-        return ApproveOrderResult(order=input.order, decision="approved", warnings=warnings)
+        transitions = TransitionServices(context.repositories)
+        draft = transitions.order.approveOrder(input.order)
+        return draft.build()
 
 
 class ShipOrderHandler(ShipOrderActionHandler):
-    def handle(self, input: ShipOrderCommand, context: ActionContext) -> ShipOrderResult:
+    def handle(self, input: ShipOrderCommand, context: ActionContext) -> OrderShipTransition:
         existing = context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
-        context.repositories.order.save(
-            Order(
-                orderId=existing.orderId,
-                customer=existing.customer,
-                totalAmount=existing.totalAmount,
-                discountCode=existing.discountCode,
-                tags=existing.tags,
-                shippingAddress=existing.shippingAddress,
-                currentState="shipped",
-            )
-        )
-        labels = [f"{input.carrier}-{package_id}" for package_id in input.packageIds]
-        return ShipOrderResult(
-            order=input.order,
-            shipmentStatus="shipped",
-            labels=labels,
-            labelBatches=[input.packageIds],
-        )
+        transitions = TransitionServices(context.repositories)
+        draft = transitions.order.shipOrder(input.order)
+        return draft.build()
 
 
 class ActionHandlers(ActionHandlers):

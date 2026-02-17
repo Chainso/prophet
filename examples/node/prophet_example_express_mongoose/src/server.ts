@@ -13,10 +13,12 @@ import {
 } from '../gen/node-express/src/generated/action-handlers.js';
 import type * as Actions from '../gen/node-express/src/generated/actions.js';
 import type * as Domain from '../gen/node-express/src/generated/domain.js';
+import type * as EventContracts from '../gen/node-express/src/generated/event-contracts.js';
 import { MongooseRepositories } from '../gen/node-express/src/generated/mongoose-adapters.js';
+import { TransitionServices } from '../gen/node-express/src/generated/transitions.js';
 
 class CreateOrderHandler implements CreateOrderActionHandler {
-  async handle(input: Actions.CreateOrderCommand, context: ActionContext): Promise<Actions.CreateOrderResult> {
+  async handle(input: Actions.CreateOrderCommand, context: ActionContext): Promise<EventContracts.CreateOrderResult> {
     await context.repositories.user.save({
       userId: input.customer.userId,
       email: `${input.customer.userId}@example.local`,
@@ -30,50 +32,36 @@ class CreateOrderHandler implements CreateOrderActionHandler {
       discountCode: input.discountCode,
       tags: input.tags,
       shippingAddress: input.shippingAddress,
-      currentState: 'created',
+      state: 'created',
     };
     await context.repositories.order.save(order);
     return {
       order: { orderId },
-      currentState: 'created',
     };
   }
 }
 
 class ApproveOrderHandler implements ApproveOrderActionHandler {
-  async handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<Actions.ApproveOrderResult> {
+  async handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<EventContracts.OrderApproveTransition> {
     const existing = await context.repositories.order.getById({ orderId: input.order.orderId });
     if (!existing) {
       throw new Error(`order not found: ${input.order.orderId}`);
     }
-    await context.repositories.order.save({
-      ...existing,
-      currentState: 'approved',
-    });
-    return {
-      order: input.order,
-      decision: 'approved',
-      warnings: input.notes?.length ? ['notes_attached'] : undefined,
-    };
+    const transitions = new TransitionServices(context.repositories);
+    const draft = await transitions.order.approveOrder(input.order);
+    return draft.build();
   }
 }
 
 class ShipOrderHandler implements ShipOrderActionHandler {
-  async handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<Actions.ShipOrderResult> {
+  async handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<EventContracts.OrderShipTransition> {
     const existing = await context.repositories.order.getById({ orderId: input.order.orderId });
     if (!existing) {
       throw new Error(`order not found: ${input.order.orderId}`);
     }
-    await context.repositories.order.save({
-      ...existing,
-      currentState: 'shipped',
-    });
-    return {
-      order: input.order,
-      shipmentStatus: 'shipped',
-      labels: input.packageIds.map((packageId) => `${input.carrier}-${packageId}`),
-      labelBatches: [input.packageIds],
-    };
+    const transitions = new TransitionServices(context.repositories);
+    const draft = await transitions.order.shipOrder(input.order);
+    return draft.build();
   }
 }
 

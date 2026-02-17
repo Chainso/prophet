@@ -37,7 +37,6 @@ describe('Prophet Express Prisma HTTP flow', function () {
       },
     });
     assert.equal(created.status, 200);
-    assert.equal(created.body.currentState, 'created');
     const orderId = created.body.order?.orderId;
     assert.equal(typeof orderId, 'string');
 
@@ -46,8 +45,9 @@ describe('Prophet Express Prisma HTTP flow', function () {
       notes: ['approved'],
     });
     assert.equal(approved.status, 200);
-    assert.equal(approved.body.decision, 'approved');
-    assert.equal(approved.body.order?.orderId, orderId);
+    assert.equal(approved.body.orderId, orderId);
+    assert.equal(approved.body.fromState, 'created');
+    assert.equal(approved.body.toState, 'approved');
 
     const shipped = await client.post('/actions/shipOrder').send({
       order: { orderId },
@@ -56,16 +56,17 @@ describe('Prophet Express Prisma HTTP flow', function () {
       packageIds: ['pkg-1', 'pkg-2'],
     });
     assert.equal(shipped.status, 200);
-    assert.equal(shipped.body.shipmentStatus, 'shipped');
-    assert.equal(shipped.body.order?.orderId, orderId);
+    assert.equal(shipped.body.orderId, orderId);
+    assert.equal(shipped.body.fromState, 'approved');
+    assert.equal(shipped.body.toState, 'shipped');
 
     const fetched = await client.get(`/orders/${orderId}`);
     assert.equal(fetched.status, 200);
     assert.equal(fetched.body.orderId, orderId);
-    assert.equal(fetched.body.currentState, 'shipped');
+    assert.equal(fetched.body.state, 'shipped');
 
     const queried = await client.post('/orders/query?page=0&size=10').send({
-      currentState: { eq: 'shipped' },
+      state: { eq: 'shipped' },
       orderId: { eq: orderId },
     });
     assert.equal(queried.status, 200);

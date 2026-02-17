@@ -27,7 +27,7 @@ export interface OrderQueryFilter {
     gte?: number;
     lte?: number;
   };
-  currentState?: {
+  state?: {
     eq?: OrderState;
     in?: OrderState[];
   };

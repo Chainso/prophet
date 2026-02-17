@@ -6,17 +6,18 @@ from prophet_events_runtime import create_event_id
 from .action_handlers import ActionContext
 from .action_handlers import ActionHandlers
 from .actions import *
+from .event_contracts import *
 from .events import EventPublishMetadata
 from .events import publish_domain_events
 from .events import publish_domain_events_sync
 from .events import to_action_outcome
-from .events import create_approve_order_result_event, create_create_order_result_event, create_ship_order_result_event
+from .events import create_create_order_result_event, create_order_approve_transition_event, create_order_ship_transition_event
 
 class ActionExecutionService:
     def __init__(self, handlers: ActionHandlers):
         self.handlers = handlers
 
-    async def execute_approveOrder(self, input: ApproveOrderCommand, context: ActionContext) -> ApproveOrderResult:
+    async def execute_approveOrder(self, input: ApproveOrderCommand, context: ActionContext) -> OrderApproveTransition:
         result = await self.handlers.approveOrder.handle(input, context)
         outcome = to_action_outcome(result)
         metadata = EventPublishMetadata(
@@ -24,7 +25,7 @@ class ActionExecutionService:
             source=context.eventSource or 'commerce_local',
             attributes=context.eventAttributes,
         )
-        events = [create_approve_order_result_event(outcome.output), *outcome.additional_events]
+        events = [create_order_approve_transition_event(outcome.output), *outcome.additional_events]
         await publish_domain_events(context.eventPublisher, events, metadata)
         return outcome.output
 
@@ -40,7 +41,7 @@ class ActionExecutionService:
         await publish_domain_events(context.eventPublisher, events, metadata)
         return outcome.output
 
-    async def execute_shipOrder(self, input: ShipOrderCommand, context: ActionContext) -> ShipOrderResult:
+    async def execute_shipOrder(self, input: ShipOrderCommand, context: ActionContext) -> OrderShipTransition:
         result = await self.handlers.shipOrder.handle(input, context)
         outcome = to_action_outcome(result)
         metadata = EventPublishMetadata(
@@ -48,6 +49,6 @@ class ActionExecutionService:
             source=context.eventSource or 'commerce_local',
             attributes=context.eventAttributes,
         )
-        events = [create_ship_order_result_event(outcome.output), *outcome.additional_events]
+        events = [create_order_ship_transition_event(outcome.output), *outcome.additional_events]
         await publish_domain_events(context.eventPublisher, events, metadata)
         return outcome.output

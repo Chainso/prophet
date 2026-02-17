@@ -165,7 +165,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApproveOrderResult'
+                $ref: '#/components/schemas/OrderApproveTransition'
   /actions/createOrder:
     post:
       operationId: createOrderAction
@@ -199,7 +199,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ShipOrderResult'
+                $ref: '#/components/schemas/OrderShipTransition'
 components:
   schemas:
     UserRef:
@@ -248,7 +248,7 @@ components:
       - orderId
       - customer
       - totalAmount
-      - currentState
+      - state
       properties:
         orderId:
           type: string
@@ -265,7 +265,7 @@ components:
             type: string
         shippingAddress:
           $ref: '#/components/schemas/Address'
-        currentState:
+        state:
           type: string
           enum:
           - CREATED
@@ -378,51 +378,46 @@ components:
           type: array
           items:
             type: string
-    ApproveOrderResult:
-      type: object
-      required:
-      - order
-      - decision
-      properties:
-        order:
-          $ref: '#/components/schemas/OrderRef'
-        decision:
-          type: string
-        warnings:
-          type: array
-          items:
-            type: string
-      description: Approval result contract.
     CreateOrderResult:
       type: object
       required:
       - order
-      - currentState
       properties:
         order:
           $ref: '#/components/schemas/OrderRef'
-        currentState:
-          type: string
-    ShipOrderResult:
+    PaymentCaptured:
       type: object
       required:
       - order
-      - shipmentStatus
       properties:
         order:
           $ref: '#/components/schemas/OrderRef'
-        shipmentStatus:
+    OrderApproveTransition:
+      type: object
+      required:
+      - orderId
+      - fromState
+      - toState
+      properties:
+        orderId:
           type: string
-        labels:
-          type: array
-          items:
-            type: string
-        labelBatches:
-          type: array
-          items:
-            type: array
-            items:
-              type: string
+        fromState:
+          type: string
+        toState:
+          type: string
+    OrderShipTransition:
+      type: object
+      required:
+      - orderId
+      - fromState
+      - toState
+      properties:
+        orderId:
+          type: string
+        fromState:
+          type: string
+        toState:
+          type: string
     OrderOrderIdFilter:
       type: object
       properties:
@@ -462,7 +457,7 @@ components:
           items: *id010
         contains:
           type: string
-    OrderCurrentStateFilter:
+    OrderStateFilter:
       type: object
       properties:
         eq: &id011
@@ -485,8 +480,8 @@ components:
           $ref: '#/components/schemas/OrderTotalAmountFilter'
         discountCode:
           $ref: '#/components/schemas/OrderDiscountCodeFilter'
-        currentState:
-          $ref: '#/components/schemas/OrderCurrentStateFilter'
+        state:
+          $ref: '#/components/schemas/OrderStateFilter'
     UserUserIdFilter:
       type: object
       properties:

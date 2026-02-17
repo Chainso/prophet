@@ -143,6 +143,33 @@ support_local:trans_ticket_triage a prophet:Transition ;
   prophet:transitionOf support_local:obj_ticket ;
   prophet:fromState support_local:state_ticket_new ;
   prophet:toState support_local:state_ticket_triaged ;
+  prophet:hasProperty support_local:trans_ticket_triage__from_state ;
+  prophet:hasProperty support_local:trans_ticket_triage__pk__fld_ticket_id ;
+  prophet:hasProperty support_local:trans_ticket_triage__to_state ;
+  prophet:inLocalOntology support_local:ont_support_local .
+
+support_local:trans_ticket_triage__from_state a prophet:PropertyDefinition ;
+  prophet:name "fromState" ;
+  prophet:fieldKey "fromState" ;
+  prophet:minCardinality 1 ;
+  prophet:maxCardinality 1 ;
+  prophet:valueType std:String ;
+  prophet:inLocalOntology support_local:ont_support_local .
+
+support_local:trans_ticket_triage__pk__fld_ticket_id a prophet:PropertyDefinition ;
+  prophet:name "id" ;
+  prophet:fieldKey "id" ;
+  prophet:minCardinality 1 ;
+  prophet:maxCardinality 1 ;
+  prophet:valueType std:String ;
+  prophet:inLocalOntology support_local:ont_support_local .
+
+support_local:trans_ticket_triage__to_state a prophet:PropertyDefinition ;
+  prophet:name "toState" ;
+  prophet:fieldKey "toState" ;
+  prophet:minCardinality 1 ;
+  prophet:maxCardinality 1 ;
+  prophet:valueType std:String ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 # ============================================================
@@ -163,14 +190,24 @@ support_local:fld_ain_triage_ticket_ticket a prophet:PropertyDefinition ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 # ============================================================
-# Action Outputs
+# Actions
 # ============================================================
 
-support_local:aout_triage_ticket a prophet:ActionOutput ;
+support_local:act_triage_ticket a prophet:Process ;
+  prophet:name "triageTicket" ;
+  prophet:acceptsInput support_local:ain_triage_ticket ;
+  prophet:producesEvent support_local:aout_triage_ticket ;
+  prophet:inLocalOntology support_local:ont_support_local .
+
+# ============================================================
+# Signals
+# ============================================================
+
+support_local:aout_triage_ticket a prophet:Signal ;
   prophet:name "TriageTicketResult" ;
-  prophet:inLocalOntology support_local:ont_support_local ;
   prophet:hasProperty support_local:fld_aout_triage_ticket_new_state ;
-  prophet:hasProperty support_local:fld_aout_triage_ticket_ticket .
+  prophet:hasProperty support_local:fld_aout_triage_ticket_ticket ;
+  prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:fld_aout_triage_ticket_new_state a prophet:PropertyDefinition ;
   prophet:name "newState" ;
@@ -187,20 +224,6 @@ support_local:fld_aout_triage_ticket_ticket a prophet:PropertyDefinition ;
   prophet:maxCardinality 1 ;
   prophet:valueType support_local:fld_aout_triage_ticket_ticket_object_ref ;
   prophet:inLocalOntology support_local:ont_support_local .
-
-# ============================================================
-# Actions
-# ============================================================
-
-support_local:act_triage_ticket a prophet:Process ;
-  prophet:name "triageTicket" ;
-  prophet:acceptsInput support_local:ain_triage_ticket ;
-  prophet:producesOutput support_local:aout_triage_ticket ;
-  prophet:inLocalOntology support_local:ont_support_local .
-
-# ============================================================
-# Signals
-# ============================================================
 
 support_local:sig_ticket_created a prophet:Signal ;
   prophet:name "TicketCreated" ;

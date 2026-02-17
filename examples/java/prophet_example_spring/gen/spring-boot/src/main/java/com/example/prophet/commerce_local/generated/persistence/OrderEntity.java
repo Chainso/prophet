@@ -54,8 +54,8 @@ public class OrderEntity {
     private Address shippingAddress;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "current_state", nullable = false)
-    private OrderState currentState;
+    @Column(name = "__prophet_state", nullable = false)
+    private OrderState state;
 
     @Version
     @Column(name = "row_version", nullable = false)
@@ -127,11 +127,11 @@ public class OrderEntity {
         this.shippingAddress = shippingAddress;
     }
 
-    public OrderState getCurrentState() {
-        return currentState;
+    public OrderState getState() {
+        return state;
     }
 
-    public void setCurrentState(OrderState currentState) {
-        this.currentState = currentState;
+    public void setState(OrderState state) {
+        this.state = state;
     }
 }

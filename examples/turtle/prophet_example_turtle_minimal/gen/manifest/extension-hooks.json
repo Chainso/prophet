@@ -9,6 +9,25 @@
       "python_protocol": "generated.action_handlers.TriageTicketActionHandler"
     },
     {
+      "kind": "transition_handler",
+      "object_id": "obj_ticket",
+      "object_name": "Ticket",
+      "transition_id": "trans_ticket_triage",
+      "transition_name": "Triage",
+      "python_protocol": "generated.transitions.TicketTransitionHandler",
+      "python_service": "generated.transitions.TicketTransitionService",
+      "default_implementation": "generated.transitions.TicketTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_ticket",
+      "object_name": "Ticket",
+      "transition_id": "trans_ticket_triage",
+      "transition_name": "Triage",
+      "python_protocol": "generated.transitions.TicketTransitionValidator",
+      "default_implementation": "generated.transitions.TicketTransitionValidatorDefault"
+    },
+    {
       "kind": "event_publisher",
       "python_protocol": "prophet_events_runtime.EventPublisher",
       "generated_publish_helper": "generated.events.publish_domain_events"

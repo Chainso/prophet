@@ -10,7 +10,7 @@ export interface OrderDocument extends Record<string, unknown> {
   discountCode?: string;
   tags?: string[];
   shippingAddress?: Domain.Address;
-  currentState: Domain.OrderState;
+  state: Domain.OrderState;
 }
 
 const OrderSchema = new Schema<OrderDocument>({
@@ -20,10 +20,28 @@ const OrderSchema = new Schema<OrderDocument>({
   discountCode: { type: String, required: false },
   tags: { type: [String], required: false },
   shippingAddress: { type: Schema.Types.Mixed, required: false },
-  currentState: { type: String, required: true, default: 'created' },
+  __prophet_state: { type: String, required: true, default: 'created' },
 }, { collection: 'orders', strict: false });
 OrderSchema.index({ orderId: 1 }, { unique: true });
 export const OrderModel: Model<OrderDocument> = model<OrderDocument>('Order', OrderSchema);
+
+export interface OrderStateHistoryDocument extends Record<string, unknown> {
+  orderId: string;
+  transitionId: string;
+  fromState: string;
+  toState: string;
+  occurredAt?: string;
+}
+
+const OrderStateHistorySchema = new Schema<OrderStateHistoryDocument>({
+  orderId: { type: String, required: true },
+  transitionId: { type: String, required: true },
+  fromState: { type: String, required: true },
+  toState: { type: String, required: true },
+  occurredAt: { type: String, required: true, default: () => new Date().toISOString() },
+}, { collection: 'orders_state_history', strict: false });
+OrderStateHistorySchema.index({ orderId: 1 });
+export const OrderStateHistoryModel: Model<OrderStateHistoryDocument> = model<OrderStateHistoryDocument>('OrderStateHistory', OrderStateHistorySchema);
 
 export interface UserDocument extends Record<string, unknown> {
   userId: string;

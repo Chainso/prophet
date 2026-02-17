@@ -2,7 +2,7 @@ package com.example.prophet.commerce_local.generated.actions.handlers.defaults;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.actions.CreateOrderCommand;
-import com.example.prophet.commerce_local.generated.actions.CreateOrderResult;
+import com.example.prophet.commerce_local.generated.events.CreateOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.CreateOrderActionHandler;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;

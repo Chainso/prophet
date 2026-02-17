@@ -7,11 +7,11 @@
     "framework": "fastapi",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "19ee4f1ca3315dbd557a17bc7ba1e9886af5f0dbf6d33a57566ef38b11e13c14",
+  "ir_hash": "cd8576dc7f66131df3f314098b3140dabf9aa835ccd294c677e7bad4ba7aab0f",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "c2c7f2d53788302b7f9d8aa7aadc39c6c8da132811ee2e452edbe5092ef57090"
+      "sha256": "aeeb8e4ac8c248d9f6372e7e636de7a9476866056487a1a5fa2dda8cc54febe0"
     },
     {
       "path": "gen/manifest/python-autodetect.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "5ab6c9a518cc01212e62f9d1e1026a550bc29abe9393fdb190643e6773ab0082"
+      "sha256": "b36e7db5c4a893d41a807e95d2108fb80b29ff53f9d1e0dcc4f22dddea76384c"
     },
     {
       "path": "gen/python/pyproject.toml",
@@ -27,31 +27,31 @@
     },
     {
       "path": "gen/python/src/generated/__init__.py",
-      "sha256": "2c82589b0e624ed358067481b07547fa51d710f584cac7e7868a254d3d9a1196"
+      "sha256": "184921b49c1504359f7c840a26dfc8a2df75988f037fb25bb16e9d93efa5c398"
     },
     {
       "path": "gen/python/src/generated/action_handlers.py",
-      "sha256": "bd42c6074eebd9b6e0514e5f1a2ef11c198988833eafdf0dabdbead95addb6af"
+      "sha256": "1234b740b2ff6c4b9e19805a5a3cc6700cbc3c7f7729d13c3a16b9434bf1ca88"
     },
     {
       "path": "gen/python/src/generated/action_service.py",
-      "sha256": "5e8b4eef05d8ada775d019f8e5b4c649551dff03cc148fee9d837656a54212a2"
+      "sha256": "9910ce9490a59a8fef10c859165ec4a3bf13ad608d8520b3088c7ab71d748d56"
     },
     {
       "path": "gen/python/src/generated/actions.py",
-      "sha256": "5bf5d35df2dfc3ca7744e731ff41b2c47ffa7e338667965727e1020a6a9038af"
+      "sha256": "494382ca890c3bf55b59f893592179010d38a8ec835dedaa37c8948487ad604c"
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "be2c3c2d63f820364b68e343c9759285551cc00e3a22edc42034a5142fa1bd5e"
+      "sha256": "4fc4c89d64c9da8980a380bc4859d091e7934bfcfff4162a8af804b9f4b5fa51"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "ad336e341ece2d1e24204c11f0794a4e73a23c16fefd70322184b13ac320d223"
+      "sha256": "04d16466e7213cc529adc8c32887f1b16ebb893e7f5c58f4480bb50ea3a6ec0e"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "205e779303f4d1bae7314114233d56aae16e00e8c932a3ef1701f89c8adfa800"
+      "sha256": "e66b47a74a02fe8ac1a71ecba192d87a9160916115ea8e244f0871877a99daaf"
     },
     {
       "path": "gen/python/src/generated/fastapi_routes.py",
@@ -59,23 +59,27 @@
     },
     {
       "path": "gen/python/src/generated/persistence.py",
-      "sha256": "c083250565a4c6e5e7faa72d41d9a4c79efce453b5c482a4676ffa2462595389"
+      "sha256": "d8b4ded855321570dff31d2bf21fafde029f708801d29f3a0ed679719e6df339"
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "9307ff37825006e777d89b1ca01b2d138a35c71f826dc1b271b088ab005c0e0e"
+      "sha256": "b95c343bd10a63ac3794580abfb3c19c6968df16fe0ef51010b446d6bb54dcbf"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_adapters.py",
-      "sha256": "35d850497a8c82e7f9f118a73eadf784b1d6571c1135e152e2233d5c3b3365c7"
+      "sha256": "032b3e81c39e537e04c510de9d4b05c020ce8bc8d47f619f35cc1b02ef8c826c"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_models.py",
-      "sha256": "80dd7a035b0ca48eba2d8c0b406e2fdf34b3e5bae52c2aa58b4bd09296ea2832"
+      "sha256": "e792b9e982c0d98243f3cbc9a2b194c5625314e4682647cb18fd62b4de975da4"
+    },
+    {
+      "path": "gen/python/src/generated/transitions.py",
+      "sha256": "b3e2648478e23592f5f25d37e7dfe97b552ad884c74412c91adbb799fd194d24"
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "3732275477f589b7aedca1814e648ca9d0f3054db553e13e7ba813ae74b31317"
+      "sha256": "7b15970ed2745bad6c608ea8f9ab1bb5c390f0fa7754ef0e53866e8702c74a8f"
     }
   ]
 }

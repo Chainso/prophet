@@ -45,7 +45,8 @@ export SPRING_DATASOURCE_PASSWORD=
 Action payload notes:
 - `createOrder` mints a new order ID server-side; request body does not include `orderId`.
 - `approveOrder` and `shipOrder` use object references in request payloads (for example `{ "order": { "orderId": "..." } }`).
-- action responses return object references for created/updated orders.
+- `createOrder` returns a signal payload with the new `order` ref.
+- `approveOrder` and `shipOrder` return transition event payloads with `orderId`, `fromState`, and `toState`.
 
 List endpoint response shape:
 - generated DTO envelopes (`OrderListResponse`, `UserListResponse`) with:
@@ -60,7 +61,7 @@ List endpoint response shape:
 ```json
 {
   "customer": { "eq": "u_123" },
-  "currentState": { "in": ["CREATED", "APPROVED"] },
+  "state": { "in": ["CREATED", "APPROVED"] },
   "totalAmount": { "gte": 50, "lte": 500 }
 }
 ```

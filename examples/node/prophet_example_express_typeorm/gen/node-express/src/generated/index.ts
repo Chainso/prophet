@@ -7,10 +7,13 @@ import { ActionExecutionService } from './action-service.js';
 import { NoOpEventPublisher, type EventPublisher } from './events.js';
 import type { ActionContext, ActionHandlers } from './action-handlers.js';
 import type { Repositories } from './persistence.js';
+import type { TransitionHandlers, TransitionValidators } from './transitions.js';
 
 export interface MountDependencies {
   repositories: Repositories;
   handlers: ActionHandlers;
+  transitionHandlers?: TransitionHandlers;
+  transitionValidators?: TransitionValidators;
   eventPublisher?: EventPublisher;
   eventSource?: string;
   eventAttributes?: Record<string, string>;
@@ -28,3 +31,6 @@ export function mountProphet(app: Application, deps: MountDependencies): void {
   app.use(buildActionRouter(service, context));
   app.use(buildQueryRouter(deps.repositories));
 }
+
+export { TransitionServices } from './transitions.js';
+export type { TransitionHandlers, TransitionValidators } from './transitions.js';

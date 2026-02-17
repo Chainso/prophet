@@ -7,11 +7,6 @@ from typing import List, Optional
 from .domain import *
 
 @dataclass(kw_only=True)
-class OrderCurrentStateFilter:
-    eq: Optional[str] = None
-    inValues: Optional[List[str]] = None
-
-@dataclass(kw_only=True)
 class OrderCustomerFilter:
     eq: Optional[UserRef] = None
     inValues: Optional[List[UserRef]] = None
@@ -29,6 +24,11 @@ class OrderOrderIdFilter:
     contains: Optional[str] = None
 
 @dataclass(kw_only=True)
+class OrderStateFilter:
+    eq: Optional[str] = None
+    inValues: Optional[List[str]] = None
+
+@dataclass(kw_only=True)
 class OrderTotalAmountFilter:
     eq: Optional[float] = None
     inValues: Optional[List[float]] = None
@@ -37,10 +37,10 @@ class OrderTotalAmountFilter:
 
 @dataclass(kw_only=True)
 class OrderQueryFilter:
-    currentState: Optional[OrderCurrentStateFilter] = None
     customer: Optional[OrderCustomerFilter] = None
     discountCode: Optional[OrderDiscountCodeFilter] = None
     orderId: Optional[OrderOrderIdFilter] = None
+    state: Optional[OrderStateFilter] = None
     totalAmount: Optional[OrderTotalAmountFilter] = None
 
 @dataclass(kw_only=True)

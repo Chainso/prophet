@@ -110,22 +110,8 @@ public final class EventPublishingSupport {
         String eventType;
         Object payloadValue;
         List<RefBinding> refBindings;
-        if (event instanceof ApproveOrderResultEvent typed) {
-            eventType = "ApproveOrderResult";
-            payloadValue = typed.payload();
-            refBindings = List.of(
-                new RefBinding("Order", List.of("order"), List.of("orderId"))
-            );
-        }
-        else if (event instanceof CreateOrderResultEvent typed) {
+        if (event instanceof CreateOrderResultEvent typed) {
             eventType = "CreateOrderResult";
-            payloadValue = typed.payload();
-            refBindings = List.of(
-                new RefBinding("Order", List.of("order"), List.of("orderId"))
-            );
-        }
-        else if (event instanceof ShipOrderResultEvent typed) {
-            eventType = "ShipOrderResult";
             payloadValue = typed.payload();
             refBindings = List.of(
                 new RefBinding("Order", List.of("order"), List.of("orderId"))
@@ -137,6 +123,16 @@ public final class EventPublishingSupport {
             refBindings = List.of(
                 new RefBinding("Order", List.of("order"), List.of("orderId"))
             );
+        }
+        else if (event instanceof OrderApproveTransitionEvent typed) {
+            eventType = "OrderApproveTransition";
+            payloadValue = typed.payload();
+            refBindings = List.of();
+        }
+        else if (event instanceof OrderShipTransitionEvent typed) {
+            eventType = "OrderShipTransition";
+            payloadValue = typed.payload();
+            refBindings = List.of();
         }
         else {
             throw new IllegalArgumentException("Unsupported domain event: " + event.getClass().getName());

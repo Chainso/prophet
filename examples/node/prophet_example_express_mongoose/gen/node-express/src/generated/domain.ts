@@ -31,7 +31,7 @@ export interface Order {
   discountCode?: string;
   tags?: string[];
   shippingAddress?: Address;
-  currentState: OrderState;
+  state: OrderState;
 }
 
 export interface User {

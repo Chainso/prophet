@@ -6,10 +6,12 @@ import type * as Filters from './query.js';
 import type * as Persistence from './persistence.js';
 import {
   OrderModel,
+  OrderStateHistoryModel,
   UserModel
 } from './mongoose-models.js';
 import type {
   OrderDocument,
+  OrderStateHistoryDocument,
   UserDocument
 } from './mongoose-models.js';
 
@@ -30,6 +32,7 @@ function escapeRegex(value: string): string {
 
 export interface MongooseModels {
   order?: Model<OrderDocument>;
+  orderStateHistory?: Model<OrderStateHistoryDocument>;
   user?: Model<UserDocument>;
 }
 
@@ -38,7 +41,7 @@ export class MongooseRepositories implements Persistence.Repositories {
   user: Persistence.UserRepository;
 
   constructor(models: MongooseModels = {}) {
-    this.order = new OrderMongooseRepository(models.order ?? OrderModel);
+    this.order = new OrderMongooseRepository(models.order ?? OrderModel, models.orderStateHistory ?? OrderStateHistoryModel);
     this.user = new UserMongooseRepository(models.user ?? UserModel);
   }
 }
@@ -70,9 +73,9 @@ function orderWhere(filter: Filters.OrderQueryFilter | undefined): FilterQuery<O
   if (totalAmountFilter?.in?.length) and.push({ totalAmount: { $in: totalAmountFilter.in } });
   if (totalAmountFilter?.gte !== undefined) and.push({ totalAmount: { $gte: totalAmountFilter.gte } });
   if (totalAmountFilter?.lte !== undefined) and.push({ totalAmount: { $lte: totalAmountFilter.lte } });
-  const currentStateFilter = filter.currentState;
-  if (currentStateFilter?.eq !== undefined) and.push({ currentState: currentStateFilter.eq });
-  if (currentStateFilter?.in?.length) and.push({ currentState: { $in: currentStateFilter.in } });
+  const stateFilter = filter.state;
+  if (stateFilter?.eq !== undefined) and.push({ __prophet_state: stateFilter.eq });
+  if (stateFilter?.in?.length) and.push({ __prophet_state: { $in: stateFilter.in } });
   if (and.length === 0) return {};
   return { $and: and };
 }
@@ -103,7 +106,7 @@ function orderDocumentToDomain(doc: any): Domain.Order {
     discountCode: doc.discountCode ?? undefined,
     tags: doc.tags ?? undefined,
     shippingAddress: doc.shippingAddress ?? undefined,
-    currentState: doc.currentState,
+    state: doc.__prophet_state,
   };
 }
 
@@ -115,12 +118,12 @@ function orderDomainToDocument(item: Domain.Order): Record<string, unknown> {
     discountCode: item.discountCode ?? null,
     tags: item.tags ?? null,
     shippingAddress: item.shippingAddress ?? null,
-    currentState: item.currentState,
+    __prophet_state: item.state,
   };
 }
 
 class OrderMongooseRepository implements Persistence.OrderRepository {
-  constructor(private readonly model: Model<OrderDocument>) {}
+  constructor(private readonly model: Model<OrderDocument>, private readonly historyModel: Model<OrderStateHistoryDocument>) {}
 
   async list(page: number, size: number): Promise<Persistence.Page<Domain.Order>> {
     const normalized = normalizePage(page, size);
@@ -163,6 +166,33 @@ class OrderMongooseRepository implements Persistence.OrderRepository {
     const payload = orderDomainToDocument(item);
     const persisted = await this.model.findOneAndUpdate(orderPrimaryFilter(id), { $set: payload }, { upsert: true, new: true, setDefaultsOnInsert: true, lean: true }).exec();
     if (!persisted) return orderDocumentToDomain(payload);
+    return orderDocumentToDomain(persisted);
+  }
+
+  async applyTransition(
+    id: Persistence.OrderId,
+    expectedState: Domain.OrderState,
+    nextState: Domain.OrderState,
+    transitionId: string,
+  ): Promise<Domain.Order | null> {
+    const primaryFilter = orderPrimaryFilter(id);
+    const persisted = await this.model
+      .findOneAndUpdate(
+        { ...primaryFilter, __prophet_state: expectedState },
+        { $set: { __prophet_state: nextState } },
+        { new: true, lean: true },
+      )
+      .exec();
+    if (!persisted) {
+      return null;
+    }
+    await this.historyModel.create({
+      ...id,
+      transitionId,
+      fromState: expectedState,
+      toState: nextState,
+      occurredAt: new Date().toISOString(),
+    });
     return orderDocumentToDomain(persisted);
   }
 }

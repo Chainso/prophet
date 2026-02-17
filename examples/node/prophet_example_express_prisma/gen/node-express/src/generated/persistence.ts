@@ -20,6 +20,12 @@ export interface OrderRepository {
   getById(id: OrderId): Promise<Domain.Order | null>;
   query(filter: Filters.OrderQueryFilter, page: number, size: number): Promise<Page<Domain.Order>>;
   save(item: Domain.Order): Promise<Domain.Order>;
+  applyTransition(
+    id: OrderId,
+    expectedState: Domain.OrderState,
+    nextState: Domain.OrderState,
+    transitionId: string,
+  ): Promise<Domain.Order | null>;
 }
 
 export interface UserId {

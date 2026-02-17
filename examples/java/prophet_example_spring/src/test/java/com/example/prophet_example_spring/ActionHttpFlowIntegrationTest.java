@@ -45,7 +45,6 @@ class ActionHttpFlowIntegrationTest {
         String orderId = String.valueOf(((Map<?, ?>) createResponse.getBody().get("order")).get("orderId"));
         assertNotNull(orderId);
         assertFalse(orderId.isBlank());
-        assertEquals("created", createResponse.getBody().get("currentState"));
 
         ResponseEntity<Map> approveResponse = restTemplate.postForEntity(
             "/actions/approveOrder",
@@ -63,7 +62,9 @@ class ActionHttpFlowIntegrationTest {
         );
         assertEquals(HttpStatus.OK, approveResponse.getStatusCode());
         assertNotNull(approveResponse.getBody());
-        assertEquals("approved", approveResponse.getBody().get("decision"));
+        assertEquals(orderId, approveResponse.getBody().get("orderId"));
+        assertEquals("created", approveResponse.getBody().get("fromState"));
+        assertEquals("approved", approveResponse.getBody().get("toState"));
 
         ResponseEntity<Map> shipResponse = restTemplate.postForEntity(
             "/actions/shipOrder",
@@ -77,20 +78,21 @@ class ActionHttpFlowIntegrationTest {
         );
         assertEquals(HttpStatus.OK, shipResponse.getStatusCode());
         assertNotNull(shipResponse.getBody());
-        assertEquals("shipped", shipResponse.getBody().get("shipmentStatus"));
-        assertNotNull(shipResponse.getBody().get("labels"));
+        assertEquals(orderId, shipResponse.getBody().get("orderId"));
+        assertEquals("approved", shipResponse.getBody().get("fromState"));
+        assertEquals("shipped", shipResponse.getBody().get("toState"));
 
         ResponseEntity<Map> getOrderResponse = restTemplate.getForEntity("/orders/" + orderId, Map.class);
         assertEquals(HttpStatus.OK, getOrderResponse.getStatusCode());
         assertNotNull(getOrderResponse.getBody());
         assertEquals(orderId, getOrderResponse.getBody().get("orderId"));
-        assertEquals("SHIPPED", getOrderResponse.getBody().get("currentState"));
+        assertEquals("SHIPPED", getOrderResponse.getBody().get("state"));
 
         ResponseEntity<Map> queryResponse = restTemplate.postForEntity(
             "/orders/query",
             Map.of(
                 "orderId", Map.of("eq", orderId),
-                "currentState", Map.of("eq", "SHIPPED")
+                "state", Map.of("eq", "SHIPPED")
             ),
             Map.class
         );

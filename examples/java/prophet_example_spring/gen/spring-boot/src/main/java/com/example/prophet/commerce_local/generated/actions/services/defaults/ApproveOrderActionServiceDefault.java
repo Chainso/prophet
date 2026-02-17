@@ -2,13 +2,13 @@ package com.example.prophet.commerce_local.generated.actions.services.defaults;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.actions.ApproveOrderCommand;
-import com.example.prophet.commerce_local.generated.actions.ApproveOrderResult;
 import com.example.prophet.commerce_local.generated.actions.handlers.ApproveOrderActionHandler;
 import com.example.prophet.commerce_local.generated.actions.services.ApproveOrderActionService;
 import com.example.prophet.commerce_local.generated.events.ActionOutcome;
-import com.example.prophet.commerce_local.generated.events.ApproveOrderResultEvent;
 import com.example.prophet.commerce_local.generated.events.DomainEvent;
 import com.example.prophet.commerce_local.generated.events.EventPublishingSupport;
+import com.example.prophet.commerce_local.generated.events.OrderApproveTransition;
+import com.example.prophet.commerce_local.generated.events.OrderApproveTransitionEvent;
 import io.prophet.events.runtime.EventIds;
 import io.prophet.events.runtime.EventPublisher;
 import java.util.ArrayList;
@@ -31,14 +31,14 @@ public class ApproveOrderActionServiceDefault implements ApproveOrderActionServi
     }
 
     @Override
-    public ApproveOrderResult execute(ApproveOrderCommand request) {
+    public OrderApproveTransition execute(ApproveOrderCommand request) {
         ApproveOrderActionHandler handler = handlerProvider.getIfAvailable();
         if (handler == null) {
             throw new UnsupportedOperationException("No handler bean provided for action 'approveOrder'");
         }
-        ActionOutcome<ApproveOrderResult> outcome = handler.handleOutcome(request);
+        ActionOutcome<OrderApproveTransition> outcome = handler.handleOutcome(request);
         List<DomainEvent> events = new ArrayList<>();
-        events.add(new ApproveOrderResultEvent(outcome.output()));
+        events.add(new OrderApproveTransitionEvent(outcome.output()));
         events.addAll(outcome.additionalEvents());
         EventPublishingSupport.publishAll(
             eventPublisher,

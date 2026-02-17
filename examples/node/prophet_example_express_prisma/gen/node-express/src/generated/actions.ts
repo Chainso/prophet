@@ -29,21 +29,3 @@ export interface ShipOrderCommand {
   trackingNumber: string;
   packageIds: string[];
 }
-
-export interface ApproveOrderResult {
-  order: OrderRef;
-  decision: string;
-  warnings?: string[];
-}
-
-export interface CreateOrderResult {
-  order: OrderRef;
-  currentState: string;
-}
-
-export interface ShipOrderResult {
-  order: OrderRef;
-  shipmentStatus: string;
-  labels?: string[];
-  labelBatches?: string[][];
-}

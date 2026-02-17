@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.18.0",
+  "toolchain_version": "0.19.0",
   "stack_id": "python_fastapi_sqlmodel",
-  "signature": "deb9787fd5387d89c7d4642d551990f454627cbb4804d9db555bd269785e34fd",
-  "ir_hash": "a25280385da0be4b8aa8977274fdf26bdb982c8a5fa685293030a782e59df960",
+  "signature": "f0451e03cb0c322f282a768c4476d3d83adedf591e5d43e5993b262735d773c6",
+  "ir_hash": "76fff5cb9b323f56823dff7c0bbbb4d2835a318077ea7f92a4b9fbede4fe3594",
   "out_dir": "gen"
 }

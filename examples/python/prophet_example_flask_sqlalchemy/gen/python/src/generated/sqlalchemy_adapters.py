@@ -6,7 +6,7 @@ import dataclasses
 
 from typing import Callable, List, Optional
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from . import sqlalchemy_models as Models
@@ -29,7 +29,7 @@ def _order_to_model(item: Domain.Order) -> Models.OrderModel:
         discountCode=_serialize(item.discountCode),
         tags=_serialize(item.tags),
         shippingAddress=_serialize(item.shippingAddress),
-        currentState=item.currentState,
+        state=item.state,
     )
 
 def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
@@ -40,7 +40,7 @@ def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
         discountCode=record.discountCode,
         tags=record.tags,
         shippingAddress=Domain.Address(**record.shippingAddress) if isinstance(record.shippingAddress, dict) else record.shippingAddress,
-        currentState=record.currentState,
+        state=record.state,
     )
 
 class OrderSqlAlchemyRepository:
@@ -48,17 +48,6 @@ class OrderSqlAlchemyRepository:
         self._session_factory = session_factory
 
     def _apply_filter(self, stmt, filter: Filters.OrderQueryFilter):
-        if filter.currentState is not None:
-            if filter.currentState.eq is not None:
-                stmt = stmt.where(Models.OrderModel.currentState == filter.currentState.eq)
-            if getattr(filter.currentState, 'inValues', None):
-                stmt = stmt.where(Models.OrderModel.currentState.in_(filter.currentState.inValues))
-            if getattr(filter.currentState, 'contains', None):
-                stmt = stmt.where(Models.OrderModel.currentState.contains(filter.currentState.contains))
-            if getattr(filter.currentState, 'gte', None) is not None:
-                stmt = stmt.where(Models.OrderModel.currentState >= filter.currentState.gte)
-            if getattr(filter.currentState, 'lte', None) is not None:
-                stmt = stmt.where(Models.OrderModel.currentState <= filter.currentState.lte)
         if filter.customer is not None:
             if filter.customer.eq is not None:
                 stmt = stmt.where(Models.OrderModel.customer == filter.customer.eq)
@@ -92,6 +81,17 @@ class OrderSqlAlchemyRepository:
                 stmt = stmt.where(Models.OrderModel.orderId >= filter.orderId.gte)
             if getattr(filter.orderId, 'lte', None) is not None:
                 stmt = stmt.where(Models.OrderModel.orderId <= filter.orderId.lte)
+        if filter.state is not None:
+            if filter.state.eq is not None:
+                stmt = stmt.where(Models.OrderModel.state == filter.state.eq)
+            if getattr(filter.state, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.state.in_(filter.state.inValues))
+            if getattr(filter.state, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.state.contains(filter.state.contains))
+            if getattr(filter.state, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.state >= filter.state.gte)
+            if getattr(filter.state, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.state <= filter.state.lte)
         if filter.totalAmount is not None:
             if filter.totalAmount.eq is not None:
                 stmt = stmt.where(Models.OrderModel.totalAmount == filter.totalAmount.eq)
@@ -141,6 +141,29 @@ class OrderSqlAlchemyRepository:
             session.commit()
         return item
 
+    def _apply_transition_sync(self, id: Domain.OrderRef, expected_state: Domain.OrderState, next_state: Domain.OrderState, transition_id: str) -> Optional[Domain.Order]:
+        with self._session_factory() as session:
+            stmt = update(Models.OrderModel).where(Models.OrderModel.state == expected_state)
+            stmt = stmt.where(Models.OrderModel.orderId == id.orderId)
+            stmt = stmt.values(state=next_state)
+            result = session.execute(stmt)
+            if int(result.rowcount or 0) < 1:
+                return None
+            history = Models.OrderStateHistoryModel(
+                orderId=id.orderId,
+                transitionId=transition_id,
+                fromState=expected_state,
+                toState=next_state,
+            )
+            session.add(history)
+            session.commit()
+            refreshed_stmt = select(Models.OrderModel)
+            refreshed_stmt = refreshed_stmt.where(Models.OrderModel.orderId == id.orderId)
+            refreshed = session.scalars(refreshed_stmt.limit(1)).first()
+            if refreshed is None:
+                return None
+            return _order_to_domain(refreshed)
+
     def list(self, page: int, size: int) -> Persistence.PagedResult:
         return self._list_sync(page, size)
 
@@ -152,6 +175,9 @@ class OrderSqlAlchemyRepository:
 
     def save(self, item: Domain.Order) -> Domain.Order:
         return self._save_sync(item)
+
+    def apply_transition(self, id: Domain.OrderRef, expected_state: Domain.OrderState, next_state: Domain.OrderState, transition_id: str) -> Optional[Domain.Order]:
+        return self._apply_transition_sync(id, expected_state, next_state, transition_id)
 
 def _user_to_model(item: Domain.User) -> Models.UserModel:
     return Models.UserModel(

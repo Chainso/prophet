@@ -7,11 +7,11 @@
     "framework": "express",
     "orm": "prisma"
   },
-  "ir_hash": "84e1c66f5621b2198047258714fb31fd89109a8545e6b0baf098634c7377fcfc",
+  "ir_hash": "cd8576dc7f66131df3f314098b3140dabf9aa835ccd294c677e7bad4ba7aab0f",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "dc0e5814d3d27354988b4e5ac5e3e9ce9b46b2294aa369da9b878ef7fa9edc3f"
+      "sha256": "8fb4515b9ce762a55cb731794e0013191757316cefe3a0b0be65948e425a22d5"
     },
     {
       "path": "gen/manifest/node-autodetect.json",
@@ -23,11 +23,11 @@
     },
     {
       "path": "gen/node-express/prisma/schema.prisma",
-      "sha256": "f3a8cd670876b9b8f71309d133c9eefcb5156c2d505baf49d3074c30aeb3f19b"
+      "sha256": "81952beb7ca763a8ee2ab0822446bf72f19a745775996f2a6fa8f076dc53d59b"
     },
     {
       "path": "gen/node-express/src/generated/action-handlers.ts",
-      "sha256": "85f735126110351ba3e72833c141cddf0ac0165600dfd8240a4e81adcfa949bc"
+      "sha256": "fe1b0e10969242d96535ba6a8529d48e1c20a261cb31da5d6293837629729ce6"
     },
     {
       "path": "gen/node-express/src/generated/action-routes.ts",
@@ -35,35 +35,35 @@
     },
     {
       "path": "gen/node-express/src/generated/action-service.ts",
-      "sha256": "13372306024812db1cfeaa547cf86a0ef892339c6ebd6070c70c491f017b81f2"
+      "sha256": "668554ff794bb0c4a336ccfc794f9020fe4746f0651af77f36aff01bacb20856"
     },
     {
       "path": "gen/node-express/src/generated/actions.ts",
-      "sha256": "277cd9326152035d83f8c69f22d412590bbcd7e87da6dd5e15277afe523fd733"
+      "sha256": "2151641e8ac25d6435937eb52fc0794d555ee990376f0edde05972f9da1cd16a"
     },
     {
       "path": "gen/node-express/src/generated/domain.ts",
-      "sha256": "2e24bc86c352c12c54928fb1e578d8ae4a1486d3b015c9cb6ef3346a9bf9f634"
+      "sha256": "1ac08f77ea4676797ec4511d0f0829bdecde465cb126afafd7c028cecb8af647"
     },
     {
       "path": "gen/node-express/src/generated/event-contracts.ts",
-      "sha256": "18f832e78a71e4891387d16bb2a7bbdc348e9ce0ad99187021a66dec90364ec7"
+      "sha256": "5c6c312cc9f0e9034edbd4e1e3409bb22aab784c3104492e0aa0c6ff3757ae7a"
     },
     {
       "path": "gen/node-express/src/generated/events.ts",
-      "sha256": "cbb7db74c075284df566e393cd17d5593baf7bb18af12be09f8487d67aa9f066"
+      "sha256": "19f964ab074b882d14eb1e2effb38229762e7e1c609c0e3d7f4fd98fcf709ae0"
     },
     {
       "path": "gen/node-express/src/generated/index.ts",
-      "sha256": "bf668d1d01616b07848c9036d5012e7d41fe0dfcf5f19c9b7539fb72dd5b2675"
+      "sha256": "9b59b045b60b7674c3fac0bb01c3c7d13fb6609db1ec4ed2494b09096e0db6e9"
     },
     {
       "path": "gen/node-express/src/generated/persistence.ts",
-      "sha256": "ba7d0ef8ec898d115835deb18c088d6705d32182b88ecc4fe1e0da3a77f911bb"
+      "sha256": "7f3208b2395e437b5c603a2c8359158e1f7e225d3ad17e1b206e33ae7efab57d"
     },
     {
       "path": "gen/node-express/src/generated/prisma-adapters.ts",
-      "sha256": "c297fb8192d4a2840d335e1c16835477017dd83335799224f15a8faf77f2ee04"
+      "sha256": "fa1cd46757803c74c5166a9e3c05b834bff966c03108c6d25776479bca309684"
     },
     {
       "path": "gen/node-express/src/generated/query-routes.ts",
@@ -71,11 +71,15 @@
     },
     {
       "path": "gen/node-express/src/generated/query.ts",
-      "sha256": "bb3c6d113e7e44245c16a57bb25aa104ad47df243a2f1cd310ecc3254f5c0126"
+      "sha256": "fe50c092c1454886f3d70a9da0d998138fb707184e9bfb5d2ed64d1639fffd86"
+    },
+    {
+      "path": "gen/node-express/src/generated/transitions.ts",
+      "sha256": "1908ddad694a9cc6f1e3bbf40c95430e9ccbdabbf108212aaf3acd22b9040df4"
     },
     {
       "path": "gen/node-express/src/generated/validation.ts",
-      "sha256": "be49064f44eda855e7580a19af45f0282bda6d4279787b045596c7653d41a7c9"
+      "sha256": "26cc12fc2f027c2abad321d9de4b42f077043cb62a5039dc210decf609a74e79"
     },
     {
       "path": "gen/node-express/tsconfig.json",
@@ -83,11 +87,11 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "cd17faa46be26a1293f91484e0e4755204c29357a69c012f9be65d3a5328d787"
+      "sha256": "b36e7db5c4a893d41a807e95d2108fb80b29ff53f9d1e0dcc4f22dddea76384c"
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "3732275477f589b7aedca1814e648ca9d0f3054db553e13e7ba813ae74b31317"
+      "sha256": "7b15970ed2745bad6c608ea8f9ab1bb5c390f0fa7754ef0e53866e8702c74a8f"
     }
   ]
 }

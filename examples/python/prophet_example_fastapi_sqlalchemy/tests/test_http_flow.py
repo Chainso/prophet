@@ -45,7 +45,6 @@ class FastApiSqlAlchemyHttpFlowTest(unittest.TestCase):
         self.assertEqual(create.status_code, 200, create.text)
         created = create.json()
         order_id = created["order"]["orderId"]
-        self.assertEqual(created["currentState"], "created")
 
         approve = self.client.post(
             "/actions/approveOrder",
@@ -56,8 +55,9 @@ class FastApiSqlAlchemyHttpFlowTest(unittest.TestCase):
         )
         self.assertEqual(approve.status_code, 200, approve.text)
         approved = approve.json()
-        self.assertEqual(approved["decision"], "approved")
-        self.assertEqual(approved["order"]["orderId"], order_id)
+        self.assertEqual(approved["orderId"], order_id)
+        self.assertEqual(approved["fromState"], "created")
+        self.assertEqual(approved["toState"], "approved")
 
         ship = self.client.post(
             "/actions/shipOrder",
@@ -70,19 +70,20 @@ class FastApiSqlAlchemyHttpFlowTest(unittest.TestCase):
         )
         self.assertEqual(ship.status_code, 200, ship.text)
         shipped = ship.json()
-        self.assertEqual(shipped["shipmentStatus"], "shipped")
-        self.assertEqual(shipped["order"]["orderId"], order_id)
+        self.assertEqual(shipped["orderId"], order_id)
+        self.assertEqual(shipped["fromState"], "approved")
+        self.assertEqual(shipped["toState"], "shipped")
 
         fetched = self.client.get(f"/orders/{order_id}")
         self.assertEqual(fetched.status_code, 200, fetched.text)
         fetched_json = fetched.json()
         self.assertEqual(fetched_json["orderId"], order_id)
-        self.assertEqual(fetched_json["currentState"], "shipped")
+        self.assertEqual(fetched_json["state"], "shipped")
 
         query = self.client.post(
             "/orders/query?page=0&size=10",
             json={
-                "currentState": {"eq": "shipped"},
+                "state": {"eq": "shipped"},
                 "orderId": {"eq": order_id},
             },
         )

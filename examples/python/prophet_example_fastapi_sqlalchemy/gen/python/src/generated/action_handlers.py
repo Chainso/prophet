@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Optional, Protocol
 
 from .actions import *
+from .event_contracts import *
 from .events import ActionOutcome
 from .events import ActionOutcomeValue
 from .events import EventPublisher
@@ -19,10 +20,10 @@ class ActionContext:
     eventAttributes: Optional[dict[str, str]] = None
 
 class ApproveOrderActionHandler(Protocol):
-    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcomeValue[ApproveOrderResult]: ...
+    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcomeValue[OrderApproveTransition]: ...
 
 class ApproveOrderActionHandlerDefault:
-    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcome[ApproveOrderResult]:
+    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcome[OrderApproveTransition]:
         raise NotImplementedError('No implementation registered for action: approveOrder')
 
 class CreateOrderActionHandler(Protocol):
@@ -33,10 +34,10 @@ class CreateOrderActionHandlerDefault:
         raise NotImplementedError('No implementation registered for action: createOrder')
 
 class ShipOrderActionHandler(Protocol):
-    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcomeValue[ShipOrderResult]: ...
+    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcomeValue[OrderShipTransition]: ...
 
 class ShipOrderActionHandlerDefault:
-    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcome[ShipOrderResult]:
+    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcome[OrderShipTransition]:
         raise NotImplementedError('No implementation registered for action: shipOrder')
 
 class ActionHandlers(Protocol):

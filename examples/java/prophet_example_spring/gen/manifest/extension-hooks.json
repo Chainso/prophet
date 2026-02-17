@@ -24,6 +24,44 @@
       "default_implementation_class": "com.example.prophet.commerce_local.generated.actions.handlers.defaults.ShipOrderActionHandlerDefault"
     },
     {
+      "kind": "transition_handler",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_approve",
+      "transition_name": "approve",
+      "java_interface": "com.example.prophet.commerce_local.generated.transitions.handlers.OrderTransitionHandler",
+      "java_service": "com.example.prophet.commerce_local.generated.transitions.services.OrderTransitionService",
+      "default_implementation_class": "com.example.prophet.commerce_local.generated.transitions.handlers.defaults.OrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_approve",
+      "transition_name": "approve",
+      "java_interface": "com.example.prophet.commerce_local.generated.transitions.validators.OrderTransitionValidator",
+      "default_implementation_class": "com.example.prophet.commerce_local.generated.transitions.validators.defaults.OrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_ship",
+      "transition_name": "ship",
+      "java_interface": "com.example.prophet.commerce_local.generated.transitions.handlers.OrderTransitionHandler",
+      "java_service": "com.example.prophet.commerce_local.generated.transitions.services.OrderTransitionService",
+      "default_implementation_class": "com.example.prophet.commerce_local.generated.transitions.handlers.defaults.OrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_ship",
+      "transition_name": "ship",
+      "java_interface": "com.example.prophet.commerce_local.generated.transitions.validators.OrderTransitionValidator",
+      "default_implementation_class": "com.example.prophet.commerce_local.generated.transitions.validators.defaults.OrderTransitionValidatorDefault"
+    },
+    {
       "kind": "event_publisher",
       "java_interface": "io.prophet.events.runtime.EventPublisher",
       "generated_publish_helper": "com.example.prophet.commerce_local.generated.events.EventPublishingSupport"

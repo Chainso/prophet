@@ -21,6 +21,44 @@
       "python_protocol": "generated.action_handlers.ShipOrderActionHandler"
     },
     {
+      "kind": "transition_handler",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_approve",
+      "transition_name": "approve",
+      "python_protocol": "generated.transitions.OrderTransitionHandler",
+      "python_service": "generated.transitions.OrderTransitionService",
+      "default_implementation": "generated.transitions.OrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_approve",
+      "transition_name": "approve",
+      "python_protocol": "generated.transitions.OrderTransitionValidator",
+      "default_implementation": "generated.transitions.OrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_ship",
+      "transition_name": "ship",
+      "python_protocol": "generated.transitions.OrderTransitionHandler",
+      "python_service": "generated.transitions.OrderTransitionService",
+      "default_implementation": "generated.transitions.OrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_ship",
+      "transition_name": "ship",
+      "python_protocol": "generated.transitions.OrderTransitionValidator",
+      "default_implementation": "generated.transitions.OrderTransitionValidatorDefault"
+    },
+    {
       "kind": "event_publisher",
       "python_protocol": "prophet_events_runtime.EventPublisher",
       "generated_publish_helper": "generated.events.publish_domain_events"

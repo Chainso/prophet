@@ -5,7 +5,7 @@ import com.example.prophet.commerce_local.generated.domain.OrderState;
 import java.util.List;
 
 @Generated("prophet-cli")
-public record OrderCurrentStateFilter(
+public record OrderStateFilter(
     OrderState eq,
     List<OrderState> in
 ) {
@@ -27,8 +27,8 @@ public record OrderCurrentStateFilter(
             this.in = value;
             return this;
         }
-        public OrderCurrentStateFilter build() {
-            return new OrderCurrentStateFilter(
+        public OrderStateFilter build() {
+            return new OrderStateFilter(
                 eq,
                 in
             );

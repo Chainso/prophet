@@ -21,7 +21,7 @@ public record Order(
     String discountCode,
     List<String> tags,
     Address shippingAddress,
-    @NotNull OrderState currentState
+    @NotNull OrderState state
 ) implements OrderRefOrObject {
 
     public static Builder builder() {
@@ -35,7 +35,7 @@ public record Order(
         private String discountCode;
         private List<String> tags;
         private Address shippingAddress;
-        private OrderState currentState;
+        private OrderState state;
 
         public Builder orderId(String value) {
             this.orderId = value;
@@ -67,8 +67,8 @@ public record Order(
             return this;
         }
 
-        public Builder currentState(OrderState value) {
-            this.currentState = value;
+        public Builder state(OrderState value) {
+            this.state = value;
             return this;
         }
         public Order build() {
@@ -79,7 +79,7 @@ public record Order(
                 discountCode,
                 tags,
                 shippingAddress,
-                currentState
+                state
             );
         }
     }

@@ -27,21 +27,3 @@ class ShipOrderCommand:
     carrier: str
     trackingNumber: str
     packageIds: List[str]
-
-@dataclass(kw_only=True)
-class ApproveOrderResult:
-    order: OrderRef
-    decision: str
-    warnings: Optional[List[str]] = None
-
-@dataclass(kw_only=True)
-class CreateOrderResult:
-    order: OrderRef
-    currentState: str
-
-@dataclass(kw_only=True)
-class ShipOrderResult:
-    order: OrderRef
-    shipmentStatus: str
-    labels: Optional[List[str]] = None
-    labelBatches: Optional[List[List[str]]] = None

@@ -36,7 +36,7 @@ class Order:
     discountCode: Optional[str] = None
     tags: Optional[List[str]] = None
     shippingAddress: Optional[Address] = None
-    currentState: OrderState
+    state: OrderState
 
 @dataclass(kw_only=True)
 class User:

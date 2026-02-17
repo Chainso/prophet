@@ -4,28 +4,25 @@ import type {
   Order,
   OrderRef
 } from './domain.js';
-import type {
-  ApproveOrderResult as ApproveOrderResultActionOutput,
-  CreateOrderResult as CreateOrderResultActionOutput,
-  ShipOrderResult as ShipOrderResultActionOutput
-} from './actions.js';
 
 export type OrderRefOrObject = OrderRef | Order;
 
-export type ApproveOrderResult = ApproveOrderResultActionOutput;
-
-export type CreateOrderResult = CreateOrderResultActionOutput;
-
-export type ShipOrderResult = ShipOrderResultActionOutput;
+export interface CreateOrderResult {
+  order: OrderRefOrObject;
+}
 
 export interface PaymentCaptured {
   order: OrderRefOrObject;
 }
 
 export interface OrderApproveTransition {
-  object: OrderRefOrObject;
+  orderId: string;
+  fromState: string;
+  toState: string;
 }
 
 export interface OrderShipTransition {
-  object: OrderRefOrObject;
+  orderId: string;
+  fromState: string;
+  toState: string;
 }

@@ -38,7 +38,7 @@ create table if not exists orders (
   discount_code text,
   tags text,
   shipping_address text,
-  current_state text not null check (current_state in ('CREATED', 'APPROVED', 'SHIPPED')),
+  __prophet_state text not null check (__prophet_state in ('CREATED', 'APPROVED', 'SHIPPED')),
   row_version bigint not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -47,7 +47,7 @@ create table if not exists orders (
 );
 
 create index if not exists idx_orders_customer_user_id on orders (customer_user_id);
-create index if not exists idx_orders_current_state on orders (current_state);
+create index if not exists idx_orders___prophet_state on orders (__prophet_state);
 
 create table if not exists order_state_history (
   history_id bigserial primary key,

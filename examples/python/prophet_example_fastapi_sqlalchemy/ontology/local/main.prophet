@@ -175,11 +175,6 @@ ontology commerce_local {
         id "fld_aout_create_order_order"
         type ref(Order)
       }
-
-      field currentState {
-        id "fld_aout_create_order_current_state"
-        type string
-      }
     }
   }
 
@@ -216,26 +211,7 @@ ontology commerce_local {
       }
     }
 
-    output {
-      id "aout_approve_order"
-      description "Approval result contract."
-
-      field order {
-        id "fld_aout_approve_order_order"
-        type ref(Order)
-      }
-
-      field decision {
-        id "fld_aout_approve_order_decision"
-        type string
-      }
-
-      field warnings {
-        id "fld_aout_approve_order_warnings"
-        type string[]
-        optional
-      }
-    }
+    output transition Order.approve
   }
 
   action shipOrder {
@@ -267,31 +243,7 @@ ontology commerce_local {
       }
     }
 
-    output {
-      id "aout_ship_order"
-
-      field order {
-        id "fld_aout_ship_order_order"
-        type ref(Order)
-      }
-
-      field shipmentStatus {
-        id "fld_aout_ship_order_status"
-        type string
-      }
-
-      field labels {
-        id "fld_aout_ship_order_labels"
-        type string[]
-        optional
-      }
-
-      field labelBatches {
-        id "fld_aout_ship_order_label_batches"
-        type string[][]
-        optional
-      }
-    }
+    output transition Order.ship
   }
 
   signal PaymentCaptured {
@@ -311,7 +263,7 @@ ontology commerce_local {
 
   trigger onOrderApproved {
     id "trg_on_order_approved"
-    when event ApproveOrderResult
+    when event OrderApproveTransition
     invoke shipOrder
   }
 }

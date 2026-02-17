@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from sqlalchemy import Boolean, Float, Integer, JSON, String
+from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 class Base(DeclarativeBase):
@@ -17,7 +17,16 @@ class OrderModel(Base):
     discountCode: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     tags: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
     shippingAddress: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
-    currentState: Mapped[str] = mapped_column(String, nullable=False, default='created')
+    state: Mapped[str] = mapped_column('__prophet_state', String, nullable=False, default='created')
+
+class OrderStateHistoryModel(Base):
+    __tablename__ = 'orders_state_history'
+    historyId: Mapped[int] = mapped_column('history_id', Integer, primary_key=True, autoincrement=True)
+    orderId: Mapped[str] = mapped_column(String, nullable=False)
+    transitionId: Mapped[str] = mapped_column('transition_id', String, nullable=False)
+    fromState: Mapped[str] = mapped_column('from_state', String, nullable=False)
+    toState: Mapped[str] = mapped_column('to_state', String, nullable=False)
+    occurredAt: Mapped[object] = mapped_column('occurred_at', DateTime, nullable=False, server_default=func.now())
 
 class UserModel(Base):
     __tablename__ = 'users'

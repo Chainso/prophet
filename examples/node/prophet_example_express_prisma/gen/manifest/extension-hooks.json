@@ -24,6 +24,44 @@
       "default_implementation": "generated.ShipOrderActionHandlerDefault"
     },
     {
+      "kind": "transition_handler",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_approve",
+      "transition_name": "approve",
+      "typescript_interface": "generated.OrderTransitionHandler",
+      "typescript_service": "generated.OrderTransitionService",
+      "default_implementation": "generated.OrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_approve",
+      "transition_name": "approve",
+      "typescript_interface": "generated.OrderTransitionValidator",
+      "default_implementation": "generated.OrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_ship",
+      "transition_name": "ship",
+      "typescript_interface": "generated.OrderTransitionHandler",
+      "typescript_service": "generated.OrderTransitionService",
+      "default_implementation": "generated.OrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_order",
+      "object_name": "Order",
+      "transition_id": "trans_order_ship",
+      "transition_name": "ship",
+      "typescript_interface": "generated.OrderTransitionValidator",
+      "default_implementation": "generated.OrderTransitionValidatorDefault"
+    },
+    {
       "kind": "event_publisher",
       "typescript_interface": "@prophet-ontology/events-runtime.EventPublisher",
       "generated_publish_helper": "generated.events.publishDomainEvents"

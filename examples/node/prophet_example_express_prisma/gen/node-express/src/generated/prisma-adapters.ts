@@ -65,9 +65,9 @@ function orderWhere(filter: Filters.OrderQueryFilter | undefined): any {
   if (totalAmountFilter?.in?.length) and.push({ total_amount: { in: totalAmountFilter.in } });
   if (totalAmountFilter?.gte !== undefined) and.push({ total_amount: { gte: totalAmountFilter.gte } });
   if (totalAmountFilter?.lte !== undefined) and.push({ total_amount: { lte: totalAmountFilter.lte } });
-  const currentStateFilter = filter.currentState;
-  if (currentStateFilter?.eq !== undefined) and.push({ current_state: currentStateFilter.eq });
-  if (currentStateFilter?.in?.length) and.push({ current_state: { in: currentStateFilter.in } });
+  const stateFilter = filter.state;
+  if (stateFilter?.eq !== undefined) and.push({ state: stateFilter.eq });
+  if (stateFilter?.in?.length) and.push({ state: { in: stateFilter.in } });
   if (and.length === 0) return {};
   return { AND: and };
 }
@@ -82,6 +82,12 @@ function orderUniqueWhere(id: Persistence.OrderId): any {
   return { order_id: id.orderId };
 }
 
+function orderPrimaryWhere(id: Persistence.OrderId): any {
+  return {
+    order_id: id.orderId,
+  };
+}
+
 function orderRowToDomain(row: any): Domain.Order {
   return {
     orderId: row.order_id,
@@ -92,7 +98,7 @@ function orderRowToDomain(row: any): Domain.Order {
     discountCode: row.discount_code ?? undefined,
     tags: parseJsonValue(row.tags) as any,
     shippingAddress: parseJsonValue(row.shipping_address) as any,
-    currentState: row.current_state,
+    state: row.state,
   };
 }
 
@@ -104,14 +110,14 @@ function orderDomainToRow(item: Domain.Order): any {
     discount_code: item.discountCode ?? null,
     tags: item.tags === undefined ? null : JSON.stringify(item.tags),
     shipping_address: item.shippingAddress === undefined ? null : JSON.stringify(item.shippingAddress),
-    current_state: item.currentState,
+    state: item.state,
   };
 }
 
 class OrderPrismaRepository implements Persistence.OrderRepository {
   private readonly delegate: any;
 
-  constructor(client: PrismaClient) {
+  constructor(private readonly client: PrismaClient) {
     this.delegate = (client as any).order;
   }
 
@@ -169,6 +175,39 @@ class OrderPrismaRepository implements Persistence.OrderRepository {
     const persisted = await this.delegate.upsert({ where: orderUniqueWhere(orderIdFromDomain(item)), create: payload, update: payload });
     return orderRowToDomain(persisted);
   }
+
+  async applyTransition(
+    id: Persistence.OrderId,
+    expectedState: Domain.OrderState,
+    nextState: Domain.OrderState,
+    transitionId: string,
+  ): Promise<Domain.Order | null> {
+    const primaryWhere = orderPrimaryWhere(id);
+    const persisted = await this.client.$transaction(async (tx) => {
+      const objDelegate = (tx as any).order;
+      const updateResult = await objDelegate.updateMany({
+        where: { ...primaryWhere, state: expectedState },
+        data: { state: nextState },
+      });
+      if (!updateResult || Number(updateResult.count ?? 0) < 1) {
+        return null;
+      }
+      const updated = await objDelegate.findUnique({ where: orderUniqueWhere(id) });
+      if (!updated) {
+        return null;
+      }
+      await (tx as any).orderStateHistory.create({
+        data: {
+          ...primaryWhere,
+          transition_id: transitionId,
+          from_state: expectedState,
+          to_state: nextState,
+        },
+      });
+      return updated;
+    });
+    return persisted ? orderRowToDomain(persisted) : null;
+  }
 }
 
 function userWhere(filter: Filters.UserQueryFilter | undefined): any {
@@ -196,6 +235,12 @@ function userUniqueWhere(id: Persistence.UserId): any {
   return { user_id: id.userId };
 }
 
+function userPrimaryWhere(id: Persistence.UserId): any {
+  return {
+    user_id: id.userId,
+  };
+}
+
 function userRowToDomain(row: any): Domain.User {
   return {
     userId: row.user_id,
@@ -213,7 +258,7 @@ function userDomainToRow(item: Domain.User): any {
 class UserPrismaRepository implements Persistence.UserRepository {
   private readonly delegate: any;
 
-  constructor(client: PrismaClient) {
+  constructor(private readonly client: PrismaClient) {
     this.delegate = (client as any).user;
   }
 

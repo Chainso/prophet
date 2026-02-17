@@ -56,7 +56,6 @@ class DjangoHttpFlowTest(unittest.TestCase):
         self.assertEqual(create.status_code, 200, create.content.decode())
         created = json.loads(create.content.decode())
         order_id = created["order"]["orderId"]
-        self.assertEqual(created["currentState"], "created")
 
         approve = self.client.post(
             "/actions/approveOrder",
@@ -70,8 +69,9 @@ class DjangoHttpFlowTest(unittest.TestCase):
         )
         self.assertEqual(approve.status_code, 200, approve.content.decode())
         approved = json.loads(approve.content.decode())
-        self.assertEqual(approved["decision"], "approved")
-        self.assertEqual(approved["order"]["orderId"], order_id)
+        self.assertEqual(approved["orderId"], order_id)
+        self.assertEqual(approved["fromState"], "created")
+        self.assertEqual(approved["toState"], "approved")
 
         ship = self.client.post(
             "/actions/shipOrder",
@@ -87,20 +87,21 @@ class DjangoHttpFlowTest(unittest.TestCase):
         )
         self.assertEqual(ship.status_code, 200, ship.content.decode())
         shipped = json.loads(ship.content.decode())
-        self.assertEqual(shipped["shipmentStatus"], "shipped")
-        self.assertEqual(shipped["order"]["orderId"], order_id)
+        self.assertEqual(shipped["orderId"], order_id)
+        self.assertEqual(shipped["fromState"], "approved")
+        self.assertEqual(shipped["toState"], "shipped")
 
         fetched = self.client.get(f"/orders/{order_id}")
         self.assertEqual(fetched.status_code, 200, fetched.content.decode())
         fetched_json = json.loads(fetched.content.decode())
         self.assertEqual(fetched_json["orderId"], order_id)
-        self.assertEqual(fetched_json["currentState"], "shipped")
+        self.assertEqual(fetched_json["state"], "shipped")
 
         query = self.client.post(
             "/orders/query?page=0&size=10",
             data=json.dumps(
                 {
-                    "currentState": {"eq": "shipped"},
+                    "state": {"eq": "shipped"},
                     "orderId": {"eq": order_id},
                 }
             ),
