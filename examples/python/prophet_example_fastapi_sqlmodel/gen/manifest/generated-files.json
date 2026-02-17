@@ -71,7 +71,7 @@
     },
     {
       "path": "gen/python/src/generated/sqlmodel_models.py",
-      "sha256": "d445bfb0e3848e6f3e8a987c4c9c73e9f153e22f397b53aa20b0fc684de95944"
+      "sha256": "8cf94afae32b345a6dab729d7a371bd00c0f92914c4e5f7c1199692307622fe3"
     },
     {
       "path": "gen/python/src/generated/transitions.py",

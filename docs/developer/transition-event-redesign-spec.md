@@ -309,7 +309,7 @@ Compiler validation must enforce:
 | 2. IR + Validation + Compatibility Engine | completed | 2026-02-17 | codex | IR now uses `output_event_id`; event kinds reduced to signal/transition; validation enforces reserved `state` and output event resolution. |
 | 3. Event/Action Codegen Refactor | completed | 2026-02-17 | codex | Action codegen now publishes produced events (`signal` or `transition`) and removed legacy action-output code paths. |
 | 4. Transition Handler Generation + Persistence Wiring | completed | 2026-02-17 | codex | Per-object transition handlers, draft returns, validator hooks, history writes, and runtime `TransitionValidationResult` integrated across Java/Node/Python. |
-| 5. Examples + Docs + Full Validation | in_progress | 2026-02-17 | codex | Examples/docs regenerated and updated; stack verification complete except FastAPI `TestClient` instability under Python 3.14 in this environment. |
+| 5. Examples + Docs + Full Validation | completed | 2026-02-17 | codex | Examples/docs regenerated and updated; full `./scripts/test-all.sh` validation passes across CLI, Java, Node, and Python examples. |
 
 ### 10.1 Deliverable Log
 
@@ -358,7 +358,22 @@ Implemented:
 6. Stateful persistence mappings standardized on internal `__prophet_state` while preserving logical `state` in domain/query contracts.
 
 Known remaining work:
-1. Final all-suite execution in one clean environment (current local blocker: FastAPI `TestClient` hangs under Python 3.14).
+1. None.
+
+#### Deliverable 3 (2026-02-17): Final Validation + SQLModel Timezone Warning Fix
+
+Status: completed
+
+Implemented:
+1. Fixed SQLModel history timestamp generation to use timezone-aware UTC (`datetime.now(timezone.utc)`), removing Python 3.14 deprecation warnings from generated SQLModel examples.
+2. Regenerated affected SQLModel examples:
+- `examples/python/prophet_example_fastapi_sqlmodel`
+- `examples/python/prophet_example_flask_sqlmodel`
+3. Re-ran targeted SQLModel example tests with runtime path wiring; both pass with no deprecation warning output.
+4. Re-ran full suite `./scripts/test-all.sh`; all gates pass end-to-end.
+
+Known remaining work:
+1. None.
 
 ### Milestone 0: Design Freeze
 
