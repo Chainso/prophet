@@ -10,6 +10,12 @@ class OrderModel(models.Model):
     discountCode = models.CharField(max_length=255, null=True, blank=True)
     tags = models.JSONField(null=True, blank=True)
     shippingAddress = models.JSONField(null=True, blank=True)
+    approvedByUserId = models.CharField(max_length=255, null=True, blank=True)
+    approvalNotes = models.JSONField(null=True, blank=True)
+    approvalReason = models.CharField(max_length=255, null=True, blank=True)
+    shippingCarrier = models.CharField(max_length=255, null=True, blank=True)
+    shippingTrackingNumber = models.CharField(max_length=255, null=True, blank=True)
+    shippingPackageIds = models.JSONField(null=True, blank=True)
     state = models.CharField(max_length=64, default='created', db_column='__prophet_state')
 
     class Meta:

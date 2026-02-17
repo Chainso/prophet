@@ -36,6 +36,12 @@ class Order:
     discountCode: Optional[str] = None
     tags: Optional[List[str]] = None
     shippingAddress: Optional[Address] = None
+    approvedByUserId: Optional[str] = None
+    approvalNotes: Optional[List[str]] = None
+    approvalReason: Optional[str] = None
+    shippingCarrier: Optional[str] = None
+    shippingTrackingNumber: Optional[str] = None
+    shippingPackageIds: Optional[List[str]] = None
     state: OrderState
 
 @dataclass(kw_only=True)

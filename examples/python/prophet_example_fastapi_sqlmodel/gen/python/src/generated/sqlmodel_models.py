@@ -15,6 +15,12 @@ class OrderModel(SQLModel, table=True):
     discountCode: Optional[str] = Field(default=None, primary_key=False)
     tags: Optional[list] = Field(default=None, sa_column=Column(JSON, nullable=True, primary_key=False))
     shippingAddress: Optional[dict] = Field(default=None, sa_column=Column(JSON, nullable=True, primary_key=False))
+    approvedByUserId: Optional[str] = Field(default=None, primary_key=False)
+    approvalNotes: Optional[list] = Field(default=None, sa_column=Column(JSON, nullable=True, primary_key=False))
+    approvalReason: Optional[str] = Field(default=None, primary_key=False)
+    shippingCarrier: Optional[str] = Field(default=None, primary_key=False)
+    shippingTrackingNumber: Optional[str] = Field(default=None, primary_key=False)
+    shippingPackageIds: Optional[list] = Field(default=None, sa_column=Column(JSON, nullable=True, primary_key=False))
     state: str = Field(default='created', sa_column=Column('__prophet_state', String, nullable=False))
 
 class OrderStateHistoryModel(SQLModel, table=True):

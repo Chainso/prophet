@@ -7,7 +7,7 @@
     "framework": "fastapi",
     "orm": "sqlmodel"
   },
-  "ir_hash": "cd8576dc7f66131df3f314098b3140dabf9aa835ccd294c677e7bad4ba7aab0f",
+  "ir_hash": "bf94a5dbe9a5d0fc40d8fe996210a74c675adfc3b235cb05dcbcb0f038feafb9",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "b36e7db5c4a893d41a807e95d2108fb80b29ff53f9d1e0dcc4f22dddea76384c"
+      "sha256": "8f19b86d560be2877286ae5f6525b4680da604658f6ce4d2297da549658888d1"
     },
     {
       "path": "gen/python/pyproject.toml",
@@ -43,11 +43,11 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "4fc4c89d64c9da8980a380bc4859d091e7934bfcfff4162a8af804b9f4b5fa51"
+      "sha256": "33c26e282e473b6477482aa39d3a268e24ae0ca994ef624073e787b124738666"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "04d16466e7213cc529adc8c32887f1b16ebb893e7f5c58f4480bb50ea3a6ec0e"
+      "sha256": "d2d31ff2ab2c1f1ee9d1a6cf7f8d21a87b06d83dfc260af364bf8164960922c8"
     },
     {
       "path": "gen/python/src/generated/events.py",
@@ -63,15 +63,15 @@
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "b95c343bd10a63ac3794580abfb3c19c6968df16fe0ef51010b446d6bb54dcbf"
+      "sha256": "15b501bc4fb0eedaf207b5f221eaffda4dc7940c4f60da52d7fafd4ce5855b44"
     },
     {
       "path": "gen/python/src/generated/sqlmodel_adapters.py",
-      "sha256": "364b4e1365186f90765975aef5951cdb4ab549c7deb6a3e2340af50b70a66d7c"
+      "sha256": "2ba90476013e19ff4fc92496d88ad0772817c69599829eac41f8f1ec24ce78f0"
     },
     {
       "path": "gen/python/src/generated/sqlmodel_models.py",
-      "sha256": "9c89c262bb404341f08851a8a9a37a5240eb22889d8051b985a50ac4b41c5d7d"
+      "sha256": "d445bfb0e3848e6f3e8a987c4c9c73e9f153e22f397b53aa20b0fc684de95944"
     },
     {
       "path": "gen/python/src/generated/transitions.py",
@@ -79,7 +79,7 @@
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "7b15970ed2745bad6c608ea8f9ab1bb5c390f0fa7754ef0e53866e8702c74a8f"
+      "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
     }
   ]
 }

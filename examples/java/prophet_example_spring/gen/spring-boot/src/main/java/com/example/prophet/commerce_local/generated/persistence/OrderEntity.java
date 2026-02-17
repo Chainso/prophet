@@ -53,6 +53,26 @@ public class OrderEntity {
     @Column(name = "shipping_address", nullable = true, columnDefinition = "text")
     private Address shippingAddress;
 
+    @Column(name = "approved_by_user_id", nullable = true)
+    private String approvedByUserId;
+
+    @Convert(converter = OrderApprovalNotesListConverter.class)
+    @Column(name = "approval_notes", nullable = true, columnDefinition = "text")
+    private List<String> approvalNotes;
+
+    @Column(name = "approval_reason", nullable = true)
+    private String approvalReason;
+
+    @Column(name = "shipping_carrier", nullable = true)
+    private String shippingCarrier;
+
+    @Column(name = "shipping_tracking_number", nullable = true)
+    private String shippingTrackingNumber;
+
+    @Convert(converter = OrderShippingPackageIdsListConverter.class)
+    @Column(name = "shipping_package_ids", nullable = true, columnDefinition = "text")
+    private List<String> shippingPackageIds;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "__prophet_state", nullable = false)
     private OrderState state;
@@ -125,6 +145,54 @@ public class OrderEntity {
 
     public void setShippingAddress(Address shippingAddress) {
         this.shippingAddress = shippingAddress;
+    }
+
+    public String getApprovedByUserId() {
+        return approvedByUserId;
+    }
+
+    public void setApprovedByUserId(String approvedByUserId) {
+        this.approvedByUserId = approvedByUserId;
+    }
+
+    public List<String> getApprovalNotes() {
+        return approvalNotes;
+    }
+
+    public void setApprovalNotes(List<String> approvalNotes) {
+        this.approvalNotes = approvalNotes;
+    }
+
+    public String getApprovalReason() {
+        return approvalReason;
+    }
+
+    public void setApprovalReason(String approvalReason) {
+        this.approvalReason = approvalReason;
+    }
+
+    public String getShippingCarrier() {
+        return shippingCarrier;
+    }
+
+    public void setShippingCarrier(String shippingCarrier) {
+        this.shippingCarrier = shippingCarrier;
+    }
+
+    public String getShippingTrackingNumber() {
+        return shippingTrackingNumber;
+    }
+
+    public void setShippingTrackingNumber(String shippingTrackingNumber) {
+        this.shippingTrackingNumber = shippingTrackingNumber;
+    }
+
+    public List<String> getShippingPackageIds() {
+        return shippingPackageIds;
+    }
+
+    public void setShippingPackageIds(List<String> shippingPackageIds) {
+        this.shippingPackageIds = shippingPackageIds;
     }
 
     public OrderState getState() {

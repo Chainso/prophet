@@ -65,6 +65,42 @@ ontology commerce_local {
       optional
     }
 
+    field approved_by_user_id {
+      id "fld_order_approved_by_user_id"
+      type string
+      optional
+    }
+
+    field approval_notes {
+      id "fld_order_approval_notes"
+      type string[]
+      optional
+    }
+
+    field approval_reason {
+      id "fld_order_approval_reason"
+      type string
+      optional
+    }
+
+    field shipping_carrier {
+      id "fld_order_shipping_carrier"
+      type string
+      optional
+    }
+
+    field shipping_tracking_number {
+      id "fld_order_shipping_tracking_number"
+      type string
+      optional
+    }
+
+    field shipping_package_ids {
+      id "fld_order_shipping_package_ids"
+      type string[]
+      optional
+    }
+
     state created {
       id "state_order_created"
       initial
@@ -82,12 +118,44 @@ ontology commerce_local {
       id "trans_order_approve"
       from created
       to approved
+
+      field approvedByUserId {
+        id "fld_trans_order_approve_approved_by_user_id"
+        type string
+        optional
+      }
+
+      field noteCount {
+        id "fld_trans_order_approve_note_count"
+        type int
+      }
+
+      field approvalReason {
+        id "fld_trans_order_approve_approval_reason"
+        type string
+        optional
+      }
     }
 
     transition ship {
       id "trans_order_ship"
       from approved
       to shipped
+
+      field carrier {
+        id "fld_trans_order_ship_carrier"
+        type string
+      }
+
+      field trackingNumber {
+        id "fld_trans_order_ship_tracking_number"
+        type string
+      }
+
+      field packageIds {
+        id "fld_trans_order_ship_package_ids"
+        type string[]
+      }
     }
   }
 

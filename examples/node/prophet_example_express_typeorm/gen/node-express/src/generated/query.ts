@@ -7,6 +7,16 @@ import type {
 } from './domain.js';
 
 export interface OrderQueryFilter {
+  approvalReason?: {
+    eq?: string;
+    in?: string[];
+    contains?: string;
+  };
+  approvedByUserId?: {
+    eq?: string;
+    in?: string[];
+    contains?: string;
+  };
   customer?: {
     eq?: UserRef;
     in?: UserRef[];
@@ -17,6 +27,16 @@ export interface OrderQueryFilter {
     contains?: string;
   };
   orderId?: {
+    eq?: string;
+    in?: string[];
+    contains?: string;
+  };
+  shippingCarrier?: {
+    eq?: string;
+    in?: string[];
+    contains?: string;
+  };
+  shippingTrackingNumber?: {
     eq?: string;
     in?: string[];
     contains?: string;

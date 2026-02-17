@@ -265,6 +265,22 @@ components:
             type: string
         shippingAddress:
           $ref: '#/components/schemas/Address'
+        approvedByUserId:
+          type: string
+        approvalNotes:
+          type: array
+          items:
+            type: string
+        approvalReason:
+          type: string
+        shippingCarrier:
+          type: string
+        shippingTrackingNumber:
+          type: string
+        shippingPackageIds:
+          type: array
+          items:
+            type: string
         state:
           type: string
           enum:
@@ -398,12 +414,19 @@ components:
       - orderId
       - fromState
       - toState
+      - noteCount
       properties:
         orderId:
           type: string
         fromState:
           type: string
         toState:
+          type: string
+        approvedByUserId:
+          type: string
+        noteCount:
+          type: integer
+        approvalReason:
           type: string
     OrderShipTransition:
       type: object
@@ -411,6 +434,9 @@ components:
       - orderId
       - fromState
       - toState
+      - carrier
+      - trackingNumber
+      - packageIds
       properties:
         orderId:
           type: string
@@ -418,6 +444,14 @@ components:
           type: string
         toState:
           type: string
+        carrier:
+          type: string
+        trackingNumber:
+          type: string
+        packageIds:
+          type: array
+          items:
+            type: string
     OrderOrderIdFilter:
       type: object
       properties:
@@ -457,10 +491,50 @@ components:
           items: *id010
         contains:
           type: string
-    OrderStateFilter:
+    OrderApprovedByUserIdFilter:
       type: object
       properties:
         eq: &id011
+          type: string
+        in:
+          type: array
+          items: *id011
+        contains:
+          type: string
+    OrderApprovalReasonFilter:
+      type: object
+      properties:
+        eq: &id012
+          type: string
+        in:
+          type: array
+          items: *id012
+        contains:
+          type: string
+    OrderShippingCarrierFilter:
+      type: object
+      properties:
+        eq: &id013
+          type: string
+        in:
+          type: array
+          items: *id013
+        contains:
+          type: string
+    OrderShippingTrackingNumberFilter:
+      type: object
+      properties:
+        eq: &id014
+          type: string
+        in:
+          type: array
+          items: *id014
+        contains:
+          type: string
+    OrderStateFilter:
+      type: object
+      properties:
+        eq: &id015
           type: string
           enum:
           - CREATED
@@ -468,7 +542,7 @@ components:
           - SHIPPED
         in:
           type: array
-          items: *id011
+          items: *id015
     OrderQueryFilter:
       type: object
       properties:
@@ -480,26 +554,34 @@ components:
           $ref: '#/components/schemas/OrderTotalAmountFilter'
         discountCode:
           $ref: '#/components/schemas/OrderDiscountCodeFilter'
+        approvedByUserId:
+          $ref: '#/components/schemas/OrderApprovedByUserIdFilter'
+        approvalReason:
+          $ref: '#/components/schemas/OrderApprovalReasonFilter'
+        shippingCarrier:
+          $ref: '#/components/schemas/OrderShippingCarrierFilter'
+        shippingTrackingNumber:
+          $ref: '#/components/schemas/OrderShippingTrackingNumberFilter'
         state:
           $ref: '#/components/schemas/OrderStateFilter'
     UserUserIdFilter:
       type: object
       properties:
-        eq: &id012
+        eq: &id016
           type: string
         in:
           type: array
-          items: *id012
+          items: *id016
         contains:
           type: string
     UserEmailFilter:
       type: object
       properties:
-        eq: &id013
+        eq: &id017
           type: string
         in:
           type: array
-          items: *id013
+          items: *id017
         contains:
           type: string
     UserQueryFilter:

@@ -28,6 +28,24 @@ export class OrderEntity {
   @Column({ type: 'simple-json', nullable: true, name: 'shipping_address' })
   shippingAddress?: unknown | null;
 
+  @Column({ type: 'varchar', nullable: true, name: 'approved_by_user_id' })
+  approvedByUserId?: string | null;
+
+  @Column({ type: 'simple-json', nullable: true, name: 'approval_notes' })
+  approvalNotes?: unknown | null;
+
+  @Column({ type: 'varchar', nullable: true, name: 'approval_reason' })
+  approvalReason?: string | null;
+
+  @Column({ type: 'varchar', nullable: true, name: 'shipping_carrier' })
+  shippingCarrier?: string | null;
+
+  @Column({ type: 'varchar', nullable: true, name: 'shipping_tracking_number' })
+  shippingTrackingNumber?: string | null;
+
+  @Column({ type: 'simple-json', nullable: true, name: 'shipping_package_ids' })
+  shippingPackageIds?: unknown | null;
+
   @Column({ type: 'varchar', nullable: false, name: '__prophet_state' })
   state!: string;
 

@@ -62,9 +62,31 @@ class ApproveOrderHandler(ApproveOrderActionHandler):
         existing = await context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
+
+        saved_order = await context.repositories.order.save(
+            Order(
+                orderId=existing.orderId,
+                customer=existing.customer,
+                totalAmount=existing.totalAmount,
+                discountCode=existing.discountCode,
+                tags=existing.tags,
+                shippingAddress=existing.shippingAddress,
+                approvedByUserId=input.approvedBy.userId if input.approvedBy else None,
+                approvalNotes=input.notes,
+                approvalReason=input.context.reason if input.context else None,
+                shippingCarrier=existing.shippingCarrier,
+                shippingTrackingNumber=existing.shippingTrackingNumber,
+                shippingPackageIds=existing.shippingPackageIds,
+                state=existing.state,
+            )
+        )
         transitions = TransitionServices(context.repositories)
-        draft = await transitions.order.approveOrder(input.order)
-        return draft.build()
+        draft = await transitions.order.approveOrder(saved_order)
+        return draft.build(
+            approvedByUserId=saved_order.approvedByUserId,
+            noteCount=len(input.notes or []),
+            approvalReason=saved_order.approvalReason,
+        )
 
 
 class ShipOrderHandler(ShipOrderActionHandler):
@@ -72,9 +94,31 @@ class ShipOrderHandler(ShipOrderActionHandler):
         existing = await context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
+
+        saved_order = await context.repositories.order.save(
+            Order(
+                orderId=existing.orderId,
+                customer=existing.customer,
+                totalAmount=existing.totalAmount,
+                discountCode=existing.discountCode,
+                tags=existing.tags,
+                shippingAddress=existing.shippingAddress,
+                approvedByUserId=existing.approvedByUserId,
+                approvalNotes=existing.approvalNotes,
+                approvalReason=existing.approvalReason,
+                shippingCarrier=input.carrier,
+                shippingTrackingNumber=input.trackingNumber,
+                shippingPackageIds=input.packageIds,
+                state=existing.state,
+            )
+        )
         transitions = TransitionServices(context.repositories)
-        draft = await transitions.order.shipOrder(input.order)
-        return draft.build()
+        draft = await transitions.order.shipOrder(saved_order)
+        return draft.build(
+            carrier=input.carrier,
+            trackingNumber=input.trackingNumber,
+            packageIds=input.packageIds,
+        )
 
 
 class ActionHandlers(ActionHandlers):

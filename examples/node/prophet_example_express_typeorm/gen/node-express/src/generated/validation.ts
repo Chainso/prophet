@@ -56,10 +56,16 @@ export const OrderApproveTransitionSchema = z.object({
   orderId: z.string(),
   fromState: z.string(),
   toState: z.string(),
+  approvedByUserId: z.string().optional(),
+  noteCount: z.number().int(),
+  approvalReason: z.string().optional(),
 });
 
 export const OrderShipTransitionSchema = z.object({
   orderId: z.string(),
   fromState: z.string(),
   toState: z.string(),
+  carrier: z.string(),
+  trackingNumber: z.string(),
+  packageIds: z.array(z.string()),
 });

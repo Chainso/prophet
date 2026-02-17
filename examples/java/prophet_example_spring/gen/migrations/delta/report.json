@@ -1,0 +1,43 @@
+{
+  "baseline_ir": ".prophet/baselines/main.ir.json",
+  "from_ir_hash": "f74cfee4a061e8802eb5e9b76ac8a8c7efa28a2cce93b868c3e2a195c7994f9b",
+  "to_ir_hash": "bf94a5dbe9a5d0fc40d8fe996210a74c675adfc3b235cb05dcbcb0f038feafb9",
+  "warnings": [],
+  "summary": {
+    "safe_auto_apply_count": 6,
+    "manual_review_count": 0,
+    "destructive_count": 0
+  },
+  "findings": [
+    {
+      "kind": "column_added_optional",
+      "classification": "safe_auto_apply",
+      "message": "optional field added: Order.approval_notes"
+    },
+    {
+      "kind": "column_added_optional",
+      "classification": "safe_auto_apply",
+      "message": "optional field added: Order.approval_reason"
+    },
+    {
+      "kind": "column_added_optional",
+      "classification": "safe_auto_apply",
+      "message": "optional field added: Order.approved_by_user_id"
+    },
+    {
+      "kind": "column_added_optional",
+      "classification": "safe_auto_apply",
+      "message": "optional field added: Order.shipping_carrier"
+    },
+    {
+      "kind": "column_added_optional",
+      "classification": "safe_auto_apply",
+      "message": "optional field added: Order.shipping_package_ids"
+    },
+    {
+      "kind": "column_added_optional",
+      "classification": "safe_auto_apply",
+      "message": "optional field added: Order.shipping_tracking_number"
+    }
+  ]
+}

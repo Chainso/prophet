@@ -29,6 +29,12 @@ def _order_to_model(item: Domain.Order) -> Models.OrderModel:
         discountCode=_serialize(item.discountCode),
         tags=_serialize(item.tags),
         shippingAddress=_serialize(item.shippingAddress),
+        approvedByUserId=_serialize(item.approvedByUserId),
+        approvalNotes=_serialize(item.approvalNotes),
+        approvalReason=_serialize(item.approvalReason),
+        shippingCarrier=_serialize(item.shippingCarrier),
+        shippingTrackingNumber=_serialize(item.shippingTrackingNumber),
+        shippingPackageIds=_serialize(item.shippingPackageIds),
         state=item.state,
     )
 
@@ -40,6 +46,12 @@ def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
         discountCode=record.discountCode,
         tags=record.tags,
         shippingAddress=Domain.Address(**record.shippingAddress) if isinstance(record.shippingAddress, dict) else record.shippingAddress,
+        approvedByUserId=record.approvedByUserId,
+        approvalNotes=record.approvalNotes,
+        approvalReason=record.approvalReason,
+        shippingCarrier=record.shippingCarrier,
+        shippingTrackingNumber=record.shippingTrackingNumber,
+        shippingPackageIds=record.shippingPackageIds,
         state=record.state,
     )
 
@@ -48,6 +60,28 @@ class OrderSqlModelRepository:
         self._session_factory = session_factory
 
     def _apply_filter(self, stmt, filter: Filters.OrderQueryFilter):
+        if filter.approvalReason is not None:
+            if filter.approvalReason.eq is not None:
+                stmt = stmt.where(Models.OrderModel.approvalReason == filter.approvalReason.eq)
+            if getattr(filter.approvalReason, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.approvalReason.in_(filter.approvalReason.inValues))
+            if getattr(filter.approvalReason, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.approvalReason.contains(filter.approvalReason.contains))
+            if getattr(filter.approvalReason, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.approvalReason >= filter.approvalReason.gte)
+            if getattr(filter.approvalReason, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.approvalReason <= filter.approvalReason.lte)
+        if filter.approvedByUserId is not None:
+            if filter.approvedByUserId.eq is not None:
+                stmt = stmt.where(Models.OrderModel.approvedByUserId == filter.approvedByUserId.eq)
+            if getattr(filter.approvedByUserId, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.approvedByUserId.in_(filter.approvedByUserId.inValues))
+            if getattr(filter.approvedByUserId, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.approvedByUserId.contains(filter.approvedByUserId.contains))
+            if getattr(filter.approvedByUserId, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.approvedByUserId >= filter.approvedByUserId.gte)
+            if getattr(filter.approvedByUserId, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.approvedByUserId <= filter.approvedByUserId.lte)
         if filter.customer is not None:
             if filter.customer.eq is not None:
                 stmt = stmt.where(Models.OrderModel.customer == filter.customer.eq)
@@ -81,6 +115,28 @@ class OrderSqlModelRepository:
                 stmt = stmt.where(Models.OrderModel.orderId >= filter.orderId.gte)
             if getattr(filter.orderId, 'lte', None) is not None:
                 stmt = stmt.where(Models.OrderModel.orderId <= filter.orderId.lte)
+        if filter.shippingCarrier is not None:
+            if filter.shippingCarrier.eq is not None:
+                stmt = stmt.where(Models.OrderModel.shippingCarrier == filter.shippingCarrier.eq)
+            if getattr(filter.shippingCarrier, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.shippingCarrier.in_(filter.shippingCarrier.inValues))
+            if getattr(filter.shippingCarrier, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.shippingCarrier.contains(filter.shippingCarrier.contains))
+            if getattr(filter.shippingCarrier, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.shippingCarrier >= filter.shippingCarrier.gte)
+            if getattr(filter.shippingCarrier, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.shippingCarrier <= filter.shippingCarrier.lte)
+        if filter.shippingTrackingNumber is not None:
+            if filter.shippingTrackingNumber.eq is not None:
+                stmt = stmt.where(Models.OrderModel.shippingTrackingNumber == filter.shippingTrackingNumber.eq)
+            if getattr(filter.shippingTrackingNumber, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.shippingTrackingNumber.in_(filter.shippingTrackingNumber.inValues))
+            if getattr(filter.shippingTrackingNumber, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.shippingTrackingNumber.contains(filter.shippingTrackingNumber.contains))
+            if getattr(filter.shippingTrackingNumber, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.shippingTrackingNumber >= filter.shippingTrackingNumber.gte)
+            if getattr(filter.shippingTrackingNumber, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.shippingTrackingNumber <= filter.shippingTrackingNumber.lte)
         if filter.state is not None:
             if filter.state.eq is not None:
                 stmt = stmt.where(Models.OrderModel.state == filter.state.eq)

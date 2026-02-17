@@ -21,6 +21,12 @@ public record Order(
     String discountCode,
     List<String> tags,
     Address shippingAddress,
+    String approvedByUserId,
+    List<String> approvalNotes,
+    String approvalReason,
+    String shippingCarrier,
+    String shippingTrackingNumber,
+    List<String> shippingPackageIds,
     @NotNull OrderState state
 ) implements OrderRefOrObject {
 
@@ -35,6 +41,12 @@ public record Order(
         private String discountCode;
         private List<String> tags;
         private Address shippingAddress;
+        private String approvedByUserId;
+        private List<String> approvalNotes;
+        private String approvalReason;
+        private String shippingCarrier;
+        private String shippingTrackingNumber;
+        private List<String> shippingPackageIds;
         private OrderState state;
 
         public Builder orderId(String value) {
@@ -67,6 +79,36 @@ public record Order(
             return this;
         }
 
+        public Builder approvedByUserId(String value) {
+            this.approvedByUserId = value;
+            return this;
+        }
+
+        public Builder approvalNotes(List<String> value) {
+            this.approvalNotes = value;
+            return this;
+        }
+
+        public Builder approvalReason(String value) {
+            this.approvalReason = value;
+            return this;
+        }
+
+        public Builder shippingCarrier(String value) {
+            this.shippingCarrier = value;
+            return this;
+        }
+
+        public Builder shippingTrackingNumber(String value) {
+            this.shippingTrackingNumber = value;
+            return this;
+        }
+
+        public Builder shippingPackageIds(List<String> value) {
+            this.shippingPackageIds = value;
+            return this;
+        }
+
         public Builder state(OrderState value) {
             this.state = value;
             return this;
@@ -79,6 +121,12 @@ public record Order(
                 discountCode,
                 tags,
                 shippingAddress,
+                approvedByUserId,
+                approvalNotes,
+                approvalReason,
+                shippingCarrier,
+                shippingTrackingNumber,
+                shippingPackageIds,
                 state
             );
         }

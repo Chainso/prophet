@@ -41,6 +41,12 @@ function orderEntityToDomain(entity: any): Domain.Order {
     discountCode: entity.discountCode ?? undefined,
     tags: entity.tags ?? undefined,
     shippingAddress: entity.shippingAddress ?? undefined,
+    approvedByUserId: entity.approvedByUserId ?? undefined,
+    approvalNotes: entity.approvalNotes ?? undefined,
+    approvalReason: entity.approvalReason ?? undefined,
+    shippingCarrier: entity.shippingCarrier ?? undefined,
+    shippingTrackingNumber: entity.shippingTrackingNumber ?? undefined,
+    shippingPackageIds: entity.shippingPackageIds ?? undefined,
     state: entity.state,
   };
 }
@@ -53,6 +59,12 @@ function orderDomainToEntity(item: Domain.Order): OrderEntity {
   entity.discountCode = item.discountCode ?? null;
   entity.tags = item.tags ?? null;
   entity.shippingAddress = item.shippingAddress ?? null;
+  entity.approvedByUserId = item.approvedByUserId ?? null;
+  entity.approvalNotes = item.approvalNotes ?? null;
+  entity.approvalReason = item.approvalReason ?? null;
+  entity.shippingCarrier = item.shippingCarrier ?? null;
+  entity.shippingTrackingNumber = item.shippingTrackingNumber ?? null;
+  entity.shippingPackageIds = item.shippingPackageIds ?? null;
   entity.state = item.state;
   return entity;
 }
@@ -65,6 +77,14 @@ function orderPrimaryWhere(id: Persistence.OrderId): Record<string, unknown> {
 
 function orderApplyFilter(qb: SelectQueryBuilder<OrderEntity>, filter: Filters.OrderQueryFilter | undefined): void {
   if (!filter) return;
+  const approvalReasonFilter = filter.approvalReason;
+  if (approvalReasonFilter?.eq !== undefined) qb.andWhere('record.approval_reason = :approvalReason_eq', { approvalReason_eq: approvalReasonFilter.eq });
+  if (approvalReasonFilter?.in?.length) qb.andWhere('record.approval_reason IN (:...approvalReason_in)', { approvalReason_in: approvalReasonFilter.in });
+  if (typeof approvalReasonFilter?.contains === 'string' && approvalReasonFilter.contains.length > 0) qb.andWhere('record.approval_reason LIKE :approvalReason_contains', { approvalReason_contains: `%${approvalReasonFilter.contains}%` });
+  const approvedByUserIdFilter = filter.approvedByUserId;
+  if (approvedByUserIdFilter?.eq !== undefined) qb.andWhere('record.approved_by_user_id = :approvedByUserId_eq', { approvedByUserId_eq: approvedByUserIdFilter.eq });
+  if (approvedByUserIdFilter?.in?.length) qb.andWhere('record.approved_by_user_id IN (:...approvedByUserId_in)', { approvedByUserId_in: approvedByUserIdFilter.in });
+  if (typeof approvedByUserIdFilter?.contains === 'string' && approvedByUserIdFilter.contains.length > 0) qb.andWhere('record.approved_by_user_id LIKE :approvedByUserId_contains', { approvedByUserId_contains: `%${approvedByUserIdFilter.contains}%` });
   const customerFilter = filter.customer;
   if (customerFilter?.eq !== undefined) {
     qb.andWhere('record.customer_user_id = :customer_eq_userId', { customer_eq_userId: customerFilter.eq.userId });
@@ -88,6 +108,14 @@ function orderApplyFilter(qb: SelectQueryBuilder<OrderEntity>, filter: Filters.O
   if (orderIdFilter?.eq !== undefined) qb.andWhere('record.order_id = :orderId_eq', { orderId_eq: orderIdFilter.eq });
   if (orderIdFilter?.in?.length) qb.andWhere('record.order_id IN (:...orderId_in)', { orderId_in: orderIdFilter.in });
   if (typeof orderIdFilter?.contains === 'string' && orderIdFilter.contains.length > 0) qb.andWhere('record.order_id LIKE :orderId_contains', { orderId_contains: `%${orderIdFilter.contains}%` });
+  const shippingCarrierFilter = filter.shippingCarrier;
+  if (shippingCarrierFilter?.eq !== undefined) qb.andWhere('record.shipping_carrier = :shippingCarrier_eq', { shippingCarrier_eq: shippingCarrierFilter.eq });
+  if (shippingCarrierFilter?.in?.length) qb.andWhere('record.shipping_carrier IN (:...shippingCarrier_in)', { shippingCarrier_in: shippingCarrierFilter.in });
+  if (typeof shippingCarrierFilter?.contains === 'string' && shippingCarrierFilter.contains.length > 0) qb.andWhere('record.shipping_carrier LIKE :shippingCarrier_contains', { shippingCarrier_contains: `%${shippingCarrierFilter.contains}%` });
+  const shippingTrackingNumberFilter = filter.shippingTrackingNumber;
+  if (shippingTrackingNumberFilter?.eq !== undefined) qb.andWhere('record.shipping_tracking_number = :shippingTrackingNumber_eq', { shippingTrackingNumber_eq: shippingTrackingNumberFilter.eq });
+  if (shippingTrackingNumberFilter?.in?.length) qb.andWhere('record.shipping_tracking_number IN (:...shippingTrackingNumber_in)', { shippingTrackingNumber_in: shippingTrackingNumberFilter.in });
+  if (typeof shippingTrackingNumberFilter?.contains === 'string' && shippingTrackingNumberFilter.contains.length > 0) qb.andWhere('record.shipping_tracking_number LIKE :shippingTrackingNumber_contains', { shippingTrackingNumber_contains: `%${shippingTrackingNumberFilter.contains}%` });
   const totalAmountFilter = filter.totalAmount;
   if (totalAmountFilter?.eq !== undefined) qb.andWhere('record.total_amount = :totalAmount_eq', { totalAmount_eq: totalAmountFilter.eq });
   if (totalAmountFilter?.in?.length) qb.andWhere('record.total_amount IN (:...totalAmount_in)', { totalAmount_in: totalAmountFilter.in });

@@ -7,7 +7,7 @@
     "framework": "express",
     "orm": "typeorm"
   },
-  "ir_hash": "cd8576dc7f66131df3f314098b3140dabf9aa835ccd294c677e7bad4ba7aab0f",
+  "ir_hash": "bf94a5dbe9a5d0fc40d8fe996210a74c675adfc3b235cb05dcbcb0f038feafb9",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -39,11 +39,11 @@
     },
     {
       "path": "gen/node-express/src/generated/domain.ts",
-      "sha256": "1ac08f77ea4676797ec4511d0f0829bdecde465cb126afafd7c028cecb8af647"
+      "sha256": "8ca2bc36cbb077b020904495421484357f83795882eca85a54b89d121b2bcf1b"
     },
     {
       "path": "gen/node-express/src/generated/event-contracts.ts",
-      "sha256": "5c6c312cc9f0e9034edbd4e1e3409bb22aab784c3104492e0aa0c6ff3757ae7a"
+      "sha256": "0768edde13a721c2d4df274b4c3e9ea561d1f25ad480c7663a0beb90a8f9c03e"
     },
     {
       "path": "gen/node-express/src/generated/events.ts",
@@ -63,7 +63,7 @@
     },
     {
       "path": "gen/node-express/src/generated/query.ts",
-      "sha256": "fe50c092c1454886f3d70a9da0d998138fb707184e9bfb5d2ed64d1639fffd86"
+      "sha256": "49511b3d0521918d5d48c11178c948c80c3938fd180bfca0eb8ee0e2f74d8b73"
     },
     {
       "path": "gen/node-express/src/generated/transitions.ts",
@@ -71,15 +71,15 @@
     },
     {
       "path": "gen/node-express/src/generated/typeorm-adapters.ts",
-      "sha256": "06539e0b631ab4bac482a9307e0a2a4d8ae11c800a073373091cae0ef82a007d"
+      "sha256": "391707b8ed9037aa4b545298c30312ebcb25314d838c7a3c960eb89fd82f3470"
     },
     {
       "path": "gen/node-express/src/generated/typeorm-entities.ts",
-      "sha256": "c80b04733b937c436ba92206cff0b1616eb202c908adaa79b593eef0cf63a19f"
+      "sha256": "c28eab64826decb9f35c38f94aa482996165a9a386c2b2da2fc971230c5f9fb8"
     },
     {
       "path": "gen/node-express/src/generated/validation.ts",
-      "sha256": "26cc12fc2f027c2abad321d9de4b42f077043cb62a5039dc210decf609a74e79"
+      "sha256": "0d18803d5d2a6b65eedbf70b98ec79d9dd8e5b37d652b543004f8ae337bd30ad"
     },
     {
       "path": "gen/node-express/tsconfig.json",
@@ -87,11 +87,11 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "b36e7db5c4a893d41a807e95d2108fb80b29ff53f9d1e0dcc4f22dddea76384c"
+      "sha256": "8f19b86d560be2877286ae5f6525b4680da604658f6ce4d2297da549658888d1"
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "7b15970ed2745bad6c608ea8f9ab1bb5c390f0fa7754ef0e53866e8702c74a8f"
+      "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
     }
   ]
 }

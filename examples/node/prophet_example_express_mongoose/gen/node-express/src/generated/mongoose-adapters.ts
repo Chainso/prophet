@@ -49,6 +49,14 @@ export class MongooseRepositories implements Persistence.Repositories {
 function orderWhere(filter: Filters.OrderQueryFilter | undefined): FilterQuery<OrderDocument> {
   if (!filter) return {};
   const and: Record<string, unknown>[] = [];
+  const approvalReasonFilter = filter.approvalReason;
+  if (approvalReasonFilter?.eq !== undefined) and.push({ approvalReason: approvalReasonFilter.eq });
+  if (approvalReasonFilter?.in?.length) and.push({ approvalReason: { $in: approvalReasonFilter.in } });
+  if (typeof approvalReasonFilter?.contains === 'string' && approvalReasonFilter.contains.length > 0) and.push({ approvalReason: { $regex: escapeRegex(approvalReasonFilter.contains), $options: 'i' } });
+  const approvedByUserIdFilter = filter.approvedByUserId;
+  if (approvedByUserIdFilter?.eq !== undefined) and.push({ approvedByUserId: approvedByUserIdFilter.eq });
+  if (approvedByUserIdFilter?.in?.length) and.push({ approvedByUserId: { $in: approvedByUserIdFilter.in } });
+  if (typeof approvedByUserIdFilter?.contains === 'string' && approvedByUserIdFilter.contains.length > 0) and.push({ approvedByUserId: { $regex: escapeRegex(approvedByUserIdFilter.contains), $options: 'i' } });
   const customerFilter = filter.customer;
   if (customerFilter?.eq !== undefined) {
     and.push({ 'customer.userId': customerFilter.eq.userId });
@@ -68,6 +76,14 @@ function orderWhere(filter: Filters.OrderQueryFilter | undefined): FilterQuery<O
   if (orderIdFilter?.eq !== undefined) and.push({ orderId: orderIdFilter.eq });
   if (orderIdFilter?.in?.length) and.push({ orderId: { $in: orderIdFilter.in } });
   if (typeof orderIdFilter?.contains === 'string' && orderIdFilter.contains.length > 0) and.push({ orderId: { $regex: escapeRegex(orderIdFilter.contains), $options: 'i' } });
+  const shippingCarrierFilter = filter.shippingCarrier;
+  if (shippingCarrierFilter?.eq !== undefined) and.push({ shippingCarrier: shippingCarrierFilter.eq });
+  if (shippingCarrierFilter?.in?.length) and.push({ shippingCarrier: { $in: shippingCarrierFilter.in } });
+  if (typeof shippingCarrierFilter?.contains === 'string' && shippingCarrierFilter.contains.length > 0) and.push({ shippingCarrier: { $regex: escapeRegex(shippingCarrierFilter.contains), $options: 'i' } });
+  const shippingTrackingNumberFilter = filter.shippingTrackingNumber;
+  if (shippingTrackingNumberFilter?.eq !== undefined) and.push({ shippingTrackingNumber: shippingTrackingNumberFilter.eq });
+  if (shippingTrackingNumberFilter?.in?.length) and.push({ shippingTrackingNumber: { $in: shippingTrackingNumberFilter.in } });
+  if (typeof shippingTrackingNumberFilter?.contains === 'string' && shippingTrackingNumberFilter.contains.length > 0) and.push({ shippingTrackingNumber: { $regex: escapeRegex(shippingTrackingNumberFilter.contains), $options: 'i' } });
   const totalAmountFilter = filter.totalAmount;
   if (totalAmountFilter?.eq !== undefined) and.push({ totalAmount: totalAmountFilter.eq });
   if (totalAmountFilter?.in?.length) and.push({ totalAmount: { $in: totalAmountFilter.in } });
@@ -106,6 +122,12 @@ function orderDocumentToDomain(doc: any): Domain.Order {
     discountCode: doc.discountCode ?? undefined,
     tags: doc.tags ?? undefined,
     shippingAddress: doc.shippingAddress ?? undefined,
+    approvedByUserId: doc.approvedByUserId ?? undefined,
+    approvalNotes: doc.approvalNotes ?? undefined,
+    approvalReason: doc.approvalReason ?? undefined,
+    shippingCarrier: doc.shippingCarrier ?? undefined,
+    shippingTrackingNumber: doc.shippingTrackingNumber ?? undefined,
+    shippingPackageIds: doc.shippingPackageIds ?? undefined,
     state: doc.__prophet_state,
   };
 }
@@ -118,6 +140,12 @@ function orderDomainToDocument(item: Domain.Order): Record<string, unknown> {
     discountCode: item.discountCode ?? null,
     tags: item.tags ?? null,
     shippingAddress: item.shippingAddress ?? null,
+    approvedByUserId: item.approvedByUserId ?? null,
+    approvalNotes: item.approvalNotes ?? null,
+    approvalReason: item.approvalReason ?? null,
+    shippingCarrier: item.shippingCarrier ?? null,
+    shippingTrackingNumber: item.shippingTrackingNumber ?? null,
+    shippingPackageIds: item.shippingPackageIds ?? null,
     __prophet_state: item.state,
   };
 }

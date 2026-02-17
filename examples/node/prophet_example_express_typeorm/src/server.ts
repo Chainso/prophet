@@ -49,9 +49,22 @@ class ApproveOrderHandler implements ApproveOrderActionHandler {
     if (!existing) {
       throw new Error(`order not found: ${input.order.orderId}`);
     }
+
+    const updatedOrder: Domain.Order = {
+      ...existing,
+      approvedByUserId: input.approvedBy?.userId,
+      approvalNotes: input.notes,
+      approvalReason: input.context?.reason,
+    };
+    const savedOrder = await context.repositories.order.save(updatedOrder);
+
     const transitions = new TransitionServices(context.repositories);
-    const draft = await transitions.order.approveOrder(input.order);
-    return draft.build();
+    const draft = await transitions.order.approveOrder(savedOrder);
+    return draft.build({
+      approvedByUserId: savedOrder.approvedByUserId,
+      noteCount: input.notes?.length ?? 0,
+      approvalReason: savedOrder.approvalReason,
+    });
   }
 }
 
@@ -61,9 +74,22 @@ class ShipOrderHandler implements ShipOrderActionHandler {
     if (!existing) {
       throw new Error(`order not found: ${input.order.orderId}`);
     }
+
+    const updatedOrder: Domain.Order = {
+      ...existing,
+      shippingCarrier: input.carrier,
+      shippingTrackingNumber: input.trackingNumber,
+      shippingPackageIds: input.packageIds,
+    };
+    const savedOrder = await context.repositories.order.save(updatedOrder);
+
     const transitions = new TransitionServices(context.repositories);
-    const draft = await transitions.order.shipOrder(input.order);
-    return draft.build();
+    const draft = await transitions.order.shipOrder(savedOrder);
+    return draft.build({
+      carrier: input.carrier,
+      trackingNumber: input.trackingNumber,
+      packageIds: input.packageIds,
+    });
   }
 }
 

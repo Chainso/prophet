@@ -7,6 +7,18 @@ from typing import List, Optional
 from .domain import *
 
 @dataclass(kw_only=True)
+class OrderApprovalReasonFilter:
+    eq: Optional[str] = None
+    inValues: Optional[List[str]] = None
+    contains: Optional[str] = None
+
+@dataclass(kw_only=True)
+class OrderApprovedByUserIdFilter:
+    eq: Optional[str] = None
+    inValues: Optional[List[str]] = None
+    contains: Optional[str] = None
+
+@dataclass(kw_only=True)
 class OrderCustomerFilter:
     eq: Optional[UserRef] = None
     inValues: Optional[List[UserRef]] = None
@@ -19,6 +31,18 @@ class OrderDiscountCodeFilter:
 
 @dataclass(kw_only=True)
 class OrderOrderIdFilter:
+    eq: Optional[str] = None
+    inValues: Optional[List[str]] = None
+    contains: Optional[str] = None
+
+@dataclass(kw_only=True)
+class OrderShippingCarrierFilter:
+    eq: Optional[str] = None
+    inValues: Optional[List[str]] = None
+    contains: Optional[str] = None
+
+@dataclass(kw_only=True)
+class OrderShippingTrackingNumberFilter:
     eq: Optional[str] = None
     inValues: Optional[List[str]] = None
     contains: Optional[str] = None
@@ -37,9 +61,13 @@ class OrderTotalAmountFilter:
 
 @dataclass(kw_only=True)
 class OrderQueryFilter:
+    approvalReason: Optional[OrderApprovalReasonFilter] = None
+    approvedByUserId: Optional[OrderApprovedByUserIdFilter] = None
     customer: Optional[OrderCustomerFilter] = None
     discountCode: Optional[OrderDiscountCodeFilter] = None
     orderId: Optional[OrderOrderIdFilter] = None
+    shippingCarrier: Optional[OrderShippingCarrierFilter] = None
+    shippingTrackingNumber: Optional[OrderShippingTrackingNumberFilter] = None
     state: Optional[OrderStateFilter] = None
     totalAmount: Optional[OrderTotalAmountFilter] = None
 

@@ -31,6 +31,12 @@ export interface Order {
   discountCode?: string;
   tags?: string[];
   shippingAddress?: Address;
+  approvedByUserId?: string;
+  approvalNotes?: string[];
+  approvalReason?: string;
+  shippingCarrier?: string;
+  shippingTrackingNumber?: string;
+  shippingPackageIds?: string[];
   state: OrderState;
 }
 

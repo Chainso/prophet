@@ -1,10 +1,14 @@
 package com.example.prophet.commerce_local.generated.api;
 
 import javax.annotation.processing.Generated;
+import com.example.prophet.commerce_local.generated.api.filters.OrderApprovalReasonFilter;
+import com.example.prophet.commerce_local.generated.api.filters.OrderApprovedByUserIdFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderCustomerFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderDiscountCodeFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderOrderIdFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderQueryFilter;
+import com.example.prophet.commerce_local.generated.api.filters.OrderShippingCarrierFilter;
+import com.example.prophet.commerce_local.generated.api.filters.OrderShippingTrackingNumberFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderStateFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderTotalAmountFilter;
 import com.example.prophet.commerce_local.generated.domain.Order;
@@ -111,6 +115,54 @@ public class OrderQueryController {
                 }
                 if (discountCodeFilter.contains() != null && !discountCodeFilter.contains().isBlank()) {
                     spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.<String>get("discountCode")), "%" + discountCodeFilter.contains().toLowerCase() + "%"));
+                }
+            }
+            if (filter.approvedByUserId() != null) {
+                OrderApprovedByUserIdFilter approvedByUserIdFilter = filter.approvedByUserId();
+                if (approvedByUserIdFilter.eq() != null) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("approvedByUserId"), approvedByUserIdFilter.eq()));
+                }
+                if (approvedByUserIdFilter.in() != null && !approvedByUserIdFilter.in().isEmpty()) {
+                    spec = spec.and((root, query, cb) -> root.get("approvedByUserId").in(approvedByUserIdFilter.in()));
+                }
+                if (approvedByUserIdFilter.contains() != null && !approvedByUserIdFilter.contains().isBlank()) {
+                    spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.<String>get("approvedByUserId")), "%" + approvedByUserIdFilter.contains().toLowerCase() + "%"));
+                }
+            }
+            if (filter.approvalReason() != null) {
+                OrderApprovalReasonFilter approvalReasonFilter = filter.approvalReason();
+                if (approvalReasonFilter.eq() != null) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("approvalReason"), approvalReasonFilter.eq()));
+                }
+                if (approvalReasonFilter.in() != null && !approvalReasonFilter.in().isEmpty()) {
+                    spec = spec.and((root, query, cb) -> root.get("approvalReason").in(approvalReasonFilter.in()));
+                }
+                if (approvalReasonFilter.contains() != null && !approvalReasonFilter.contains().isBlank()) {
+                    spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.<String>get("approvalReason")), "%" + approvalReasonFilter.contains().toLowerCase() + "%"));
+                }
+            }
+            if (filter.shippingCarrier() != null) {
+                OrderShippingCarrierFilter shippingCarrierFilter = filter.shippingCarrier();
+                if (shippingCarrierFilter.eq() != null) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("shippingCarrier"), shippingCarrierFilter.eq()));
+                }
+                if (shippingCarrierFilter.in() != null && !shippingCarrierFilter.in().isEmpty()) {
+                    spec = spec.and((root, query, cb) -> root.get("shippingCarrier").in(shippingCarrierFilter.in()));
+                }
+                if (shippingCarrierFilter.contains() != null && !shippingCarrierFilter.contains().isBlank()) {
+                    spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.<String>get("shippingCarrier")), "%" + shippingCarrierFilter.contains().toLowerCase() + "%"));
+                }
+            }
+            if (filter.shippingTrackingNumber() != null) {
+                OrderShippingTrackingNumberFilter shippingTrackingNumberFilter = filter.shippingTrackingNumber();
+                if (shippingTrackingNumberFilter.eq() != null) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("shippingTrackingNumber"), shippingTrackingNumberFilter.eq()));
+                }
+                if (shippingTrackingNumberFilter.in() != null && !shippingTrackingNumberFilter.in().isEmpty()) {
+                    spec = spec.and((root, query, cb) -> root.get("shippingTrackingNumber").in(shippingTrackingNumberFilter.in()));
+                }
+                if (shippingTrackingNumberFilter.contains() != null && !shippingTrackingNumberFilter.contains().isBlank()) {
+                    spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.<String>get("shippingTrackingNumber")), "%" + shippingTrackingNumberFilter.contains().toLowerCase() + "%"));
                 }
             }
             if (filter.state() != null) {

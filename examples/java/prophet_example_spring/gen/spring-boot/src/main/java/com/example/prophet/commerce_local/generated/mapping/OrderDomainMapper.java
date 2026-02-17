@@ -20,6 +20,12 @@ public class OrderDomainMapper {
             .discountCode(entity.getDiscountCode())
             .tags(entity.getTags())
             .shippingAddress(entity.getShippingAddress())
+            .approvedByUserId(entity.getApprovedByUserId())
+            .approvalNotes(entity.getApprovalNotes())
+            .approvalReason(entity.getApprovalReason())
+            .shippingCarrier(entity.getShippingCarrier())
+            .shippingTrackingNumber(entity.getShippingTrackingNumber())
+            .shippingPackageIds(entity.getShippingPackageIds())
             .state(entity.getState())
             .build();
     }

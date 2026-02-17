@@ -10,7 +10,10 @@ import jakarta.validation.constraints.NotNull;
 public record OrderApproveTransition(
     @NotNull String orderId,
     @NotNull String fromState,
-    @NotNull String toState
+    @NotNull String toState,
+    String approvedByUserId,
+    @NotNull Integer noteCount,
+    String approvalReason
 ) {
 
     public static Builder builder() {
@@ -21,6 +24,9 @@ public record OrderApproveTransition(
         private String orderId;
         private String fromState;
         private String toState;
+        private String approvedByUserId;
+        private Integer noteCount;
+        private String approvalReason;
 
         public Builder orderId(String value) {
             this.orderId = value;
@@ -36,11 +42,29 @@ public record OrderApproveTransition(
             this.toState = value;
             return this;
         }
+
+        public Builder approvedByUserId(String value) {
+            this.approvedByUserId = value;
+            return this;
+        }
+
+        public Builder noteCount(Integer value) {
+            this.noteCount = value;
+            return this;
+        }
+
+        public Builder approvalReason(String value) {
+            this.approvalReason = value;
+            return this;
+        }
         public OrderApproveTransition build() {
             return new OrderApproveTransition(
                 orderId,
                 fromState,
-                toState
+                toState,
+                approvedByUserId,
+                noteCount,
+                approvalReason
             );
         }
     }

@@ -41,6 +41,14 @@ export class PrismaRepositories implements Persistence.Repositories {
 function orderWhere(filter: Filters.OrderQueryFilter | undefined): any {
   if (!filter) return {};
   const and: any[] = [];
+  const approvalReasonFilter = filter.approvalReason;
+  if (approvalReasonFilter?.eq !== undefined) and.push({ approval_reason: approvalReasonFilter.eq });
+  if (approvalReasonFilter?.in?.length) and.push({ approval_reason: { in: approvalReasonFilter.in } });
+  if (typeof approvalReasonFilter?.contains === 'string' && approvalReasonFilter.contains.length > 0) and.push({ approval_reason: { contains: approvalReasonFilter.contains } });
+  const approvedByUserIdFilter = filter.approvedByUserId;
+  if (approvedByUserIdFilter?.eq !== undefined) and.push({ approved_by_user_id: approvedByUserIdFilter.eq });
+  if (approvedByUserIdFilter?.in?.length) and.push({ approved_by_user_id: { in: approvedByUserIdFilter.in } });
+  if (typeof approvedByUserIdFilter?.contains === 'string' && approvedByUserIdFilter.contains.length > 0) and.push({ approved_by_user_id: { contains: approvedByUserIdFilter.contains } });
   const customerFilter = filter.customer;
   if (customerFilter?.eq !== undefined) {
     and.push({ customer_user_id: customerFilter.eq.userId });
@@ -60,6 +68,14 @@ function orderWhere(filter: Filters.OrderQueryFilter | undefined): any {
   if (orderIdFilter?.eq !== undefined) and.push({ order_id: orderIdFilter.eq });
   if (orderIdFilter?.in?.length) and.push({ order_id: { in: orderIdFilter.in } });
   if (typeof orderIdFilter?.contains === 'string' && orderIdFilter.contains.length > 0) and.push({ order_id: { contains: orderIdFilter.contains } });
+  const shippingCarrierFilter = filter.shippingCarrier;
+  if (shippingCarrierFilter?.eq !== undefined) and.push({ shipping_carrier: shippingCarrierFilter.eq });
+  if (shippingCarrierFilter?.in?.length) and.push({ shipping_carrier: { in: shippingCarrierFilter.in } });
+  if (typeof shippingCarrierFilter?.contains === 'string' && shippingCarrierFilter.contains.length > 0) and.push({ shipping_carrier: { contains: shippingCarrierFilter.contains } });
+  const shippingTrackingNumberFilter = filter.shippingTrackingNumber;
+  if (shippingTrackingNumberFilter?.eq !== undefined) and.push({ shipping_tracking_number: shippingTrackingNumberFilter.eq });
+  if (shippingTrackingNumberFilter?.in?.length) and.push({ shipping_tracking_number: { in: shippingTrackingNumberFilter.in } });
+  if (typeof shippingTrackingNumberFilter?.contains === 'string' && shippingTrackingNumberFilter.contains.length > 0) and.push({ shipping_tracking_number: { contains: shippingTrackingNumberFilter.contains } });
   const totalAmountFilter = filter.totalAmount;
   if (totalAmountFilter?.eq !== undefined) and.push({ total_amount: totalAmountFilter.eq });
   if (totalAmountFilter?.in?.length) and.push({ total_amount: { in: totalAmountFilter.in } });
@@ -98,6 +114,12 @@ function orderRowToDomain(row: any): Domain.Order {
     discountCode: row.discount_code ?? undefined,
     tags: parseJsonValue(row.tags) as any,
     shippingAddress: parseJsonValue(row.shipping_address) as any,
+    approvedByUserId: row.approved_by_user_id ?? undefined,
+    approvalNotes: parseJsonValue(row.approval_notes) as any,
+    approvalReason: row.approval_reason ?? undefined,
+    shippingCarrier: row.shipping_carrier ?? undefined,
+    shippingTrackingNumber: row.shipping_tracking_number ?? undefined,
+    shippingPackageIds: parseJsonValue(row.shipping_package_ids) as any,
     state: row.state,
   };
 }
@@ -110,6 +132,12 @@ function orderDomainToRow(item: Domain.Order): any {
     discount_code: item.discountCode ?? null,
     tags: item.tags === undefined ? null : JSON.stringify(item.tags),
     shipping_address: item.shippingAddress === undefined ? null : JSON.stringify(item.shippingAddress),
+    approved_by_user_id: item.approvedByUserId ?? null,
+    approval_notes: item.approvalNotes === undefined ? null : JSON.stringify(item.approvalNotes),
+    approval_reason: item.approvalReason ?? null,
+    shipping_carrier: item.shippingCarrier ?? null,
+    shipping_tracking_number: item.shippingTrackingNumber ?? null,
+    shipping_package_ids: item.shippingPackageIds === undefined ? null : JSON.stringify(item.shippingPackageIds),
     state: item.state,
   };
 }

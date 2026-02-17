@@ -7,7 +7,7 @@
     "framework": "express",
     "orm": "mongoose"
   },
-  "ir_hash": "cd8576dc7f66131df3f314098b3140dabf9aa835ccd294c677e7bad4ba7aab0f",
+  "ir_hash": "bf94a5dbe9a5d0fc40d8fe996210a74c675adfc3b235cb05dcbcb0f038feafb9",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -39,11 +39,11 @@
     },
     {
       "path": "gen/node-express/src/generated/domain.ts",
-      "sha256": "1ac08f77ea4676797ec4511d0f0829bdecde465cb126afafd7c028cecb8af647"
+      "sha256": "8ca2bc36cbb077b020904495421484357f83795882eca85a54b89d121b2bcf1b"
     },
     {
       "path": "gen/node-express/src/generated/event-contracts.ts",
-      "sha256": "5c6c312cc9f0e9034edbd4e1e3409bb22aab784c3104492e0aa0c6ff3757ae7a"
+      "sha256": "0768edde13a721c2d4df274b4c3e9ea561d1f25ad480c7663a0beb90a8f9c03e"
     },
     {
       "path": "gen/node-express/src/generated/events.ts",
@@ -55,11 +55,11 @@
     },
     {
       "path": "gen/node-express/src/generated/mongoose-adapters.ts",
-      "sha256": "72caf0d551d367b68f257482617f9ac256091c892007c6753b52df409885a274"
+      "sha256": "402c933d99dd925d292df05d8b1340ac13122f79c72f01515b81046d27b94d16"
     },
     {
       "path": "gen/node-express/src/generated/mongoose-models.ts",
-      "sha256": "8ffe9e96701e6cd7a5c96431f1c2bda2ba4ce2c1c14829b31dc0db49be1e7c7d"
+      "sha256": "9b752cf23e2c1e0f1b348a29da54c2697fdba1de2d1173d6accbd03f91bdbd09"
     },
     {
       "path": "gen/node-express/src/generated/persistence.ts",
@@ -71,7 +71,7 @@
     },
     {
       "path": "gen/node-express/src/generated/query.ts",
-      "sha256": "fe50c092c1454886f3d70a9da0d998138fb707184e9bfb5d2ed64d1639fffd86"
+      "sha256": "49511b3d0521918d5d48c11178c948c80c3938fd180bfca0eb8ee0e2f74d8b73"
     },
     {
       "path": "gen/node-express/src/generated/transitions.ts",
@@ -79,7 +79,7 @@
     },
     {
       "path": "gen/node-express/src/generated/validation.ts",
-      "sha256": "26cc12fc2f027c2abad321d9de4b42f077043cb62a5039dc210decf609a74e79"
+      "sha256": "0d18803d5d2a6b65eedbf70b98ec79d9dd8e5b37d652b543004f8ae337bd30ad"
     },
     {
       "path": "gen/node-express/tsconfig.json",
@@ -87,7 +87,7 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "b36e7db5c4a893d41a807e95d2108fb80b29ff53f9d1e0dcc4f22dddea76384c"
+      "sha256": "8f19b86d560be2877286ae5f6525b4680da604658f6ce4d2297da549658888d1"
     }
   ]
 }

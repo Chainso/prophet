@@ -17,6 +17,12 @@ class OrderModel(Base):
     discountCode: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     tags: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
     shippingAddress: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
+    approvedByUserId: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    approvalNotes: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
+    approvalReason: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    shippingCarrier: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    shippingTrackingNumber: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    shippingPackageIds: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
     state: Mapped[str] = mapped_column('__prophet_state', String, nullable=False, default='created')
 
 class OrderStateHistoryModel(Base):

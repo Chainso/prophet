@@ -7,7 +7,7 @@
     "framework": "django",
     "orm": "django_orm"
   },
-  "ir_hash": "cd8576dc7f66131df3f314098b3140dabf9aa835ccd294c677e7bad4ba7aab0f",
+  "ir_hash": "bf94a5dbe9a5d0fc40d8fe996210a74c675adfc3b235cb05dcbcb0f038feafb9",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "b36e7db5c4a893d41a807e95d2108fb80b29ff53f9d1e0dcc4f22dddea76384c"
+      "sha256": "8f19b86d560be2877286ae5f6525b4680da604658f6ce4d2297da549658888d1"
     },
     {
       "path": "gen/python/pyproject.toml",
@@ -43,11 +43,11 @@
     },
     {
       "path": "gen/python/src/generated/django_adapters.py",
-      "sha256": "6a28abe5a33975fde2dfa68466534de935eacc53b7fb86bb173d4e60c532a7cf"
+      "sha256": "9ce150e39d378b90117bff46d7bf0c8af6869adcc69fd11657da2a675ea219f0"
     },
     {
       "path": "gen/python/src/generated/django_models.py",
-      "sha256": "e8ef618f871d36c948ad9fd0793ecc27579f42ba471b3be74c8781ae7754f742"
+      "sha256": "b0ca5674c81df475f9a1f68127d38ff41b8c04bb96d4f39f28ed1a64a1435b31"
     },
     {
       "path": "gen/python/src/generated/django_urls.py",
@@ -59,11 +59,11 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "4fc4c89d64c9da8980a380bc4859d091e7934bfcfff4162a8af804b9f4b5fa51"
+      "sha256": "33c26e282e473b6477482aa39d3a268e24ae0ca994ef624073e787b124738666"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "04d16466e7213cc529adc8c32887f1b16ebb893e7f5c58f4480bb50ea3a6ec0e"
+      "sha256": "d2d31ff2ab2c1f1ee9d1a6cf7f8d21a87b06d83dfc260af364bf8164960922c8"
     },
     {
       "path": "gen/python/src/generated/events.py",
@@ -75,7 +75,7 @@
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "b95c343bd10a63ac3794580abfb3c19c6968df16fe0ef51010b446d6bb54dcbf"
+      "sha256": "15b501bc4fb0eedaf207b5f221eaffda4dc7940c4f60da52d7fafd4ce5855b44"
     },
     {
       "path": "gen/python/src/generated/transitions.py",
@@ -83,7 +83,7 @@
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "7b15970ed2745bad6c608ea8f9ab1bb5c390f0fa7754ef0e53866e8702c74a8f"
+      "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
     }
   ]
 }

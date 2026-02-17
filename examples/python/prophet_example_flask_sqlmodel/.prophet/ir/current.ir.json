@@ -100,6 +100,84 @@
             "min": 0,
             "max": 1
           }
+        },
+        {
+          "id": "fld_order_approved_by_user_id",
+          "name": "approved_by_user_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_order_approval_notes",
+          "name": "approval_notes",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 0,
+            "max": "many"
+          }
+        },
+        {
+          "id": "fld_order_approval_reason",
+          "name": "approval_reason",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_order_shipping_carrier",
+          "name": "shipping_carrier",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_order_shipping_tracking_number",
+          "name": "shipping_tracking_number",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_order_shipping_package_ids",
+          "name": "shipping_package_ids",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 0,
+            "max": "many"
+          }
         }
       ],
       "keys": {
@@ -571,6 +649,42 @@
             "min": 1,
             "max": 1
           }
+        },
+        {
+          "id": "fld_trans_order_approve_approved_by_user_id",
+          "name": "approvedByUserId",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_approve_note_count",
+          "name": "noteCount",
+          "type": {
+            "kind": "base",
+            "name": "int"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_approve_approval_reason",
+          "name": "approvalReason",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
         }
       ],
       "object_id": "obj_order",
@@ -618,6 +732,45 @@
             "min": 1,
             "max": 1
           }
+        },
+        {
+          "id": "fld_trans_order_ship_carrier",
+          "name": "carrier",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_ship_tracking_number",
+          "name": "trackingNumber",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_order_ship_package_ids",
+          "name": "packageIds",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 1,
+            "max": "many"
+          }
         }
       ],
       "object_id": "obj_order",
@@ -655,6 +808,24 @@
       },
       "filters": [
         {
+          "field_id": "fld_order_approval_reason",
+          "field_name": "approval_reason",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_order_approved_by_user_id",
+          "field_name": "approved_by_user_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
           "field_id": "fld_order_customer",
           "field_name": "customer",
           "operators": [
@@ -681,6 +852,24 @@
           ]
         },
         {
+          "field_id": "fld_order_shipping_carrier",
+          "field_name": "shipping_carrier",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_order_shipping_tracking_number",
+          "field_name": "shipping_tracking_number",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
           "field_id": "fld_order_total_amount",
           "field_name": "total_amount",
           "operators": [
@@ -699,7 +888,7 @@
           ]
         }
       ],
-      "contract_hash": "ab95a90be337bb39a59899bd06092d30d9b312010f62b1f248c07e939402898c"
+      "contract_hash": "835657e8a16077a44de3aefc9f788abb4e951c7c5049aa2a70105b7997cb9557"
     },
     {
       "object_id": "obj_user",
@@ -746,6 +935,6 @@
     "struct_field_contract_changes_are_breaking": true,
     "custom_type_constraint_changes_are_breaking": true
   },
-  "query_contracts_version": "e6aa93c0ab8dd7e363b2cd8dc208505d0b7fdcd0d23e63cf9ccae6d76b7e20c8",
-  "ir_hash": "cd8576dc7f66131df3f314098b3140dabf9aa835ccd294c677e7bad4ba7aab0f"
+  "query_contracts_version": "026cc621cb86c87effeb4d1c95d64d9f993c65869a205b9346d57dc90f5ad261",
+  "ir_hash": "bf94a5dbe9a5d0fc40d8fe996210a74c675adfc3b235cb05dcbcb0f038feafb9"
 }

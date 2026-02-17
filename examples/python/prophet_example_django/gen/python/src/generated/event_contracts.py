@@ -21,9 +21,15 @@ class OrderApproveTransition:
     orderId: str
     fromState: str
     toState: str
+    approvedByUserId: Optional[str] = None
+    noteCount: int
+    approvalReason: Optional[str] = None
 
 @dataclass(kw_only=True)
 class OrderShipTransition:
     orderId: str
     fromState: str
     toState: str
+    carrier: str
+    trackingNumber: str
+    packageIds: List[str]

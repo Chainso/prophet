@@ -19,10 +19,16 @@ export interface OrderApproveTransition {
   orderId: string;
   fromState: string;
   toState: string;
+  approvedByUserId?: string;
+  noteCount: number;
+  approvalReason?: string;
 }
 
 export interface OrderShipTransition {
   orderId: string;
   fromState: string;
   toState: string;
+  carrier: string;
+  trackingNumber: string;
+  packageIds: string[];
 }

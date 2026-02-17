@@ -15,6 +15,12 @@ model Order {
   discount_code String?
   tags String?
   shipping_address String?
+  approved_by_user_id String?
+  approval_notes String?
+  approval_reason String?
+  shipping_carrier String?
+  shipping_tracking_number String?
+  shipping_package_ids String?
   state String @default("created") @map("__prophet_state")
   customer User @relation("Order_customer_User", fields: [customer_user_id], references: [user_id])
 }

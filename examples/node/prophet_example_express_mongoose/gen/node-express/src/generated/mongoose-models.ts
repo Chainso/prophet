@@ -10,6 +10,12 @@ export interface OrderDocument extends Record<string, unknown> {
   discountCode?: string;
   tags?: string[];
   shippingAddress?: Domain.Address;
+  approvedByUserId?: string;
+  approvalNotes?: string[];
+  approvalReason?: string;
+  shippingCarrier?: string;
+  shippingTrackingNumber?: string;
+  shippingPackageIds?: string[];
   state: Domain.OrderState;
 }
 
@@ -20,6 +26,12 @@ const OrderSchema = new Schema<OrderDocument>({
   discountCode: { type: String, required: false },
   tags: { type: [String], required: false },
   shippingAddress: { type: Schema.Types.Mixed, required: false },
+  approvedByUserId: { type: String, required: false },
+  approvalNotes: { type: [String], required: false },
+  approvalReason: { type: String, required: false },
+  shippingCarrier: { type: String, required: false },
+  shippingTrackingNumber: { type: String, required: false },
+  shippingPackageIds: { type: [String], required: false },
   __prophet_state: { type: String, required: true, default: 'created' },
 }, { collection: 'orders', strict: false });
 OrderSchema.index({ orderId: 1 }, { unique: true });

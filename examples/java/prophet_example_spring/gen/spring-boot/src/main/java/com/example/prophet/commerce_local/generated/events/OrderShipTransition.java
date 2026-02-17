@@ -2,6 +2,7 @@ package com.example.prophet.commerce_local.generated.events;
 
 import javax.annotation.processing.Generated;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 
 /**
  * Event payload for 'OrderShipTransition'.
@@ -10,7 +11,10 @@ import jakarta.validation.constraints.NotNull;
 public record OrderShipTransition(
     @NotNull String orderId,
     @NotNull String fromState,
-    @NotNull String toState
+    @NotNull String toState,
+    @NotNull String carrier,
+    @NotNull String trackingNumber,
+    @NotNull List<String> packageIds
 ) {
 
     public static Builder builder() {
@@ -21,6 +25,9 @@ public record OrderShipTransition(
         private String orderId;
         private String fromState;
         private String toState;
+        private String carrier;
+        private String trackingNumber;
+        private List<String> packageIds;
 
         public Builder orderId(String value) {
             this.orderId = value;
@@ -36,11 +43,29 @@ public record OrderShipTransition(
             this.toState = value;
             return this;
         }
+
+        public Builder carrier(String value) {
+            this.carrier = value;
+            return this;
+        }
+
+        public Builder trackingNumber(String value) {
+            this.trackingNumber = value;
+            return this;
+        }
+
+        public Builder packageIds(List<String> value) {
+            this.packageIds = value;
+            return this;
+        }
         public OrderShipTransition build() {
             return new OrderShipTransition(
                 orderId,
                 fromState,
-                toState
+                toState,
+                carrier,
+                trackingNumber,
+                packageIds
             );
         }
     }
