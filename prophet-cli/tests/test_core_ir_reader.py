@@ -21,14 +21,13 @@ def minimal_ir() -> dict:
         "objects": [{"id": "o1", "name": "Order"}],
         "structs": [],
         "action_inputs": [],
-        "action_outputs": [],
         "actions": [
             {
                 "id": "a1",
                 "name": "createOrder",
                 "kind": "process",
                 "input_shape_id": "ain_create_order",
-                "output_shape_id": "aout_create_order",
+                "output_event_id": "evt_create_order_result",
             }
         ],
         "events": [],

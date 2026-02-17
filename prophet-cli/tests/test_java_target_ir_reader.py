@@ -24,7 +24,6 @@ def minimal_ir() -> dict:
         "objects": [],
         "structs": [],
         "action_inputs": [],
-        "action_outputs": [],
         "actions": [],
         "events": [],
         "triggers": [],

@@ -7,6 +7,7 @@ This section is for contributors and maintainers of Prophet.
 - Architecture: [Architecture](architecture.md)
 - IR contract: [IR Contract](ir-contract.md)
 - Codegen architecture: [Codegen Architecture](codegen-architecture.md)
+- Transition/event redesign plan: [Transition/Event Redesign Spec](transition-event-redesign-spec.md)
 
 ## Engineering Workflow
 

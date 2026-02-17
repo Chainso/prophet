@@ -26,10 +26,10 @@ class SemanticContractTests(unittest.TestCase):
     def test_action_contracts_reference_declared_shapes(self) -> None:
         ir = load_example_ir()
         input_ids = {item["id"] for item in ir.get("action_inputs", [])}
-        output_ids = {item["id"] for item in ir.get("action_outputs", [])}
+        event_ids = {item["id"] for item in ir.get("events", [])}
         for action in ir.get("actions", []):
             self.assertIn(action.get("input_shape_id"), input_ids)
-            self.assertIn(action.get("output_shape_id"), output_ids)
+            self.assertIn(action.get("output_event_id"), event_ids)
 
     def test_query_contracts_align_with_object_fields(self) -> None:
         ir = load_example_ir()
@@ -40,7 +40,7 @@ class SemanticContractTests(unittest.TestCase):
             field_ids = {field["id"] for field in objects_by_id[object_id].get("fields", [])}
             for item in contract.get("filters", []):
                 field_id = item.get("field_id")
-                if field_id == "__current_state__":
+                if field_id == "__state__":
                     continue
                 self.assertIn(field_id, field_ids)
 

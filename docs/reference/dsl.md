@@ -68,7 +68,8 @@ Display key generation behavior:
 
 ## Action Contracts
 
-Actions declare contracts inline with `input { ... }` and `output { ... }`.
+Actions declare command contracts inline with `input { ... }`.
+Action output is an event, and can be declared in three forms.
 
 ```prophet
 action createOrder {
@@ -80,28 +81,30 @@ action createOrder {
     }
   }
 
-  output {
-    field order_id {
-      type string
-    }
-  }
+  output signal PaymentCaptured
 }
 ```
 
+Supported output forms:
+- Inline signal payload:
+  - `output { ... }`
+  - derives signal event `<ActionName>Result`
+- Referenced signal:
+  - `output signal <SignalName>`
+- Referenced transition:
+  - `output transition <ObjectName>.<TransitionName>`
+
 ## Event Semantics
 
-- `signal` is the only explicit top-level event definition in the DSL.
-- action `output` contracts are event types by definition and are derived automatically as events.
-- object `transition` definitions are also derived automatically as events.
-- triggers can reference any derived event name:
+- Top-level event definitions in DSL are `signal` declarations.
+- Object `transition` declarations are also events.
+- Action output always resolves to an event (`signal` or `transition`).
+- Triggers can reference:
   - signal name (for example `PaymentCaptured`)
-  - derived action output event name `<ActionName>Result` (for example `ApproveOrderResult`)
+  - derived inline output signal name `<ActionName>Result` (for example `ApproveOrderResult`)
   - derived transition event name `<Object><Transition>Transition` (for example `OrderApproveTransition`)
-- action input shape names are derived as `<ActionName>Command` (for example `ApproveOrderCommand`).
-- action output shape/event names are derived as `<ActionName>Result` (for example `ApproveOrderResult`).
-
-Runtime emission note:
-- Transition events are part of the event model and trigger graph, but generated action services auto-publish action-output and signal events only; transition emission is user-controlled.
+- Action input shape names are derived as `<ActionName>Command` (for example `ApproveOrderCommand`).
+- Transition events automatically include object primary key fields, `fromState`, and `toState`.
 
 Signal example:
 
@@ -121,9 +124,10 @@ signal PaymentCaptured {
 - key constraints
 - action/event/trigger link integrity
 - object-ref target constraints (currently single-field PK targets)
-- valid action input/output schemas in action definitions
+- valid action input and output-event wiring in action definitions
 - signal schema validity
 - valid trigger references to existing events/actions
+- reserved field name `state` cannot be user-defined
 
 ## Canonical Example
 

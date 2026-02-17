@@ -193,16 +193,16 @@ ontology MinimalCommerce {
         ids.extend(item["id"] for item in ir.get("action_inputs", []))
         for shape in ir.get("action_inputs", []):
             ids.extend(field["id"] for field in shape.get("fields", []))
-        ids.extend(item["id"] for item in ir.get("action_outputs", []))
-        for shape in ir.get("action_outputs", []):
-            ids.extend(field["id"] for field in shape.get("fields", []))
+        ids.extend(item["id"] for item in ir.get("events", []))
+        for event in ir.get("events", []):
+            ids.extend(field["id"] for field in event.get("fields", []))
         ids.extend(item["id"] for item in ir.get("actions", []))
 
         self.assertTrue(all(ids))
         self.assertEqual(len(ids), len(set(ids)))
 
         input_names = {shape["name"] for shape in ir.get("action_inputs", [])}
-        output_names = {shape["name"] for shape in ir.get("action_outputs", [])}
+        output_names = {event["name"] for event in ir.get("events", [])}
         self.assertIn("CreateOrderCommand", input_names)
         self.assertIn("CreateOrderResult", output_names)
 

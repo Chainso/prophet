@@ -38,6 +38,8 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 - Keep ontology `id` values as immutable compatibility anchors.
 - Spring generated Java package root is ontology-scoped: `<base_package>.<ontology_name>`.
 - When behavior changes, update docs and tests in the same change.
+- Action outputs are event-based: use `output { ... }`, `output signal <SignalName>`, or `output transition <Object>.<transition>`.
+- User-defined DSL field name `state` is reserved globally and must be rejected by validation.
 
 ## Commands
 

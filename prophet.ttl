@@ -21,7 +21,7 @@ prophet:ProphetConcept a owl:Class ;
 prophet:PropertyContainer a owl:Class ;
   rdfs:subClassOf prophet:ProphetConcept ;
   rdfs:label "Property Container" ;
-  rdfs:comment "Abstract class for any entity that defines a schema of properties (ObjectModels, StructTypes, Inputs, Outputs, Signals, Transitions, Triggers, etc)." .
+  rdfs:comment "Abstract class for any entity that defines a schema of properties (ObjectModels, StructTypes, Inputs, Signals, Transitions, Triggers, etc)." .
 
 # --- Common Metadata ---
 
@@ -266,17 +266,13 @@ prophet:ActionInput a owl:Class ;
   rdfs:subClassOf prophet:PropertyContainer ;
   rdfs:label "Action Input" .
 
-prophet:ActionOutput a owl:Class ;
-  rdfs:subClassOf prophet:Event, prophet:PropertyContainer ;
-  rdfs:label "Action Output" .
-
 prophet:acceptsInput a owl:ObjectProperty, owl:FunctionalProperty ;
   rdfs:domain prophet:Action ;
   rdfs:range prophet:ActionInput .
 
-prophet:producesOutput a owl:ObjectProperty, owl:FunctionalProperty ;
+prophet:producesEvent a owl:ObjectProperty, owl:FunctionalProperty ;
   rdfs:domain prophet:Action ;
-  rdfs:range prophet:ActionOutput .
+  rdfs:range prophet:Event .
 
 # ============================================================================
 # 6. OBJECT MODEL & KEYS (Ordered only)
@@ -394,11 +390,10 @@ prophet:invokes a owl:ObjectProperty ;
 # ============================================================================
 
 prophet:Process owl:disjointWith prophet:Workflow .
-prophet:Signal owl:disjointWith prophet:Transition, prophet:ActionOutput .
-prophet:Transition owl:disjointWith prophet:ActionOutput .
+prophet:Signal owl:disjointWith prophet:Transition .
 
 prophet:Action owl:disjointUnionOf (prophet:Process prophet:Workflow) .
-prophet:Event  owl:disjointUnionOf (prophet:Signal prophet:Transition prophet:ActionOutput) .
+prophet:Event  owl:disjointUnionOf (prophet:Signal prophet:Transition) .
 prophet:Type   owl:disjointUnionOf (prophet:BaseType prophet:CustomType prophet:StructType prophet:ListType prophet:ObjectReference) .
 
 # ============================================================================
@@ -432,9 +427,8 @@ prophet:EventAbstractShape a sh:NodeShape ;
   sh:xone (
     [ sh:class prophet:Signal ]
     [ sh:class prophet:Transition ]
-    [ sh:class prophet:ActionOutput ]
   ) ;
-  sh:message "An Event must be exactly one of: Signal, Transition, or ActionOutput." .
+  sh:message "An Event must be exactly one of: Signal or Transition." .
 
 prophet:TypeAbstractShape a sh:NodeShape ;
   sh:targetClass prophet:Type ;
@@ -740,7 +734,7 @@ prophet:EventTriggerShape a sh:NodeShape ;
     sh:message "An EventTrigger must invoke exactly one Action." ;
   ] .
 
-# --- 8. Action I/O constraints (exactly one input/output + inverse ownership) ---
+# --- 8. Action I/O constraints (exactly one input/output event + inverse ownership) ---
 
 prophet:ActionShape a sh:NodeShape ;
   sh:targetClass prophet:Action ;
@@ -752,11 +746,11 @@ prophet:ActionShape a sh:NodeShape ;
     sh:message "An Action must accept exactly one ActionInput." ;
   ] ;
   sh:property [
-    sh:path prophet:producesOutput ;
+    sh:path prophet:producesEvent ;
     sh:minCount 1 ;
     sh:maxCount 1 ;
-    sh:class prophet:ActionOutput ;
-    sh:message "An Action must produce exactly one ActionOutput." ;
+    sh:class prophet:Event ;
+    sh:message "An Action must produce exactly one Event." ;
   ] .
 
 prophet:ActionInputOwnershipShape a sh:NodeShape ;
@@ -769,14 +763,13 @@ prophet:ActionInputOwnershipShape a sh:NodeShape ;
     sh:message "Each ActionInput must be referenced by exactly one Action via acceptsInput." ;
   ] .
 
-prophet:ActionOutputOwnershipShape a sh:NodeShape ;
-  sh:targetClass prophet:ActionOutput ;
+prophet:ActionEventOwnershipShape a sh:NodeShape ;
+  sh:targetClass prophet:Event ;
   sh:property [
-    sh:path [ sh:inversePath prophet:producesOutput ] ;
-    sh:minCount 1 ;
+    sh:path [ sh:inversePath prophet:producesEvent ] ;
     sh:maxCount 1 ;
     sh:class prophet:Action ;
-    sh:message "Each ActionOutput must be referenced by exactly one Action via producesOutput." ;
+    sh:message "Each Event may be referenced by at most one Action via producesEvent." ;
   ] .
 
 # --- 9. KeyDefinition validation (ordered only) ---
@@ -979,17 +972,6 @@ prophet:ActionInputClosedShape a sh:NodeShape ;
   sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
   sh:property [ sh:path prophet:hasProperty ; sh:class prophet:PropertyDefinition ] ;
   sh:message "ActionInput is closed: only declared schema predicates are permitted." .
-
-prophet:ActionOutputClosedShape a sh:NodeShape ;
-  sh:targetClass prophet:ActionOutput ;
-  sh:closed true ;
-  sh:ignoredProperties ( rdf:type rdfs:label rdfs:comment owl:sameAs ) ;
-  sh:property [ sh:path prophet:name ; sh:minCount 1 ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
-  sh:property [ sh:path prophet:description ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
-  sh:property [ sh:path prophet:documentation ; sh:maxCount 1 ; sh:datatype xsd:string ] ;
-  sh:property [ sh:path prophet:inLocalOntology ; sh:maxCount 1 ; sh:class prophet:LocalOntology ] ;
-  sh:property [ sh:path prophet:hasProperty ; sh:class prophet:PropertyDefinition ] ;
-  sh:message "ActionOutput is closed: only declared schema predicates are permitted." .
 
 prophet:SignalClosedShape a sh:NodeShape ;
   sh:targetClass prophet:Signal ;

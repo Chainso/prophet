@@ -87,6 +87,10 @@ def _snake_case(value: str) -> str:
     return normalized.strip("_").lower()
 
 
+def transition_event_name(object_name: str, transition_name: str) -> str:
+    return f"{object_name}{_pascal_case(transition_name)}Transition"
+
+
 def _extract_explicit_ids(lines: List[Tuple[int, str]]) -> set[str]:
     ids: set[str] = set()
     for _, line in lines:
@@ -127,7 +131,6 @@ def parse_ontology(text: str) -> Ontology:
     objects: List[ObjectDef] = []
     structs: List[StructDef] = []
     action_inputs: List[ActionShapeDef] = []
-    action_outputs: List[ActionShapeDef] = []
     actions: List[ActionDef] = []
     events: List[EventDef] = []
     triggers: List[TriggerDef] = []
@@ -176,12 +179,12 @@ def parse_ontology(text: str) -> Ontology:
         m = re.match(r"^action\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            action_def, inline_input, inline_output = parse_action_block(p, m.group(1), ln, id_allocator)
+            action_def, inline_input, inline_output_event = parse_action_block(p, m.group(1), ln, id_allocator)
             actions.append(action_def)
             if inline_input is not None:
                 action_inputs.append(inline_input)
-            if inline_output is not None:
-                action_outputs.append(inline_output)
+            if inline_output_event is not None:
+                events.append(inline_output_event)
             continue
 
         m = re.match(r"^signal\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
@@ -212,7 +215,6 @@ def parse_ontology(text: str) -> Ontology:
         objects=objects,
         structs=structs,
         action_inputs=action_inputs,
-        action_outputs=action_outputs,
         actions=actions,
         events=events,
         triggers=triggers,
@@ -566,14 +568,14 @@ def parse_action_block(
     name: str,
     block_line: int,
     id_allocator: IdAllocator,
-) -> Tuple[ActionDef, Optional[ActionShapeDef], Optional[ActionShapeDef]]:
+) -> Tuple[ActionDef, Optional[ActionShapeDef], Optional[EventDef]]:
     a_id: Optional[str] = None
     kind: Optional[str] = None
     input_shape: Optional[str] = None
-    output_shape: Optional[str] = None
+    produces_event: Optional[str] = None
     description: Optional[str] = None
     inline_input: Optional[ActionShapeDef] = None
-    inline_output: Optional[ActionShapeDef] = None
+    inline_output_event: Optional[EventDef] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -605,17 +607,31 @@ def parse_action_block(
             continue
         if line == "output {":
             p.pop()
-            if output_shape is not None:
+            if produces_event is not None:
                 raise ProphetError(f"Action {name} defines output more than once (line {ln})")
-            output_shape = f"{_pascal_case(name)}Result"
-            inline_output = parse_inline_action_shape_block(
+            produces_event = f"{_pascal_case(name)}Result"
+            inline_output_event = parse_inline_signal_block(
                 p,
-                output_shape,
+                produces_event,
                 ln,
                 f"action {name} output",
                 id_allocator,
-                f"aout_{name}",
+                f"sig_action_{name}",
             )
+            continue
+        m = re.match(r"^output\s+signal\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
+        if m:
+            p.pop()
+            if produces_event is not None:
+                raise ProphetError(f"Action {name} defines output more than once (line {ln})")
+            produces_event = m.group(1)
+            continue
+        m = re.match(r"^output\s+transition\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)$", line)
+        if m:
+            p.pop()
+            if produces_event is not None:
+                raise ProphetError(f"Action {name} defines output more than once (line {ln})")
+            produces_event = transition_event_name(m.group(1), m.group(2))
             continue
         if line.startswith("input "):
             raise ProphetError(
@@ -623,7 +639,7 @@ def parse_action_block(
             )
         if line.startswith("output "):
             raise ProphetError(
-                f"Action {name} output must be declared as 'output {{ ... }}' (line {ln})"
+                f"Action {name} output must be one of 'output {{ ... }}', 'output signal <SignalName>', or 'output transition <ObjectName>.<TransitionName>' (line {ln})"
             )
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
@@ -632,7 +648,7 @@ def parse_action_block(
             continue
         raise ProphetError(f"Unexpected action line {ln}: {line}")
 
-    if kind is None or input_shape is None or output_shape is None:
+    if kind is None or input_shape is None or produces_event is None:
         raise ProphetError(f"Action {name} missing kind/input/output (line {block_line})")
     if a_id is None:
         a_id = id_allocator.generate(f"act_{name}")
@@ -642,12 +658,57 @@ def parse_action_block(
             id=a_id,
             kind=kind,
             input_shape=input_shape,
-            output_shape=output_shape,
+            produces_event=produces_event,
             description=description,
             line=block_line,
         ),
         inline_input,
-        inline_output,
+        inline_output_event,
+    )
+
+
+def parse_inline_signal_block(
+    p: Parser,
+    signal_name: str,
+    block_line: int,
+    block_label: str,
+    id_allocator: IdAllocator,
+    id_base: str,
+) -> EventDef:
+    signal_id: Optional[str] = None
+    fields: List[FieldDef] = []
+    description: Optional[str] = None
+    while not p.eof():
+        ln, line = p.peek()
+        if line == "}":
+            p.pop()
+            break
+        if re.match(r"^id\s+\".*\"$", line):
+            _, row = p.pop()
+            signal_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(signal_id)
+            continue
+        m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
+        if m:
+            p.pop()
+            fields.append(parse_field_block(p, m.group(1), ln, id_allocator, id_base))
+            continue
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
+        raise ProphetError(f"Unexpected {block_label} line {ln}: {line}")
+
+    if signal_id is None:
+        signal_id = id_allocator.generate(id_base)
+    return EventDef(
+        name=signal_name,
+        id=signal_id,
+        kind="signal",
+        fields=fields,
+        description=description,
+        line=block_line,
     )
 
 

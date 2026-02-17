@@ -20,6 +20,8 @@ Prophet treats that as a modeling problem, not just a coding problem. You define
 
 The result is not a rigid platform. Teams can stay polyglot and still keep one coherent domain model across Java, Node, and Python services.
 
+Action outputs are modeled as events: each action produces exactly one `signal` or `transition` event.
+
 ## Why This Matters for Systems Engineering
 
 Reliability problems in large systems often begin as language problems. Team A uses one definition. Team B uses another. Both are reasonable on their own, but the integration breaks.

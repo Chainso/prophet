@@ -47,6 +47,12 @@ ontology CommerceLocal {
     field totalAmount { type decimal }
     field discountCode { type string optional }
     field tags { type string[] optional }
+    state pending { initial }
+    state approved {}
+    transition approve {
+      from pending
+      to approved
+    }
   }
 
   struct ShippingAddress {
@@ -64,7 +70,6 @@ ontology CommerceLocal {
     }
     output {
       field order { type ref(Order) }
-      field currentState { type string }
     }
   }
 
@@ -74,6 +79,14 @@ ontology CommerceLocal {
   }
 }
 ```
+
+Action output forms:
+- `output { ... }` for inline signal payloads (derived event `<ActionName>Result`)
+- `output signal <SignalName>`
+- `output transition <ObjectName>.<TransitionName>`
+
+Reserved field name:
+- `state` is reserved and cannot be declared manually in DSL fields.
 
 ## 4. Configure Generation
 

@@ -78,7 +78,7 @@ class ActionDef:
     id: str
     kind: str
     input_shape: str
-    output_shape: str
+    produces_event: str
     description: Optional[str]
     line: int
 
@@ -122,7 +122,6 @@ class Ontology:
     objects: List[ObjectDef] = field(default_factory=list)
     structs: List[StructDef] = field(default_factory=list)
     action_inputs: List[ActionShapeDef] = field(default_factory=list)
-    action_outputs: List[ActionShapeDef] = field(default_factory=list)
     actions: List[ActionDef] = field(default_factory=list)
     events: List[EventDef] = field(default_factory=list)
     triggers: List[TriggerDef] = field(default_factory=list)

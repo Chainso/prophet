@@ -175,8 +175,8 @@ def build_query_contracts(ir: Dict[str, Any]) -> List[Dict[str, Any]]:
         if obj.get("states"):
             filters.append(
                 {
-                    "field_id": "__current_state__",
-                    "field_name": "currentState",
+                    "field_id": "__state__",
+                    "field_name": "state",
                     "operators": ["eq", "in"],
                 }
             )
@@ -313,7 +313,7 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
     def compare_named_list(kind: str, old_list: List[Dict[str, Any]], new_list: List[Dict[str, Any]]) -> None:
         def comparable_payload(item: Dict[str, Any]) -> Dict[str, Any]:
             if kind == "action":
-                keep = ("id", "name", "kind", "input_shape_id", "output_shape_id")
+                keep = ("id", "name", "kind", "input_shape_id", "output_event_id")
                 return {k: item.get(k) for k in keep}
             if kind == "event":
                 keep = (
@@ -321,7 +321,6 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
                     "name",
                     "kind",
                     "fields",
-                    "output_shape_id",
                     "object_id",
                     "transition_id",
                     "from_state_id",
@@ -355,7 +354,6 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
 
     compare_action_shape_list("struct", old_ir.get("structs", []), new_ir.get("structs", []))
     compare_action_shape_list("action_input", old_ir.get("action_inputs", []), new_ir.get("action_inputs", []))
-    compare_action_shape_list("action_output", old_ir.get("action_outputs", []), new_ir.get("action_outputs", []))
     compare_named_list("action", old_ir.get("actions", []), new_ir.get("actions", []))
     compare_named_list("event", old_ir.get("events", []), new_ir.get("events", []))
     compare_named_list("trigger", old_ir.get("triggers", []), new_ir.get("triggers", []))

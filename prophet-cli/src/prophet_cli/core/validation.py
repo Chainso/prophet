@@ -11,6 +11,8 @@ from .models import TypeDef
 from .parser import resolve_type_descriptor
 from .errors import ProphetError
 
+RESERVED_FIELD_NAMES = {"state"}
+
 
 def _pascal_case(value: str) -> str:
     chunks = [part for part in value.replace("-", "_").split("_") if part]
@@ -85,10 +87,6 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         id_entries.append((f"actionInput {shape.name}", shape.id, shape.line))
         for f in shape.fields:
             id_entries.append((f"field {shape.name}.{f.name}", f.id, f.line))
-    for shape in ont.action_outputs:
-        id_entries.append((f"actionOutput {shape.name}", shape.id, shape.line))
-        for f in shape.fields:
-            id_entries.append((f"field {shape.name}.{f.name}", f.id, f.line))
     for a in ont.actions:
         id_entries.append((f"action {a.name}", a.id, a.line))
     for e in ont.events:
@@ -110,7 +108,6 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
     object_names = {o.name: o for o in ont.objects}
     struct_names = {s.name: s for s in ont.structs}
     action_input_names = {s.name: s for s in ont.action_inputs}
-    action_output_names = {s.name: s for s in ont.action_outputs}
     action_names = {a.name: a for a in ont.actions}
 
     for t in ont.types:
@@ -124,6 +121,10 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                     f"line {key_def.line}: object {o.name} key kind '{key_def.kind}' is invalid; expected primary or display"
                 )
         for f in o.fields:
+            if f.name in RESERVED_FIELD_NAMES:
+                errors.append(
+                    f"line {f.line}: field {o.name}.{f.name} uses reserved name '{f.name}'"
+                )
             if f.key is not None and f.key not in {"primary", "display"}:
                 errors.append(
                     f"line {f.line}: field {o.name}.{f.name} key kind '{f.key}' is invalid; expected primary or display"
@@ -189,6 +190,10 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
 
     for s in ont.structs:
         for f in s.fields:
+            if f.name in RESERVED_FIELD_NAMES:
+                errors.append(
+                    f"line {f.line}: field {s.name}.{f.name} uses reserved name '{f.name}'"
+                )
             if f.key is not None:
                 errors.append(f"line {f.line}: struct {s.name}.{f.name} must not declare key")
             type_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
@@ -197,6 +202,10 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
 
     def validate_action_shape_fields(kind: str, shape_name: str, fields: List[FieldDef]) -> None:
         for f in fields:
+            if f.name in RESERVED_FIELD_NAMES:
+                errors.append(
+                    f"line {f.line}: field {shape_name}.{f.name} uses reserved name '{f.name}'"
+                )
             if f.key is not None:
                 errors.append(
                     f"line {f.line}: {kind} {shape_name}.{f.name} must not declare key (keys are only valid on object fields)"
@@ -208,16 +217,11 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
     for shape in ont.action_inputs:
         validate_action_shape_fields("actionInput", shape.name, shape.fields)
 
-    for shape in ont.action_outputs:
-        validate_action_shape_fields("actionOutput", shape.name, shape.fields)
-
     for a in ont.actions:
         if a.kind not in {"process", "workflow"}:
             errors.append(f"line {a.line}: action {a.name} kind must be process or workflow")
         if a.input_shape not in action_input_names:
             errors.append(f"line {a.line}: action {a.name} input shape '{a.input_shape}' not found")
-        if a.output_shape not in action_output_names:
-            errors.append(f"line {a.line}: action {a.name} output shape '{a.output_shape}' not found")
 
     for signal in ont.events:
         if signal.kind != "signal":
@@ -229,13 +233,6 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
     event_name_sources: Dict[str, str] = {}
     for signal in ont.events:
         event_name_sources[signal.name] = f"signal {signal.name}"
-    for shape in ont.action_outputs:
-        existing = event_name_sources.get(shape.name)
-        if existing is not None:
-            errors.append(
-                f"line {shape.line}: actionOutput {shape.name} collides with event name from {existing}"
-            )
-        event_name_sources[shape.name] = f"actionOutput {shape.name}"
     for obj in ont.objects:
         for tr in obj.transitions:
             derived_name = transition_event_name(obj.name, tr.name)
@@ -245,6 +242,10 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                     f"line {tr.line}: transition event name '{derived_name}' collides with {existing}"
                 )
             event_name_sources[derived_name] = f"transition {obj.name}.{tr.name}"
+
+    for a in ont.actions:
+        if a.produces_event not in event_name_sources:
+            errors.append(f"line {a.line}: action {a.name} output event '{a.produces_event}' not found")
 
     for tr in ont.triggers:
         if tr.event_name not in event_name_sources:

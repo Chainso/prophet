@@ -85,11 +85,6 @@ def _build_id_map(ontology: Ontology, source_lines: List[str]) -> Dict[int, str]
         for field in item.fields:
             id_map[field.line] = field.id
 
-    for item in ontology.action_outputs:
-        id_map[item.line] = item.id
-        for field in item.fields:
-            id_map[field.line] = field.id
-
     for item in ontology.actions:
         id_map[item.line] = item.id
 

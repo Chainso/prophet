@@ -14,7 +14,6 @@ REQUIRED_TOP_LEVEL_KEYS = (
     "objects",
     "structs",
     "action_inputs",
-    "action_outputs",
     "actions",
     "events",
     "triggers",
@@ -27,7 +26,7 @@ class ActionContractView:
     name: str
     kind: str
     input_shape_id: str
-    output_shape_id: str
+    output_event_id: str
 
 
 @dataclass(frozen=True)
@@ -68,7 +67,6 @@ class IRReader:
             "objects",
             "structs",
             "action_inputs",
-            "action_outputs",
             "actions",
             "events",
             "triggers",
@@ -112,9 +110,6 @@ class IRReader:
     def action_inputs(self) -> List[Dict[str, Any]]:
         return list(self._ir.get("action_inputs", []))
 
-    def action_outputs(self) -> List[Dict[str, Any]]:
-        return list(self._ir.get("action_outputs", []))
-
     def actions(self) -> List[Dict[str, Any]]:
         return list(self._ir.get("actions", []))
 
@@ -136,7 +131,7 @@ class IRReader:
                     name=str(action.get("name", "")),
                     kind=str(action.get("kind", "")),
                     input_shape_id=str(action.get("input_shape_id", "")),
-                    output_shape_id=str(action.get("output_shape_id", "")),
+                    output_event_id=str(action.get("output_event_id", "")),
                 )
             )
         return contracts
