@@ -184,29 +184,31 @@ jobs:
 
       - name: Smoke import Python generated app wiring
         run: |
-          PYTHONPATH=examples/python/prophet_example_fastapi_sqlalchemy/src:examples/python/prophet_example_fastapi_sqlalchemy/gen/python/src \
+          PROPHET_EVENTS_RUNTIME_PYTHONPATH=prophet-lib/python/src
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_fastapi_sqlalchemy/src:examples/python/prophet_example_fastapi_sqlalchemy/gen/python/src \
             python -c "import app"
-          PYTHONPATH=examples/python/prophet_example_fastapi_sqlmodel/src:examples/python/prophet_example_fastapi_sqlmodel/gen/python/src \
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_fastapi_sqlmodel/src:examples/python/prophet_example_fastapi_sqlmodel/gen/python/src \
             python -c "import app"
-          PYTHONPATH=examples/python/prophet_example_flask_sqlalchemy/src:examples/python/prophet_example_flask_sqlalchemy/gen/python/src \
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_flask_sqlalchemy/src:examples/python/prophet_example_flask_sqlalchemy/gen/python/src \
             python -c "import app"
-          PYTHONPATH=examples/python/prophet_example_flask_sqlmodel/src:examples/python/prophet_example_flask_sqlmodel/gen/python/src \
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_flask_sqlmodel/src:examples/python/prophet_example_flask_sqlmodel/gen/python/src \
             python -c "import app"
-          PYTHONPATH=examples/python/prophet_example_django/src:examples/python/prophet_example_django/gen/python/src \
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_django/src:examples/python/prophet_example_django/gen/python/src \
             DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
             python -c "import django; django.setup(); from prophet_example_django.app import initialize_generated_runtime; initialize_generated_runtime()"
 
       - name: Run Python HTTP integration tests
         run: |
-          PYTHONPATH=examples/python/prophet_example_fastapi_sqlalchemy/src:examples/python/prophet_example_fastapi_sqlalchemy/gen/python/src \
+          PROPHET_EVENTS_RUNTIME_PYTHONPATH=prophet-lib/python/src
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_fastapi_sqlalchemy/src:examples/python/prophet_example_fastapi_sqlalchemy/gen/python/src \
             python -m unittest discover -s examples/python/prophet_example_fastapi_sqlalchemy/tests -p 'test_*.py' -v
-          PYTHONPATH=examples/python/prophet_example_fastapi_sqlmodel/src:examples/python/prophet_example_fastapi_sqlmodel/gen/python/src \
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_fastapi_sqlmodel/src:examples/python/prophet_example_fastapi_sqlmodel/gen/python/src \
             python -m unittest discover -s examples/python/prophet_example_fastapi_sqlmodel/tests -p 'test_*.py' -v
-          PYTHONPATH=examples/python/prophet_example_flask_sqlalchemy/src:examples/python/prophet_example_flask_sqlalchemy/gen/python/src \
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_flask_sqlalchemy/src:examples/python/prophet_example_flask_sqlalchemy/gen/python/src \
             python -m unittest discover -s examples/python/prophet_example_flask_sqlalchemy/tests -p 'test_*.py' -v
-          PYTHONPATH=examples/python/prophet_example_flask_sqlmodel/src:examples/python/prophet_example_flask_sqlmodel/gen/python/src \
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_flask_sqlmodel/src:examples/python/prophet_example_flask_sqlmodel/gen/python/src \
             python -m unittest discover -s examples/python/prophet_example_flask_sqlmodel/tests -p 'test_*.py' -v
-          PYTHONPATH=examples/python/prophet_example_django/src:examples/python/prophet_example_django/gen/python/src \
+          PYTHONPATH=${PROPHET_EVENTS_RUNTIME_PYTHONPATH}:examples/python/prophet_example_django/src:examples/python/prophet_example_django/gen/python/src \
             DJANGO_SETTINGS_MODULE=prophet_example_django.settings \
             python -m unittest discover -s examples/python/prophet_example_django/tests -p 'test_*.py' -v
 
