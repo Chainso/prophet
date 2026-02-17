@@ -60,6 +60,10 @@ jobs:
         working-directory: examples/java/prophet_example_spring
         run: prophet gen --wire-gradle
 
+      - name: Publish prophet-lib Java runtime to local Maven
+        working-directory: examples/java/prophet_example_spring
+        run: ./gradlew -p ../../../prophet-lib/java publishToMavenLocal
+
       - name: Verify generated outputs are committed
         working-directory: examples/java/prophet_example_spring
         run: prophet generate --verify-clean
