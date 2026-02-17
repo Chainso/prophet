@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.1",
+  "toolchain_version": "0.17.2",
   "stack_id": "node_express_mongoose",
-  "signature": "90ebd846e799609d5e530a2f10fc42f3b995efb2ca4a6947fe6f5345a41a5313",
-  "ir_hash": "f5f89792c05e02eac9314deac58d0ac569bc6c6283a65afb6a0bec17f3eabb47",
+  "signature": "a55c136f9ccbc750b61f1305393c3fa9cb568d0fc0d56b6f7316bfc0bec63107",
+  "ir_hash": "393e65437191a52214aff7795219edc9a2667e6a2b2cb558ead12e4769f1545b",
   "out_dir": "gen"
 }

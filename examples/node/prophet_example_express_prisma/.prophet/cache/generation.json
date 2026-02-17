@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.1",
+  "toolchain_version": "0.17.2",
   "stack_id": "node_express_prisma",
-  "signature": "c2145e03f809202ae1482186004405b6490f37366d7b37abce61582bd90f0e2f",
-  "ir_hash": "f5f89792c05e02eac9314deac58d0ac569bc6c6283a65afb6a0bec17f3eabb47",
+  "signature": "4f4c671598bee42b88bd7ea098d6428ee407d9d42e3e681f043091914fa866d7",
+  "ir_hash": "393e65437191a52214aff7795219edc9a2667e6a2b2cb558ead12e4769f1545b",
   "out_dir": "gen"
 }

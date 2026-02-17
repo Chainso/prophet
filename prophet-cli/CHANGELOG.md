@@ -4,6 +4,13 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.17.2] - 2026-02-17
+
+### Changed
+- Updated `publish-pypi` validation to publish `prophet-lib` Java runtime to `mavenLocal` before compiling generated Spring sources, ensuring local runtime dependency resolution succeeds.
+- Bumped `prophet-lib` runtime packages to `0.2.8` and refreshed runtime version references.
+- Toolchain/package version advanced to `0.17.2`.
+
 ## [0.17.1] - 2026-02-17
 
 ### Changed
