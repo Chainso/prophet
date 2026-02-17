@@ -4,6 +4,13 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.17.3] - 2026-02-17
+
+### Changed
+- Updated `publish-pypi` Python smoke-import and integration test steps to prepend `prophet-lib/python/src` to `PYTHONPATH`, ensuring generated modules can import `prophet_events_runtime` during CLI release validation.
+- Bumped `prophet-lib` runtime packages to `0.2.9` and refreshed runtime version references.
+- Toolchain/package version advanced to `0.17.3`.
+
 ## [0.17.2] - 2026-02-17
 
 ### Changed

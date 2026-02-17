@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.2",
+  "toolchain_version": "0.17.3",
   "stack": {
     "id": "python_flask_sqlmodel",
     "language": "python",
     "framework": "flask",
     "orm": "sqlmodel"
   },
-  "ir_hash": "9a9ccb55f8c83bdca4d89125599bd614eb41225cc8f7eb91a9069cc67b546c3c",
+  "ir_hash": "fb727d8cbda2878f1a0c25a6573b0bfbcec31ec3d2c398c0dd83cb46dae67ecf",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "b0fff1250e50d3023b1a130e2c612b0e9fe30f9c707228439efab302c56a6ae3"
+      "sha256": "f8502eb94edb67bdf87e5b81e11022a426b0eff2b21f4819b1a9469a3a2343a0"
     },
     {
       "path": "gen/python/src/generated/__init__.py",

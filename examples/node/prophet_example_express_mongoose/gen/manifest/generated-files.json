@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.2",
+  "toolchain_version": "0.17.3",
   "stack": {
     "id": "node_express_mongoose",
     "language": "node",
     "framework": "express",
     "orm": "mongoose"
   },
-  "ir_hash": "393e65437191a52214aff7795219edc9a2667e6a2b2cb558ead12e4769f1545b",
+  "ir_hash": "2123a3f5bf0bbbb631fcb229d97879afdb18db3986170c45a425d86903382335",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/node-express/package.json",
-      "sha256": "2556bcb8945ef6aaa89f1860850ed229fa31decd72507e40ff9a2254ae848aec"
+      "sha256": "9976993aa2b637316c4520befb11ad89cc5848b9314ac33d84a0e991fcbac8c2"
     },
     {
       "path": "gen/node-express/src/generated/action-handlers.ts",

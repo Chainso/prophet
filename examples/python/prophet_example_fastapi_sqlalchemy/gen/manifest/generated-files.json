@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.17.2",
+  "toolchain_version": "0.17.3",
   "stack": {
     "id": "python_fastapi_sqlalchemy",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "9a9ccb55f8c83bdca4d89125599bd614eb41225cc8f7eb91a9069cc67b546c3c",
+  "ir_hash": "fb727d8cbda2878f1a0c25a6573b0bfbcec31ec3d2c398c0dd83cb46dae67ecf",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "25afbfa08084a3c11d991a8e46ca67f9d96295034023299ee6fee7a24654f9de"
+      "sha256": "1814792fd7b091bcc1c8b16efeb51e9b332983c5831dc833449fe37ac0b1ebf9"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
