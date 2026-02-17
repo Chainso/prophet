@@ -86,6 +86,12 @@ When adding/changing generation targets, update these surfaces in the same chang
 - [prophet-lib/specs/wire-contract.md](prophet-lib/specs/wire-contract.md)
 - [prophet-lib/specs/wire-event-envelope.schema.json](prophet-lib/specs/wire-event-envelope.schema.json)
 
+When changing action output or transition behavior, also verify docs cover:
+- event-based action outputs (`output {}`, `output signal`, `output transition`)
+- reserved DSL field name `state`
+- transition drafts (`fromState` / `toState` + implicit primary keys)
+- generated transition validators and `TransitionValidationResult` runtime contracts
+
 ## Open Items (Good First/Next Contributions)
 
 ### Migration and Schema Evolution

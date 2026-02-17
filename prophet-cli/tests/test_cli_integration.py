@@ -185,7 +185,7 @@ dependencies {
             self.assertIn('id "fld_obj_order_order_id"', hydrated)
             self.assertIn('id "act_create_order"', hydrated)
             self.assertIn('id "ain_create_order"', hydrated)
-            self.assertIn('id "aout_create_order"', hydrated)
+            self.assertIn('id "sig_action_create_order"', hydrated)
 
             run_cli(root, "validate")
             self.assertEqual(hydrated, ontology_path.read_text(encoding="utf-8"))

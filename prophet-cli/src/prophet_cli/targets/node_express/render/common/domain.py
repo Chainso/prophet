@@ -62,7 +62,7 @@ def _render_domain_types(ir: Dict[str, Any]) -> str:
             if isinstance(field, dict):
                 lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
         if states:
-            lines.append(f"  currentState: {obj_name}State;")
+            lines.append(f"  state: {obj_name}State;")
         lines.append("}")
         lines.append("")
 

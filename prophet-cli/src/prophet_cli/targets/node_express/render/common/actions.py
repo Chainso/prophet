@@ -30,17 +30,5 @@ def _render_action_contracts(ir: Dict[str, Any]) -> str:
         lines.append("}")
         lines.append("")
 
-    for shape in sorted(ir.get("action_outputs", []), key=lambda item: str(item.get("id", ""))):
-        if not isinstance(shape, dict):
-            continue
-        name = _pascal_case(str(shape.get("name", "ActionOutput")))
-        lines.append(f"export interface {name} {{")
-        for field in list(shape.get("fields", [])):
-            if isinstance(field, dict):
-                lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
-        lines.append("}")
-        lines.append("")
-
     return "\n".join(lines).replace("import type {\n  \n} from './domain';\n\n", "")
-
 

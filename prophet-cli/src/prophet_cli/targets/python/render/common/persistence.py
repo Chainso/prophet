@@ -39,11 +39,19 @@ def render_persistence_contracts(ir: Dict[str, Any], *, async_mode: bool) -> str
             lines.append(f"    async def query(self, filter: {query_filter_name}, page: int, size: int) -> PagedResult: ...")
             lines.append(f"    async def get_by_id(self, id: {pk_name}) -> Optional[{obj_name}]: ...")
             lines.append(f"    async def save(self, item: {obj_name}) -> {obj_name}: ...")
+            if obj.get("states"):
+                lines.append(
+                    f"    async def apply_transition(self, id: {pk_name}, expected_state: {obj_name}State, next_state: {obj_name}State, transition_id: str) -> Optional[{obj_name}]: ..."
+                )
         else:
             lines.append(f"    def list(self, page: int, size: int) -> PagedResult: ...")
             lines.append(f"    def query(self, filter: {query_filter_name}, page: int, size: int) -> PagedResult: ...")
             lines.append(f"    def get_by_id(self, id: {pk_name}) -> Optional[{obj_name}]: ...")
             lines.append(f"    def save(self, item: {obj_name}) -> {obj_name}: ...")
+            if obj.get("states"):
+                lines.append(
+                    f"    def apply_transition(self, id: {pk_name}, expected_state: {obj_name}State, next_state: {obj_name}State, transition_id: str) -> Optional[{obj_name}]: ..."
+                )
         lines.append("")
 
     lines.append("class Repositories(Protocol):")

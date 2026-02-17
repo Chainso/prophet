@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from ..support import _camel_case
 from ..support import _object_primary_key_fields
 from ..support import _pascal_case
-from ..support import _render_property
 from ..support import _ts_type_for_descriptor
 
 def _render_persistence_contracts(ir: Dict[str, Any]) -> str:
@@ -57,6 +56,13 @@ def _render_persistence_contracts(ir: Dict[str, Any]) -> str:
         lines.append(f"  getById(id: {id_name}): Promise<Domain.{obj_name} | null>;")
         lines.append(f"  query(filter: Filters.{obj_name}QueryFilter, page: number, size: number): Promise<Page<Domain.{obj_name}>>;")
         lines.append(f"  save(item: Domain.{obj_name}): Promise<Domain.{obj_name}>;")
+        if obj.get("states"):
+            lines.append("  applyTransition(")
+            lines.append(f"    id: {id_name},")
+            lines.append(f"    expectedState: Domain.{obj_name}State,")
+            lines.append(f"    nextState: Domain.{obj_name}State,")
+            lines.append("    transitionId: string,")
+            lines.append(f"  ): Promise<Domain.{obj_name} | null>;")
         lines.append("}")
         lines.append("")
 
@@ -67,4 +73,3 @@ def _render_persistence_contracts(ir: Dict[str, Any]) -> str:
     lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
-

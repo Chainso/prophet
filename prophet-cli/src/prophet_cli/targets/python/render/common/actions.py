@@ -42,23 +42,4 @@ def render_action_contracts(ir: Dict[str, Any]) -> str:
                 )
         lines.append("")
 
-    for shape in _sort_dict_entries(list(ir.get("action_outputs", []))):
-        name = _pascal_case(str(shape.get("name", "ActionOutput")))
-        lines.append("@dataclass(kw_only=True)")
-        lines.append(f"class {name}:")
-        fields = [field for field in shape.get("fields", []) if isinstance(field, dict)]
-        if not fields:
-            lines.append("    pass")
-        else:
-            for field in fields:
-                lines.append(
-                    _render_dataclass_field(
-                        field,
-                        type_by_id=type_by_id,
-                        object_by_id=object_by_id,
-                        struct_by_id=struct_by_id,
-                    )
-                )
-        lines.append("")
-
     return "\n".join(lines).rstrip() + "\n"

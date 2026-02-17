@@ -1,6 +1,8 @@
 package io.prophet.events.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -35,5 +37,16 @@ class EventPublisherRuntimeTest {
     @Test
     void eventIdHelperProducesValue() {
         assertFalse(EventIds.createEventId().isBlank());
+    }
+
+    @Test
+    void transitionValidationResultHelpers() {
+        TransitionValidationResult passed = TransitionValidationResult.passed();
+        assertTrue(passed.passesValidation());
+        assertNull(passed.failureReason());
+
+        TransitionValidationResult failed = TransitionValidationResult.failed("blocked");
+        assertFalse(failed.passesValidation());
+        assertTrue("blocked".equals(failed.failureReason()));
     }
 }

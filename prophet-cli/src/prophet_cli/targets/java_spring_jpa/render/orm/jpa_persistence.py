@@ -218,8 +218,8 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
                 }
             )
             lines.append("    @Enumerated(EnumType.STRING)")
-            lines.append("    @Column(name = \"current_state\", nullable = false)")
-            lines.append(f"    private {obj['name']}State currentState;")
+            lines.append("    @Column(name = \"__prophet_state\", nullable = false)")
+            lines.append(f"    private {obj['name']}State state;")
             lines.append("")
 
         lines.extend(
@@ -263,12 +263,12 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
             lines.append("")
 
         if obj.get("states"):
-            lines.append(f"    public {obj['name']}State getCurrentState() {{")
-            lines.append("        return currentState;")
+            lines.append(f"    public {obj['name']}State getState() {{")
+            lines.append("        return state;")
             lines.append("    }")
             lines.append("")
-            lines.append(f"    public void setCurrentState({obj['name']}State currentState) {{")
-            lines.append("        this.currentState = currentState;")
+            lines.append(f"    public void setState({obj['name']}State state) {{")
+            lines.append("        this.state = state;")
             lines.append("    }")
             lines.append("")
 

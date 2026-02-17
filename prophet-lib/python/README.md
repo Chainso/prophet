@@ -14,6 +14,7 @@ Main project repository:
 It defines:
 - an async `EventPublisher` protocol
 - a canonical `EventWireEnvelope` dataclass
+- `TransitionValidationResult` for generated transition-validator hooks
 - utility helpers (`create_event_id`, `now_iso`)
 - sync bridge helpers (`publish_sync`, `publish_batch_sync`)
 - a `NoOpEventPublisher` for local wiring and tests
@@ -59,6 +60,7 @@ Exports:
 - `now_iso()`
 - `publish_sync(publisher, envelope)`
 - `publish_batch_sync(publisher, envelopes)`
+- `TransitionValidationResult`
 
 ## Implement a Platform Publisher
 

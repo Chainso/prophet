@@ -56,7 +56,7 @@ def _render_query_filters(ir: Dict[str, Any]) -> str:
                 continue
             field_id = str(item.get("field_id", ""))
             field_name = _camel_case(str(item.get("field_name", "field")))
-            if field_id == "__current_state__":
+            if field_id == "__state__":
                 ts_type = f"{obj_name}State"
             else:
                 field = fields_by_id.get(field_id, {})
@@ -182,4 +182,3 @@ def _render_query_routes(ir: Dict[str, Any]) -> str:
 
     lines.extend(["  return router;", "}", ""])
     return "\n".join(lines).rstrip() + "\n"
-

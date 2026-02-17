@@ -484,6 +484,7 @@ def parse_transition_block(
     t_id: Optional[str] = None
     from_state: Optional[str] = None
     to_state: Optional[str] = None
+    fields: List[FieldDef] = []
     description: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
@@ -505,6 +506,11 @@ def parse_transition_block(
             p.pop()
             to_state = m.group(1)
             continue
+        m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
+        if m:
+            p.pop()
+            fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"trans_{object_name}_{name}"))
+            continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -521,6 +527,7 @@ def parse_transition_block(
         id=t_id,
         from_state=from_state,
         to_state=to_state,
+        fields=fields,
         description=description,
         line=block_line,
     )

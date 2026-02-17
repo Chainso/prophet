@@ -40,6 +40,8 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 - When behavior changes, update docs and tests in the same change.
 - Action outputs are event-based: use `output { ... }`, `output signal <SignalName>`, or `output transition <Object>.<transition>`.
 - User-defined DSL field name `state` is reserved globally and must be rejected by validation.
+- Stateful persistence uses internal `__prophet_state` storage while generated domain/query contracts expose logical `state`.
+- Transition codegen must include per-object handler + validator seams and use runtime `TransitionValidationResult`.
 
 ## Commands
 

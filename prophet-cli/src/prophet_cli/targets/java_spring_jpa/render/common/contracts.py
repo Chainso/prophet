@@ -137,8 +137,6 @@ def _java_string_list_literal(values: List[str]) -> str:
 
 def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> None:
     action_inputs = state["action_inputs"]
-    action_outputs = state["action_outputs"]
-    action_output_by_id = state["action_output_by_id"]
     events = state["events"]
     object_by_id = state["object_by_id"]
     struct_by_id = state["struct_by_id"]
@@ -146,10 +144,9 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     base_package = state["base_package"]
     package_path = state["package_path"]
     schema_version = str(state.get("ontology_version", "1.0.0"))
-    action_output_names = {str(item.get("name", "")) for item in action_outputs if isinstance(item, dict)}
 
     # action contract records
-    action_shapes = sorted(action_inputs + action_outputs, key=lambda x: x["id"])
+    action_shapes = sorted(action_inputs, key=lambda x: x["id"])
     for shape in action_shapes:
         imports: set[str] = set()
         shape_fields: List[Tuple[str, str, bool]] = []
@@ -182,68 +179,35 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     domain_event_specs: List[Dict[str, Any]] = []
 
     for event in sorted(events, key=lambda x: x["id"]):
-        event_kind = str(event.get("kind", "signal"))
         event_name = str(event["name"])
-
-        if event_kind == "action_output":
-            output_shape = action_output_by_id.get(str(event.get("output_shape_id", "")))
-            if output_shape is None:
-                continue
-            payload_type = str(output_shape["name"])
-            ref_specs = _collect_event_ref_specs_for_fields(
-                [field for field in output_shape.get("fields", []) if isinstance(field, dict)],
-                object_by_id=object_by_id,
-                struct_by_id=struct_by_id,
-            )
-            domain_event_specs.append(
-                {
-                    "event_name": event_name,
-                    "payload_type": payload_type,
-                    "ref_specs": ref_specs,
-                }
-            )
-            continue
 
         event_fields: List[Tuple[str, str, bool]] = []
         event_imports: set[str] = set()
         event_field_descriptions: Dict[str, str] = {}
-        event_ref_specs: List[Dict[str, Any]] = []
-
-        if event_kind == "signal":
-            signal_fields = [field for field in event.get("fields", []) if isinstance(field, dict)]
-            event_ref_specs = _collect_event_ref_specs_for_fields(
-                signal_fields,
+        event_payload_fields = [field for field in event.get("fields", []) if isinstance(field, dict)]
+        event_ref_specs = _collect_event_ref_specs_for_fields(
+            event_payload_fields,
+            object_by_id=object_by_id,
+            struct_by_id=struct_by_id,
+        )
+        for f in event_payload_fields:
+            java_t = _java_event_type_for_descriptor(
+                f["type"],
+                type_by_id=type_by_id,
                 object_by_id=object_by_id,
                 struct_by_id=struct_by_id,
             )
-            for f in signal_fields:
-                java_t = _java_event_type_for_descriptor(
-                    f["type"],
-                    type_by_id=type_by_id,
-                    object_by_id=object_by_id,
-                    struct_by_id=struct_by_id,
-                )
-                add_java_imports_for_type(java_t, event_imports)
-                for target_id in object_ref_target_ids_for_type(f["type"]):
-                    target = object_by_id[target_id]
-                    event_imports.add(f"import {base_package}.generated.domain.{target['name']}RefOrObject;")
-                for target_struct_id in struct_target_ids_for_type(f["type"]):
-                    target_struct = struct_by_id[target_struct_id]
-                    event_imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
-                required = f.get("cardinality", {}).get("min", 0) > 0
-                event_fields.append((java_t, camel_case(f["name"]), required))
-                if f.get("description"):
-                    event_field_descriptions[camel_case(f["name"])] = str(f["description"])
-        elif event_kind == "transition":
-            object_id = event.get("object_id")
-            if object_id in object_by_id:
-                object_model = object_by_id[object_id]
-                object_ref_or_object_name = f"{object_model['name']}RefOrObject"
-                event_imports.add(f"import {base_package}.generated.domain.{object_ref_or_object_name};")
-                event_fields.append((object_ref_or_object_name, "objectRef", False))
-                event_field_descriptions["objectRef"] = (
-                    f"Reference or full {object_model['name']} instance associated with this transition."
-                )
+            add_java_imports_for_type(java_t, event_imports)
+            for target_id in object_ref_target_ids_for_type(f["type"]):
+                target = object_by_id[target_id]
+                event_imports.add(f"import {base_package}.generated.domain.{target['name']}RefOrObject;")
+            for target_struct_id in struct_target_ids_for_type(f["type"]):
+                target_struct = struct_by_id[target_struct_id]
+                event_imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
+            required = f.get("cardinality", {}).get("min", 0) > 0
+            event_fields.append((java_t, camel_case(f["name"]), required))
+            if f.get("description"):
+                event_field_descriptions[camel_case(f["name"])] = str(f["description"])
 
         event_record_src = render_java_record_with_builder(
             f"{base_package}.generated.events",
@@ -255,14 +219,13 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
         )
         files[f"src/main/java/{package_path}/generated/events/{event_name}.java"] = event_record_src
 
-        if event_kind == "signal":
-            domain_event_specs.append(
-                {
-                    "event_name": event_name,
-                    "payload_type": event_name,
-                    "ref_specs": event_ref_specs,
-                }
-            )
+        domain_event_specs.append(
+            {
+                "event_name": event_name,
+                "payload_type": event_name,
+                "ref_specs": event_ref_specs,
+            }
+        )
 
     if domain_event_specs:
         permits = ", ".join([f"{spec['event_name']}Event" for spec in domain_event_specs])
@@ -284,12 +247,8 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     for spec in domain_event_specs:
         event_name = str(spec["event_name"])
         payload_type = str(spec["payload_type"])
-        wrapper_imports = ""
-        if payload_type in action_output_names:
-            wrapper_imports = f"import {base_package}.generated.actions.{payload_type};\n\n"
         wrapper_src = (
             f"package {base_package}.generated.events;\n\n"
-            + wrapper_imports
             + f"public record {event_name}Event({payload_type} payload) implements DomainEvent {{\n"
             + "}\n"
         )

@@ -40,7 +40,7 @@ def render_sqlalchemy_models(ir: Dict[str, Any]) -> str:
         "",
         "from typing import Optional",
         "",
-        "from sqlalchemy import Boolean, Float, Integer, JSON, String",
+        "from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, func",
         "from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column",
         "",
         "class Base(DeclarativeBase):",
@@ -78,10 +78,38 @@ def render_sqlalchemy_models(ir: Dict[str, Any]) -> str:
         if states:
             initial = next((str(item.get("name", "")) for item in states if item.get("initial")), "")
             if initial:
-                lines.append(f"    currentState: Mapped[str] = mapped_column(String, nullable=False, default='{initial}')")
+                lines.append(f"    state: Mapped[str] = mapped_column('__prophet_state', String, nullable=False, default='{initial}')")
             else:
-                lines.append("    currentState: Mapped[str] = mapped_column(String, nullable=False)")
+                lines.append("    state: Mapped[str] = mapped_column('__prophet_state', String, nullable=False)")
         lines.append("")
+
+        if states:
+            history_model_name = f"{obj_name}StateHistoryModel"
+            history_table = f"{table_name}_state_history"
+            lines.append(f"class {history_model_name}(Base):")
+            lines.append(f"    __tablename__ = '{history_table}'")
+            lines.append("    historyId: Mapped[int] = mapped_column('history_id', Integer, primary_key=True, autoincrement=True)")
+            for pk_field in _object_primary_key_fields(obj):
+                pk_name = _camel_case(str(pk_field.get("name", "id")))
+                pk_type_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+                pk_col_type = _column_type_for_descriptor(pk_type_desc, type_by_id)
+                pk_hint = "object" if pk_col_type == "JSON" else "str"
+                if pk_col_type == "Boolean":
+                    pk_hint = "bool"
+                elif pk_col_type == "Integer":
+                    pk_hint = "int"
+                elif pk_col_type == "Float":
+                    pk_hint = "float"
+                lines.append(
+                    f"    {pk_name}: Mapped[{pk_hint}] = mapped_column({pk_col_type}, nullable=False)"
+                )
+            lines.append("    transitionId: Mapped[str] = mapped_column('transition_id', String, nullable=False)")
+            lines.append("    fromState: Mapped[str] = mapped_column('from_state', String, nullable=False)")
+            lines.append("    toState: Mapped[str] = mapped_column('to_state', String, nullable=False)")
+            lines.append(
+                "    occurredAt: Mapped[object] = mapped_column('occurred_at', DateTime, nullable=False, server_default=func.now())"
+            )
+            lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -105,7 +133,7 @@ def render_sqlalchemy_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
         "",
         "from typing import Callable, List, Optional",
         "",
-        "from sqlalchemy import func, select",
+        "from sqlalchemy import func, select, update",
         "from sqlalchemy.orm import Session",
         "",
         "from . import sqlalchemy_models as Models",
@@ -132,7 +160,7 @@ def render_sqlalchemy_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
             prop = _camel_case(str(field.get("name", "field")))
             lines.append(f"        {prop}=_serialize(item.{prop}),")
         if obj.get("states"):
-            lines.append("        currentState=item.currentState,")
+            lines.append("        state=item.state,")
         lines.append("    )")
         lines.append("")
 
@@ -150,7 +178,7 @@ def render_sqlalchemy_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
             else:
                 lines.append(f"        {prop}=record.{prop},")
         if obj.get("states"):
-            lines.append("        currentState=record.currentState,")
+            lines.append("        state=record.state,")
         lines.append("    )")
         lines.append("")
 
@@ -166,8 +194,8 @@ def render_sqlalchemy_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
         for filter_def in sorted([item for item in contract.get("filters", []) if isinstance(item, dict)], key=lambda item: str(item.get("field_name", ""))):
             field_name = _camel_case(str(filter_def.get("field_name", "field")))
             lines.append(f"        if filter.{field_name} is not None:")
-            if str(filter_def.get("field_id", "")) == "__current_state__":
-                target = "Models." + obj_name + "Model.currentState"
+            if str(filter_def.get("field_id", "")) == "__state__":
+                target = "Models." + obj_name + "Model.state"
             else:
                 target = "Models." + obj_name + "Model." + field_name
             lines.append(f"            if filter.{field_name}.eq is not None:")
@@ -229,6 +257,40 @@ def render_sqlalchemy_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
         lines.append("        return item")
         lines.append("")
 
+        if obj.get("states"):
+            history_model_name = f"{obj_name}StateHistoryModel"
+            lines.append(
+                f"    def _apply_transition_sync(self, id: Domain.{obj_name}Ref, expected_state: Domain.{obj_name}State, next_state: Domain.{obj_name}State, transition_id: str) -> Optional[Domain.{obj_name}]:"
+            )
+            lines.append("        with self._session_factory() as session:")
+            lines.append(f"            stmt = update(Models.{obj_name}Model).where(Models.{obj_name}Model.state == expected_state)")
+            for pk in pk_fields:
+                pk_prop = _camel_case(str(pk.get("name", "id")))
+                lines.append(f"            stmt = stmt.where(Models.{obj_name}Model.{pk_prop} == id.{pk_prop})")
+            lines.append("            stmt = stmt.values(state=next_state)")
+            lines.append("            result = session.execute(stmt)")
+            lines.append("            if int(result.rowcount or 0) < 1:")
+            lines.append("                return None")
+            lines.append(f"            history = Models.{history_model_name}(")
+            for pk in pk_fields:
+                pk_prop = _camel_case(str(pk.get("name", "id")))
+                lines.append(f"                {pk_prop}=id.{pk_prop},")
+            lines.append("                transitionId=transition_id,")
+            lines.append("                fromState=expected_state,")
+            lines.append("                toState=next_state,")
+            lines.append("            )")
+            lines.append("            session.add(history)")
+            lines.append("            session.commit()")
+            lines.append(f"            refreshed_stmt = select(Models.{obj_name}Model)")
+            for pk in pk_fields:
+                pk_prop = _camel_case(str(pk.get("name", "id")))
+                lines.append(f"            refreshed_stmt = refreshed_stmt.where(Models.{obj_name}Model.{pk_prop} == id.{pk_prop})")
+            lines.append("            refreshed = session.scalars(refreshed_stmt.limit(1)).first()")
+            lines.append("            if refreshed is None:")
+            lines.append("                return None")
+            lines.append(f"            return _{obj_name.lower()}_to_domain(refreshed)")
+            lines.append("")
+
         if async_mode:
             lines.append("    async def list(self, page: int, size: int) -> Persistence.PagedResult:")
             lines.append("        return self._list_sync(page, size)")
@@ -241,6 +303,12 @@ def render_sqlalchemy_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
             lines.append("")
             lines.append(f"    async def save(self, item: Domain.{obj_name}) -> Domain.{obj_name}:")
             lines.append("        return self._save_sync(item)")
+            if obj.get("states"):
+                lines.append("")
+                lines.append(
+                    f"    async def apply_transition(self, id: Domain.{obj_name}Ref, expected_state: Domain.{obj_name}State, next_state: Domain.{obj_name}State, transition_id: str) -> Optional[Domain.{obj_name}]:"
+                )
+                lines.append("        return self._apply_transition_sync(id, expected_state, next_state, transition_id)")
         else:
             lines.append("    def list(self, page: int, size: int) -> Persistence.PagedResult:")
             lines.append("        return self._list_sync(page, size)")
@@ -253,6 +321,12 @@ def render_sqlalchemy_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
             lines.append("")
             lines.append(f"    def save(self, item: Domain.{obj_name}) -> Domain.{obj_name}:")
             lines.append("        return self._save_sync(item)")
+            if obj.get("states"):
+                lines.append("")
+                lines.append(
+                    f"    def apply_transition(self, id: Domain.{obj_name}Ref, expected_state: Domain.{obj_name}State, next_state: Domain.{obj_name}State, transition_id: str) -> Optional[Domain.{obj_name}]:"
+                )
+                lines.append("        return self._apply_transition_sync(id, expected_state, next_state, transition_id)")
         lines.append("")
 
     lines.append("class SqlAlchemyRepositories:")

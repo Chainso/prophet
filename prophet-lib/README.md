@@ -8,7 +8,7 @@
 
 Shared, non-generated Prophet runtime libraries used by generated stacks.
 
-These packages provide the common async `EventPublisher` contract and `EventWireEnvelope` model across Node, Python, and Java, including optional extracted object snapshots (`updated_objects` / `updatedObjects`) for ref-normalized event payloads.
+These packages provide the common async `EventPublisher` contract, `EventWireEnvelope` model, and `TransitionValidationResult` type across Node, Python, and Java, including optional extracted object snapshots (`updated_objects` / `updatedObjects`) for ref-normalized event payloads.
 
 Main project repository:
 - https://github.com/Chainso/prophet

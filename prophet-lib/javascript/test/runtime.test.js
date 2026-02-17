@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { NoOpEventPublisher, createEventId, nowIso } from '../dist/index.js';
+import { NoOpEventPublisher, TransitionValidationResult, createEventId, nowIso } from '../dist/index.js';
 
 test('createEventId returns non-empty id', () => {
   const id = createEventId();
@@ -33,4 +33,14 @@ test('NoOpEventPublisher resolves publish methods', async () => {
     ],
   });
   await publisher.publishBatch([]);
+});
+
+test('TransitionValidationResult helper factories shape values', () => {
+  const passed = TransitionValidationResult.passed();
+  assert.equal(passed.passesValidation, true);
+  assert.equal(passed.failureReason, undefined);
+
+  const failed = TransitionValidationResult.failed('blocked');
+  assert.equal(failed.passesValidation, false);
+  assert.equal(failed.failureReason, 'blocked');
 });

@@ -1320,8 +1320,8 @@ def build_query_contracts(ir: Dict[str, Any]) -> List[Dict[str, Any]]:
         if obj.get("states"):
             filters.append(
                 {
-                    "field_id": "__current_state__",
-                    "field_name": "currentState",
+                    "field_id": "__state__",
+                    "field_name": "state",
                     "operators": ["eq", "in"],
                 }
             )

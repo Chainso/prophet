@@ -217,7 +217,7 @@ def render_sql(ir: Dict[str, Any]) -> str:
 
         if obj.get("states"):
             enum_vals = ", ".join(f"'{s['name'].upper()}'" for s in obj["states"])
-            column_lines.append(f"  current_state text not null check (current_state in ({enum_vals}))")
+            column_lines.append(f"  __prophet_state text not null check (__prophet_state in ({enum_vals}))")
 
         column_lines.extend(
             [
@@ -249,8 +249,8 @@ def render_sql(ir: Dict[str, Any]) -> str:
             lines.append(f"create index if not exists {idx_display} on {table} ({', '.join(display_columns)});")
 
         if obj.get("states"):
-            idx_state = f"idx_{table}_current_state"
-            lines.append(f"create index if not exists {idx_state} on {table} (current_state);")
+            idx_state = f"idx_{table}___prophet_state"
+            lines.append(f"create index if not exists {idx_state} on {table} (__prophet_state);")
 
             history_table = f"{snake_case(obj['name'])}_state_history"
             history_pk_columns: List[str] = []
@@ -428,7 +428,7 @@ def render_create_table_statements_for_object(
 
     if obj.get("states"):
         enum_vals = ", ".join(f"'{s['name'].upper()}'" for s in obj["states"])
-        column_lines.append(f"  current_state text not null check (current_state in ({enum_vals}))")
+        column_lines.append(f"  __prophet_state text not null check (__prophet_state in ({enum_vals}))")
 
     column_lines.extend(
         [
@@ -450,8 +450,8 @@ def render_create_table_statements_for_object(
     statements.append(");")
     statements.extend(index_lines)
     if obj.get("states"):
-        idx_state = f"idx_{table}_current_state"
-        statements.append(f"create index if not exists {idx_state} on {table} (current_state);")
+        idx_state = f"idx_{table}___prophet_state"
+        statements.append(f"create index if not exists {idx_state} on {table} (__prophet_state);")
         history_table = f"{snake_case(obj['name'])}_state_history"
         history_pk_columns: List[str] = []
         history_fk_cols: List[str] = []
@@ -723,13 +723,13 @@ def render_delta_migration(
         new_state_names = sorted(s["name"] for s in new_obj.get("states", []))
         if old_state_names != new_state_names:
             warnings.append(
-                f"manual_review: state set changed for {new_obj['name']} (current_state constraint may require manual adjustment)."
+                f"manual_review: state set changed for {new_obj['name']} (__prophet_state constraint may require manual adjustment)."
             )
             add_finding(
                 "state_set_changed",
                 "manual_review",
                 f"state set changed for {new_obj['name']}",
-                "current_state constraint may require manual adjustment",
+                "__prophet_state constraint may require manual adjustment",
             )
 
     has_changes = bool(statements or warnings)
@@ -773,16 +773,16 @@ def render_openapi(ir: Dict[str, Any]) -> str:
     structs = ir.get("structs", [])
     actions = ir.get("actions", [])
     action_inputs = ir.get("action_inputs", [])
-    action_outputs = ir.get("action_outputs", [])
+    events = ir.get("events", [])
     type_by_id = {t["id"]: t for t in ir.get("types", [])}
     object_by_id = {o["id"]: o for o in objects}
     struct_by_id = {s["id"]: s for s in structs}
     action_input_by_id = {s["id"]: s for s in action_inputs}
-    action_output_by_id = {s["id"]: s for s in action_outputs}
+    event_by_id = {e["id"]: e for e in events if isinstance(e, dict) and "id" in e}
 
     components_schemas: Dict[str, Any] = {}
 
-    for source in list(objects) + list(structs) + list(action_inputs) + list(action_outputs):
+    for source in list(objects) + list(structs) + list(action_inputs) + [e for e in events if isinstance(e, dict)]:
         for f in source.get("fields", []):
             for target_id in object_ref_target_ids_for_type(f["type"]):
                 target = object_by_id[target_id]
@@ -826,11 +826,11 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             if f.get("cardinality", {}).get("min", 0) > 0:
                 required_props.append(prop)
         if obj.get("states"):
-            properties["currentState"] = {
+            properties["state"] = {
                 "type": "string",
                 "enum": [s["name"].upper() for s in obj["states"]],
             }
-            required_props.append("currentState")
+            required_props.append("state")
 
         components_schemas[obj["name"]] = {
             "type": "object",
@@ -870,21 +870,24 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         if shape.get("description"):
             components_schemas[shape["name"]]["description"] = shape["description"]
 
-    for shape in action_outputs:
-        required_props = []
-        properties = {}
-        for f in shape.get("fields", []):
-            prop = camel_case(f["name"])
+    for event in events:
+        if not isinstance(event, dict):
+            continue
+        event_name = str(event.get("name", "Event"))
+        required_props: List[str] = []
+        properties: Dict[str, Any] = {}
+        for f in [field for field in event.get("fields", []) if isinstance(field, dict)]:
+            prop = camel_case(str(f.get("name", "field")))
             properties[prop] = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
             if f.get("cardinality", {}).get("min", 0) > 0:
                 required_props.append(prop)
-        components_schemas[shape["name"]] = {
+        components_schemas[event_name] = {
             "type": "object",
             "required": required_props,
             "properties": properties,
         }
-        if shape.get("description"):
-            components_schemas[shape["name"]]["description"] = shape["description"]
+        if event.get("description"):
+            components_schemas[event_name]["description"] = event["description"]
 
     paths: Dict[str, Any] = {}
 
@@ -957,7 +960,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             query_filter_props[param_name] = {"$ref": f"#/components/schemas/{filter_name}"}
 
         if obj.get("states"):
-            state_filter_name = f"{obj['name']}CurrentStateFilter"
+            state_filter_name = f"{obj['name']}StateFilter"
             enum_schema = {
                 "type": "string",
                 "enum": [s["name"].upper() for s in obj["states"]],
@@ -969,7 +972,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                     "in": {"type": "array", "items": enum_schema},
                 },
             }
-            query_filter_props["currentState"] = {"$ref": f"#/components/schemas/{state_filter_name}"}
+            query_filter_props["state"] = {"$ref": f"#/components/schemas/{state_filter_name}"}
 
         query_filter_name = f"{obj['name']}QueryFilter"
         components_schemas[query_filter_name] = {"type": "object", "properties": query_filter_props}
@@ -1055,7 +1058,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
 
     for action in actions:
         req_name = action_input_by_id[action["input_shape_id"]]["name"]
-        res_name = action_output_by_id[action["output_shape_id"]]["name"]
+        event_name = str(event_by_id.get(action["output_event_id"], {}).get("name", "Event"))
         op_id = f"{camel_case(action['name'])}Action"
         paths[f"/actions/{action['name']}"] = {
             "post": {
@@ -1074,7 +1077,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                         "description": "Action response",
                         "content": {
                             "application/json": {
-                                "schema": {"$ref": f"#/components/schemas/{res_name}"}
+                                "schema": {"$ref": f"#/components/schemas/{event_name}"}
                             }
                         },
                     }

@@ -47,23 +47,10 @@ def _render_validation(ir: Dict[str, Any]) -> str:
         lines.append("});")
         lines.append("")
 
-    for shape in sorted(ir.get("action_outputs", []), key=lambda item: str(item.get("id", ""))):
-        if not isinstance(shape, dict):
-            continue
-        name = _pascal_case(str(shape.get("name", "ActionOutput")))
-        lines.append(f"export const {name}Schema = z.object({{")
-        for field in list(shape.get("fields", [])):
-            if isinstance(field, dict):
-                lines.append(_render_zod_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
-        lines.append("});")
-        lines.append("")
-
     for event in sorted(ir.get("events", []), key=lambda item: str(item.get("id", ""))):
         if not isinstance(event, dict):
             continue
-        if str(event.get("kind", "")) != "signal":
-            continue
-        name = _pascal_case(str(event.get("name", "Signal")))
+        name = _pascal_case(str(event.get("name", "Event")))
         lines.append(f"export const {name}Schema = z.object({{")
         for field in list(event.get("fields", [])):
             if isinstance(field, dict):
@@ -72,4 +59,3 @@ def _render_validation(ir: Dict[str, Any]) -> str:
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
-

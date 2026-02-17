@@ -14,6 +14,7 @@ Main project repository:
 It defines:
 - an async `EventPublisher` interface (`CompletionStage<Void>`)
 - a canonical `EventWireEnvelope` record
+- `TransitionValidationResult` for generated transition-validator hooks
 - utility helpers (`EventIds.createEventId`, `EventTime.nowIso`)
 - a `NoOpEventPublisher` for local wiring and tests
 
@@ -64,6 +65,7 @@ Core classes:
 - `io.prophet.events.runtime.NoOpEventPublisher`
 - `io.prophet.events.runtime.EventIds`
 - `io.prophet.events.runtime.EventTime`
+- `io.prophet.events.runtime.TransitionValidationResult`
 
 ## Implement a Platform Publisher
 

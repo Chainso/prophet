@@ -23,6 +23,7 @@ Example:
 - Query controllers
 - Action contracts and action endpoints
 - Action service/handler extension points
+- Transition service/handler/validator extension points
 
 ## JPA Mapping Rules
 
@@ -51,11 +52,14 @@ List responses are generated DTO envelopes (`*ListResponse`), not raw Spring `Pa
 
 - generated services depend on `io.prophet.events.runtime.EventPublisher` from `io.github.chainso:prophet-events-runtime`.
 - generated event payload ref fields use sealed `<Object>RefOrObject` contracts.
-- generated default action services publish action-output and signal domain events; emitted envelopes normalize embedded objects back to refs and include extracted snapshots in `updatedObjects`.
+- generated default action services publish produced events (signals and transitions); emitted envelopes normalize embedded objects back to refs and include extracted snapshots in `updatedObjects`.
 - generated `EventPublisherNoOp` is registered automatically when no custom publisher bean is provided.
 - generated default action services publish action outcomes automatically after successful handler execution.
-- handlers can return either the action output directly or generated `ActionOutcome` with additional domain events.
-- transition emission remains user-controlled via generated event helpers; signals can also be emitted manually when needed.
+- handlers can return either the produced event payload directly or generated `ActionOutcome` with additional domain events.
+- stateful objects generate transition handlers and validators:
+  - default transition handler beans are emitted as `@Component` + `@ConditionalOnMissingBean`
+  - transition methods return transition drafts seeded with object primary keys plus `fromState`/`toState`
+  - handler defaults invoke `<ObjectName>TransitionValidator` before state mutation and fail with `TransitionValidationResult.failureReason` when validation fails
 
 ## Ownership Boundaries
 

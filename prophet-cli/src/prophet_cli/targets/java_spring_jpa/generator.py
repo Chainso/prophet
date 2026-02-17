@@ -104,6 +104,41 @@ def generate_outputs(context: GenerationContext, deps: JavaSpringJpaDeps) -> Dic
                 "default_implementation_class": f"{base_package}.generated.actions.handlers.defaults.{interface_name}Default",
             }
         )
+    objects = context.ir_reader.get("objects", [])
+    for obj in sorted([item for item in objects if isinstance(item, dict)], key=lambda item: str(item.get("id", ""))):
+        obj_name = str(obj.get("name", "Object"))
+        handler_name = f"{obj_name}TransitionHandler"
+        service_name = f"{obj_name}TransitionService"
+        validator_name = f"{obj_name}TransitionValidator"
+        transitions = sorted(
+            [item for item in obj.get("transitions", []) if isinstance(item, dict)],
+            key=lambda item: str(item.get("id", "")),
+        )
+        for transition in transitions:
+            transition_name = str(transition.get("name", "transition"))
+            extension_hooks.append(
+                {
+                    "kind": "transition_handler",
+                    "object_id": str(obj.get("id", "")),
+                    "object_name": obj_name,
+                    "transition_id": str(transition.get("id", "")),
+                    "transition_name": transition_name,
+                    "java_interface": f"{base_package}.generated.transitions.handlers.{handler_name}",
+                    "java_service": f"{base_package}.generated.transitions.services.{service_name}",
+                    "default_implementation_class": f"{base_package}.generated.transitions.handlers.defaults.{handler_name}Default",
+                }
+            )
+            extension_hooks.append(
+                {
+                    "kind": "transition_validator",
+                    "object_id": str(obj.get("id", "")),
+                    "object_name": obj_name,
+                    "transition_id": str(transition.get("id", "")),
+                    "transition_name": transition_name,
+                    "java_interface": f"{base_package}.generated.transitions.validators.{validator_name}",
+                    "default_implementation_class": f"{base_package}.generated.transitions.validators.defaults.{validator_name}Default",
+                }
+            )
     extension_hooks.append(
         {
             "kind": "event_publisher",

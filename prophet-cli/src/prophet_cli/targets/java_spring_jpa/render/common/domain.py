@@ -14,7 +14,6 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
     objects = state["objects"]
     structs = state["structs"]
     action_inputs = state["action_inputs"]
-    action_outputs = state["action_outputs"]
     events = state["events"]
     object_by_id = state["object_by_id"]
     struct_by_id = state["struct_by_id"]
@@ -24,7 +23,7 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
 
     # domain ref records
     ref_types: Dict[str, Dict[str, Any]] = {}
-    for source in list(objects) + list(structs) + list(action_inputs) + list(action_outputs):
+    for source in list(objects) + list(structs) + list(action_inputs):
         for f in source.get("fields", []):
             for target_id in object_ref_target_ids_for_type(f["type"]):
                 target = object_by_id[target_id]
@@ -118,7 +117,7 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
                 object_field_descriptions[camel_case(f["name"])] = str(f["description"])
 
         if obj.get("states"):
-            object_fields.append((f"{obj['name']}State", "currentState", True))
+            object_fields.append((f"{obj['name']}State", "state", True))
             imports.add(f"import {base_package}.generated.domain.{obj['name']}State;")
 
         files[f"src/main/java/{package_path}/generated/domain/{obj['name']}.java"] = render_java_record_with_builder(

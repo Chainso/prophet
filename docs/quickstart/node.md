@@ -75,7 +75,7 @@ Prophet generates adapters and contracts, but your app owns connection setup:
 ## 6. Optional Event Publisher Integration
 
 Generated action services publish event wire envelopes through the generated `EventPublisher` interface.
-For generated action-output and signal events, event payload ref fields can be passed as either refs or full objects; emitted envelopes normalize payload refs and include extracted snapshots in `updated_objects`.
+For produced events (signals and transitions), event payload ref fields can be passed as either refs or full objects; emitted envelopes normalize payload refs and include extracted snapshots in `updated_objects`.
 Provide a custom publisher implementation to publish externally. Default no-op publisher is used if none is provided.
 
 ## 7. Run Build and Tests

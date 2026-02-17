@@ -263,6 +263,23 @@ def build_ir(
                     },
                 ]
             )
+            for transition_field in tr.fields:
+                resolved_type = resolve_field_type(
+                    transition_field,
+                    type_name_to_id,
+                    object_name_to_id,
+                    struct_name_to_id,
+                )
+                max_cardinality = "many" if resolved_type.get("kind") == "list" else 1
+                transition_field_entry = {
+                    "id": transition_field.id,
+                    "name": transition_field.name,
+                    "type": resolved_type,
+                    "cardinality": {"min": 1 if transition_field.required else 0, "max": max_cardinality},
+                }
+                if transition_field.description:
+                    transition_field_entry["description"] = transition_field.description
+                transition_fields.append(transition_field_entry)
             transition_entry = {
                 "id": tr.id,
                 "name": transition_name,

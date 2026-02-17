@@ -17,3 +17,18 @@ export class NoOpEventPublisher {
     return;
   }
 }
+
+export class TransitionValidationResult {
+  constructor(passesValidation, failureReason) {
+    this.passesValidation = passesValidation;
+    this.failureReason = failureReason;
+  }
+
+  static passed() {
+    return new TransitionValidationResult(true);
+  }
+
+  static failed(failureReason) {
+    return new TransitionValidationResult(false, failureReason);
+  }
+}

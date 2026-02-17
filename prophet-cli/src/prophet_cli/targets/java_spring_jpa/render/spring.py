@@ -11,6 +11,7 @@ from prophet_cli.targets.java_common.render.support import effective_base_packag
 from prophet_cli.targets.java_spring_jpa.render.common import render_action_runtime_artifacts
 from prophet_cli.targets.java_spring_jpa.render.common import render_contract_artifacts
 from prophet_cli.targets.java_spring_jpa.render.common import render_domain_artifacts
+from prophet_cli.targets.java_spring_jpa.render.common import render_transition_runtime_artifacts
 from prophet_cli.targets.java_spring_jpa.render.orm import render_jpa_persistence_artifacts
 from prophet_cli.targets.java_spring_jpa.render.orm import render_jpa_query_artifacts
 from prophet_cli.targets.runtime_versions import resolve_java_runtime_group
@@ -219,19 +220,12 @@ def render_spring_files(
     structs = ir.get("structs", [])
     actions = ir.get("actions", [])
     action_inputs = ir.get("action_inputs", [])
-    action_outputs = ir.get("action_outputs", [])
     events = ir.get("events", [])
     type_by_id = {t["id"]: t for t in ir.get("types", [])}
     object_by_id = {o["id"]: o for o in objects}
     struct_by_id = {s["id"]: s for s in structs}
     action_input_by_id = {s["id"]: s for s in action_inputs}
-    action_output_by_id = {s["id"]: s for s in action_outputs}
-    action_output_event_by_shape_id: Dict[str, Dict[str, Any]] = {}
-    for event in events:
-        if event.get("kind") == "action_output":
-            shape_id = str(event.get("output_shape_id", ""))
-            if shape_id:
-                action_output_event_by_shape_id[shape_id] = event
+    event_by_id = {e["id"]: e for e in events if isinstance(e, dict) and "id" in e}
 
     files["build.gradle.kts"] = render_gradle_file(
         boot_version,
@@ -274,14 +268,12 @@ def render_spring_files(
         "structs": structs,
         "actions": actions,
         "action_inputs": action_inputs,
-        "action_outputs": action_outputs,
         "events": events,
         "type_by_id": type_by_id,
         "object_by_id": object_by_id,
         "struct_by_id": struct_by_id,
         "action_input_by_id": action_input_by_id,
-        "action_output_by_id": action_output_by_id,
-        "action_output_event_by_shape_id": action_output_event_by_shape_id,
+        "event_by_id": event_by_id,
         "base_package": base_package,
         "package_path": package_path,
         "ontology_name": str(ir.get("ontology", {}).get("name", "prophet")),
@@ -292,6 +284,7 @@ def render_spring_files(
     render_jpa_persistence_artifacts(files, state)
     render_contract_artifacts(files, state)
     render_action_runtime_artifacts(files, state)
+    render_transition_runtime_artifacts(files, state)
     render_jpa_query_artifacts(files, state)
 
     annotate_generated_java_files(files)

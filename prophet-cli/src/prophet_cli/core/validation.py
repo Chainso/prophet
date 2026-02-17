@@ -12,6 +12,7 @@ from .parser import resolve_type_descriptor
 from .errors import ProphetError
 
 RESERVED_FIELD_NAMES = {"state"}
+RESERVED_FIELD_PREFIXES = ("__prophet_",)
 
 
 def _pascal_case(value: str) -> str:
@@ -21,6 +22,19 @@ def _pascal_case(value: str) -> str:
 
 def transition_event_name(object_name: str, transition_name: str) -> str:
     return f"{object_name}{_pascal_case(transition_name)}Transition"
+
+
+def _validate_reserved_field_name(owner: str, field: FieldDef, errors: List[str]) -> None:
+    if field.name in RESERVED_FIELD_NAMES:
+        errors.append(
+            f"line {field.line}: field {owner}.{field.name} uses reserved name '{field.name}'"
+        )
+    for prefix in RESERVED_FIELD_PREFIXES:
+        if field.name.startswith(prefix):
+            errors.append(
+                f"line {field.line}: field {owner}.{field.name} uses reserved prefix '{prefix}'"
+            )
+            break
 
 
 def _effective_key_field_names(
@@ -79,6 +93,8 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
             id_entries.append((f"state {o.name}.{s.name}", s.id, s.line))
         for tr in o.transitions:
             id_entries.append((f"transition {o.name}.{tr.name}", tr.id, tr.line))
+            for f in tr.fields:
+                id_entries.append((f"field {o.name}.{tr.name}.{f.name}", f.id, f.line))
     for s in ont.structs:
         id_entries.append((f"struct {s.name}", s.id, s.line))
         for f in s.fields:
@@ -121,10 +137,7 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                     f"line {key_def.line}: object {o.name} key kind '{key_def.kind}' is invalid; expected primary or display"
                 )
         for f in o.fields:
-            if f.name in RESERVED_FIELD_NAMES:
-                errors.append(
-                    f"line {f.line}: field {o.name}.{f.name} uses reserved name '{f.name}'"
-                )
+            _validate_reserved_field_name(o.name, f, errors)
             if f.key is not None and f.key not in {"primary", "display"}:
                 errors.append(
                     f"line {f.line}: field {o.name}.{f.name} key kind '{f.key}' is invalid; expected primary or display"
@@ -170,6 +183,44 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                 errors.append(f"line {tr.line}: transition {o.name}.{tr.name} from unknown state '{tr.from_state}'")
             if tr.to_state not in state_names:
                 errors.append(f"line {tr.line}: transition {o.name}.{tr.name} to unknown state '{tr.to_state}'")
+            if tr.from_state == tr.to_state:
+                errors.append(
+                    f"line {tr.line}: transition {o.name}.{tr.name} must change state (from and to cannot match)"
+                )
+
+            transition_field_names: set[str] = set()
+            transition_field_dups: set[str] = set()
+            for transition_field in tr.fields:
+                if transition_field.name in transition_field_names:
+                    transition_field_dups.add(transition_field.name)
+                transition_field_names.add(transition_field.name)
+            for duplicate_name in sorted(transition_field_dups):
+                errors.append(
+                    f"line {tr.line}: transition {o.name}.{tr.name} declares duplicate field '{duplicate_name}'"
+                )
+
+            implicit_field_names = set(primary_field_names or [])
+            implicit_field_names.update({"fromState", "toState"})
+            for transition_field in tr.fields:
+                _validate_reserved_field_name(f"{o.name}.{tr.name}", transition_field, errors)
+                if transition_field.key is not None:
+                    errors.append(
+                        f"line {transition_field.line}: transition {o.name}.{tr.name}.{transition_field.name} must not declare key"
+                    )
+                if transition_field.name in implicit_field_names:
+                    errors.append(
+                        f"line {transition_field.line}: transition {o.name}.{tr.name}.{transition_field.name} collides with implicit transition field '{transition_field.name}'"
+                    )
+                type_error = validate_type_expr(
+                    transition_field.type_raw,
+                    type_names,
+                    object_names,
+                    struct_names,
+                )
+                if type_error:
+                    errors.append(
+                        f"line {transition_field.line}: field {o.name}.{tr.name}.{transition_field.name} {type_error}"
+                    )
 
         for f in o.fields:
             type_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
@@ -190,10 +241,7 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
 
     for s in ont.structs:
         for f in s.fields:
-            if f.name in RESERVED_FIELD_NAMES:
-                errors.append(
-                    f"line {f.line}: field {s.name}.{f.name} uses reserved name '{f.name}'"
-                )
+            _validate_reserved_field_name(s.name, f, errors)
             if f.key is not None:
                 errors.append(f"line {f.line}: struct {s.name}.{f.name} must not declare key")
             type_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
@@ -202,10 +250,7 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
 
     def validate_action_shape_fields(kind: str, shape_name: str, fields: List[FieldDef]) -> None:
         for f in fields:
-            if f.name in RESERVED_FIELD_NAMES:
-                errors.append(
-                    f"line {f.line}: field {shape_name}.{f.name} uses reserved name '{f.name}'"
-                )
+            _validate_reserved_field_name(shape_name, f, errors)
             if f.key is not None:
                 errors.append(
                     f"line {f.line}: {kind} {shape_name}.{f.name} must not declare key (keys are only valid on object fields)"

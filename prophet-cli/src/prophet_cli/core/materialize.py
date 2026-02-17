@@ -74,6 +74,8 @@ def _build_id_map(ontology: Ontology, source_lines: List[str]) -> Dict[int, str]
             id_map[state.line] = state.id
         for transition in item.transitions:
             id_map[transition.line] = transition.id
+            for field in transition.fields:
+                id_map[field.line] = field.id
 
     for item in ontology.structs:
         id_map[item.line] = item.id

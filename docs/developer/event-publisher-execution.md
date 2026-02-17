@@ -24,7 +24,7 @@ Replace legacy generated event publishing contracts with async-first `EventPubli
 ### Phase 2: Generator Migration
 
 4. Node codegen migration:
-   - Generate `DomainEvent` closed sum for action outputs + signals
+   - Generate `DomainEvent` closed sum for produced events + additional signals
    - Generate `ActionOutcome<T>` and ergonomic helpers
   - Replace legacy event publishing path with `EventPublisher` path
    - Emit envelopes and publish batched events in deterministic order
@@ -84,7 +84,7 @@ Replace legacy generated event publishing contracts with async-first `EventPubli
 - Node/Python/Java generated action flows support:
   - raw output return shorthand
   - `ActionOutcome` return with additional events
-  - deterministic publish order: primary action output event first, then additional events
+  - deterministic publish order: primary produced event first, then additional events
 - All published envelopes follow event wire contract fields:
   - `event_id`, `trace_id`, `event_type`, `schema_version`, `occurred_at`, `source`, `payload`, optional `attributes`, optional `updated_objects`
 - Runtime packages build and test locally.

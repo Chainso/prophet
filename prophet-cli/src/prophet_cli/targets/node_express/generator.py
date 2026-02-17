@@ -21,6 +21,7 @@ from prophet_cli.targets.node_express.render.common.package_files import _render
 from prophet_cli.targets.node_express.render.common.persistence import _render_persistence_contracts
 from prophet_cli.targets.node_express.render.common.query import _render_query_filters
 from prophet_cli.targets.node_express.render.common.query import _render_query_routes
+from prophet_cli.targets.node_express.render.common.transitions import _render_transition_services
 from prophet_cli.targets.node_express.render.common.validation import _render_validation
 from prophet_cli.targets.node_express.render.orm.mongoose import _render_mongoose_adapter
 from prophet_cli.targets.node_express.render.orm.mongoose import _render_mongoose_models
@@ -83,6 +84,7 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
         outputs[f"{node_prefix}/src/generated/action-handlers.ts"] = _render_action_handlers(ir)
         outputs[f"{node_prefix}/src/generated/events.ts"] = _render_event_emitter(ir)
         outputs[f"{node_prefix}/src/generated/action-service.ts"] = _render_action_service(ir)
+        outputs[f"{node_prefix}/src/generated/transitions.ts"] = _render_transition_services(ir)
         outputs[f"{node_prefix}/src/generated/action-routes.ts"] = _render_action_routes(ir)
         outputs[f"{node_prefix}/src/generated/query-routes.ts"] = _render_query_routes(ir)
         outputs[f"{node_prefix}/src/generated/index.ts"] = _render_index_file(ir)
@@ -121,6 +123,44 @@ def generate_outputs(context: GenerationContext, deps: NodeExpressDeps) -> Dict[
                 "default_implementation": f"generated.{handler_name}Default",
             }
         )
+    transition_events = {
+        str(item.get("transition_id", "")): item
+        for item in ir.get("events", [])
+        if isinstance(item, dict) and str(item.get("kind", "")) == "transition" and str(item.get("transition_id", ""))
+    }
+    for obj in sorted([item for item in ir.get("objects", []) if isinstance(item, dict)], key=lambda item: str(item.get("id", ""))):
+        obj_name = _pascal_case(str(obj.get("name", "Object")))
+        object_name = str(obj.get("name", "Object"))
+        handler_name = f"{obj_name}TransitionHandler"
+        service_name = f"{obj_name}TransitionService"
+        validator_name = f"{obj_name}TransitionValidator"
+        for transition in sorted([item for item in obj.get("transitions", []) if isinstance(item, dict)], key=lambda item: str(item.get("id", ""))):
+            transition_id = str(transition.get("id", ""))
+            if transition_id not in transition_events:
+                continue
+            extension_hooks.append(
+                {
+                    "kind": "transition_handler",
+                    "object_id": str(obj.get("id", "")),
+                    "object_name": object_name,
+                    "transition_id": transition_id,
+                    "transition_name": str(transition.get("name", "transition")),
+                    "typescript_interface": f"generated.{handler_name}",
+                    "typescript_service": f"generated.{service_name}",
+                    "default_implementation": f"generated.{handler_name}Default",
+                }
+            )
+            extension_hooks.append(
+                {
+                    "kind": "transition_validator",
+                    "object_id": str(obj.get("id", "")),
+                    "object_name": object_name,
+                    "transition_id": transition_id,
+                    "transition_name": str(transition.get("name", "transition")),
+                    "typescript_interface": f"generated.{validator_name}",
+                    "default_implementation": f"generated.{validator_name}Default",
+                }
+            )
     extension_hooks.append(
         {
             "kind": "event_publisher",

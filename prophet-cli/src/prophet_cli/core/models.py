@@ -40,6 +40,7 @@ class TransitionDef:
     id: str
     from_state: str
     to_state: str
+    fields: List[FieldDef]
     description: Optional[str]
     line: int
 

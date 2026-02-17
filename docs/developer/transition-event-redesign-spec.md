@@ -67,12 +67,14 @@ We need a single coherent event model where action outputs are events (`Signal` 
 - automatically include `fromState` and `toState`
 5. Generate per-object transition handlers with default implementations that:
 - validate current state against transition `from`
+- run transition validator hooks
 - persist new state
 - persist transition history
 - return a transition event **Draft**
 6. Represent object lifecycle state as generated domain field `state`.
 7. Reserve user field name `state` globally (cannot be user-defined).
 8. Preserve deterministic generation behavior.
+9. Generate transition validator extension points with shared validation result contract.
 
 ## 4. Non-Goals
 
@@ -181,7 +183,37 @@ Default implementation behavior:
 2. Enforce state mismatch errors with explicit message.
 3. Ensure atomicity where backend supports transactions.
 
-### 6.6 Action Codegen Behavior
+### 6.6 Transition Validator Extension Points
+
+Generate one transition validator interface per object that has transitions.
+
+Validator interface naming:
+
+1. `<ObjectName>TransitionValidator`
+
+Method naming:
+
+1. `validate<TransitionName><ObjectName>` (for example `validateApproveOrder`).
+
+Method behavior:
+
+1. Accept the fully loaded domain object for validation.
+2. Return `TransitionValidationResult`.
+
+Default behavior:
+
+1. Generate a default validator implementation that always passes.
+2. Generated transition handlers must invoke validators before state mutation.
+3. Failed validation must stop transition execution and expose `failureReason`.
+
+`TransitionValidationResult` contract:
+
+1. Add a new runtime-library class/type named `TransitionValidationResult`.
+2. Fields:
+- `passesValidation` (boolean)
+- `failureReason` (string, optional/nullable; unset when `passesValidation` is true)
+
+### 6.7 Action Codegen Behavior
 
 1. Action codegen remains structurally similar.
 2. Replace old action-output type usage with produced event payload type.
@@ -192,7 +224,7 @@ Default implementation behavior:
 - finalize Draft
 - return/publish resulting transition event payload
 
-### 6.7 Persistence Model Requirements
+### 6.8 Persistence Model Requirements
 
 #### SQL-based stacks
 
@@ -246,18 +278,25 @@ Compiler validation must enforce:
 1. Transition handlers return typed Draft/builder objects.
 2. Draft supports fluent field assignment and final `build()`.
 3. Existing action handler/service pattern remains, with produced-event type substitution.
+4. Generate `<ObjectName>TransitionValidator` interface + default implementation.
+5. Transition handlers call validators and fail with reason when validation fails.
+6. Include `TransitionValidationResult` in Java runtime library.
 
 ### Node/TypeScript
 
 1. Generate typed Draft classes/interfaces for transitions.
 2. Draft expresses "incomplete until finalized" semantics.
 3. Preserve existing action execution service pattern.
+4. Generate `<ObjectName>TransitionValidator` interfaces + default implementations.
+5. Include `TransitionValidationResult` in Node runtime contract and generated code.
 
 ### Python
 
 1. Generate typed Draft dataclasses/helpers for transitions.
 2. Draft has explicit finalize/build method.
 3. Preserve existing action execution service pattern.
+4. Generate `<ObjectName>TransitionValidator` protocols/interfaces + default implementations.
+5. Include `TransitionValidationResult` in Python runtime contract and generated code.
 
 ## 10. Milestones
 
@@ -267,10 +306,10 @@ Compiler validation must enforce:
 |---|---|---|---|---|
 | 0. Design Freeze | completed | 2026-02-17 | codex | Naming and architecture decisions locked in this spec. |
 | 1. Metamodel + DSL + Parser + Core Models | completed | 2026-02-17 | codex | `ActionOutput` removed, `producesEvent` model, new action output DSL forms, reserved `state` validation added. |
-| 2. IR + Validation + Compatibility Engine | in_progress | 2026-02-17 | codex | IR switched to `output_event_id`, transition events now include implicit PK + `fromState` + `toState`; generator stack migration still pending. |
-| 3. Event/Action Codegen Refactor | not_started | TBD | TBD | |
-| 4. Transition Handler Generation + Persistence Wiring | not_started | TBD | TBD | |
-| 5. Examples + Docs + Full Validation | not_started | TBD | TBD | |
+| 2. IR + Validation + Compatibility Engine | completed | 2026-02-17 | codex | IR now uses `output_event_id`; event kinds reduced to signal/transition; validation enforces reserved `state` and output event resolution. |
+| 3. Event/Action Codegen Refactor | completed | 2026-02-17 | codex | Action codegen now publishes produced events (`signal` or `transition`) and removed legacy action-output code paths. |
+| 4. Transition Handler Generation + Persistence Wiring | completed | 2026-02-17 | codex | Per-object transition handlers, draft returns, validator hooks, history writes, and runtime `TransitionValidationResult` integrated across Java/Node/Python. |
+| 5. Examples + Docs + Full Validation | in_progress | 2026-02-17 | codex | Examples/docs regenerated and updated; stack verification complete except FastAPI `TestClient` instability under Python 3.14 in this environment. |
 
 ### 10.1 Deliverable Log
 
@@ -292,13 +331,34 @@ Implemented:
 - object primary-key fields
 - `fromState`
 - `toState`
-8. Updated compatibility/query-contract state filter naming from `currentState`/`__current_state__` to `state`/`__state__`.
+8. Updated compatibility/query-contract state filter naming from `currentState`/`__current_state__` to `state`/`__prophet_state`.
 9. Updated `prophet.ttl` to remove `ActionOutput` and move action output relation to `producesEvent`.
 
 Known remaining work:
-1. Full codegen-target migration (Java/Node/Python/turtle rendering) to the new IR/event model.
-2. Generated transition handler interfaces/default implementations across stacks.
-3. Persistence-layer state storage rename to internal `__prophet_state` and runtime mapping.
+1. Completed in Deliverable 2.
+
+#### Deliverable 2 (2026-02-17): Generator + Runtime Transition Validation Integration
+
+Status: completed
+
+Implemented:
+1. Added generated transition runtime surfaces for Java/Node/Python:
+- per-object transition handler interfaces
+- per-object transition service defaults
+- transition draft return types seeded with PK + `fromState` + `toState`
+2. Added per-object transition validator interfaces/defaults:
+- `<ObjectName>TransitionValidator`
+- method shape `validate<TransitionName><ObjectName>(...)`
+3. Handler defaults now invoke validators on full loaded objects before state mutation.
+4. Added shared `TransitionValidationResult` runtime type in:
+- Java runtime (`io.prophet.events.runtime`)
+- Python runtime (`prophet_events_runtime`)
+- JavaScript runtime (`@prophet-ontology/events-runtime`)
+5. Java transition default handlers are generated as `@Component` with `@ConditionalOnMissingBean` directly on the default handler class (no dedicated transition config class).
+6. Stateful persistence mappings standardized on internal `__prophet_state` while preserving logical `state` in domain/query contracts.
+
+Known remaining work:
+1. Final all-suite execution in one clean environment (current local blocker: FastAPI `TestClient` hangs under Python 3.14).
 
 ### Milestone 0: Design Freeze
 
@@ -370,14 +430,17 @@ Deliverables:
 2. Default implementations generated across stacks.
 3. State compare-and-set logic implemented.
 4. Transition history persistence wired.
+5. Per-object transition validator interfaces/defaults generated.
+6. `TransitionValidationResult` added to runtime libraries and wired into handlers.
 
 Exit criteria:
 
 1. Generated transition handler tests pass for all stacks.
 2. Invalid transition attempts fail as expected.
 3. Successful transitions produce Draft and final event payload correctly.
-4. Living document tracker updated.
-5. Documentation update gate completed before commit.
+4. Validator failures block transitions with clear failure reason.
+5. Living document tracker updated.
+6. Documentation update gate completed before commit.
 
 ### Milestone 5: Examples + Docs + Full Validation
 
@@ -404,12 +467,13 @@ Exit criteria:
 5. Update action service renderers to consume produced event types.
 6. Implement transition Draft contract generation.
 7. Implement transition handler interfaces/defaults per target.
-8. Implement persistence updates for `__prophet_state` and history writes.
-9. After each deliverable, update this living spec status tracker and notes.
-10. After each deliverable, update required docs (`AGENTS.md`, `README.md`, `CONTRIBUTING.md`, and relevant `docs/*`) before commit.
-11. Migrate examples and regenerate.
-12. Update docs/reference and docs/developer pages.
-13. Run all required tests and fix regressions.
+8. Implement transition validator interfaces/defaults + `TransitionValidationResult` runtime support per target.
+9. Implement persistence updates for `__prophet_state` and history writes.
+10. After each deliverable, update this living spec status tracker and notes.
+11. After each deliverable, update required docs (`AGENTS.md`, `README.md`, `CONTRIBUTING.md`, and relevant `docs/*`) before commit.
+12. Migrate examples and regenerate.
+13. Update docs/reference and docs/developer pages.
+14. Run all required tests and fix regressions.
 
 ## 12. Acceptance Criteria (Success Criteria)
 

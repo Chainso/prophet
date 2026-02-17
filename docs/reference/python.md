@@ -20,6 +20,7 @@ With `generation.targets` containing `python`:
 - `gen/python/src/generated/actions.py`
 - `gen/python/src/generated/event_contracts.py`
 - `gen/python/src/generated/events.py`
+- `gen/python/src/generated/transitions.py`
 - `gen/python/src/generated/query.py`
 - `gen/python/src/generated/persistence.py`
 - `gen/python/src/generated/action_handlers.py`
@@ -58,11 +59,15 @@ Autodetection fails closed for ambiguous framework signals or missing ORM signal
 - Generated action endpoints are mounted per framework.
 - Generated action service publishes event wire envelopes through async `EventPublisher` from `prophet-events-runtime`.
 - Event payload object-ref fields in generated event contracts accept either a `<Object>Ref` or full `<Object>` value.
-- For action-output and signal domain events emitted through generated action services, wire payloads normalize embedded objects back to refs and emit extracted snapshots in `updated_objects`.
+- For produced events emitted through generated action services, wire payloads normalize embedded objects back to refs and emit extracted snapshots in `updated_objects`.
 - `EventPublisherNoOp` is provided for zero-config local wiring.
-- Handlers can return either the action output directly or `ActionOutcome` with additional domain events.
-- Transition events remain user-controlled and are not auto-published by generated action services.
+- Handlers can return either the produced event payload directly or `ActionOutcome` with additional domain events.
+- Produced transition events are auto-published by generated action services the same way as produced signals.
 - Default action handler implementations raise `NotImplementedError` until replaced by user code.
+- Stateful objects generate transition helpers in `transitions.py`:
+  - `<ObjectName>TransitionHandler` and `<ObjectName>TransitionService`
+  - `<ObjectName>TransitionValidator` and `<ObjectName>TransitionValidatorDefault`
+  - transition drafts seeded with primary keys plus `fromState` and `toState`
 
 ## Query Behavior
 

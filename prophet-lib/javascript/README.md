@@ -14,6 +14,7 @@ Main project repository:
 It defines:
 - an async `EventPublisher` interface
 - a canonical `EventWireEnvelope` shape
+- `TransitionValidationResult` for generated transition-validator hooks
 - utility helpers (`createEventId`, `nowIso`)
 - a `NoOpEventPublisher` for local wiring and tests
 
@@ -54,6 +55,7 @@ Exports:
 - `createEventId(): string`
 - `nowIso(): string`
 - `NoOpEventPublisher`
+- `TransitionValidationResult`
 
 ## Implement a Platform Publisher
 

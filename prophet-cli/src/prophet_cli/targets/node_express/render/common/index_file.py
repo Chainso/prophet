@@ -13,10 +13,13 @@ def _render_index_file(ir: Dict[str, Any]) -> str:
         "import { NoOpEventPublisher, type EventPublisher } from './events';",
         "import type { ActionContext, ActionHandlers } from './action-handlers';",
         "import type { Repositories } from './persistence';",
+        "import type { TransitionHandlers, TransitionValidators } from './transitions';",
         "",
         "export interface MountDependencies {",
         "  repositories: Repositories;",
         "  handlers: ActionHandlers;",
+        "  transitionHandlers?: TransitionHandlers;",
+        "  transitionValidators?: TransitionValidators;",
         "  eventPublisher?: EventPublisher;",
         "  eventSource?: string;",
         "  eventAttributes?: Record<string, string>;",
@@ -35,6 +38,8 @@ def _render_index_file(ir: Dict[str, Any]) -> str:
         "  app.use(buildQueryRouter(deps.repositories));",
         "}",
         "",
+        "export { TransitionServices } from './transitions';",
+        "export type { TransitionHandlers, TransitionValidators } from './transitions';",
+        "",
     ]
     return "\n".join(lines)
-

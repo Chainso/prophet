@@ -10,8 +10,7 @@ from prophet_cli.targets.java_common.render.support import render_javadoc_block
 def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> None:
     actions = state["actions"]
     action_input_by_id = state["action_input_by_id"]
-    action_output_by_id = state["action_output_by_id"]
-    action_output_event_by_shape_id = state["action_output_event_by_shape_id"]
+    event_by_id = state["event_by_id"]
     base_package = state["base_package"]
     package_path = state["package_path"]
     default_event_source = str(state.get("ontology_name", "prophet"))
@@ -19,14 +18,15 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
     # action handler interfaces
     for action in sorted(actions, key=lambda x: x["id"]):
         req_name = action_input_by_id[action["input_shape_id"]]["name"]
-        res_name = action_output_by_id[action["output_shape_id"]]["name"]
+        output_event = event_by_id[action["output_event_id"]]
+        res_name = str(output_event["name"])
         handler_name = f"{pascal_case(action['name'])}ActionHandler"
         service_name = f"{pascal_case(action['name'])}ActionService"
         action_description = str(action.get("description", "")) or None
         handler_src = (
             f"package {base_package}.generated.actions.handlers;\n\n"
             f"import {base_package}.generated.actions.{req_name};\n"
-            f"import {base_package}.generated.actions.{res_name};\n"
+            f"import {base_package}.generated.events.{res_name};\n"
             f"import {base_package}.generated.events.ActionOutcome;\n"
             f"import {base_package}.generated.events.ActionOutcomes;\n\n"
             + render_javadoc_block(action_description)
@@ -43,7 +43,7 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
         default_handler_src = (
             f"package {base_package}.generated.actions.handlers.defaults;\n\n"
             f"import {base_package}.generated.actions.{req_name};\n"
-            f"import {base_package}.generated.actions.{res_name};\n"
+            f"import {base_package}.generated.events.{res_name};\n"
             f"import {base_package}.generated.actions.handlers.{handler_name};\n"
             "import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;\n"
             "import org.springframework.stereotype.Component;\n\n"
@@ -61,7 +61,7 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
         service_src = (
             f"package {base_package}.generated.actions.services;\n\n"
             f"import {base_package}.generated.actions.{req_name};\n"
-            f"import {base_package}.generated.actions.{res_name};\n\n"
+            f"import {base_package}.generated.events.{res_name};\n\n"
             + render_javadoc_block(action_description)
             + f"public interface {service_name} {{\n"
             + f"    {res_name} execute({req_name} request);\n"
@@ -70,14 +70,16 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
         files[f"src/main/java/{package_path}/generated/actions/services/{service_name}.java"] = service_src
 
         default_service_name = f"{service_name}Default"
+        primary_event_wrapper = f"{pascal_case(res_name)}Event"
         service_default_imports = {
             f"import {base_package}.generated.actions.{req_name};",
-            f"import {base_package}.generated.actions.{res_name};",
+            f"import {base_package}.generated.events.{res_name};",
             f"import {base_package}.generated.actions.handlers.{handler_name};",
             f"import {base_package}.generated.actions.services.{service_name};",
             f"import {base_package}.generated.events.ActionOutcome;",
             f"import {base_package}.generated.events.DomainEvent;",
             f"import {base_package}.generated.events.EventPublishingSupport;",
+            f"import {base_package}.generated.events.{primary_event_wrapper};",
             "import io.prophet.events.runtime.EventPublisher;",
             "import io.prophet.events.runtime.EventIds;",
             "import java.util.ArrayList;",
@@ -86,18 +88,11 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
             "import org.springframework.stereotype.Component;",
         }
 
-        action_output_event = action_output_event_by_shape_id.get(action["output_shape_id"])
-        primary_event_wrapper = None
-        if action_output_event is not None:
-            primary_event_wrapper = f"{pascal_case(str(action_output_event['name']))}Event"
-            service_default_imports.add(f"import {base_package}.generated.events.{primary_event_wrapper};")
-
         emit_lines: List[str] = [
             f"        ActionOutcome<{res_name}> outcome = handler.handleOutcome(request);",
             "        List<DomainEvent> events = new ArrayList<>();",
         ]
-        if primary_event_wrapper is not None:
-            emit_lines.append(f"        events.add(new {primary_event_wrapper}(outcome.output()));")
+        emit_lines.append(f"        events.add(new {primary_event_wrapper}(outcome.output()));")
         emit_lines.extend(
             [
                 "        events.addAll(outcome.additionalEvents());",
@@ -160,12 +155,13 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
     controller_methods: List[str] = []
     for action in sorted(actions, key=lambda x: x["id"]):
         req_name = action_input_by_id[action["input_shape_id"]]["name"]
-        res_name = action_output_by_id[action["output_shape_id"]]["name"]
+        output_event = event_by_id[action["output_event_id"]]
+        res_name = str(output_event["name"])
         service_name = f"{pascal_case(action['name'])}ActionService"
         service_var = f"{camel_case(action['name'])}Service"
         method_name = camel_case(action["name"])
         controller_imports.add(f"import {base_package}.generated.actions.{req_name};")
-        controller_imports.add(f"import {base_package}.generated.actions.{res_name};")
+        controller_imports.add(f"import {base_package}.generated.events.{res_name};")
         controller_imports.add(f"import {base_package}.generated.actions.services.{service_name};")
         controller_fields.append(f"    private final {service_name} {service_var};")
         ctor_args.append(f"        {service_name} {service_var}")

@@ -24,6 +24,7 @@ With `generation.targets` containing `node_express`:
 - `gen/node-express/src/generated/query.ts`
 - `gen/node-express/src/generated/query-routes.ts`
 - `gen/node-express/src/generated/events.ts`
+- `gen/node-express/src/generated/transitions.ts`
 - `gen/node-express/src/generated/index.ts`
 
 Prisma-only (`prisma` target):
@@ -79,11 +80,15 @@ On `prophet gen` for Node stacks, Prophet adds scripts to host `package.json` wh
 - Generated action routes are available under `/actions/<actionName>`.
 - Generated action service publishes event wire envelopes through async `EventPublisher` from `@prophet-ontology/events-runtime`.
 - Event payload object-ref fields in generated event contracts accept either a `<Object>Ref` or full `<Object>` value.
-- For action-output and signal domain events emitted through generated action services, wire payloads normalize embedded objects back to refs and emit extracted snapshots in `updated_objects`.
+- For produced events emitted through generated action services, wire payloads normalize embedded objects back to refs and emit extracted snapshots in `updated_objects`.
 - `NoOpEventPublisher` is provided for zero-config integration.
-- Handlers can return either the action output directly or `ActionOutcome` with additional domain events.
-- Transition events remain user-controlled and are not auto-published by generated action services.
+- Handlers can return either the produced event payload directly or `ActionOutcome` with additional domain events.
+- Produced transition events are auto-published by generated action services the same way as produced signals.
 - Default handler stubs throw until replaced by user-owned implementations.
+- Stateful objects generate transition helpers in `transitions.ts`:
+  - `<ObjectName>TransitionHandler` and `<ObjectName>TransitionService`
+  - `<ObjectName>TransitionValidator` and `<ObjectName>TransitionValidatorDefault`
+  - transition draft builders seeded with primary keys plus `fromState` and `toState`
 
 ## Query Behavior
 
@@ -102,7 +107,7 @@ Prisma generated repositories:
 
 - constructor expects `PrismaClient`
 - generated methods implement paging, typed filtering, `getById`, and `save` via `upsert`
-- Prisma schema includes object refs, state column (`current_state`), and supports composite primary keys
+- Prisma schema includes object refs, state column (`__prophet_state` mapped to logical `state`), and supports composite primary keys
 - Prisma schema adds non-unique display-key indexes (`idx_<model>_display`) from `key display (...)`
 - datasource URL is driven by `DATABASE_URL`; provider defaults to `sqlite` and can be configured with:
   - `generation.node_express.prisma.provider` in `prophet.yaml`
@@ -110,7 +115,7 @@ Prisma generated repositories:
 TypeORM generated repositories:
 
 - constructor expects `DataSource`
-- generated entities include columns, relations, and state column (`current_state`)
+- generated entities include columns, relations, and state column (`__prophet_state` mapped to logical `state`)
 - generated methods implement paging, typed filtering, `getById`, and `save`
 - query filtering is translated through `QueryBuilder`
 - database connection/runtime options come from your application-owned `DataSource` configuration

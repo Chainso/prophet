@@ -36,7 +36,7 @@ def render_query_contracts(ir: Dict[str, Any]) -> str:
             class_name = f"{obj_name}{filter_name}Filter"
             field_id = str(filter_def.get("field_id", ""))
             operators = [str(item) for item in filter_def.get("operators", [])]
-            if field_id == "__current_state__":
+            if field_id == "__state__":
                 field_type = "str"
             else:
                 field = by_field.get(field_id, {})

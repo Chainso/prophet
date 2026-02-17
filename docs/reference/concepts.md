@@ -5,17 +5,19 @@
 A Prophet ontology is a domain contract describing:
 - Objects and fields
 - Optional object state models (states and transitions)
-- Action inputs and outputs
+- Action inputs and produced events
 - Actions, signals, and triggers
 
 Event categories in the model:
 - Signals are explicitly defined in DSL (`signal` blocks).
-- Action outputs are events by definition (derived from action output contracts).
+- Inline action `output { ... }` blocks derive a signal event (`<ActionName>Result`).
+- Actions can also reference existing events via `output signal <SignalName>` and `output transition <Object>.<transition>`.
 - Object transitions are events by definition (derived from object transition definitions).
 
 Event emission behavior in generated action services:
-- Action-output and signal domain events are auto-published through generated event publisher wiring.
-- Transition events remain user-controlled (explicitly emitted by user code when needed).
+- The action's produced event is auto-published through generated event publisher wiring.
+- Additional user-returned events are published after the produced event in deterministic order.
+- For transition-producing actions, handlers can use generated transition services/handlers that return transition drafts, then build the final transition event payload.
 
 ## DSL -> IR -> Artifacts
 

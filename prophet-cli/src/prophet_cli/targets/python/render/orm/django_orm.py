@@ -74,9 +74,9 @@ def render_django_models(ir: Dict[str, Any]) -> str:
                 "",
             )
             if initial:
-                lines.append(f"    currentState = models.CharField(max_length=64, default='{initial}')")
+                lines.append(f"    state = models.CharField(max_length=64, default='{initial}', db_column='__prophet_state')")
             else:
-                lines.append("    currentState = models.CharField(max_length=64)")
+                lines.append("    state = models.CharField(max_length=64, db_column='__prophet_state')")
 
         lines.append("")
         lines.append("    class Meta:")
@@ -93,6 +93,26 @@ def render_django_models(ir: Dict[str, Any]) -> str:
                 quoted = ", ".join([repr(item) for item in composite_names])
                 lines.append(f"        constraints = [models.UniqueConstraint(fields=[{quoted}], name='uniq_{obj_name.lower()}_key')]")
         lines.append("")
+
+        if obj.get("states"):
+            history_model_name = f"{obj_name}StateHistoryModel"
+            history_table_name = f"{obj_name.lower()}s_state_history"
+            lines.append(f"class {history_model_name}(models.Model):")
+            lines.append("    historyId = models.BigAutoField(primary_key=True, db_column='history_id')")
+            for pk_field in _object_primary_key_fields(obj):
+                pk_name = _camel_case(str(pk_field.get("name", "id")))
+                pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
+                pk_decl = _django_field_for_descriptor(pk_desc, type_by_id, True)
+                lines.append(f"    {pk_name} = {pk_decl}")
+            lines.append("    transitionId = models.CharField(max_length=255, db_column='transition_id')")
+            lines.append("    fromState = models.CharField(max_length=255, db_column='from_state')")
+            lines.append("    toState = models.CharField(max_length=255, db_column='to_state')")
+            lines.append("    occurredAt = models.DateTimeField(auto_now_add=True, db_column='occurred_at')")
+            lines.append("")
+            lines.append("    class Meta:")
+            lines.append("        app_label = 'generated'")
+            lines.append(f"        db_table = '{history_table_name}'")
+            lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -139,7 +159,7 @@ def render_django_adapters(ir: Dict[str, Any]) -> str:
             prop = _camel_case(str(field.get("name", "field")))
             lines.append(f"        '{prop}': _serialize(item.{prop}),")
         if obj.get("states"):
-            lines.append("        'currentState': item.currentState,")
+            lines.append("        'state': item.state,")
         lines.append("    }")
         lines.append("")
 
@@ -177,7 +197,7 @@ def render_django_adapters(ir: Dict[str, Any]) -> str:
             else:
                 lines.append(f"        {prop}=record.{prop},")
         if obj.get("states"):
-            lines.append("        currentState=record.currentState,")
+            lines.append("        state=record.state,")
         lines.append("    )")
         lines.append("")
 
@@ -194,7 +214,7 @@ def render_django_adapters(ir: Dict[str, Any]) -> str:
             key=lambda item: str(item.get("field_name", "")),
         ):
             field_name = _camel_case(str(filter_def.get("field_name", "field")))
-            model_field = "currentState" if str(filter_def.get("field_id", "")) == "__current_state__" else field_name
+            model_field = "state" if str(filter_def.get("field_id", "")) == "__state__" else field_name
             lines.append(f"        if filter.{field_name} is not None:")
             lines.append(f"            if filter.{field_name}.eq is not None:")
             lines.append(f"                queryset = queryset.filter({model_field}=filter.{field_name}.eq)")
@@ -260,6 +280,37 @@ def render_django_adapters(ir: Dict[str, Any]) -> str:
             lines.append("        self._model.objects.create(**payload)")
         lines.append("        return item")
         lines.append("")
+
+        if obj.get("states"):
+            history_model_name = f"{obj_name}StateHistoryModel"
+            lines.append(
+                f"    def apply_transition(self, id: Domain.{obj_name}Ref, expected_state: Domain.{obj_name}State, next_state: Domain.{obj_name}State, transition_id: str) -> Optional[Domain.{obj_name}]:"
+            )
+            if pk_fields:
+                lines.append("        lookup = {")
+                for pk in pk_fields:
+                    pk_prop = _camel_case(str(pk.get("name", "id")))
+                    lines.append(f"            '{pk_prop}': id.{pk_prop},")
+                lines.append("        }")
+                lines.append("        updated = self._model.objects.filter(**lookup, state=expected_state).update(state=next_state)")
+                lines.append("        if int(updated or 0) < 1:")
+                lines.append("            return None")
+                lines.append("        history_payload = {")
+                for pk in pk_fields:
+                    pk_prop = _camel_case(str(pk.get("name", "id")))
+                    lines.append(f"            '{pk_prop}': id.{pk_prop},")
+                lines.append("            'transitionId': transition_id,")
+                lines.append("            'fromState': expected_state,")
+                lines.append("            'toState': next_state,")
+                lines.append("        }")
+                lines.append(f"        Models.{history_model_name}.objects.create(**history_payload)")
+                lines.append("        row = self._model.objects.filter(**lookup).first()")
+                lines.append("        if row is None:")
+                lines.append("            return None")
+                lines.append(f"        return _{obj_name.lower()}_to_domain(row)")
+            else:
+                lines.append("        return None")
+            lines.append("")
 
     lines.append("class DjangoRepositories:")
     lines.append("    def __init__(self):")

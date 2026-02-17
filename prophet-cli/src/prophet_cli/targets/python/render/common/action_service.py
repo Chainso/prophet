@@ -10,12 +10,12 @@ from ..support import _sort_dict_entries
 
 def render_action_service(ir: Dict[str, Any], *, async_mode: bool) -> str:
     action_input_by_id = {item["id"]: item for item in ir.get("action_inputs", []) if isinstance(item, dict) and "id" in item}
-    action_output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
-    action_output_event_helpers = sorted(
+    event_by_id = {item["id"]: item for item in ir.get("events", []) if isinstance(item, dict) and "id" in item}
+    output_event_helpers = sorted(
         {
-            f"create_{_snake_case(_pascal_case(str(shape.get('name', 'Output'))))}_event"
-            for shape in ir.get("action_outputs", [])
-            if isinstance(shape, dict)
+            f"create_{_snake_case(_pascal_case(str(event_by_id.get(str(action.get('output_event_id', '')), {}).get('name', 'Event'))))}_event"
+            for action in ir.get("actions", [])
+            if isinstance(action, dict)
         }
     )
 
@@ -28,11 +28,12 @@ def render_action_service(ir: Dict[str, Any], *, async_mode: bool) -> str:
         "from .action_handlers import ActionContext",
         "from .action_handlers import ActionHandlers",
         "from .actions import *",
+        "from .event_contracts import *",
         "from .events import EventPublishMetadata",
         "from .events import publish_domain_events",
         "from .events import publish_domain_events_sync",
         "from .events import to_action_outcome",
-        "from .events import " + ", ".join(action_output_event_helpers),
+        "from .events import " + ", ".join(output_event_helpers),
         "",
         "class ActionExecutionService:",
         "    def __init__(self, handlers: ActionHandlers):",
@@ -44,9 +45,8 @@ def render_action_service(ir: Dict[str, Any], *, async_mode: bool) -> str:
         action_name = str(action.get("name", "action"))
         camel = _camel_case(action_name)
         input_shape = action_input_by_id.get(str(action.get("input_shape_id", "")), {})
-        output_shape = action_output_by_id.get(str(action.get("output_shape_id", "")), {})
         input_name = _pascal_case(str(input_shape.get("name", "ActionInput")))
-        output_name = _pascal_case(str(output_shape.get("name", "ActionOutput")))
+        output_name = _pascal_case(str(event_by_id.get(str(action.get("output_event_id", "")), {}).get("name", "Event")))
         output_event_helper = f"create_{_snake_case(output_name)}_event"
 
         if async_mode:

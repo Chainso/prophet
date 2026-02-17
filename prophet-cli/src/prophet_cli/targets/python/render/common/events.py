@@ -103,7 +103,6 @@ def _render_py_list(values: List[str]) -> str:
 
 
 def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
-    action_output_by_id = {item["id"]: item for item in ir.get("action_outputs", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
     schema_version = str(ir.get("ontology", {}).get("version", "1.0.0"))
@@ -111,33 +110,18 @@ def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
     event_specs: List[Dict[str, Any]] = []
     seen_event_names: set[str] = set()
     for event in sorted([item for item in ir.get("events", []) if isinstance(item, dict)], key=lambda item: str(item.get("id", ""))):
-        kind = str(event.get("kind", ""))
-        if kind not in {"action_output", "signal"}:
-            continue
         event_name = _pascal_case(str(event.get("name", "Event")))
         if event_name in seen_event_names:
             continue
         seen_event_names.add(event_name)
-        if kind == "action_output":
-            shape_id = str(event.get("output_shape_id", ""))
-            output_shape = action_output_by_id.get(shape_id, {})
-            payload_type = _pascal_case(str(output_shape.get("name", event_name)))
-            payload_source = "Actions"
-            fields = [field for field in output_shape.get("fields", []) if isinstance(field, dict)]
-            ref_specs = _collect_event_ref_specs_for_fields(
-                fields,
-                object_by_id=object_by_id,
-                struct_by_id=struct_by_id,
-            )
-        else:
-            payload_type = event_name
-            payload_source = "EventContracts"
-            fields = [field for field in event.get("fields", []) if isinstance(field, dict)]
-            ref_specs = _collect_event_ref_specs_for_fields(
-                fields,
-                object_by_id=object_by_id,
-                struct_by_id=struct_by_id,
-            )
+        payload_type = event_name
+        payload_source = "EventContracts"
+        fields = [field for field in event.get("fields", []) if isinstance(field, dict)]
+        ref_specs = _collect_event_ref_specs_for_fields(
+            fields,
+            object_by_id=object_by_id,
+            struct_by_id=struct_by_id,
+        )
         event_specs.append(
             {
                 "name": event_name,
@@ -164,7 +148,6 @@ def render_event_emitter(ir: Dict[str, Any], *, async_mode: bool) -> str:
         "from prophet_events_runtime import now_iso",
         "from prophet_events_runtime import publish_batch_sync",
         "",
-        "from . import actions as Actions",
         "from . import event_contracts as EventContracts",
         "",
         "TOutput = TypeVar('TOutput')",

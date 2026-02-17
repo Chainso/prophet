@@ -78,7 +78,7 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
         if obj.get("states"):
             enum_cls = f"{obj['name']}State"
             imports.add(f"import {base_package}.generated.domain.{enum_cls};")
-            domain_builder_steps.append("            .currentState(entity.getCurrentState())")
+            domain_builder_steps.append("            .state(entity.getState())")
 
         mapper_imports = {
             "import org.springframework.stereotype.Component;",
@@ -238,7 +238,7 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
 
         if obj.get("states"):
             enum_cls = f"{obj['name']}State"
-            state_filter_name = f"{obj['name']}CurrentStateFilter"
+            state_filter_name = f"{obj['name']}StateFilter"
             files[
                 f"src/main/java/{package_path}/generated/api/filters/{state_filter_name}.java"
             ] = render_java_record_with_builder(
@@ -250,17 +250,17 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
                 state_filter_name,
                 [(enum_cls, "eq", False), (f"List<{enum_cls}>", "in", False)],
             )
-            typed_query_fields.append((state_filter_name, "currentState", False))
+            typed_query_fields.append((state_filter_name, "state", False))
             typed_query_imports.add(f"import {base_package}.generated.api.filters.{state_filter_name};")
             typed_filter_conditions.extend(
                 [
-                    "            if (filter.currentState() != null) {",
-                    f"                {state_filter_name} currentStateFilter = filter.currentState();",
-                    "                if (currentStateFilter.eq() != null) {",
-                    "                    spec = spec.and((root, query, cb) -> cb.equal(root.get(\"currentState\"), currentStateFilter.eq()));",
+                    "            if (filter.state() != null) {",
+                    f"                {state_filter_name} stateFilter = filter.state();",
+                    "                if (stateFilter.eq() != null) {",
+                    "                    spec = spec.and((root, query, cb) -> cb.equal(root.get(\"state\"), stateFilter.eq()));",
                     "                }",
-                    "                if (currentStateFilter.in() != null && !currentStateFilter.in().isEmpty()) {",
-                    "                    spec = spec.and((root, query, cb) -> root.get(\"currentState\").in(currentStateFilter.in()));",
+                    "                if (stateFilter.in() != null && !stateFilter.in().isEmpty()) {",
+                    "                    spec = spec.and((root, query, cb) -> root.get(\"state\").in(stateFilter.in()));",
                     "                }",
                     "            }",
                 ]
@@ -401,4 +401,3 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
         )
 
         files[f"src/main/java/{package_path}/generated/api/{obj['name']}QueryController.java"] = query_src
-

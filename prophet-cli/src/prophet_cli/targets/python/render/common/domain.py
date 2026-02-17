@@ -92,7 +92,7 @@ def render_domain_types(ir: Dict[str, Any]) -> str:
                     )
                 )
             if states:
-                lines.append(f"    currentState: {obj_name}State")
+                lines.append(f"    state: {obj_name}State")
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
