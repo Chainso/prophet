@@ -4,6 +4,17 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-02-19
+
+### Changed
+- Bumped shared runtime libraries to `0.5.0` across:
+  - `@prophet-ontology/events-runtime`,
+  - `prophet-events-runtime`,
+  - `io.github.chainso:prophet-events-runtime`.
+- Updated default generator runtime version resolution to `0.5.0`.
+- Regenerated maintained Java/Node/Python/Turtle examples so generated runtime dependency pins and manifests align with the runtime bump.
+- Toolchain/package version advanced to `0.22.0`.
+
 ## [0.21.0] - 2026-02-19
 
 ### Added

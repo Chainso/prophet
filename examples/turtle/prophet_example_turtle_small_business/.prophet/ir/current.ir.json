@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.21.0",
+  "toolchain_version": "0.22.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_artisan_bakery_local",
@@ -4121,5 +4121,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "6b94790e01efa543badd3ea7189d16b84fb2cb485afac0ef486457dbef8bf641",
-  "ir_hash": "b20f62660c76e19d6c95307d17069546310b017fe5fd2bbb9a53812d581ea6c1"
+  "ir_hash": "9b081af50cd5c05cb8d283d0448973ba4616cc9a9d0b07eb8e71c250a77ffedb"
 }

@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.example"
-version = "0.21.0"
+version = "0.22.0"
 
 java {
     toolchain {
@@ -22,7 +22,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("io.github.chainso:prophet-events-runtime:0.4.0")
+    implementation("io.github.chainso:prophet-events-runtime:0.5.0")
     runtimeOnly("org.postgresql:postgresql")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
