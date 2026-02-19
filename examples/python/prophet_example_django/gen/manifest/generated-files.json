@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.20.0",
+  "toolchain_version": "0.21.0",
   "stack": {
     "id": "python_django_django_orm",
     "language": "python",
     "framework": "django",
     "orm": "django_orm"
   },
-  "ir_hash": "211facecc42e6e0e449a6a116867d04a9ef14dcba13622094bebc8bccbc6bca3",
+  "ir_hash": "4730fbfa7594841c0209b8638d6389d0cd53c158384404ec08bd55d9872607c7",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",

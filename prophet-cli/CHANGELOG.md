@@ -4,6 +4,20 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-02-19
+
+### Added
+- Added optional DSL `name "..."` metadata across ontology elements and fields for human-facing display labels.
+- Added a realistic Turtle small-business example (`examples/turtle/prophet_example_turtle_small_business`) covering dense entity relationships, reusable structs, transitions, mixed action outputs, and triggers.
+- Added dedicated example README coverage for every maintained example with model/surface-focused guidance.
+
+### Changed
+- Updated IR and generators to carry display-name metadata (`display_name`) while preserving technical symbols for stable wire keys and references.
+- Updated Turtle rendering to source `prophet:name` from display names (with technical fallback) while preserving technical field keys via `prophet:fieldKey`.
+- Updated OpenAPI rendering to emit display-name hints (`title`, `x-prophet-display-name`) without changing generated property keys.
+- Regenerated maintained example outputs and refreshed example compatibility baselines after the naming rollout.
+- Toolchain/package version advanced to `0.21.0`.
+
 ## [0.20.0] - 2026-02-17
 
 ### Added
