@@ -1,0 +1,247 @@
+{
+  "schema_version": 1,
+  "stack": "python_fastapi_sqlmodel",
+  "hooks": [
+    {
+      "kind": "action_handler",
+      "action_id": "act_adjust_inventory",
+      "action_name": "adjustInventory",
+      "python_protocol": "generated.action_handlers.AdjustInventoryActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_cancel_sales_order",
+      "action_name": "cancelSalesOrder",
+      "python_protocol": "generated.action_handlers.CancelSalesOrderActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_close_purchase_order",
+      "action_name": "closePurchaseOrder",
+      "python_protocol": "generated.action_handlers.ClosePurchaseOrderActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_create_purchase_order",
+      "action_name": "createPurchaseOrder",
+      "python_protocol": "generated.action_handlers.CreatePurchaseOrderActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_create_sales_order",
+      "action_name": "createSalesOrder",
+      "python_protocol": "generated.action_handlers.CreateSalesOrderActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_fulfill_sales_order",
+      "action_name": "fulfillSalesOrder",
+      "python_protocol": "generated.action_handlers.FulfillSalesOrderActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_mark_invoice_overdue",
+      "action_name": "markInvoiceOverdue",
+      "python_protocol": "generated.action_handlers.MarkInvoiceOverdueActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_mark_invoice_paid",
+      "action_name": "markInvoicePaid",
+      "python_protocol": "generated.action_handlers.MarkInvoicePaidActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_mark_sales_order_paid",
+      "action_name": "markSalesOrderPaid",
+      "python_protocol": "generated.action_handlers.MarkSalesOrderPaidActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_receive_purchase_order",
+      "action_name": "receivePurchaseOrder",
+      "python_protocol": "generated.action_handlers.ReceivePurchaseOrderActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_record_invoice_payment",
+      "action_name": "recordInvoicePayment",
+      "python_protocol": "generated.action_handlers.RecordInvoicePaymentActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_register_customer",
+      "action_name": "registerCustomer",
+      "python_protocol": "generated.action_handlers.RegisterCustomerActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_restock_inventory",
+      "action_name": "restockInventory",
+      "python_protocol": "generated.action_handlers.RestockInventoryActionHandler"
+    },
+    {
+      "kind": "action_handler",
+      "action_id": "act_submit_purchase_order",
+      "action_name": "submitPurchaseOrder",
+      "python_protocol": "generated.action_handlers.SubmitPurchaseOrderActionHandler"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_invoice",
+      "object_name": "Invoice",
+      "transition_id": "trans_invoice_mark_overdue",
+      "transition_name": "markOverdue",
+      "python_protocol": "generated.transitions.InvoiceTransitionHandler",
+      "python_service": "generated.transitions.InvoiceTransitionService",
+      "default_implementation": "generated.transitions.InvoiceTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_invoice",
+      "object_name": "Invoice",
+      "transition_id": "trans_invoice_mark_overdue",
+      "transition_name": "markOverdue",
+      "python_protocol": "generated.transitions.InvoiceTransitionValidator",
+      "default_implementation": "generated.transitions.InvoiceTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_invoice",
+      "object_name": "Invoice",
+      "transition_id": "trans_invoice_mark_paid",
+      "transition_name": "markPaid",
+      "python_protocol": "generated.transitions.InvoiceTransitionHandler",
+      "python_service": "generated.transitions.InvoiceTransitionService",
+      "default_implementation": "generated.transitions.InvoiceTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_invoice",
+      "object_name": "Invoice",
+      "transition_id": "trans_invoice_mark_paid",
+      "transition_name": "markPaid",
+      "python_protocol": "generated.transitions.InvoiceTransitionValidator",
+      "default_implementation": "generated.transitions.InvoiceTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_purchase_order",
+      "object_name": "PurchaseOrder",
+      "transition_id": "trans_purchase_order_close",
+      "transition_name": "close",
+      "python_protocol": "generated.transitions.PurchaseOrderTransitionHandler",
+      "python_service": "generated.transitions.PurchaseOrderTransitionService",
+      "default_implementation": "generated.transitions.PurchaseOrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_purchase_order",
+      "object_name": "PurchaseOrder",
+      "transition_id": "trans_purchase_order_close",
+      "transition_name": "close",
+      "python_protocol": "generated.transitions.PurchaseOrderTransitionValidator",
+      "default_implementation": "generated.transitions.PurchaseOrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_purchase_order",
+      "object_name": "PurchaseOrder",
+      "transition_id": "trans_purchase_order_receive",
+      "transition_name": "receive",
+      "python_protocol": "generated.transitions.PurchaseOrderTransitionHandler",
+      "python_service": "generated.transitions.PurchaseOrderTransitionService",
+      "default_implementation": "generated.transitions.PurchaseOrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_purchase_order",
+      "object_name": "PurchaseOrder",
+      "transition_id": "trans_purchase_order_receive",
+      "transition_name": "receive",
+      "python_protocol": "generated.transitions.PurchaseOrderTransitionValidator",
+      "default_implementation": "generated.transitions.PurchaseOrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_purchase_order",
+      "object_name": "PurchaseOrder",
+      "transition_id": "trans_purchase_order_submit",
+      "transition_name": "submit",
+      "python_protocol": "generated.transitions.PurchaseOrderTransitionHandler",
+      "python_service": "generated.transitions.PurchaseOrderTransitionService",
+      "default_implementation": "generated.transitions.PurchaseOrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_purchase_order",
+      "object_name": "PurchaseOrder",
+      "transition_id": "trans_purchase_order_submit",
+      "transition_name": "submit",
+      "python_protocol": "generated.transitions.PurchaseOrderTransitionValidator",
+      "default_implementation": "generated.transitions.PurchaseOrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_sales_order",
+      "object_name": "SalesOrder",
+      "transition_id": "trans_sales_order_cancel",
+      "transition_name": "cancel",
+      "python_protocol": "generated.transitions.SalesOrderTransitionHandler",
+      "python_service": "generated.transitions.SalesOrderTransitionService",
+      "default_implementation": "generated.transitions.SalesOrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_sales_order",
+      "object_name": "SalesOrder",
+      "transition_id": "trans_sales_order_cancel",
+      "transition_name": "cancel",
+      "python_protocol": "generated.transitions.SalesOrderTransitionValidator",
+      "default_implementation": "generated.transitions.SalesOrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_sales_order",
+      "object_name": "SalesOrder",
+      "transition_id": "trans_sales_order_fulfill",
+      "transition_name": "fulfill",
+      "python_protocol": "generated.transitions.SalesOrderTransitionHandler",
+      "python_service": "generated.transitions.SalesOrderTransitionService",
+      "default_implementation": "generated.transitions.SalesOrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_sales_order",
+      "object_name": "SalesOrder",
+      "transition_id": "trans_sales_order_fulfill",
+      "transition_name": "fulfill",
+      "python_protocol": "generated.transitions.SalesOrderTransitionValidator",
+      "default_implementation": "generated.transitions.SalesOrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "transition_handler",
+      "object_id": "obj_sales_order",
+      "object_name": "SalesOrder",
+      "transition_id": "trans_sales_order_mark_paid",
+      "transition_name": "markPaid",
+      "python_protocol": "generated.transitions.SalesOrderTransitionHandler",
+      "python_service": "generated.transitions.SalesOrderTransitionService",
+      "default_implementation": "generated.transitions.SalesOrderTransitionHandlerDefault"
+    },
+    {
+      "kind": "transition_validator",
+      "object_id": "obj_sales_order",
+      "object_name": "SalesOrder",
+      "transition_id": "trans_sales_order_mark_paid",
+      "transition_name": "markPaid",
+      "python_protocol": "generated.transitions.SalesOrderTransitionValidator",
+      "default_implementation": "generated.transitions.SalesOrderTransitionValidatorDefault"
+    },
+    {
+      "kind": "event_publisher",
+      "python_protocol": "prophet_events_runtime.EventPublisher",
+      "generated_publish_helper": "generated.events.publish_domain_events"
+    }
+  ]
+}

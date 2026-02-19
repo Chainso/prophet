@@ -85,10 +85,17 @@ and validated by SHACL exactly as intended.
 Validate generated Turtle against the base ontology/shapes with:
 
 ```bash
+# Minimal example
 cd examples/turtle/prophet_example_turtle_minimal
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen
 cd $(git rev-parse --show-toplevel)
 pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_minimal/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
+
+# Complex small-business example
+cd examples/turtle/prophet_example_turtle_small_business
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+cd $(git rev-parse --show-toplevel)
+pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_small_business/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
 ```
 
 ## Minimal Turtle Example
@@ -97,3 +104,10 @@ A minimal initialized Turtle example is provided at:
 - [examples/turtle/prophet_example_turtle_minimal](../../examples/turtle/prophet_example_turtle_minimal)
 
 This example includes Prophet project scaffolding plus a minimal ontology, but no runtime app code.
+
+## Complex Turtle Example
+
+A richer small-business Turtle example is also available at:
+- [examples/turtle/prophet_example_turtle_small_business](../../examples/turtle/prophet_example_turtle_small_business)
+
+This model includes multiple related entities, lifecycle transitions, reusable structs, and trigger wiring intended for more realistic testing scenarios.

@@ -109,7 +109,7 @@ python3 -m venv .venv --system-site-packages
 | Python | Flask | SQLAlchemy | `python_flask_sqlalchemy` | [Flask + SQLAlchemy Example](examples/python/prophet_example_flask_sqlalchemy) |
 | Python | Flask | SQLModel | `python_flask_sqlmodel` | [Flask + SQLModel Example](examples/python/prophet_example_flask_sqlmodel) |
 | Python | Django | Django ORM | `python_django_django_orm` | [Django + Django ORM Example](examples/python/prophet_example_django) |
-| Turtle | SHACL/RDF | Ontology projection | N/A | [Minimal Turtle Example](examples/turtle/prophet_example_turtle_minimal) |
+| Turtle | SHACL/RDF | Ontology projection | N/A | [Minimal Turtle Example](examples/turtle/prophet_example_turtle_minimal) · [Small Business Turtle Example](examples/turtle/prophet_example_turtle_small_business) |
 
 ## License
 

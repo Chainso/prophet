@@ -1,6 +1,6 @@
 # Examples
 
-This page is the sample catalog (runnable apps + minimal target examples).
+This page is the sample catalog (runnable apps + Turtle target examples).
 
 Use [Quickstart](../quickstart/quickstart.md) when integrating Prophet into your own project.
 
@@ -175,4 +175,26 @@ Validate the generated Turtle with base SHACL shapes:
 
 ```bash
 pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_minimal/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
+```
+
+## Complex Turtle Example (Small Business)
+
+Path:
+- [examples/turtle/prophet_example_turtle_small_business](../../examples/turtle/prophet_example_turtle_small_business)
+
+This example models a realistic small-business domain with:
+- customers, employees, suppliers, products, inventory, purchase orders, sales orders, invoices, and deliveries
+- multiple object relationships via `ref(...)`
+- reusable structs for addresses, contacts, order lines, and payment details
+- lifecycle state machines and transitions for purchasing, sales, and invoicing
+- mixed action output forms (`output { ... }`, `output signal ...`, `output transition ...`)
+- signal-driven automation via triggers
+
+Generate and validate:
+
+```bash
+cd examples/turtle/prophet_example_turtle_small_business
+prophet gen
+cd $(git rev-parse --show-toplevel)
+pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_small_business/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
 ```

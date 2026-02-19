@@ -1,0 +1,3868 @@
+{
+  "ir_version": "0.1",
+  "toolchain_version": "0.20.0",
+  "ontology_source_file": "ontology/local/main.prophet",
+  "ontology": {
+    "id": "ont_artisan_bakery_local",
+    "name": "artisan_bakery_local",
+    "version": "1.0.0",
+    "description": "Operations ontology for a neighborhood bakery: catalog, customers, inventory, purchasing, invoicing, and fulfillment."
+  },
+  "types": [
+    {
+      "id": "type_currency_code",
+      "name": "CurrencyCode",
+      "kind": "custom",
+      "base": "string",
+      "constraints": {
+        "pattern": "^[A-Z]{3}$"
+      }
+    },
+    {
+      "id": "type_email",
+      "name": "Email",
+      "kind": "custom",
+      "base": "string",
+      "constraints": {
+        "pattern": "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$"
+      }
+    },
+    {
+      "id": "type_money",
+      "name": "Money",
+      "kind": "custom",
+      "base": "decimal",
+      "constraints": {
+        "min": "0.00"
+      }
+    },
+    {
+      "id": "type_phone_number",
+      "name": "PhoneNumber",
+      "kind": "custom",
+      "base": "string",
+      "constraints": {
+        "pattern": "^\\\\+?[0-9][0-9\\\\- ]{7,19}$"
+      }
+    },
+    {
+      "id": "type_quantity",
+      "name": "Quantity",
+      "kind": "custom",
+      "base": "decimal",
+      "constraints": {
+        "min": "0.00"
+      }
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj_customer",
+      "name": "Customer",
+      "fields": [
+        {
+          "id": "fld_customer_customer_id",
+          "name": "customer_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_customer_full_name",
+          "name": "full_name",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_customer_email",
+          "name": "email",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_email"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_customer_phone",
+          "name": "phone",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_phone_number"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_customer_billing_address",
+          "name": "billing_address",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_address"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_customer_shipping_address",
+          "name": "shipping_address",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_address"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_customer_preferred_currency",
+          "name": "preferred_currency",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_currency_code"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_customer_loyalty_points",
+          "name": "loyalty_points",
+          "type": {
+            "kind": "base",
+            "name": "int"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_customer_tags",
+          "name": "tags",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 0,
+            "max": "many"
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_customer_customer_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [],
+      "transitions": []
+    },
+    {
+      "id": "obj_delivery",
+      "name": "Delivery",
+      "fields": [
+        {
+          "id": "fld_delivery_delivery_id",
+          "name": "delivery_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_delivery_sales_order",
+          "name": "sales_order",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_sales_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_delivery_destination",
+          "name": "destination",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_address"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_delivery_carrier",
+          "name": "carrier",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_delivery_tracking_number",
+          "name": "tracking_number",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_delivery_scheduled_for",
+          "name": "scheduled_for",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_delivery_delivered_at",
+          "name": "delivered_at",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_delivery_status_text",
+          "name": "status_text",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_delivery_delivery_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [],
+      "transitions": []
+    },
+    {
+      "id": "obj_employee",
+      "name": "Employee",
+      "fields": [
+        {
+          "id": "fld_employee_employee_id",
+          "name": "employee_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_employee_full_name",
+          "name": "full_name",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_employee_email",
+          "name": "email",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_email"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_employee_phone",
+          "name": "phone",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_phone_number"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_employee_role",
+          "name": "role",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_employee_manager",
+          "name": "manager",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_employee"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_employee_active",
+          "name": "active",
+          "type": {
+            "kind": "base",
+            "name": "boolean"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_employee_employee_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [],
+      "transitions": []
+    },
+    {
+      "id": "obj_inventory_item",
+      "name": "InventoryItem",
+      "fields": [
+        {
+          "id": "fld_inventory_item_inventory_item_id",
+          "name": "inventory_item_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_inventory_item_product",
+          "name": "product",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_product"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_inventory_item_quantity_on_hand",
+          "name": "quantity_on_hand",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_inventory_item_reorder_threshold",
+          "name": "reorder_threshold",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_inventory_item_reorder_quantity",
+          "name": "reorder_quantity",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_inventory_item_location_code",
+          "name": "location_code",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_inventory_item_lot_code",
+          "name": "lot_code",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_inventory_item_expires_on",
+          "name": "expires_on",
+          "type": {
+            "kind": "base",
+            "name": "date"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_inventory_item_last_restocked_at",
+          "name": "last_restocked_at",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_inventory_item_inventory_item_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [],
+      "transitions": []
+    },
+    {
+      "id": "obj_invoice",
+      "name": "Invoice",
+      "fields": [
+        {
+          "id": "fld_invoice_invoice_id",
+          "name": "invoice_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_invoice_sales_order",
+          "name": "sales_order",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_sales_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_invoice_issued_at",
+          "name": "issued_at",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_invoice_due_on",
+          "name": "due_on",
+          "type": {
+            "kind": "base",
+            "name": "date"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_invoice_subtotal",
+          "name": "subtotal",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_invoice_tax_amount",
+          "name": "tax_amount",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_invoice_total_due",
+          "name": "total_due",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_invoice_balance_due",
+          "name": "balance_due",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_invoice_currency",
+          "name": "currency",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_currency_code"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_invoice_invoice_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [
+        {
+          "id": "state_invoice_issued",
+          "name": "issued",
+          "initial": true
+        },
+        {
+          "id": "state_invoice_paid",
+          "name": "paid",
+          "initial": false
+        },
+        {
+          "id": "state_invoice_overdue",
+          "name": "overdue",
+          "initial": false
+        }
+      ],
+      "transitions": [
+        {
+          "id": "trans_invoice_mark_paid",
+          "name": "markPaid",
+          "from_state_id": "state_invoice_issued",
+          "to_state_id": "state_invoice_paid"
+        },
+        {
+          "id": "trans_invoice_mark_overdue",
+          "name": "markOverdue",
+          "from_state_id": "state_invoice_issued",
+          "to_state_id": "state_invoice_overdue"
+        }
+      ]
+    },
+    {
+      "id": "obj_product",
+      "name": "Product",
+      "fields": [
+        {
+          "id": "fld_product_product_id",
+          "name": "product_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_product_sku",
+          "name": "sku",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "display"
+        },
+        {
+          "id": "fld_product_name",
+          "name": "name",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "display"
+        },
+        {
+          "id": "fld_product_description",
+          "name": "description",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_product_supplier",
+          "name": "supplier",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_supplier"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_product_list_price",
+          "name": "list_price",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_product_cost_price",
+          "name": "cost_price",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_product_active",
+          "name": "active",
+          "type": {
+            "kind": "base",
+            "name": "boolean"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_product_tags",
+          "name": "tags",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "base",
+              "name": "string"
+            }
+          },
+          "cardinality": {
+            "min": 0,
+            "max": "many"
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_product_product_id"
+          ]
+        },
+        "display": {
+          "field_ids": [
+            "fld_product_sku",
+            "fld_product_name"
+          ]
+        }
+      },
+      "states": [],
+      "transitions": []
+    },
+    {
+      "id": "obj_purchase_order",
+      "name": "PurchaseOrder",
+      "fields": [
+        {
+          "id": "fld_purchase_order_purchase_order_id",
+          "name": "purchase_order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_purchase_order_supplier",
+          "name": "supplier",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_supplier"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_purchase_order_requested_by",
+          "name": "requested_by",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_employee"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_purchase_order_lines",
+          "name": "lines",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "struct",
+              "target_struct_id": "struct_purchase_order_line"
+            }
+          },
+          "cardinality": {
+            "min": 1,
+            "max": "many"
+          }
+        },
+        {
+          "id": "fld_purchase_order_notes",
+          "name": "notes",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_purchase_order_submitted_at",
+          "name": "submitted_at",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_purchase_order_received_at",
+          "name": "received_at",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_purchase_order_total_cost",
+          "name": "total_cost",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_purchase_order_purchase_order_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [
+        {
+          "id": "state_purchase_order_draft",
+          "name": "draft",
+          "initial": true
+        },
+        {
+          "id": "state_purchase_order_submitted",
+          "name": "submitted",
+          "initial": false
+        },
+        {
+          "id": "state_purchase_order_received",
+          "name": "received",
+          "initial": false
+        },
+        {
+          "id": "state_purchase_order_closed",
+          "name": "closed",
+          "initial": false
+        }
+      ],
+      "transitions": [
+        {
+          "id": "trans_purchase_order_submit",
+          "name": "submit",
+          "from_state_id": "state_purchase_order_draft",
+          "to_state_id": "state_purchase_order_submitted"
+        },
+        {
+          "id": "trans_purchase_order_receive",
+          "name": "receive",
+          "from_state_id": "state_purchase_order_submitted",
+          "to_state_id": "state_purchase_order_received"
+        },
+        {
+          "id": "trans_purchase_order_close",
+          "name": "close",
+          "from_state_id": "state_purchase_order_received",
+          "to_state_id": "state_purchase_order_closed"
+        }
+      ]
+    },
+    {
+      "id": "obj_sales_order",
+      "name": "SalesOrder",
+      "fields": [
+        {
+          "id": "fld_sales_order_sales_order_id",
+          "name": "sales_order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_sales_order_customer",
+          "name": "customer",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_customer"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sales_order_created_by",
+          "name": "created_by",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_employee"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sales_order_lines",
+          "name": "lines",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "struct",
+              "target_struct_id": "struct_sales_order_line"
+            }
+          },
+          "cardinality": {
+            "min": 1,
+            "max": "many"
+          }
+        },
+        {
+          "id": "fld_sales_order_requested_fulfillment_date",
+          "name": "requested_fulfillment_date",
+          "type": {
+            "kind": "base",
+            "name": "date"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sales_order_subtotal",
+          "name": "subtotal",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sales_order_tax_amount",
+          "name": "tax_amount",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sales_order_total_amount",
+          "name": "total_amount",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sales_order_invoice",
+          "name": "invoice",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_invoice"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sales_order_notes",
+          "name": "notes",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_sales_order_sales_order_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [
+        {
+          "id": "state_sales_order_pending_payment",
+          "name": "pending_payment",
+          "initial": true
+        },
+        {
+          "id": "state_sales_order_paid",
+          "name": "paid",
+          "initial": false
+        },
+        {
+          "id": "state_sales_order_fulfilled",
+          "name": "fulfilled",
+          "initial": false
+        },
+        {
+          "id": "state_sales_order_cancelled",
+          "name": "cancelled",
+          "initial": false
+        }
+      ],
+      "transitions": [
+        {
+          "id": "trans_sales_order_mark_paid",
+          "name": "markPaid",
+          "from_state_id": "state_sales_order_pending_payment",
+          "to_state_id": "state_sales_order_paid"
+        },
+        {
+          "id": "trans_sales_order_fulfill",
+          "name": "fulfill",
+          "from_state_id": "state_sales_order_paid",
+          "to_state_id": "state_sales_order_fulfilled"
+        },
+        {
+          "id": "trans_sales_order_cancel",
+          "name": "cancel",
+          "from_state_id": "state_sales_order_pending_payment",
+          "to_state_id": "state_sales_order_cancelled"
+        }
+      ]
+    },
+    {
+      "id": "obj_supplier",
+      "name": "Supplier",
+      "fields": [
+        {
+          "id": "fld_supplier_supplier_id",
+          "name": "supplier_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "key": "primary"
+        },
+        {
+          "id": "fld_supplier_legal_name",
+          "name": "legal_name",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_supplier_primary_contact",
+          "name": "primary_contact",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_contact_point"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_supplier_payment_terms_days",
+          "name": "payment_terms_days",
+          "type": {
+            "kind": "base",
+            "name": "int"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_supplier_address",
+          "name": "address",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_address"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_supplier_active",
+          "name": "active",
+          "type": {
+            "kind": "base",
+            "name": "boolean"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "keys": {
+        "primary": {
+          "field_ids": [
+            "fld_supplier_supplier_id"
+          ]
+        },
+        "display": {
+          "field_ids": []
+        }
+      },
+      "states": [],
+      "transitions": []
+    }
+  ],
+  "structs": [
+    {
+      "id": "struct_address",
+      "name": "Address",
+      "fields": [
+        {
+          "id": "fld_struct_address_line1",
+          "name": "line1",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_address_line2",
+          "name": "line2",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_address_city",
+          "name": "city",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_address_region",
+          "name": "region",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_address_postal_code",
+          "name": "postal_code",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_address_country_code",
+          "name": "country_code",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_currency_code"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "struct_contact_point",
+      "name": "ContactPoint",
+      "fields": [
+        {
+          "id": "fld_struct_contact_point_name",
+          "name": "name",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_contact_point_email",
+          "name": "email",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_email"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_contact_point_phone",
+          "name": "phone",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_phone_number"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "struct_payment_method_details",
+      "name": "PaymentMethodDetails",
+      "fields": [
+        {
+          "id": "fld_struct_payment_method_details_method",
+          "name": "method",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_payment_method_details_provider_reference",
+          "name": "provider_reference",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_payment_method_details_note",
+          "name": "note",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "struct_purchase_order_line",
+      "name": "PurchaseOrderLine",
+      "fields": [
+        {
+          "id": "fld_struct_purchase_order_line_product",
+          "name": "product",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_product"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_purchase_order_line_quantity",
+          "name": "quantity",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_purchase_order_line_unit_cost",
+          "name": "unit_cost",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "struct_sales_order_line",
+      "name": "SalesOrderLine",
+      "fields": [
+        {
+          "id": "fld_struct_sales_order_line_product",
+          "name": "product",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_product"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_sales_order_line_quantity",
+          "name": "quantity",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_sales_order_line_unit_price",
+          "name": "unit_price",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_struct_sales_order_line_note",
+          "name": "note",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ],
+  "action_inputs": [
+    {
+      "id": "ain_adjust_inventory",
+      "name": "AdjustInventoryCommand",
+      "fields": [
+        {
+          "id": "fld_ain_adjust_inventory_inventory_item",
+          "name": "inventoryItem",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_inventory_item"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_adjust_inventory_delta",
+          "name": "delta",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_adjust_inventory_reason",
+          "name": "reason",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_cancel_sales_order",
+      "name": "CancelSalesOrderCommand",
+      "fields": [
+        {
+          "id": "fld_ain_cancel_sales_order_sales_order",
+          "name": "salesOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_sales_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_cancel_sales_order_reason",
+          "name": "reason",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_cancel_sales_order_cancelled_at",
+          "name": "cancelledAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_close_purchase_order",
+      "name": "ClosePurchaseOrderCommand",
+      "fields": [
+        {
+          "id": "fld_ain_close_purchase_order_purchase_order",
+          "name": "purchaseOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_purchase_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_close_purchase_order_closed_at",
+          "name": "closedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_create_purchase_order",
+      "name": "CreatePurchaseOrderCommand",
+      "fields": [
+        {
+          "id": "fld_ain_create_purchase_order_supplier",
+          "name": "supplier",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_supplier"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_create_purchase_order_requested_by",
+          "name": "requestedBy",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_employee"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_create_purchase_order_lines",
+          "name": "lines",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "struct",
+              "target_struct_id": "struct_purchase_order_line"
+            }
+          },
+          "cardinality": {
+            "min": 1,
+            "max": "many"
+          }
+        },
+        {
+          "id": "fld_ain_create_purchase_order_notes",
+          "name": "notes",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_create_sales_order",
+      "name": "CreateSalesOrderCommand",
+      "fields": [
+        {
+          "id": "fld_ain_create_sales_order_customer",
+          "name": "customer",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_customer"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_create_sales_order_created_by",
+          "name": "createdBy",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_employee"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_create_sales_order_lines",
+          "name": "lines",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "struct",
+              "target_struct_id": "struct_sales_order_line"
+            }
+          },
+          "cardinality": {
+            "min": 1,
+            "max": "many"
+          }
+        },
+        {
+          "id": "fld_ain_create_sales_order_requested_fulfillment_date",
+          "name": "requestedFulfillmentDate",
+          "type": {
+            "kind": "base",
+            "name": "date"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_fulfill_sales_order",
+      "name": "FulfillSalesOrderCommand",
+      "fields": [
+        {
+          "id": "fld_ain_fulfill_sales_order_sales_order",
+          "name": "salesOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_sales_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_fulfill_sales_order_fulfilled_at",
+          "name": "fulfilledAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_fulfill_sales_order_shipment_tracking",
+          "name": "shipmentTracking",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_mark_invoice_overdue",
+      "name": "MarkInvoiceOverdueCommand",
+      "fields": [
+        {
+          "id": "fld_ain_mark_invoice_overdue_invoice",
+          "name": "invoice",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_invoice"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_mark_invoice_overdue_marked_at",
+          "name": "markedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_mark_invoice_paid",
+      "name": "MarkInvoicePaidCommand",
+      "fields": [
+        {
+          "id": "fld_ain_mark_invoice_paid_invoice",
+          "name": "invoice",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_invoice"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_mark_invoice_paid_paid_at",
+          "name": "paidAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_mark_invoice_paid_payment_reference",
+          "name": "paymentReference",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_mark_sales_order_paid",
+      "name": "MarkSalesOrderPaidCommand",
+      "fields": [
+        {
+          "id": "fld_ain_mark_sales_order_paid_sales_order",
+          "name": "salesOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_sales_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_mark_sales_order_paid_amount",
+          "name": "amount",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_mark_sales_order_paid_paid_at",
+          "name": "paidAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_receive_purchase_order",
+      "name": "ReceivePurchaseOrderCommand",
+      "fields": [
+        {
+          "id": "fld_ain_receive_purchase_order_purchase_order",
+          "name": "purchaseOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_purchase_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_receive_purchase_order_received_at",
+          "name": "receivedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_receive_purchase_order_invoice_number",
+          "name": "invoiceNumber",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_record_invoice_payment",
+      "name": "RecordInvoicePaymentCommand",
+      "fields": [
+        {
+          "id": "fld_ain_record_invoice_payment_invoice",
+          "name": "invoice",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_invoice"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_record_invoice_payment_amount",
+          "name": "amount",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_record_invoice_payment_method_details",
+          "name": "methodDetails",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_payment_method_details"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_register_customer",
+      "name": "RegisterCustomerCommand",
+      "fields": [
+        {
+          "id": "fld_ain_register_customer_full_name",
+          "name": "fullName",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_register_customer_email",
+          "name": "email",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_email"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_register_customer_phone",
+          "name": "phone",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_phone_number"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_register_customer_billing_address",
+          "name": "billingAddress",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_address"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_register_customer_shipping_address",
+          "name": "shippingAddress",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_address"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_register_customer_preferred_currency",
+          "name": "preferredCurrency",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_currency_code"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_restock_inventory",
+      "name": "RestockInventoryCommand",
+      "fields": [
+        {
+          "id": "fld_ain_restock_inventory_purchase_order",
+          "name": "purchaseOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_purchase_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_restock_inventory_received_at",
+          "name": "receivedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "ain_submit_purchase_order",
+      "name": "SubmitPurchaseOrderCommand",
+      "fields": [
+        {
+          "id": "fld_ain_submit_purchase_order_purchase_order",
+          "name": "purchaseOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_purchase_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_submit_purchase_order_submitted_at",
+          "name": "submittedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_ain_submit_purchase_order_buyer_note",
+          "name": "buyerNote",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "act_adjust_inventory",
+      "name": "adjustInventory",
+      "kind": "process",
+      "input_shape_id": "ain_adjust_inventory",
+      "output_event_id": "aout_adjust_inventory"
+    },
+    {
+      "id": "act_cancel_sales_order",
+      "name": "cancelSalesOrder",
+      "kind": "process",
+      "input_shape_id": "ain_cancel_sales_order",
+      "output_event_id": "trans_sales_order_cancel"
+    },
+    {
+      "id": "act_close_purchase_order",
+      "name": "closePurchaseOrder",
+      "kind": "workflow",
+      "input_shape_id": "ain_close_purchase_order",
+      "output_event_id": "trans_purchase_order_close"
+    },
+    {
+      "id": "act_create_purchase_order",
+      "name": "createPurchaseOrder",
+      "kind": "process",
+      "input_shape_id": "ain_create_purchase_order",
+      "output_event_id": "aout_create_purchase_order"
+    },
+    {
+      "id": "act_create_sales_order",
+      "name": "createSalesOrder",
+      "kind": "process",
+      "input_shape_id": "ain_create_sales_order",
+      "output_event_id": "aout_create_sales_order"
+    },
+    {
+      "id": "act_fulfill_sales_order",
+      "name": "fulfillSalesOrder",
+      "kind": "workflow",
+      "input_shape_id": "ain_fulfill_sales_order",
+      "output_event_id": "trans_sales_order_fulfill"
+    },
+    {
+      "id": "act_mark_invoice_overdue",
+      "name": "markInvoiceOverdue",
+      "kind": "workflow",
+      "input_shape_id": "ain_mark_invoice_overdue",
+      "output_event_id": "trans_invoice_mark_overdue"
+    },
+    {
+      "id": "act_mark_invoice_paid",
+      "name": "markInvoicePaid",
+      "kind": "workflow",
+      "input_shape_id": "ain_mark_invoice_paid",
+      "output_event_id": "trans_invoice_mark_paid"
+    },
+    {
+      "id": "act_mark_sales_order_paid",
+      "name": "markSalesOrderPaid",
+      "kind": "workflow",
+      "input_shape_id": "ain_mark_sales_order_paid",
+      "output_event_id": "trans_sales_order_mark_paid"
+    },
+    {
+      "id": "act_receive_purchase_order",
+      "name": "receivePurchaseOrder",
+      "kind": "workflow",
+      "input_shape_id": "ain_receive_purchase_order",
+      "output_event_id": "trans_purchase_order_receive"
+    },
+    {
+      "id": "act_record_invoice_payment",
+      "name": "recordInvoicePayment",
+      "kind": "process",
+      "input_shape_id": "ain_record_invoice_payment",
+      "output_event_id": "sig_invoice_payment_recorded"
+    },
+    {
+      "id": "act_register_customer",
+      "name": "registerCustomer",
+      "kind": "process",
+      "input_shape_id": "ain_register_customer",
+      "output_event_id": "aout_register_customer"
+    },
+    {
+      "id": "act_restock_inventory",
+      "name": "restockInventory",
+      "kind": "workflow",
+      "input_shape_id": "ain_restock_inventory",
+      "output_event_id": "aout_restock_inventory"
+    },
+    {
+      "id": "act_submit_purchase_order",
+      "name": "submitPurchaseOrder",
+      "kind": "workflow",
+      "input_shape_id": "ain_submit_purchase_order",
+      "output_event_id": "trans_purchase_order_submit"
+    }
+  ],
+  "events": [
+    {
+      "id": "aout_adjust_inventory",
+      "name": "AdjustInventoryResult",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_aout_adjust_inventory_inventory_item",
+          "name": "inventoryItem",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_inventory_item"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_aout_adjust_inventory_new_quantity",
+          "name": "newQuantity",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "aout_create_purchase_order",
+      "name": "CreatePurchaseOrderResult",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_aout_create_purchase_order_purchase_order",
+          "name": "purchaseOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_purchase_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_aout_create_purchase_order_estimated_total",
+          "name": "estimatedTotal",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "aout_create_sales_order",
+      "name": "CreateSalesOrderResult",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_aout_create_sales_order_sales_order",
+          "name": "salesOrder",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_sales_order"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_aout_create_sales_order_invoice",
+          "name": "invoice",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_invoice"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_aout_create_sales_order_total_amount",
+          "name": "totalAmount",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "aout_register_customer",
+      "name": "RegisterCustomerResult",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_aout_register_customer_customer",
+          "name": "customer",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_customer"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_aout_register_customer_welcome_tier",
+          "name": "welcomeTier",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "aout_restock_inventory",
+      "name": "RestockInventoryResult",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_aout_restock_inventory_updated_items",
+          "name": "updatedItems",
+          "type": {
+            "kind": "list",
+            "element": {
+              "kind": "object_ref",
+              "target_object_id": "obj_inventory_item"
+            }
+          },
+          "cardinality": {
+            "min": 1,
+            "max": "many"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sig_invoice_payment_recorded",
+      "name": "InvoicePaymentRecorded",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_sig_invoice_payment_recorded_invoice",
+          "name": "invoice",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_invoice"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sig_invoice_payment_recorded_amount",
+          "name": "amount",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sig_invoice_payment_recorded_method_details",
+          "name": "method_details",
+          "type": {
+            "kind": "struct",
+            "target_struct_id": "struct_payment_method_details"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "sig_low_stock_detected",
+      "name": "LowStockDetected",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_sig_low_stock_detected_inventory_item",
+          "name": "inventory_item",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_inventory_item"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sig_low_stock_detected_current_quantity",
+          "name": "current_quantity",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sig_low_stock_detected_threshold",
+          "name": "threshold",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_quantity"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "sig_supplier_lead_time_updated",
+      "name": "SupplierLeadTimeUpdated",
+      "kind": "signal",
+      "fields": [
+        {
+          "id": "fld_sig_supplier_lead_time_updated_supplier",
+          "name": "supplier",
+          "type": {
+            "kind": "object_ref",
+            "target_object_id": "obj_supplier"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_sig_supplier_lead_time_updated_lead_time_days",
+          "name": "lead_time_days",
+          "type": {
+            "kind": "base",
+            "name": "int"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "trans_invoice_mark_overdue",
+      "name": "InvoiceMarkOverdueTransition",
+      "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_invoice_mark_overdue__pk__fld_invoice_invoice_id",
+          "name": "invoice_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_invoice_mark_overdue__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_invoice_mark_overdue__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_invoice_mark_overdue_marked_at",
+          "name": "markedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "object_id": "obj_invoice",
+      "transition_id": "trans_invoice_mark_overdue",
+      "from_state_id": "state_invoice_issued",
+      "to_state_id": "state_invoice_overdue"
+    },
+    {
+      "id": "trans_invoice_mark_paid",
+      "name": "InvoiceMarkPaidTransition",
+      "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_invoice_mark_paid__pk__fld_invoice_invoice_id",
+          "name": "invoice_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_invoice_mark_paid__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_invoice_mark_paid__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_invoice_mark_paid_paid_at",
+          "name": "paidAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_invoice_mark_paid_payment_reference",
+          "name": "paymentReference",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "object_id": "obj_invoice",
+      "transition_id": "trans_invoice_mark_paid",
+      "from_state_id": "state_invoice_issued",
+      "to_state_id": "state_invoice_paid"
+    },
+    {
+      "id": "trans_purchase_order_close",
+      "name": "PurchaseOrderCloseTransition",
+      "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_purchase_order_close__pk__fld_purchase_order_purchase_order_id",
+          "name": "purchase_order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_purchase_order_close__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_purchase_order_close__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_purchase_order_close_closed_at",
+          "name": "closedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "object_id": "obj_purchase_order",
+      "transition_id": "trans_purchase_order_close",
+      "from_state_id": "state_purchase_order_received",
+      "to_state_id": "state_purchase_order_closed"
+    },
+    {
+      "id": "trans_purchase_order_receive",
+      "name": "PurchaseOrderReceiveTransition",
+      "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_purchase_order_receive__pk__fld_purchase_order_purchase_order_id",
+          "name": "purchase_order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_purchase_order_receive__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_purchase_order_receive__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_purchase_order_receive_received_at",
+          "name": "receivedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_purchase_order_receive_invoice_number",
+          "name": "invoiceNumber",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "object_id": "obj_purchase_order",
+      "transition_id": "trans_purchase_order_receive",
+      "from_state_id": "state_purchase_order_submitted",
+      "to_state_id": "state_purchase_order_received"
+    },
+    {
+      "id": "trans_purchase_order_submit",
+      "name": "PurchaseOrderSubmitTransition",
+      "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_purchase_order_submit__pk__fld_purchase_order_purchase_order_id",
+          "name": "purchase_order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_purchase_order_submit__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_purchase_order_submit__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_purchase_order_submit_submitted_at",
+          "name": "submittedAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_purchase_order_submit_buyer_note",
+          "name": "buyerNote",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "object_id": "obj_purchase_order",
+      "transition_id": "trans_purchase_order_submit",
+      "from_state_id": "state_purchase_order_draft",
+      "to_state_id": "state_purchase_order_submitted"
+    },
+    {
+      "id": "trans_sales_order_cancel",
+      "name": "SalesOrderCancelTransition",
+      "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_sales_order_cancel__pk__fld_sales_order_sales_order_id",
+          "name": "sales_order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_sales_order_cancel__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_sales_order_cancel__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_sales_order_cancel_cancelled_at",
+          "name": "cancelledAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_sales_order_cancel_reason",
+          "name": "reason",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "object_id": "obj_sales_order",
+      "transition_id": "trans_sales_order_cancel",
+      "from_state_id": "state_sales_order_pending_payment",
+      "to_state_id": "state_sales_order_cancelled"
+    },
+    {
+      "id": "trans_sales_order_fulfill",
+      "name": "SalesOrderFulfillTransition",
+      "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_sales_order_fulfill__pk__fld_sales_order_sales_order_id",
+          "name": "sales_order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_sales_order_fulfill__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_sales_order_fulfill__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_sales_order_fulfill_fulfilled_at",
+          "name": "fulfilledAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_sales_order_fulfill_shipment_tracking",
+          "name": "shipmentTracking",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "object_id": "obj_sales_order",
+      "transition_id": "trans_sales_order_fulfill",
+      "from_state_id": "state_sales_order_paid",
+      "to_state_id": "state_sales_order_fulfilled"
+    },
+    {
+      "id": "trans_sales_order_mark_paid",
+      "name": "SalesOrderMarkPaidTransition",
+      "kind": "transition",
+      "fields": [
+        {
+          "id": "trans_sales_order_mark_paid__pk__fld_sales_order_sales_order_id",
+          "name": "sales_order_id",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_sales_order_mark_paid__from_state",
+          "name": "fromState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "trans_sales_order_mark_paid__to_state",
+          "name": "toState",
+          "type": {
+            "kind": "base",
+            "name": "string"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_sales_order_mark_paid_payment_amount",
+          "name": "paymentAmount",
+          "type": {
+            "kind": "custom",
+            "target_type_id": "type_money"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        },
+        {
+          "id": "fld_trans_sales_order_mark_paid_paid_at",
+          "name": "paidAt",
+          "type": {
+            "kind": "base",
+            "name": "datetime"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          }
+        }
+      ],
+      "object_id": "obj_sales_order",
+      "transition_id": "trans_sales_order_mark_paid",
+      "from_state_id": "state_sales_order_pending_payment",
+      "to_state_id": "state_sales_order_paid"
+    }
+  ],
+  "triggers": [
+    {
+      "id": "trg_on_invoice_payment_recorded",
+      "name": "onInvoicePaymentRecorded",
+      "event_id": "sig_invoice_payment_recorded",
+      "action_id": "act_mark_invoice_paid"
+    },
+    {
+      "id": "trg_on_low_stock_detected",
+      "name": "onLowStockDetected",
+      "event_id": "sig_low_stock_detected",
+      "action_id": "act_create_purchase_order"
+    },
+    {
+      "id": "trg_on_purchase_order_received",
+      "name": "onPurchaseOrderReceived",
+      "event_id": "trans_purchase_order_receive",
+      "action_id": "act_restock_inventory"
+    },
+    {
+      "id": "trg_on_sales_order_marked_paid",
+      "name": "onSalesOrderMarkedPaid",
+      "event_id": "trans_sales_order_mark_paid",
+      "action_id": "act_fulfill_sales_order"
+    }
+  ],
+  "query_contracts": [
+    {
+      "object_id": "obj_customer",
+      "object_name": "Customer",
+      "paths": {
+        "list": "/customers",
+        "get_by_id": "/customers/{id}",
+        "typed_query": "/customers/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_customer_customer_id",
+          "field_name": "customer_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_customer_email",
+          "field_name": "email",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_customer_full_name",
+          "field_name": "full_name",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_customer_loyalty_points",
+          "field_name": "loyalty_points",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_customer_phone",
+          "field_name": "phone",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_customer_preferred_currency",
+          "field_name": "preferred_currency",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        }
+      ],
+      "contract_hash": "c36d6001ea747e3c155c734d0fb1abcef2e94aaeaffe493e742f7d9e594d4977"
+    },
+    {
+      "object_id": "obj_delivery",
+      "object_name": "Delivery",
+      "paths": {
+        "list": "/deliveries",
+        "get_by_id": "/deliveries/{id}",
+        "typed_query": "/deliveries/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_delivery_carrier",
+          "field_name": "carrier",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_delivery_delivered_at",
+          "field_name": "delivered_at",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_delivery_delivery_id",
+          "field_name": "delivery_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_delivery_sales_order",
+          "field_name": "sales_order",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_delivery_scheduled_for",
+          "field_name": "scheduled_for",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_delivery_status_text",
+          "field_name": "status_text",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_delivery_tracking_number",
+          "field_name": "tracking_number",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        }
+      ],
+      "contract_hash": "f4dec9a199fe487726d7f2226fc2ae261b16ac01aaa211994ab4a9f9cd74b053"
+    },
+    {
+      "object_id": "obj_employee",
+      "object_name": "Employee",
+      "paths": {
+        "list": "/employees",
+        "get_by_id": "/employees/{id}",
+        "typed_query": "/employees/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_employee_active",
+          "field_name": "active",
+          "operators": [
+            "eq"
+          ]
+        },
+        {
+          "field_id": "fld_employee_email",
+          "field_name": "email",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_employee_employee_id",
+          "field_name": "employee_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_employee_full_name",
+          "field_name": "full_name",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_employee_manager",
+          "field_name": "manager",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_employee_phone",
+          "field_name": "phone",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_employee_role",
+          "field_name": "role",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        }
+      ],
+      "contract_hash": "6c9fc8b3dfc01999898b2d88002da411d69d3df84afd3976f8bd944bd4d79813"
+    },
+    {
+      "object_id": "obj_inventory_item",
+      "object_name": "InventoryItem",
+      "paths": {
+        "list": "/inventory_items",
+        "get_by_id": "/inventory_items/{id}",
+        "typed_query": "/inventory_items/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_inventory_item_expires_on",
+          "field_name": "expires_on",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_inventory_item_inventory_item_id",
+          "field_name": "inventory_item_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_inventory_item_last_restocked_at",
+          "field_name": "last_restocked_at",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_inventory_item_location_code",
+          "field_name": "location_code",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_inventory_item_lot_code",
+          "field_name": "lot_code",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_inventory_item_product",
+          "field_name": "product",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_inventory_item_quantity_on_hand",
+          "field_name": "quantity_on_hand",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_inventory_item_reorder_quantity",
+          "field_name": "reorder_quantity",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_inventory_item_reorder_threshold",
+          "field_name": "reorder_threshold",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        }
+      ],
+      "contract_hash": "fa8eac668028a416350ac1bd24447a8bb846763bff1a3a09de3e0ef681c869bc"
+    },
+    {
+      "object_id": "obj_invoice",
+      "object_name": "Invoice",
+      "paths": {
+        "list": "/invoices",
+        "get_by_id": "/invoices/{id}",
+        "typed_query": "/invoices/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_invoice_balance_due",
+          "field_name": "balance_due",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_invoice_currency",
+          "field_name": "currency",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_invoice_due_on",
+          "field_name": "due_on",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_invoice_invoice_id",
+          "field_name": "invoice_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_invoice_issued_at",
+          "field_name": "issued_at",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_invoice_sales_order",
+          "field_name": "sales_order",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_invoice_subtotal",
+          "field_name": "subtotal",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_invoice_tax_amount",
+          "field_name": "tax_amount",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_invoice_total_due",
+          "field_name": "total_due",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "__state__",
+          "field_name": "state",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        }
+      ],
+      "contract_hash": "a71f3b94e36832039130b329f47914ac98c40cdebd496a511a4d9c5c9415ab14"
+    },
+    {
+      "object_id": "obj_product",
+      "object_name": "Product",
+      "paths": {
+        "list": "/products",
+        "get_by_id": "/products/{id}",
+        "typed_query": "/products/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_product_active",
+          "field_name": "active",
+          "operators": [
+            "eq"
+          ]
+        },
+        {
+          "field_id": "fld_product_cost_price",
+          "field_name": "cost_price",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_product_description",
+          "field_name": "description",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_product_list_price",
+          "field_name": "list_price",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_product_name",
+          "field_name": "name",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_product_product_id",
+          "field_name": "product_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_product_sku",
+          "field_name": "sku",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_product_supplier",
+          "field_name": "supplier",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        }
+      ],
+      "contract_hash": "86dfda8ff336558ff4c444cee4d8e536bebf6dbbd4988ba91ee08b9074b808b8"
+    },
+    {
+      "object_id": "obj_purchase_order",
+      "object_name": "PurchaseOrder",
+      "paths": {
+        "list": "/purchase_orders",
+        "get_by_id": "/purchase_orders/{id}",
+        "typed_query": "/purchase_orders/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_purchase_order_notes",
+          "field_name": "notes",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_purchase_order_purchase_order_id",
+          "field_name": "purchase_order_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_purchase_order_received_at",
+          "field_name": "received_at",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_purchase_order_requested_by",
+          "field_name": "requested_by",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_purchase_order_submitted_at",
+          "field_name": "submitted_at",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_purchase_order_supplier",
+          "field_name": "supplier",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_purchase_order_total_cost",
+          "field_name": "total_cost",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "__state__",
+          "field_name": "state",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        }
+      ],
+      "contract_hash": "5dc59e61bc5cd3246d18d9a0f4473435823a18f869fdde1f39dfd3d99f516921"
+    },
+    {
+      "object_id": "obj_sales_order",
+      "object_name": "SalesOrder",
+      "paths": {
+        "list": "/sales_orders",
+        "get_by_id": "/sales_orders/{id}",
+        "typed_query": "/sales_orders/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_sales_order_created_by",
+          "field_name": "created_by",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_sales_order_customer",
+          "field_name": "customer",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_sales_order_invoice",
+          "field_name": "invoice",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
+          "field_id": "fld_sales_order_notes",
+          "field_name": "notes",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_sales_order_requested_fulfillment_date",
+          "field_name": "requested_fulfillment_date",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_sales_order_sales_order_id",
+          "field_name": "sales_order_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_sales_order_subtotal",
+          "field_name": "subtotal",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_sales_order_tax_amount",
+          "field_name": "tax_amount",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_sales_order_total_amount",
+          "field_name": "total_amount",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "__state__",
+          "field_name": "state",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        }
+      ],
+      "contract_hash": "5c5501736210c3cca9ccad662b83c291469b27316e9721033da3b99fa60b036d"
+    },
+    {
+      "object_id": "obj_supplier",
+      "object_name": "Supplier",
+      "paths": {
+        "list": "/suppliers",
+        "get_by_id": "/suppliers/{id}",
+        "typed_query": "/suppliers/query"
+      },
+      "pageable": {
+        "supported": true,
+        "default_size": 20
+      },
+      "filters": [
+        {
+          "field_id": "fld_supplier_active",
+          "field_name": "active",
+          "operators": [
+            "eq"
+          ]
+        },
+        {
+          "field_id": "fld_supplier_legal_name",
+          "field_name": "legal_name",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        },
+        {
+          "field_id": "fld_supplier_payment_terms_days",
+          "field_name": "payment_terms_days",
+          "operators": [
+            "eq",
+            "in",
+            "gte",
+            "lte"
+          ]
+        },
+        {
+          "field_id": "fld_supplier_supplier_id",
+          "field_name": "supplier_id",
+          "operators": [
+            "eq",
+            "in",
+            "contains"
+          ]
+        }
+      ],
+      "contract_hash": "1360f83a43afc520c5ab6bedcc137e3f4b81a39e46b4376ff187e2dd4529cea9"
+    }
+  ],
+  "generation_profile": {
+    "golden_stack": "spring_boot"
+  },
+  "compatibility_profile": {
+    "strict_enums": false,
+    "list_scalar_shape_changes_are_breaking": true,
+    "nested_list_shape_changes_are_breaking": true,
+    "struct_field_contract_changes_are_breaking": true,
+    "custom_type_constraint_changes_are_breaking": true
+  },
+  "query_contracts_version": "6b94790e01efa543badd3ea7189d16b84fb2cb485afac0ef486457dbef8bf641",
+  "ir_hash": "e25ba8c59580466e703adf82f54fca456a36bb4a1cf412c2fa540b577e1ce27f"
+}

@@ -28,6 +28,7 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
    - [examples/python/prophet_example_flask_sqlmodel](examples/python/prophet_example_flask_sqlmodel)
    - [examples/python/prophet_example_django](examples/python/prophet_example_django)
    - [examples/turtle/prophet_example_turtle_minimal](examples/turtle/prophet_example_turtle_minimal)
+   - [examples/turtle/prophet_example_turtle_small_business](examples/turtle/prophet_example_turtle_small_business)
 4. Read [Developer Index](docs/developer/index.md) before changing internal architecture.
 
 ## Critical Rules
@@ -116,10 +117,16 @@ Turtle target smoke check:
 
 ```bash
 python3 -m unittest prophet-cli/tests/test_turtle_target.py -v
+
 cd examples/turtle/prophet_example_turtle_minimal
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen
 cd $(git rev-parse --show-toplevel)
 pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_minimal/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
+
+cd examples/turtle/prophet_example_turtle_small_business
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+cd $(git rev-parse --show-toplevel)
+pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_small_business/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
 ```
 
 ## Where to Edit

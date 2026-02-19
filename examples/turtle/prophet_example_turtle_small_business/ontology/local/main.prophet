@@ -1,0 +1,1299 @@
+ontology artisan_bakery_local {
+  id "ont_artisan_bakery_local"
+  version "1.0.0"
+  description "Operations ontology for a neighborhood bakery: catalog, customers, inventory, purchasing, invoicing, and fulfillment."
+
+  type Money {
+    id "type_money"
+    base decimal
+    constraint min "0.00"
+  }
+
+  type Quantity {
+    id "type_quantity"
+    base decimal
+    constraint min "0.00"
+  }
+
+  type Email {
+    id "type_email"
+    base string
+    constraint pattern "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
+  }
+
+  type CurrencyCode {
+    id "type_currency_code"
+    base string
+    constraint pattern "^[A-Z]{3}$"
+  }
+
+  type PhoneNumber {
+    id "type_phone_number"
+    base string
+    constraint pattern "^\\+?[0-9][0-9\\- ]{7,19}$"
+  }
+
+  struct Address {
+    id "struct_address"
+
+    field line1 {
+      id "fld_struct_address_line1"
+      type string
+    }
+
+    field line2 {
+      id "fld_struct_address_line2"
+      type string
+      optional
+    }
+
+    field city {
+      id "fld_struct_address_city"
+      type string
+    }
+
+    field region {
+      id "fld_struct_address_region"
+      type string
+      optional
+    }
+
+    field postal_code {
+      id "fld_struct_address_postal_code"
+      type string
+    }
+
+    field country_code {
+      id "fld_struct_address_country_code"
+      type CurrencyCode
+    }
+  }
+
+  struct ContactPoint {
+    id "struct_contact_point"
+
+    field name {
+      id "fld_struct_contact_point_name"
+      type string
+      optional
+    }
+
+    field email {
+      id "fld_struct_contact_point_email"
+      type Email
+      optional
+    }
+
+    field phone {
+      id "fld_struct_contact_point_phone"
+      type PhoneNumber
+      optional
+    }
+  }
+
+  struct SalesOrderLine {
+    id "struct_sales_order_line"
+
+    field product {
+      id "fld_struct_sales_order_line_product"
+      type ref(Product)
+    }
+
+    field quantity {
+      id "fld_struct_sales_order_line_quantity"
+      type Quantity
+    }
+
+    field unit_price {
+      id "fld_struct_sales_order_line_unit_price"
+      type Money
+    }
+
+    field note {
+      id "fld_struct_sales_order_line_note"
+      type string
+      optional
+    }
+  }
+
+  struct PurchaseOrderLine {
+    id "struct_purchase_order_line"
+
+    field product {
+      id "fld_struct_purchase_order_line_product"
+      type ref(Product)
+    }
+
+    field quantity {
+      id "fld_struct_purchase_order_line_quantity"
+      type Quantity
+    }
+
+    field unit_cost {
+      id "fld_struct_purchase_order_line_unit_cost"
+      type Money
+    }
+  }
+
+  struct PaymentMethodDetails {
+    id "struct_payment_method_details"
+
+    field method {
+      id "fld_struct_payment_method_details_method"
+      type string
+    }
+
+    field provider_reference {
+      id "fld_struct_payment_method_details_provider_reference"
+      type string
+      optional
+    }
+
+    field note {
+      id "fld_struct_payment_method_details_note"
+      type string
+      optional
+    }
+  }
+
+  object Customer {
+    id "obj_customer"
+
+    field customer_id {
+      id "fld_customer_customer_id"
+      type string
+      key primary
+    }
+
+    field full_name {
+      id "fld_customer_full_name"
+      type string
+    }
+
+    field email {
+      id "fld_customer_email"
+      type Email
+      optional
+    }
+
+    field phone {
+      id "fld_customer_phone"
+      type PhoneNumber
+      optional
+    }
+
+    field billing_address {
+      id "fld_customer_billing_address"
+      type Address
+      optional
+    }
+
+    field shipping_address {
+      id "fld_customer_shipping_address"
+      type Address
+      optional
+    }
+
+    field preferred_currency {
+      id "fld_customer_preferred_currency"
+      type CurrencyCode
+      optional
+    }
+
+    field loyalty_points {
+      id "fld_customer_loyalty_points"
+      type int
+      optional
+    }
+
+    field tags {
+      id "fld_customer_tags"
+      type string[]
+      optional
+    }
+  }
+
+  object Employee {
+    id "obj_employee"
+
+    field employee_id {
+      id "fld_employee_employee_id"
+      type string
+      key primary
+    }
+
+    field full_name {
+      id "fld_employee_full_name"
+      type string
+    }
+
+    field email {
+      id "fld_employee_email"
+      type Email
+    }
+
+    field phone {
+      id "fld_employee_phone"
+      type PhoneNumber
+      optional
+    }
+
+    field role {
+      id "fld_employee_role"
+      type string
+    }
+
+    field manager {
+      id "fld_employee_manager"
+      type ref(Employee)
+      optional
+    }
+
+    field active {
+      id "fld_employee_active"
+      type boolean
+    }
+  }
+
+  object Supplier {
+    id "obj_supplier"
+
+    field supplier_id {
+      id "fld_supplier_supplier_id"
+      type string
+      key primary
+    }
+
+    field legal_name {
+      id "fld_supplier_legal_name"
+      type string
+    }
+
+    field primary_contact {
+      id "fld_supplier_primary_contact"
+      type ContactPoint
+    }
+
+    field payment_terms_days {
+      id "fld_supplier_payment_terms_days"
+      type int
+      optional
+    }
+
+    field address {
+      id "fld_supplier_address"
+      type Address
+      optional
+    }
+
+    field active {
+      id "fld_supplier_active"
+      type boolean
+    }
+  }
+
+  object Product {
+    id "obj_product"
+
+    field product_id {
+      id "fld_product_product_id"
+      type string
+      key primary
+    }
+
+    field sku {
+      id "fld_product_sku"
+      type string
+      key display
+    }
+
+    field name {
+      id "fld_product_name"
+      type string
+      key display
+    }
+
+    field description {
+      id "fld_product_description"
+      type string
+      optional
+    }
+
+    field supplier {
+      id "fld_product_supplier"
+      type ref(Supplier)
+    }
+
+    field list_price {
+      id "fld_product_list_price"
+      type Money
+    }
+
+    field cost_price {
+      id "fld_product_cost_price"
+      type Money
+      optional
+    }
+
+    field active {
+      id "fld_product_active"
+      type boolean
+    }
+
+    field tags {
+      id "fld_product_tags"
+      type string[]
+      optional
+    }
+  }
+
+  object InventoryItem {
+    id "obj_inventory_item"
+
+    field inventory_item_id {
+      id "fld_inventory_item_inventory_item_id"
+      type string
+      key primary
+    }
+
+    field product {
+      id "fld_inventory_item_product"
+      type ref(Product)
+    }
+
+    field quantity_on_hand {
+      id "fld_inventory_item_quantity_on_hand"
+      type Quantity
+    }
+
+    field reorder_threshold {
+      id "fld_inventory_item_reorder_threshold"
+      type Quantity
+    }
+
+    field reorder_quantity {
+      id "fld_inventory_item_reorder_quantity"
+      type Quantity
+    }
+
+    field location_code {
+      id "fld_inventory_item_location_code"
+      type string
+    }
+
+    field lot_code {
+      id "fld_inventory_item_lot_code"
+      type string
+      optional
+    }
+
+    field expires_on {
+      id "fld_inventory_item_expires_on"
+      type date
+      optional
+    }
+
+    field last_restocked_at {
+      id "fld_inventory_item_last_restocked_at"
+      type datetime
+      optional
+    }
+  }
+
+  object PurchaseOrder {
+    id "obj_purchase_order"
+
+    field purchase_order_id {
+      id "fld_purchase_order_purchase_order_id"
+      type string
+      key primary
+    }
+
+    field supplier {
+      id "fld_purchase_order_supplier"
+      type ref(Supplier)
+    }
+
+    field requested_by {
+      id "fld_purchase_order_requested_by"
+      type ref(Employee)
+    }
+
+    field lines {
+      id "fld_purchase_order_lines"
+      type PurchaseOrderLine[]
+    }
+
+    field notes {
+      id "fld_purchase_order_notes"
+      type string
+      optional
+    }
+
+    field submitted_at {
+      id "fld_purchase_order_submitted_at"
+      type datetime
+      optional
+    }
+
+    field received_at {
+      id "fld_purchase_order_received_at"
+      type datetime
+      optional
+    }
+
+    field total_cost {
+      id "fld_purchase_order_total_cost"
+      type Money
+      optional
+    }
+
+    state draft {
+      id "state_purchase_order_draft"
+      initial
+    }
+
+    state submitted {
+      id "state_purchase_order_submitted"
+    }
+
+    state received {
+      id "state_purchase_order_received"
+    }
+
+    state closed {
+      id "state_purchase_order_closed"
+    }
+
+    transition submit {
+      id "trans_purchase_order_submit"
+      from draft
+      to submitted
+
+      field submittedAt {
+        id "fld_trans_purchase_order_submit_submitted_at"
+        type datetime
+      }
+
+      field buyerNote {
+        id "fld_trans_purchase_order_submit_buyer_note"
+        type string
+        optional
+      }
+    }
+
+    transition receive {
+      id "trans_purchase_order_receive"
+      from submitted
+      to received
+
+      field receivedAt {
+        id "fld_trans_purchase_order_receive_received_at"
+        type datetime
+      }
+
+      field invoiceNumber {
+        id "fld_trans_purchase_order_receive_invoice_number"
+        type string
+        optional
+      }
+    }
+
+    transition close {
+      id "trans_purchase_order_close"
+      from received
+      to closed
+
+      field closedAt {
+        id "fld_trans_purchase_order_close_closed_at"
+        type datetime
+      }
+    }
+  }
+
+  object SalesOrder {
+    id "obj_sales_order"
+
+    field sales_order_id {
+      id "fld_sales_order_sales_order_id"
+      type string
+      key primary
+    }
+
+    field customer {
+      id "fld_sales_order_customer"
+      type ref(Customer)
+    }
+
+    field created_by {
+      id "fld_sales_order_created_by"
+      type ref(Employee)
+    }
+
+    field lines {
+      id "fld_sales_order_lines"
+      type SalesOrderLine[]
+    }
+
+    field requested_fulfillment_date {
+      id "fld_sales_order_requested_fulfillment_date"
+      type date
+      optional
+    }
+
+    field subtotal {
+      id "fld_sales_order_subtotal"
+      type Money
+    }
+
+    field tax_amount {
+      id "fld_sales_order_tax_amount"
+      type Money
+    }
+
+    field total_amount {
+      id "fld_sales_order_total_amount"
+      type Money
+    }
+
+    field invoice {
+      id "fld_sales_order_invoice"
+      type ref(Invoice)
+      optional
+    }
+
+    field notes {
+      id "fld_sales_order_notes"
+      type string
+      optional
+    }
+
+    state pending_payment {
+      id "state_sales_order_pending_payment"
+      initial
+    }
+
+    state paid {
+      id "state_sales_order_paid"
+    }
+
+    state fulfilled {
+      id "state_sales_order_fulfilled"
+    }
+
+    state cancelled {
+      id "state_sales_order_cancelled"
+    }
+
+    transition markPaid {
+      id "trans_sales_order_mark_paid"
+      from pending_payment
+      to paid
+
+      field paymentAmount {
+        id "fld_trans_sales_order_mark_paid_payment_amount"
+        type Money
+      }
+
+      field paidAt {
+        id "fld_trans_sales_order_mark_paid_paid_at"
+        type datetime
+      }
+    }
+
+    transition fulfill {
+      id "trans_sales_order_fulfill"
+      from paid
+      to fulfilled
+
+      field fulfilledAt {
+        id "fld_trans_sales_order_fulfill_fulfilled_at"
+        type datetime
+      }
+
+      field shipmentTracking {
+        id "fld_trans_sales_order_fulfill_shipment_tracking"
+        type string
+        optional
+      }
+    }
+
+    transition cancel {
+      id "trans_sales_order_cancel"
+      from pending_payment
+      to cancelled
+
+      field cancelledAt {
+        id "fld_trans_sales_order_cancel_cancelled_at"
+        type datetime
+      }
+
+      field reason {
+        id "fld_trans_sales_order_cancel_reason"
+        type string
+        optional
+      }
+    }
+  }
+
+  object Invoice {
+    id "obj_invoice"
+
+    field invoice_id {
+      id "fld_invoice_invoice_id"
+      type string
+      key primary
+    }
+
+    field sales_order {
+      id "fld_invoice_sales_order"
+      type ref(SalesOrder)
+    }
+
+    field issued_at {
+      id "fld_invoice_issued_at"
+      type datetime
+    }
+
+    field due_on {
+      id "fld_invoice_due_on"
+      type date
+    }
+
+    field subtotal {
+      id "fld_invoice_subtotal"
+      type Money
+    }
+
+    field tax_amount {
+      id "fld_invoice_tax_amount"
+      type Money
+    }
+
+    field total_due {
+      id "fld_invoice_total_due"
+      type Money
+    }
+
+    field balance_due {
+      id "fld_invoice_balance_due"
+      type Money
+    }
+
+    field currency {
+      id "fld_invoice_currency"
+      type CurrencyCode
+    }
+
+    state issued {
+      id "state_invoice_issued"
+      initial
+    }
+
+    state paid {
+      id "state_invoice_paid"
+    }
+
+    state overdue {
+      id "state_invoice_overdue"
+    }
+
+    transition markPaid {
+      id "trans_invoice_mark_paid"
+      from issued
+      to paid
+
+      field paidAt {
+        id "fld_trans_invoice_mark_paid_paid_at"
+        type datetime
+      }
+
+      field paymentReference {
+        id "fld_trans_invoice_mark_paid_payment_reference"
+        type string
+        optional
+      }
+    }
+
+    transition markOverdue {
+      id "trans_invoice_mark_overdue"
+      from issued
+      to overdue
+
+      field markedAt {
+        id "fld_trans_invoice_mark_overdue_marked_at"
+        type datetime
+      }
+    }
+  }
+
+  object Delivery {
+    id "obj_delivery"
+
+    field delivery_id {
+      id "fld_delivery_delivery_id"
+      type string
+      key primary
+    }
+
+    field sales_order {
+      id "fld_delivery_sales_order"
+      type ref(SalesOrder)
+    }
+
+    field destination {
+      id "fld_delivery_destination"
+      type Address
+    }
+
+    field carrier {
+      id "fld_delivery_carrier"
+      type string
+      optional
+    }
+
+    field tracking_number {
+      id "fld_delivery_tracking_number"
+      type string
+      optional
+    }
+
+    field scheduled_for {
+      id "fld_delivery_scheduled_for"
+      type datetime
+      optional
+    }
+
+    field delivered_at {
+      id "fld_delivery_delivered_at"
+      type datetime
+      optional
+    }
+
+    field status_text {
+      id "fld_delivery_status_text"
+      type string
+    }
+  }
+
+  signal LowStockDetected {
+    id "sig_low_stock_detected"
+
+    field inventory_item {
+      id "fld_sig_low_stock_detected_inventory_item"
+      type ref(InventoryItem)
+    }
+
+    field current_quantity {
+      id "fld_sig_low_stock_detected_current_quantity"
+      type Quantity
+    }
+
+    field threshold {
+      id "fld_sig_low_stock_detected_threshold"
+      type Quantity
+    }
+  }
+
+  signal InvoicePaymentRecorded {
+    id "sig_invoice_payment_recorded"
+
+    field invoice {
+      id "fld_sig_invoice_payment_recorded_invoice"
+      type ref(Invoice)
+    }
+
+    field amount {
+      id "fld_sig_invoice_payment_recorded_amount"
+      type Money
+    }
+
+    field method_details {
+      id "fld_sig_invoice_payment_recorded_method_details"
+      type PaymentMethodDetails
+    }
+  }
+
+  signal SupplierLeadTimeUpdated {
+    id "sig_supplier_lead_time_updated"
+
+    field supplier {
+      id "fld_sig_supplier_lead_time_updated_supplier"
+      type ref(Supplier)
+    }
+
+    field lead_time_days {
+      id "fld_sig_supplier_lead_time_updated_lead_time_days"
+      type int
+    }
+  }
+
+  action registerCustomer {
+    id "act_register_customer"
+    kind process
+
+    input {
+      id "ain_register_customer"
+
+      field fullName {
+        id "fld_ain_register_customer_full_name"
+        type string
+      }
+
+      field email {
+        id "fld_ain_register_customer_email"
+        type Email
+        optional
+      }
+
+      field phone {
+        id "fld_ain_register_customer_phone"
+        type PhoneNumber
+        optional
+      }
+
+      field billingAddress {
+        id "fld_ain_register_customer_billing_address"
+        type Address
+        optional
+      }
+
+      field shippingAddress {
+        id "fld_ain_register_customer_shipping_address"
+        type Address
+        optional
+      }
+
+      field preferredCurrency {
+        id "fld_ain_register_customer_preferred_currency"
+        type CurrencyCode
+        optional
+      }
+    }
+
+    output {
+      id "aout_register_customer"
+
+      field customer {
+        id "fld_aout_register_customer_customer"
+        type ref(Customer)
+      }
+
+      field welcomeTier {
+        id "fld_aout_register_customer_welcome_tier"
+        type string
+      }
+    }
+  }
+
+  action createSalesOrder {
+    id "act_create_sales_order"
+    kind process
+
+    input {
+      id "ain_create_sales_order"
+
+      field customer {
+        id "fld_ain_create_sales_order_customer"
+        type ref(Customer)
+      }
+
+      field createdBy {
+        id "fld_ain_create_sales_order_created_by"
+        type ref(Employee)
+      }
+
+      field lines {
+        id "fld_ain_create_sales_order_lines"
+        type SalesOrderLine[]
+      }
+
+      field requestedFulfillmentDate {
+        id "fld_ain_create_sales_order_requested_fulfillment_date"
+        type date
+        optional
+      }
+    }
+
+    output {
+      id "aout_create_sales_order"
+
+      field salesOrder {
+        id "fld_aout_create_sales_order_sales_order"
+        type ref(SalesOrder)
+      }
+
+      field invoice {
+        id "fld_aout_create_sales_order_invoice"
+        type ref(Invoice)
+      }
+
+      field totalAmount {
+        id "fld_aout_create_sales_order_total_amount"
+        type Money
+      }
+    }
+  }
+
+  action markSalesOrderPaid {
+    id "act_mark_sales_order_paid"
+    kind workflow
+
+    input {
+      id "ain_mark_sales_order_paid"
+
+      field salesOrder {
+        id "fld_ain_mark_sales_order_paid_sales_order"
+        type ref(SalesOrder)
+      }
+
+      field amount {
+        id "fld_ain_mark_sales_order_paid_amount"
+        type Money
+      }
+
+      field paidAt {
+        id "fld_ain_mark_sales_order_paid_paid_at"
+        type datetime
+      }
+    }
+
+    output transition SalesOrder.markPaid
+  }
+
+  action fulfillSalesOrder {
+    id "act_fulfill_sales_order"
+    kind workflow
+
+    input {
+      id "ain_fulfill_sales_order"
+
+      field salesOrder {
+        id "fld_ain_fulfill_sales_order_sales_order"
+        type ref(SalesOrder)
+      }
+
+      field fulfilledAt {
+        id "fld_ain_fulfill_sales_order_fulfilled_at"
+        type datetime
+      }
+
+      field shipmentTracking {
+        id "fld_ain_fulfill_sales_order_shipment_tracking"
+        type string
+        optional
+      }
+    }
+
+    output transition SalesOrder.fulfill
+  }
+
+  action cancelSalesOrder {
+    id "act_cancel_sales_order"
+    kind process
+
+    input {
+      id "ain_cancel_sales_order"
+
+      field salesOrder {
+        id "fld_ain_cancel_sales_order_sales_order"
+        type ref(SalesOrder)
+      }
+
+      field reason {
+        id "fld_ain_cancel_sales_order_reason"
+        type string
+      }
+
+      field cancelledAt {
+        id "fld_ain_cancel_sales_order_cancelled_at"
+        type datetime
+      }
+    }
+
+    output transition SalesOrder.cancel
+  }
+
+  action createPurchaseOrder {
+    id "act_create_purchase_order"
+    kind process
+
+    input {
+      id "ain_create_purchase_order"
+
+      field supplier {
+        id "fld_ain_create_purchase_order_supplier"
+        type ref(Supplier)
+      }
+
+      field requestedBy {
+        id "fld_ain_create_purchase_order_requested_by"
+        type ref(Employee)
+      }
+
+      field lines {
+        id "fld_ain_create_purchase_order_lines"
+        type PurchaseOrderLine[]
+      }
+
+      field notes {
+        id "fld_ain_create_purchase_order_notes"
+        type string
+        optional
+      }
+    }
+
+    output {
+      id "aout_create_purchase_order"
+
+      field purchaseOrder {
+        id "fld_aout_create_purchase_order_purchase_order"
+        type ref(PurchaseOrder)
+      }
+
+      field estimatedTotal {
+        id "fld_aout_create_purchase_order_estimated_total"
+        type Money
+      }
+    }
+  }
+
+  action submitPurchaseOrder {
+    id "act_submit_purchase_order"
+    kind workflow
+
+    input {
+      id "ain_submit_purchase_order"
+
+      field purchaseOrder {
+        id "fld_ain_submit_purchase_order_purchase_order"
+        type ref(PurchaseOrder)
+      }
+
+      field submittedAt {
+        id "fld_ain_submit_purchase_order_submitted_at"
+        type datetime
+      }
+
+      field buyerNote {
+        id "fld_ain_submit_purchase_order_buyer_note"
+        type string
+        optional
+      }
+    }
+
+    output transition PurchaseOrder.submit
+  }
+
+  action receivePurchaseOrder {
+    id "act_receive_purchase_order"
+    kind workflow
+
+    input {
+      id "ain_receive_purchase_order"
+
+      field purchaseOrder {
+        id "fld_ain_receive_purchase_order_purchase_order"
+        type ref(PurchaseOrder)
+      }
+
+      field receivedAt {
+        id "fld_ain_receive_purchase_order_received_at"
+        type datetime
+      }
+
+      field invoiceNumber {
+        id "fld_ain_receive_purchase_order_invoice_number"
+        type string
+        optional
+      }
+    }
+
+    output transition PurchaseOrder.receive
+  }
+
+  action closePurchaseOrder {
+    id "act_close_purchase_order"
+    kind workflow
+
+    input {
+      id "ain_close_purchase_order"
+
+      field purchaseOrder {
+        id "fld_ain_close_purchase_order_purchase_order"
+        type ref(PurchaseOrder)
+      }
+
+      field closedAt {
+        id "fld_ain_close_purchase_order_closed_at"
+        type datetime
+      }
+    }
+
+    output transition PurchaseOrder.close
+  }
+
+  action recordInvoicePayment {
+    id "act_record_invoice_payment"
+    kind process
+
+    input {
+      id "ain_record_invoice_payment"
+
+      field invoice {
+        id "fld_ain_record_invoice_payment_invoice"
+        type ref(Invoice)
+      }
+
+      field amount {
+        id "fld_ain_record_invoice_payment_amount"
+        type Money
+      }
+
+      field methodDetails {
+        id "fld_ain_record_invoice_payment_method_details"
+        type PaymentMethodDetails
+      }
+    }
+
+    output signal InvoicePaymentRecorded
+  }
+
+  action markInvoicePaid {
+    id "act_mark_invoice_paid"
+    kind workflow
+
+    input {
+      id "ain_mark_invoice_paid"
+
+      field invoice {
+        id "fld_ain_mark_invoice_paid_invoice"
+        type ref(Invoice)
+      }
+
+      field paidAt {
+        id "fld_ain_mark_invoice_paid_paid_at"
+        type datetime
+      }
+
+      field paymentReference {
+        id "fld_ain_mark_invoice_paid_payment_reference"
+        type string
+        optional
+      }
+    }
+
+    output transition Invoice.markPaid
+  }
+
+  action markInvoiceOverdue {
+    id "act_mark_invoice_overdue"
+    kind workflow
+
+    input {
+      id "ain_mark_invoice_overdue"
+
+      field invoice {
+        id "fld_ain_mark_invoice_overdue_invoice"
+        type ref(Invoice)
+      }
+
+      field markedAt {
+        id "fld_ain_mark_invoice_overdue_marked_at"
+        type datetime
+      }
+    }
+
+    output transition Invoice.markOverdue
+  }
+
+  action adjustInventory {
+    id "act_adjust_inventory"
+    kind process
+
+    input {
+      id "ain_adjust_inventory"
+
+      field inventoryItem {
+        id "fld_ain_adjust_inventory_inventory_item"
+        type ref(InventoryItem)
+      }
+
+      field delta {
+        id "fld_ain_adjust_inventory_delta"
+        type Quantity
+      }
+
+      field reason {
+        id "fld_ain_adjust_inventory_reason"
+        type string
+      }
+    }
+
+    output {
+      id "aout_adjust_inventory"
+
+      field inventoryItem {
+        id "fld_aout_adjust_inventory_inventory_item"
+        type ref(InventoryItem)
+      }
+
+      field newQuantity {
+        id "fld_aout_adjust_inventory_new_quantity"
+        type Quantity
+      }
+    }
+  }
+
+  action restockInventory {
+    id "act_restock_inventory"
+    kind workflow
+
+    input {
+      id "ain_restock_inventory"
+
+      field purchaseOrder {
+        id "fld_ain_restock_inventory_purchase_order"
+        type ref(PurchaseOrder)
+      }
+
+      field receivedAt {
+        id "fld_ain_restock_inventory_received_at"
+        type datetime
+      }
+    }
+
+    output {
+      id "aout_restock_inventory"
+
+      field updatedItems {
+        id "fld_aout_restock_inventory_updated_items"
+        type ref(InventoryItem)[]
+      }
+    }
+  }
+
+  trigger onLowStockDetected {
+    id "trg_on_low_stock_detected"
+    when event LowStockDetected
+    invoke createPurchaseOrder
+  }
+
+  trigger onPurchaseOrderReceived {
+    id "trg_on_purchase_order_received"
+    when event PurchaseOrderReceiveTransition
+    invoke restockInventory
+  }
+
+  trigger onInvoicePaymentRecorded {
+    id "trg_on_invoice_payment_recorded"
+    when event InvoicePaymentRecorded
+    invoke markInvoicePaid
+  }
+
+  trigger onSalesOrderMarkedPaid {
+    id "trg_on_sales_order_marked_paid"
+    when event SalesOrderMarkPaidTransition
+    invoke fulfillSalesOrder
+  }
+}

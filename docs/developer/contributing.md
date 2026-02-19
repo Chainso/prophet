@@ -38,10 +38,16 @@ Target-specific coverage (example for Turtle):
 
 ```bash
 python3 -m unittest prophet-cli/tests/test_turtle_target.py -v
+
 cd examples/turtle/prophet_example_turtle_minimal
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen
 cd $(git rev-parse --show-toplevel)
 pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_minimal/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
+
+cd examples/turtle/prophet_example_turtle_small_business
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
+cd $(git rev-parse --show-toplevel)
+pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_small_business/gen/turtle/ontology.ttl -e prophet.ttl --advanced --inference owlrl --format turtle
 ```
 
 ## Doc Surfaces for Generation Target Changes
