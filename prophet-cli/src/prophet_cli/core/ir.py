@@ -67,11 +67,16 @@ def build_ir(
     def sorted_by_id(items: List[Any]) -> List[Any]:
         return sorted(items, key=lambda x: x.id)
 
+    def _resolved_display_name(symbol: str, display_name: Any) -> str:
+        value = str(display_name or "").strip()
+        return value if value else symbol
+
     types = []
     for t in sorted_by_id(ont.types):
         entry = {
             "id": t.id,
             "name": t.name,
+            "display_name": _resolved_display_name(t.name, t.display_name),
             "kind": "custom",
             "base": t.base,
             "constraints": dict(sorted(t.constraints.items())),
@@ -99,6 +104,7 @@ def build_ir(
             f_entry = {
                 "id": f.id,
                 "name": f.name,
+                "display_name": _resolved_display_name(f.name, f.display_name),
                 "type": resolved_type,
                 "cardinality": card,
             }
@@ -111,7 +117,12 @@ def build_ir(
         state_name_to_id = {s.name: s.id for s in o.states}
         obj_states = []
         for s in o.states:
-            state_entry = {"id": s.id, "name": s.name, "initial": s.initial}
+            state_entry = {
+                "id": s.id,
+                "name": s.name,
+                "display_name": _resolved_display_name(s.name, s.display_name),
+                "initial": s.initial,
+            }
             if s.description:
                 state_entry["description"] = s.description
             obj_states.append(state_entry)
@@ -120,6 +131,7 @@ def build_ir(
             transition_entry = {
                 "id": t.id,
                 "name": t.name,
+                "display_name": _resolved_display_name(t.name, t.display_name),
                 "from_state_id": state_name_to_id[t.from_state],
                 "to_state_id": state_name_to_id[t.to_state],
             }
@@ -130,6 +142,7 @@ def build_ir(
         obj_entry = {
             "id": o.id,
             "name": o.name,
+            "display_name": _resolved_display_name(o.name, o.display_name),
             "fields": obj_fields,
             "keys": {
                 "primary": {"field_ids": [field_id_by_name[name] for name in primary_key_field_names if name in field_id_by_name]},
@@ -152,6 +165,7 @@ def build_ir(
                 {
                     "id": f.id,
                     "name": f.name,
+                    "display_name": _resolved_display_name(f.name, f.display_name),
                     "type": resolved_type,
                     "cardinality": {"min": 1 if f.required else 0, "max": max_cardinality},
                 }
@@ -161,6 +175,7 @@ def build_ir(
         struct_entry = {
             "id": s.id,
             "name": s.name,
+            "display_name": _resolved_display_name(s.name, s.display_name),
             "fields": struct_fields,
         }
         if s.description:
@@ -177,6 +192,7 @@ def build_ir(
                 {
                     "id": f.id,
                     "name": f.name,
+                    "display_name": _resolved_display_name(f.name, f.display_name),
                     "type": resolved_type,
                     "cardinality": {"min": 1 if f.required else 0, "max": max_cardinality},
                 }
@@ -186,6 +202,7 @@ def build_ir(
         action_input_entry = {
             "id": shape.id,
             "name": shape.name,
+            "display_name": _resolved_display_name(shape.name, shape.display_name),
             "fields": shape_fields,
         }
         if shape.description:
@@ -200,6 +217,7 @@ def build_ir(
         entry = {
             "id": e.id,
             "name": e.name,
+            "display_name": _resolved_display_name(e.name, e.display_name),
             "kind": "signal",
             "fields": [],
         }
@@ -212,6 +230,7 @@ def build_ir(
             signal_field_entry = {
                 "id": f.id,
                 "name": f.name,
+                "display_name": _resolved_display_name(f.name, f.display_name),
                 "type": resolved_type,
                 "cardinality": {"min": 1 if f.required else 0, "max": max_cardinality},
             }
@@ -274,6 +293,7 @@ def build_ir(
                 transition_field_entry = {
                     "id": transition_field.id,
                     "name": transition_field.name,
+                    "display_name": _resolved_display_name(transition_field.name, transition_field.display_name),
                     "type": resolved_type,
                     "cardinality": {"min": 1 if transition_field.required else 0, "max": max_cardinality},
                 }
@@ -283,6 +303,7 @@ def build_ir(
             transition_entry = {
                 "id": tr.id,
                 "name": transition_name,
+                "display_name": _resolved_display_name(tr.name, tr.display_name),
                 "kind": "transition",
                 "fields": transition_fields,
                 "object_id": object_name_to_id[obj.name],
@@ -300,6 +321,7 @@ def build_ir(
         action_entry = {
             "id": a.id,
             "name": a.name,
+            "display_name": _resolved_display_name(a.name, a.display_name),
             "kind": a.kind,
             "input_shape_id": action_input_name_to_id[a.input_shape],
             "output_event_id": event_name_to_id[a.produces_event],
@@ -313,6 +335,7 @@ def build_ir(
         trigger_entry = {
             "id": t.id,
             "name": t.name,
+            "display_name": _resolved_display_name(t.name, t.display_name),
             "event_id": event_name_to_id[t.event_name],
             "action_id": action_name_to_id[t.action_name],
         }
@@ -327,6 +350,7 @@ def build_ir(
         "ontology": {
             "id": ont.id,
             "name": ont.name,
+            "display_name": _resolved_display_name(ont.name, ont.display_name),
             "version": ont.version,
         },
         "types": types,

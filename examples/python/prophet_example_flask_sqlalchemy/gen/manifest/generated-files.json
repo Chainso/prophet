@@ -7,7 +7,7 @@
     "framework": "flask",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "11d80de956863e05d45fcd958134a99237823d4ea06eda6a385379796c72e0e7",
+  "ir_hash": "211facecc42e6e0e449a6a116867d04a9ef14dcba13622094bebc8bccbc6bca3",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "8f19b86d560be2877286ae5f6525b4680da604658f6ce4d2297da549658888d1"
+      "sha256": "33438e4b8dde03d089c836ac9f70e13a244d44c3ef1b1c8c8e4123e1722e18e5"
     },
     {
       "path": "gen/python/pyproject.toml",

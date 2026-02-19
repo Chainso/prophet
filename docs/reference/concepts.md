@@ -8,6 +8,11 @@ A Prophet ontology is a domain contract describing:
 - Action inputs and produced events
 - Actions, signals, and triggers
 
+Naming model:
+- Technical symbols are the DSL identifiers (`object Order`, `field orderId`).
+- Display labels are optional `name "..."` metadata for human-facing surfaces.
+- Generated wire keys and references stay technical-symbol based.
+
 Event categories in the model:
 - Signals are explicitly defined in DSL (`signal` blocks).
 - Inline action `output { ... }` blocks derive a signal event (`<ActionName>Result`).

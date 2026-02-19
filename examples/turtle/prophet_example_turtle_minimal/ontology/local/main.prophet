@@ -1,23 +1,28 @@
 ontology support_local {
+  name "Support Local"
   id "ont_support_local"
   version "1.0.0"
   description "Minimal support ontology used for Turtle target examples."
 
   type Email {
+    name "Email"
     id "type_email"
     base string
     constraint pattern "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
   }
 
   struct UserRef {
+    name "User Ref"
     id "struct_user_ref"
 
     field userId {
+      name "User ID"
       id "fld_struct_user_ref_user_id"
       type string
     }
 
     field email {
+      name "Email"
       id "fld_struct_user_ref_email"
       type Email
       optional
@@ -25,41 +30,49 @@ ontology support_local {
   }
 
   object Ticket {
+    name "Ticket"
     id "obj_ticket"
 
     field id {
+      name "ID"
       id "fld_ticket_id"
       type string
       key primary
     }
 
     field title {
+      name "Title"
       id "fld_ticket_title"
       type string
     }
 
     field assignee {
+      name "Assignee"
       id "fld_ticket_assignee"
       type UserRef
       optional
     }
 
     field tags {
+      name "Tags"
       id "fld_ticket_tags"
       type string[]
       optional
     }
 
     state New {
+      name "New"
       id "state_ticket_new"
       initial
     }
 
     state Triaged {
+      name "Triaged"
       id "state_ticket_triaged"
     }
 
     transition Triage {
+      name "Triage"
       id "trans_ticket_triage"
       from New
       to Triaged
@@ -67,15 +80,18 @@ ontology support_local {
   }
 
   signal TicketCreated {
+    name "Ticket Created"
     id "sig_ticket_created"
 
     field ticket {
+      name "Ticket"
       id "fld_sig_ticket_created_ticket"
       type ref(Ticket)
     }
   }
 
   action triageTicket {
+    name "Triage Ticket"
     id "act_triage_ticket"
     kind process
 
@@ -83,6 +99,7 @@ ontology support_local {
       id "ain_triage_ticket"
 
       field ticket {
+        name "Ticket"
         id "fld_ain_triage_ticket_ticket"
         type ref(Ticket)
       }
@@ -92,11 +109,13 @@ ontology support_local {
       id "aout_triage_ticket"
 
       field ticket {
+        name "Ticket"
         id "fld_aout_triage_ticket_ticket"
         type ref(Ticket)
       }
 
       field newState {
+        name "New State"
         id "fld_aout_triage_ticket_new_state"
         type string
       }
@@ -104,6 +123,7 @@ ontology support_local {
   }
 
   trigger onTicketCreated {
+    name "On Ticket Created"
     id "trg_on_ticket_created"
     when event TicketCreated
     invoke triageTicket

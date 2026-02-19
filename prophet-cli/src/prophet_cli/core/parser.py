@@ -64,6 +64,27 @@ def _parse_optional_description_line(line: str) -> Optional[str]:
     return None
 
 
+def _parse_optional_name_line(line: str) -> Optional[str]:
+    m = re.match(r'^name\s+\"(.*)\"$', line)
+    if m:
+        return m.group(1)
+    return None
+
+
+def _assign_optional_name(
+    current: Optional[str],
+    candidate: str,
+    *,
+    line: int,
+    context: str,
+) -> str:
+    if current is not None:
+        raise ProphetError(f"{context} has duplicate name metadata (line {line})")
+    if not candidate.strip():
+        raise ProphetError(f"{context} name metadata must not be empty (line {line})")
+    return candidate
+
+
 def _parse_key_fields_csv(raw: str, line: int) -> List[str]:
     fields = [item.strip() for item in raw.split(",")]
     if not fields or any(not item for item in fields):
@@ -127,6 +148,7 @@ def parse_ontology(text: str) -> Ontology:
     ont_id: Optional[str] = None
     ont_version: Optional[str] = None
     ont_description: Optional[str] = None
+    ont_display_name: Optional[str] = None
     types: List[TypeDef] = []
     objects: List[ObjectDef] = []
     structs: List[StructDef] = []
@@ -150,6 +172,17 @@ def parse_ontology(text: str) -> Ontology:
         if re.match(r"^version\s+\".*\"$", line):
             _, row = p.pop()
             ont_version = re.match(r'^version\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            continue
+
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            ont_display_name = _assign_optional_name(
+                ont_display_name,
+                parsed_name,
+                line=ln,
+                context=f"ontology {ont_name}",
+            )
             continue
 
         parsed_description = _parse_optional_description_line(line)
@@ -211,6 +244,7 @@ def parse_ontology(text: str) -> Ontology:
         id=ont_id,
         version=ont_version,
         description=ont_description,
+        display_name=ont_display_name,
         types=types,
         objects=objects,
         structs=structs,
@@ -226,6 +260,7 @@ def parse_type_block(p: Parser, name: str, block_line: int, id_allocator: IdAllo
     base: Optional[str] = None
     constraints: Dict[str, str] = {}
     description: Optional[str] = None
+    display_name: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -250,6 +285,17 @@ def parse_type_block(p: Parser, name: str, block_line: int, id_allocator: IdAllo
             constraints[m.group(1)] = m.group(2)
             continue
 
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"type {name}",
+            )
+            continue
+
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -262,7 +308,15 @@ def parse_type_block(p: Parser, name: str, block_line: int, id_allocator: IdAllo
         t_id = id_allocator.generate(f"type_{name}")
     if base is None:
         raise ProphetError(f"Type {name} missing base (line {block_line})")
-    return TypeDef(name=name, id=t_id, base=base, constraints=constraints, description=description, line=block_line)
+    return TypeDef(
+        name=name,
+        id=t_id,
+        base=base,
+        constraints=constraints,
+        description=description,
+        line=block_line,
+        display_name=display_name,
+    )
 
 
 def parse_object_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> ObjectDef:
@@ -272,6 +326,7 @@ def parse_object_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
     states: List[StateDef] = []
     transitions: List[TransitionDef] = []
     description: Optional[str] = None
+    display_name: Optional[str] = None
 
     while not p.eof():
         ln, line = p.peek()
@@ -309,6 +364,17 @@ def parse_object_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
             transitions.append(parse_transition_block(p, m.group(1), ln, id_allocator, name))
             continue
 
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"object {name}",
+            )
+            continue
+
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -328,6 +394,7 @@ def parse_object_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
         transitions=transitions,
         description=description,
         line=block_line,
+        display_name=display_name,
     )
 
 
@@ -335,6 +402,7 @@ def parse_struct_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
     s_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
+    display_name: Optional[str] = None
 
     while not p.eof():
         ln, line = p.peek()
@@ -354,6 +422,17 @@ def parse_struct_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
             fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"struct_{name}"))
             continue
 
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"struct {name}",
+            )
+            continue
+
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -364,7 +443,14 @@ def parse_struct_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
 
     if s_id is None:
         s_id = id_allocator.generate(f"struct_{name}")
-    return StructDef(name=name, id=s_id, fields=fields, description=description, line=block_line)
+    return StructDef(
+        name=name,
+        id=s_id,
+        fields=fields,
+        description=description,
+        line=block_line,
+        display_name=display_name,
+    )
 
 
 def parse_field_block(
@@ -379,6 +465,7 @@ def parse_field_block(
     required = True
     key: Optional[str] = None
     description: Optional[str] = None
+    display_name: Optional[str] = None
 
     while not p.eof():
         ln, line = p.peek()
@@ -414,6 +501,17 @@ def parse_field_block(
             key = m.group(1)
             continue
 
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"field {owner_scope}.{name}",
+            )
+            continue
+
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -435,6 +533,7 @@ def parse_field_block(
         key=key,
         description=description,
         line=block_line,
+        display_name=display_name,
     )
 
 
@@ -448,6 +547,7 @@ def parse_state_block(
     s_id: Optional[str] = None
     initial = False
     description: Optional[str] = None
+    display_name: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -462,6 +562,16 @@ def parse_state_block(
             p.pop()
             initial = True
             continue
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"state {object_name}.{name}",
+            )
+            continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -471,7 +581,14 @@ def parse_state_block(
 
     if s_id is None:
         s_id = id_allocator.generate(f"state_{object_name}_{name}")
-    return StateDef(name=name, id=s_id, initial=initial, description=description, line=block_line)
+    return StateDef(
+        name=name,
+        id=s_id,
+        initial=initial,
+        description=description,
+        line=block_line,
+        display_name=display_name,
+    )
 
 
 def parse_transition_block(
@@ -486,6 +603,7 @@ def parse_transition_block(
     to_state: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
+    display_name: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -511,6 +629,16 @@ def parse_transition_block(
             p.pop()
             fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"trans_{object_name}_{name}"))
             continue
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"transition {object_name}.{name}",
+            )
+            continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -530,6 +658,7 @@ def parse_transition_block(
         fields=fields,
         description=description,
         line=block_line,
+        display_name=display_name,
     )
 
 
@@ -543,6 +672,7 @@ def parse_action_shape_block(
     shape_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
+    display_name: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -558,6 +688,16 @@ def parse_action_shape_block(
             p.pop()
             fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"shape_{name}"))
             continue
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=block_kind,
+            )
+            continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -567,7 +707,14 @@ def parse_action_shape_block(
 
     if shape_id is None:
         shape_id = id_allocator.generate(f"shape_{name}")
-    return ActionShapeDef(name=name, id=shape_id, fields=fields, description=description, line=block_line)
+    return ActionShapeDef(
+        name=name,
+        id=shape_id,
+        fields=fields,
+        description=description,
+        line=block_line,
+        display_name=display_name,
+    )
 
 
 def parse_action_block(
@@ -581,6 +728,7 @@ def parse_action_block(
     input_shape: Optional[str] = None
     produces_event: Optional[str] = None
     description: Optional[str] = None
+    display_name: Optional[str] = None
     inline_input: Optional[ActionShapeDef] = None
     inline_output_event: Optional[EventDef] = None
     while not p.eof():
@@ -648,6 +796,16 @@ def parse_action_block(
             raise ProphetError(
                 f"Action {name} output must be one of 'output {{ ... }}', 'output signal <SignalName>', or 'output transition <ObjectName>.<TransitionName>' (line {ln})"
             )
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"action {name}",
+            )
+            continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -668,6 +826,7 @@ def parse_action_block(
             produces_event=produces_event,
             description=description,
             line=block_line,
+            display_name=display_name,
         ),
         inline_input,
         inline_output_event,
@@ -685,6 +844,7 @@ def parse_inline_signal_block(
     signal_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
+    display_name: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -699,6 +859,16 @@ def parse_inline_signal_block(
         if m:
             p.pop()
             fields.append(parse_field_block(p, m.group(1), ln, id_allocator, id_base))
+            continue
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=block_label,
+            )
             continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
@@ -716,6 +886,7 @@ def parse_inline_signal_block(
         fields=fields,
         description=description,
         line=block_line,
+        display_name=display_name,
     )
 
 
@@ -730,6 +901,7 @@ def parse_inline_action_shape_block(
     shape_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
+    display_name: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -744,6 +916,16 @@ def parse_inline_action_shape_block(
         if m:
             p.pop()
             fields.append(parse_field_block(p, m.group(1), ln, id_allocator, id_base))
+            continue
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=block_label,
+            )
             continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
@@ -760,6 +942,7 @@ def parse_inline_action_shape_block(
         fields=fields,
         description=description,
         line=block_line,
+        display_name=display_name,
     )
 
 
@@ -767,6 +950,7 @@ def parse_signal_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
     e_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
+    display_name: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -781,6 +965,16 @@ def parse_signal_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
         if m:
             p.pop()
             fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"sig_{name}"))
+            continue
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"signal {name}",
+            )
             continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
@@ -798,6 +992,7 @@ def parse_signal_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
         fields=fields,
         description=description,
         line=block_line,
+        display_name=display_name,
     )
 
 
@@ -806,6 +1001,7 @@ def parse_trigger_block(p: Parser, name: str, block_line: int, id_allocator: IdA
     event_name: Optional[str] = None
     action_name: Optional[str] = None
     description: Optional[str] = None
+    display_name: Optional[str] = None
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -826,6 +1022,16 @@ def parse_trigger_block(p: Parser, name: str, block_line: int, id_allocator: IdA
             p.pop()
             action_name = m.group(1)
             continue
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"trigger {name}",
+            )
+            continue
         parsed_description = _parse_optional_description_line(line)
         if parsed_description is not None:
             p.pop()
@@ -844,6 +1050,7 @@ def parse_trigger_block(p: Parser, name: str, block_line: int, id_allocator: IdA
         action_name=action_name,
         description=description,
         line=block_line,
+        display_name=display_name,
     )
 
 

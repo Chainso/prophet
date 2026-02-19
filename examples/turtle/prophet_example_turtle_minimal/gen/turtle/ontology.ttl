@@ -12,7 +12,7 @@
 # ============================================================
 
 support_local:ont_support_local a prophet:LocalOntology ;
-  prophet:name "support_local" ;
+  prophet:name "Support Local" ;
   prophet:description "Minimal support ontology used for Turtle target examples." .
 
 # ============================================================
@@ -37,13 +37,13 @@ support_local:type_email_constraint a sh:NodeShape ;
 # ============================================================
 
 support_local:struct_user_ref a prophet:StructType ;
-  prophet:name "UserRef" ;
+  prophet:name "User Ref" ;
   prophet:inLocalOntology support_local:ont_support_local ;
   prophet:hasProperty support_local:fld_struct_user_ref_email ;
   prophet:hasProperty support_local:fld_struct_user_ref_user_id .
 
 support_local:fld_struct_user_ref_email a prophet:PropertyDefinition ;
-  prophet:name "email" ;
+  prophet:name "Email" ;
   prophet:fieldKey "email" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -51,7 +51,7 @@ support_local:fld_struct_user_ref_email a prophet:PropertyDefinition ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:fld_struct_user_ref_user_id a prophet:PropertyDefinition ;
-  prophet:name "userId" ;
+  prophet:name "User ID" ;
   prophet:fieldKey "userId" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -76,7 +76,7 @@ support_local:obj_ticket a prophet:ObjectModel ;
   prophet:hasDisplayKey support_local:obj_ticket_display_key .
 
 support_local:fld_ticket_assignee a prophet:PropertyDefinition ;
-  prophet:name "assignee" ;
+  prophet:name "Assignee" ;
   prophet:fieldKey "assignee" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -84,7 +84,7 @@ support_local:fld_ticket_assignee a prophet:PropertyDefinition ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:fld_ticket_id a prophet:PropertyDefinition ;
-  prophet:name "id" ;
+  prophet:name "ID" ;
   prophet:fieldKey "id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -92,14 +92,14 @@ support_local:fld_ticket_id a prophet:PropertyDefinition ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:fld_ticket_tags a prophet:PropertyDefinition ;
-  prophet:name "tags" ;
+  prophet:name "Tags" ;
   prophet:fieldKey "tags" ;
   prophet:minCardinality 0 ;
   prophet:valueType support_local:fld_ticket_tags_list_type ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:fld_ticket_title a prophet:PropertyDefinition ;
-  prophet:name "title" ;
+  prophet:name "Title" ;
   prophet:fieldKey "title" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -182,7 +182,7 @@ support_local:ain_triage_ticket a prophet:ActionInput ;
   prophet:hasProperty support_local:fld_ain_triage_ticket_ticket .
 
 support_local:fld_ain_triage_ticket_ticket a prophet:PropertyDefinition ;
-  prophet:name "ticket" ;
+  prophet:name "Ticket" ;
   prophet:fieldKey "ticket" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -194,7 +194,7 @@ support_local:fld_ain_triage_ticket_ticket a prophet:PropertyDefinition ;
 # ============================================================
 
 support_local:act_triage_ticket a prophet:Process ;
-  prophet:name "triageTicket" ;
+  prophet:name "Triage Ticket" ;
   prophet:acceptsInput support_local:ain_triage_ticket ;
   prophet:producesEvent support_local:aout_triage_ticket ;
   prophet:inLocalOntology support_local:ont_support_local .
@@ -210,7 +210,7 @@ support_local:aout_triage_ticket a prophet:Signal ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:fld_aout_triage_ticket_new_state a prophet:PropertyDefinition ;
-  prophet:name "newState" ;
+  prophet:name "New State" ;
   prophet:fieldKey "newState" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -218,7 +218,7 @@ support_local:fld_aout_triage_ticket_new_state a prophet:PropertyDefinition ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:fld_aout_triage_ticket_ticket a prophet:PropertyDefinition ;
-  prophet:name "ticket" ;
+  prophet:name "Ticket" ;
   prophet:fieldKey "ticket" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -226,12 +226,12 @@ support_local:fld_aout_triage_ticket_ticket a prophet:PropertyDefinition ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:sig_ticket_created a prophet:Signal ;
-  prophet:name "TicketCreated" ;
+  prophet:name "Ticket Created" ;
   prophet:hasProperty support_local:fld_sig_ticket_created_ticket ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 support_local:fld_sig_ticket_created_ticket a prophet:PropertyDefinition ;
-  prophet:name "ticket" ;
+  prophet:name "Ticket" ;
   prophet:fieldKey "ticket" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -243,7 +243,7 @@ support_local:fld_sig_ticket_created_ticket a prophet:PropertyDefinition ;
 # ============================================================
 
 support_local:trg_on_ticket_created a prophet:EventTrigger ;
-  prophet:name "onTicketCreated" ;
+  prophet:name "On Ticket Created" ;
   prophet:listensTo support_local:sig_ticket_created ;
   prophet:invokes support_local:act_triage_ticket ;
   prophet:inLocalOntology support_local:ont_support_local .

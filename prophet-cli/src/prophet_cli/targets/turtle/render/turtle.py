@@ -146,7 +146,9 @@ def _emit_resource(lines: List[str], subject: str, rdf_type: str, statements: Li
 
 
 def _append_name_description(statements: List[Tuple[str, str]], item: Dict[str, Any]) -> None:
-    name = str(item.get("name", "")).strip()
+    display_name = str(item.get("display_name", "")).strip()
+    fallback_name = str(item.get("name", "")).strip()
+    name = display_name or fallback_name
     if name:
         statements.append(("prophet:name", _turtle_literal(name)))
     description = str(item.get("description", "")).strip()
@@ -205,11 +207,12 @@ class TurtleRenderContext:
     def property_block(self, field: Dict[str, Any]) -> Tuple[str, List[Tuple[str, str]]]:
         field_id = str(field.get("id", "field"))
         field_name = str(field.get("name", field_id))
+        field_display_name = str(field.get("display_name", field_name)).strip() or field_name
         field_subject = self.local_resource(field_id)
         min_cardinality = int(field.get("cardinality", {}).get("min", 0))
         max_cardinality = field.get("cardinality", {}).get("max", 1)
         statements: List[Tuple[str, str]] = [
-            ("prophet:name", _turtle_literal(field_name)),
+            ("prophet:name", _turtle_literal(field_display_name)),
             ("prophet:fieldKey", _turtle_literal(field_name)),
             ("prophet:minCardinality", str(min_cardinality)),
             ("prophet:valueType", self.type_ref_for_descriptor(field.get("type", {}), field_id)),
@@ -229,9 +232,10 @@ def _sorted_items(ir: Dict[str, Any], key: str) -> List[Dict[str, Any]]:
 
 def render_turtle(ir: Dict[str, Any]) -> str:
     ontology = ir.get("ontology", {}) if isinstance(ir.get("ontology"), dict) else {}
-    ontology_name = str(ontology.get("name", "Ontology")).strip() or "Ontology"
+    ontology_symbol = str(ontology.get("name", "Ontology")).strip() or "Ontology"
+    ontology_name = str(ontology.get("display_name", ontology_symbol)).strip() or ontology_symbol
     ontology_id = str(ontology.get("id", "")) or f"ontology_{snake_case(ontology_name)}"
-    ontology_prefix_seed = _local_namespace_fragment(ontology_name or ontology_id)
+    ontology_prefix_seed = _local_namespace_fragment(ontology_symbol or ontology_id)
     local_prefix = _sanitize_prefix_name(ontology_prefix_seed)
     if local_prefix in {"prophet", "std", "sh", "xsd", "owl", "rdf", "rdfs"}:
         local_prefix = f"{local_prefix}_local"

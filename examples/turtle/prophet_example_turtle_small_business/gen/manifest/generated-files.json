@@ -7,7 +7,7 @@
     "framework": "fastapi",
     "orm": "sqlmodel"
   },
-  "ir_hash": "e25ba8c59580466e703adf82f54fca456a36bb4a1cf412c2fa540b577e1ce27f",
+  "ir_hash": "f80fc57098682d4ab18583a2e156e8239706e039c17107a6ffe6b2ffbe70f3ed",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/turtle/ontology.ttl",
-      "sha256": "efc0318a10c3e0716796d361d776c7b2427057f2e06b357c9cd440381f580370"
+      "sha256": "2b0296f8318cdb33e45869b35c5d2570ed470c6e24e95f21131ed46f10446d36"
     }
   ]
 }

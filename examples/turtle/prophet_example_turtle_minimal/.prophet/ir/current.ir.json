@@ -5,6 +5,7 @@
   "ontology": {
     "id": "ont_support_local",
     "name": "support_local",
+    "display_name": "Support Local",
     "version": "1.0.0",
     "description": "Minimal support ontology used for Turtle target examples."
   },
@@ -12,6 +13,7 @@
     {
       "id": "type_email",
       "name": "Email",
+      "display_name": "Email",
       "kind": "custom",
       "base": "string",
       "constraints": {
@@ -23,10 +25,12 @@
     {
       "id": "obj_ticket",
       "name": "Ticket",
+      "display_name": "Ticket",
       "fields": [
         {
           "id": "fld_ticket_id",
           "name": "id",
+          "display_name": "ID",
           "type": {
             "kind": "base",
             "name": "string"
@@ -40,6 +44,7 @@
         {
           "id": "fld_ticket_title",
           "name": "title",
+          "display_name": "Title",
           "type": {
             "kind": "base",
             "name": "string"
@@ -52,6 +57,7 @@
         {
           "id": "fld_ticket_assignee",
           "name": "assignee",
+          "display_name": "Assignee",
           "type": {
             "kind": "struct",
             "target_struct_id": "struct_user_ref"
@@ -64,6 +70,7 @@
         {
           "id": "fld_ticket_tags",
           "name": "tags",
+          "display_name": "Tags",
           "type": {
             "kind": "list",
             "element": {
@@ -91,11 +98,13 @@
         {
           "id": "state_ticket_new",
           "name": "New",
+          "display_name": "New",
           "initial": true
         },
         {
           "id": "state_ticket_triaged",
           "name": "Triaged",
+          "display_name": "Triaged",
           "initial": false
         }
       ],
@@ -103,6 +112,7 @@
         {
           "id": "trans_ticket_triage",
           "name": "Triage",
+          "display_name": "Triage",
           "from_state_id": "state_ticket_new",
           "to_state_id": "state_ticket_triaged"
         }
@@ -113,10 +123,12 @@
     {
       "id": "struct_user_ref",
       "name": "UserRef",
+      "display_name": "User Ref",
       "fields": [
         {
           "id": "fld_struct_user_ref_user_id",
           "name": "userId",
+          "display_name": "User ID",
           "type": {
             "kind": "base",
             "name": "string"
@@ -129,6 +141,7 @@
         {
           "id": "fld_struct_user_ref_email",
           "name": "email",
+          "display_name": "Email",
           "type": {
             "kind": "custom",
             "target_type_id": "type_email"
@@ -145,10 +158,12 @@
     {
       "id": "ain_triage_ticket",
       "name": "TriageTicketCommand",
+      "display_name": "TriageTicketCommand",
       "fields": [
         {
           "id": "fld_ain_triage_ticket_ticket",
           "name": "ticket",
+          "display_name": "Ticket",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_ticket"
@@ -165,6 +180,7 @@
     {
       "id": "act_triage_ticket",
       "name": "triageTicket",
+      "display_name": "Triage Ticket",
       "kind": "process",
       "input_shape_id": "ain_triage_ticket",
       "output_event_id": "aout_triage_ticket"
@@ -174,11 +190,13 @@
     {
       "id": "aout_triage_ticket",
       "name": "TriageTicketResult",
+      "display_name": "TriageTicketResult",
       "kind": "signal",
       "fields": [
         {
           "id": "fld_aout_triage_ticket_ticket",
           "name": "ticket",
+          "display_name": "Ticket",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_ticket"
@@ -191,6 +209,7 @@
         {
           "id": "fld_aout_triage_ticket_new_state",
           "name": "newState",
+          "display_name": "New State",
           "type": {
             "kind": "base",
             "name": "string"
@@ -205,11 +224,13 @@
     {
       "id": "sig_ticket_created",
       "name": "TicketCreated",
+      "display_name": "Ticket Created",
       "kind": "signal",
       "fields": [
         {
           "id": "fld_sig_ticket_created_ticket",
           "name": "ticket",
+          "display_name": "Ticket",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_ticket"
@@ -224,6 +245,7 @@
     {
       "id": "trans_ticket_triage",
       "name": "TicketTriageTransition",
+      "display_name": "Triage",
       "kind": "transition",
       "fields": [
         {
@@ -273,6 +295,7 @@
     {
       "id": "trg_on_ticket_created",
       "name": "onTicketCreated",
+      "display_name": "On Ticket Created",
       "event_id": "sig_ticket_created",
       "action_id": "act_triage_ticket"
     }
@@ -332,5 +355,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "fa69e4300b3d10c42435b689a584fc0d9713d0fa7137130dda42950aac6ef377",
-  "ir_hash": "3ac9f34298f1b90c3f88ca595bbfed261a3881ad4e8564e1574073f87931c072"
+  "ir_hash": "10d98afa8506ba3e3d735ada74c6da84cf978ea35b74deb1a0dd99b5927ec65d"
 }

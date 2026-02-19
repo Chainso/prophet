@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: CommerceLocal API
+  title: Commerce Local API
   version: 1.0.0
 servers:
 - url: https://api.example.com
@@ -225,10 +225,16 @@ components:
       properties:
         line1:
           type: string
+          title: Line 1
+          x-prophet-display-name: Line 1
         city:
           type: string
+          title: City
+          x-prophet-display-name: City
         countryCode:
           type: string
+          title: Country Code
+          x-prophet-display-name: Country Code
     ApprovalContext:
       type: object
       required:
@@ -240,8 +246,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserRef'
+          title: Watchers
+          x-prophet-display-name: Watchers
         reason:
           type: string
+          title: Reason
+          x-prophet-display-name: Reason
+      title: Approval Context
+      x-prophet-display-name: Approval Context
     Order:
       type: object
       required:
@@ -252,35 +264,55 @@ components:
       properties:
         orderId:
           type: string
+          title: Order ID
+          x-prophet-display-name: Order ID
         customer:
           $ref: '#/components/schemas/UserRef'
         totalAmount:
           type: string
           description: Decimal encoded as string
+          title: Total Amount
+          x-prophet-display-name: Total Amount
         discountCode:
           type: string
+          title: Discount Code
+          x-prophet-display-name: Discount Code
         tags:
           type: array
           items:
             type: string
+          title: Tags
+          x-prophet-display-name: Tags
         shippingAddress:
           $ref: '#/components/schemas/Address'
         approvedByUserId:
           type: string
+          title: Approved By User ID
+          x-prophet-display-name: Approved By User ID
         approvalNotes:
           type: array
           items:
             type: string
+          title: Approval Notes
+          x-prophet-display-name: Approval Notes
         approvalReason:
           type: string
+          title: Approval Reason
+          x-prophet-display-name: Approval Reason
         shippingCarrier:
           type: string
+          title: Shipping Carrier
+          x-prophet-display-name: Shipping Carrier
         shippingTrackingNumber:
           type: string
+          title: Shipping Tracking Number
+          x-prophet-display-name: Shipping Tracking Number
         shippingPackageIds:
           type: array
           items:
             type: string
+          title: Shipping Package IDs
+          x-prophet-display-name: Shipping Package IDs
         state:
           type: string
           enum:
@@ -317,8 +349,12 @@ components:
       properties:
         userId:
           type: string
+          title: User ID
+          x-prophet-display-name: User ID
         email:
           type: string
+          title: Email
+          x-prophet-display-name: Email
       description: Platform user who can place or approve orders.
     UserListResponse:
       type: object
@@ -354,6 +390,8 @@ components:
           type: array
           items:
             type: string
+          title: Notes
+          x-prophet-display-name: Notes
         context:
           $ref: '#/components/schemas/ApprovalContext'
       description: Input payload for approving an order.
@@ -368,12 +406,18 @@ components:
         totalAmount:
           type: string
           description: Decimal encoded as string
+          title: Total Amount
+          x-prophet-display-name: Total Amount
         discountCode:
           type: string
+          title: Discount Code
+          x-prophet-display-name: Discount Code
         tags:
           type: array
           items:
             type: string
+          title: Tags
+          x-prophet-display-name: Tags
         shippingAddress:
           $ref: '#/components/schemas/Address'
     ShipOrderCommand:
@@ -388,12 +432,18 @@ components:
           $ref: '#/components/schemas/OrderRef'
         carrier:
           type: string
+          title: Carrier
+          x-prophet-display-name: Carrier
         trackingNumber:
           type: string
+          title: Tracking Number
+          x-prophet-display-name: Tracking Number
         packageIds:
           type: array
           items:
             type: string
+          title: Package IDs
+          x-prophet-display-name: Package IDs
     CreateOrderResult:
       type: object
       required:
@@ -408,6 +458,8 @@ components:
       properties:
         order:
           $ref: '#/components/schemas/OrderRef'
+      title: Payment Captured
+      x-prophet-display-name: Payment Captured
     OrderApproveTransition:
       type: object
       required:
@@ -424,10 +476,18 @@ components:
           type: string
         approvedByUserId:
           type: string
+          title: Approved By User ID
+          x-prophet-display-name: Approved By User ID
         noteCount:
           type: integer
+          title: Note Count
+          x-prophet-display-name: Note Count
         approvalReason:
           type: string
+          title: Approval Reason
+          x-prophet-display-name: Approval Reason
+      title: Approve
+      x-prophet-display-name: Approve
     OrderShipTransition:
       type: object
       required:
@@ -446,12 +506,20 @@ components:
           type: string
         carrier:
           type: string
+          title: Carrier
+          x-prophet-display-name: Carrier
         trackingNumber:
           type: string
+          title: Tracking Number
+          x-prophet-display-name: Tracking Number
         packageIds:
           type: array
           items:
             type: string
+          title: Package IDs
+          x-prophet-display-name: Package IDs
+      title: Ship
+      x-prophet-display-name: Ship
     OrderOrderIdFilter:
       type: object
       properties:

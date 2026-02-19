@@ -8,6 +8,8 @@ IR is the stable internal contract between DSL/validation and target generators.
 
 - Canonical ordering for deterministic generation
 - Explicit IDs for compatibility classification
+- Technical symbol `name` remains the stable generator/wire identifier
+- Human-facing `display_name` carries resolved DSL `name "..."` metadata fallback
 - Query contracts captured as versioned IR surface (`query_contracts`, `query_contracts_version`)
 - Action contracts represented through declared input shape + produced event references (`input_shape_id`, `output_event_id`)
 - Event kinds are `signal` or `transition` only (no `action_output` kind)

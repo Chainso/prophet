@@ -4,6 +4,7 @@
 
 ```prophet
 ontology CommerceLocal {
+  name "Commerce Local"
   version "0.1.0"
   # type/object/struct/action/signal/trigger blocks
 }
@@ -24,6 +25,13 @@ ontology CommerceLocal {
 - Strings use double quotes
 - `#` starts a line comment
 - Empty lines are ignored
+
+## Technical Symbol vs Display Name
+
+- The block identifier is the technical symbol (`object Order`, `field order_id`, etc.).
+- Optional metadata `name "..."` is the human-facing display name.
+- If `name` is omitted, display name defaults to the technical symbol.
+- References and generated wire keys still use technical symbols.
 
 ## IDs
 
@@ -56,9 +64,23 @@ Display key generation behavior:
 - SQL/Flyway/Liquibase generators emit a non-unique display index when `key display` is explicitly declared and differs from the primary key columns.
 - Node Prisma and Mongoose generators also emit non-unique display indexes from `key display`.
 
-## Description Metadata
+## Metadata
 
-`description "..."` and `documentation "..."` are supported synonyms.
+Supported metadata lines on ontology elements and fields:
+
+- `name "..."` for human-facing display names
+- `description "..."` for short descriptive text
+- `documentation "..."` as a synonym for `description`
+
+Example:
+
+```prophet
+field customer_id {
+  name "Customer ID"
+  type string
+  description "Stable customer identifier."
+}
+```
 
 ## Field Requiredness
 
@@ -132,6 +154,7 @@ signal PaymentCaptured {
 ## Canonical Example
 
 - [examples/java/prophet_example_spring/ontology/local/main.prophet](../../examples/java/prophet_example_spring/ontology/local/main.prophet)
+- [examples/turtle/prophet_example_turtle_small_business/ontology/local/main.prophet](../../examples/turtle/prophet_example_turtle_small_business/ontology/local/main.prophet)
 
 ## Current Limitations
 

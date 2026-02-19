@@ -12,6 +12,7 @@ class TypeDef:
     constraints: Dict[str, str]
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -23,6 +24,7 @@ class FieldDef:
     key: Optional[str]
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -32,6 +34,7 @@ class StateDef:
     initial: bool
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -43,6 +46,7 @@ class TransitionDef:
     fields: List[FieldDef]
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -62,6 +66,7 @@ class ObjectDef:
     transitions: List[TransitionDef]
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -71,6 +76,7 @@ class StructDef:
     fields: List[FieldDef]
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -82,6 +88,7 @@ class ActionDef:
     produces_event: str
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -91,6 +98,7 @@ class ActionShapeDef:
     fields: List[FieldDef]
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -101,6 +109,7 @@ class EventDef:
     fields: List[FieldDef]
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -111,6 +120,7 @@ class TriggerDef:
     action_name: str
     description: Optional[str]
     line: int
+    display_name: Optional[str] = None
 
 
 @dataclass
@@ -119,6 +129,7 @@ class Ontology:
     id: str
     version: str
     description: Optional[str] = None
+    display_name: Optional[str] = None
     types: List[TypeDef] = field(default_factory=list)
     objects: List[ObjectDef] = field(default_factory=list)
     structs: List[StructDef] = field(default_factory=list)

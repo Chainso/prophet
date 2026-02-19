@@ -63,6 +63,10 @@ The output is aligned to the base metamodel in [`prophet.ttl`](../../prophet.ttl
 - `prophet:ObjectReference` resources for `ref(Object)` field types
 - `prophet:initialState` on object models (instead of per-state flags)
 
+Naming semantics in Turtle:
+- `prophet:name` comes from DSL display-name metadata (`name "..."`, fallback to technical symbol).
+- `prophet:fieldKey` preserves the technical DSL field symbol for stable wiring.
+
 ## Constraint Escaping
 
 Regex constraints from DSL are decoded once from DSL string form and then escaped for Turtle literals.

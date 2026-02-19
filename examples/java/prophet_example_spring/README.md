@@ -1,8 +1,33 @@
-# Prophet Example Java (Spring Boot)
+# Prophet Example: Spring Boot + JPA
 
-This app was generated via Spring Initializr and then wired with Prophet-generated Spring/JPA artifacts.
+This example is a runnable Spring Boot app generated from a Prophet ontology for a small commerce workflow.
 
-## Generate First
+## What This Example Models
+
+A compact commerce domain with:
+- users and orders
+- order lifecycle transitions (`created -> approved -> shipped`)
+- actions for create/approve/ship order flows
+- signal and transition events
+- UI-facing display labels via DSL `name "..."` metadata
+
+## What This Example Showcases
+
+- `java_spring_jpa` generation end-to-end
+- generated Spring query + action controllers
+- generated JPA entities/repositories and transition support
+- OpenAPI and SQL generation from the same ontology
+- generated extension seams for user-owned action handler logic
+
+## Files to Inspect
+
+- DSL source: `ontology/local/main.prophet`
+- App wiring + handlers: `src/main/java/com/example/prophet/commerce_local/`
+- Generated Spring artifacts: `gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/`
+- Generated OpenAPI: `gen/openapi/openapi.yaml`
+- Generated SQL: `gen/sql/schema.sql`
+
+## Generate
 
 ```bash
 cd examples/java/prophet_example_spring
@@ -18,80 +43,30 @@ cd examples/java/prophet_example_spring
 
 ## Database
 
-- Uses embedded H2 by default (no external DB required).
+- Default: embedded H2 (no external DB needed)
 - H2 console: `http://localhost:8080/h2-console`
 - Default JDBC URL: `jdbc:h2:mem:prophet_example`
 
 Optional override:
 
 ```bash
-export SPRING_DATASOURCE_URL=jdbc:h2:mem:prophet_example;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+export SPRING_DATASOURCE_URL='jdbc:h2:mem:prophet_example;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE'
 export SPRING_DATASOURCE_USERNAME=sa
 export SPRING_DATASOURCE_PASSWORD=
 ```
 
-## Endpoints
+## Example Endpoints
 
 - `GET /orders/{orderId}`
-- `GET /orders?page=0&size=20&sort=orderId,asc` (pagination/sort only)
-- `GET /users/{userId}`
-- `GET /users?page=0&size=20&sort=userId,asc` (pagination/sort only)
-- `POST /orders/query` (typed filter DSL with pagination/sort)
-- `POST /users/query` (typed filter DSL with pagination/sort)
+- `GET /orders?page=0&size=20&sort=orderId,asc`
+- `POST /orders/query`
 - `POST /actions/createOrder`
 - `POST /actions/approveOrder`
 - `POST /actions/shipOrder`
 
-Action payload notes:
-- `createOrder` mints a new order ID server-side; request body does not include `orderId`.
-- `approveOrder` and `shipOrder` use object references in request payloads (for example `{ "order": { "orderId": "..." } }`).
-- `createOrder` returns a signal payload with the new `order` ref.
-- `approveOrder` and `shipOrder` return transition event payloads with `orderId`, `fromState`, and `toState`.
-
-List endpoint response shape:
-- generated DTO envelopes (`OrderListResponse`, `UserListResponse`) with:
-  - `items`
-  - `page`
-  - `size`
-  - `totalElements`
-  - `totalPages`
-
-`/orders/query` example body:
-
-```json
-{
-  "customer": { "eq": "u_123" },
-  "state": { "in": ["CREATED", "APPROVED"] },
-  "totalAmount": { "gte": 50, "lte": 500 }
-}
-```
-
-`/users/query` example body:
-
-```json
-{
-  "email": { "contains": "@example.com" }
-}
-```
-
-## Notes
-
-- Hibernate generates schema from JPA entities at startup (`ddl-auto=update`) in this example.
-- Prophet also generates migration artifacts:
-  - Flyway: `gen/migrations/flyway/V1__prophet_init.sql`
-  - Liquibase: `gen/migrations/liquibase/**`
-  - Spring runtime resources under `gen/spring-boot/src/main/resources/db/**` are auto-detected from existing app dependencies/plugins.
-- Generated classes live under `gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated` for this example.
-- Event ingestion/dispatch is external; this app only exposes action endpoints.
-
-## Tests
+## Test
 
 ```bash
 cd examples/java/prophet_example_spring
 ./gradlew test
 ```
-
-Notable test coverage:
-- `ActionHttpFlowIntegrationTest`: end-to-end HTTP flow (`createOrder -> approveOrder -> shipOrder -> query/get`)
-- `H2ProfileContextTest`: H2 profile boot sanity
-- `PostgresProfileContextTest`: real Postgres profile boot sanity via Testcontainers

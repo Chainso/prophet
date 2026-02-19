@@ -9,6 +9,7 @@ PROJECT_ROOT = THIS_FILE.parents[2]
 sys.path.insert(0, str(PROJECT_ROOT / "prophet-cli" / "src"))
 
 from prophet_cli.cli import build_ir
+from prophet_cli.cli import build_generated_outputs
 from prophet_cli.cli import parse_ontology
 from prophet_cli.cli import validate_ontology
 
@@ -18,17 +19,20 @@ class DSLFeaturesTests(unittest.TestCase):
         ontology_text = """
 ontology CommerceLocal {
   id "ont_commerce_local"
+  name "Commerce Local"
   version "0.1.0"
   description "Commerce ontology for local order processing."
 
   object TenantOrder {
     id "obj_tenant_order"
+    name "Tenant Order"
     description "Tenant-scoped order aggregate."
     key primary (tenantId, orderId)
     key display (externalCode)
 
     field tenantId {
       id "fld_tenant_order_tenant_id"
+      name "Tenant ID"
       type string
       required
       description "Tenant identifier."
@@ -43,6 +47,7 @@ ontology CommerceLocal {
 
     field externalCode {
       id "fld_tenant_order_external_code"
+      name "External Code"
       type string
       optional
       description "Human-friendly lookup code."
@@ -56,8 +61,10 @@ ontology CommerceLocal {
 
         ir = build_ir(ontology, {})
         self.assertEqual(ir["ontology"]["description"], "Commerce ontology for local order processing.")
+        self.assertEqual(ir["ontology"]["display_name"], "Commerce Local")
         obj = next(item for item in ir["objects"] if item["id"] == "obj_tenant_order")
         self.assertEqual(obj["description"], "Tenant-scoped order aggregate.")
+        self.assertEqual(obj["display_name"], "Tenant Order")
         self.assertEqual(
             obj["keys"]["primary"]["field_ids"],
             ["fld_tenant_order_tenant_id", "fld_tenant_order_order_id"],
@@ -70,9 +77,83 @@ ontology CommerceLocal {
         self.assertEqual(field_by_id["fld_tenant_order_tenant_id"]["description"], "Tenant identifier.")
         self.assertEqual(field_by_id["fld_tenant_order_order_id"]["description"], "Order identifier.")
         self.assertEqual(field_by_id["fld_tenant_order_external_code"]["description"], "Human-friendly lookup code.")
+        self.assertEqual(field_by_id["fld_tenant_order_tenant_id"]["display_name"], "Tenant ID")
+        self.assertEqual(field_by_id["fld_tenant_order_external_code"]["display_name"], "External Code")
 
         contract = next(item for item in ir["query_contracts"] if item["object_id"] == "obj_tenant_order")
         self.assertEqual(contract["paths"]["get_by_id"], "/tenant_orders/{tenantId}/{orderId}")
+
+    def test_name_metadata_rejects_empty_and_duplicate_values(self) -> None:
+        empty_name = """
+ontology CommerceLocal {
+  version "0.1.0"
+  name "   "
+}
+"""
+        with self.assertRaisesRegex(Exception, "must not be empty"):
+            parse_ontology(empty_name)
+
+        duplicate_name = """
+ontology CommerceLocal {
+  version "0.1.0"
+  object Order {
+    name "Order"
+    name "Order Duplicate"
+    field orderId {
+      type string
+      key primary
+    }
+  }
+}
+"""
+        with self.assertRaisesRegex(Exception, "duplicate name metadata"):
+            parse_ontology(duplicate_name)
+
+    def test_display_name_flows_to_turtle_and_openapi_hints(self) -> None:
+        ontology_text = """
+ontology CommerceLocal {
+  id "ont_commerce_local"
+  name "Commerce Local"
+  version "0.1.0"
+
+  object Order {
+    id "obj_order"
+    name "Sales Order"
+
+    field orderId {
+      id "fld_order_order_id"
+      name "Order ID"
+      type string
+      key primary
+    }
+  }
+}
+"""
+        ontology = parse_ontology(ontology_text)
+        errors = validate_ontology(ontology)
+        self.assertEqual(errors, [])
+        cfg = {
+            "project": {"ontology_file": "ontology/local/main.prophet"},
+            "generation": {
+                "out_dir": "gen",
+                "stack": {"id": "java_spring_jpa"},
+                "targets": ["openapi", "turtle", "manifest"],
+            },
+        }
+        ir = build_ir(ontology, cfg)
+        outputs = build_generated_outputs(ir, cfg)
+
+        turtle = outputs["gen/turtle/ontology.ttl"]
+        self.assertIn('prophet:name "Commerce Local"', turtle)
+        self.assertIn('prophet:name "Sales Order"', turtle)
+        self.assertIn('prophet:name "Order ID"', turtle)
+        self.assertIn('prophet:fieldKey "orderId"', turtle)
+
+        openapi = outputs["gen/openapi/openapi.yaml"]
+        self.assertIn("title: Sales Order", openapi)
+        self.assertIn("x-prophet-display-name: Sales Order", openapi)
+        self.assertIn("title: Order ID", openapi)
+        self.assertIn("x-prophet-display-name: Order ID", openapi)
 
     def test_object_refs_require_single_field_primary_key_targets(self) -> None:
         ontology_text = """

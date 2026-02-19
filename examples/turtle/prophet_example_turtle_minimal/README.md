@@ -17,6 +17,7 @@ A simple support workflow:
 - Structs embedded in objects (`assignee: UserRef`)
 - Object references (`ref(Ticket)`) for action/signal payloads
 - Lists (`string[]`) in object fields
+- Human-facing labels via DSL `name "..."` metadata
 - State machine basics: `state`, `transition`, `initial`
 - Action inline output (`output { ... }`) deriving `<ActionName>Result`
 - Deterministic Turtle generation in `gen/turtle/ontology.ttl`

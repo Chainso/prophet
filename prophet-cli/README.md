@@ -260,6 +260,7 @@ Compatibility rules used by CLI are documented in:
 
 - Field types support scalars, custom types, object refs (`ref(User)`), lists (`string[]`, `list(string)`), and reusable `struct` types.
 - Nested list types are supported (for example `string[][]`, `list(list(string))`).
+- `name "..."` metadata provides human-facing display labels while technical symbols remain the wire/reference keys.
 - Description metadata supports both `description "..."` and `documentation "..."`.
 - Object keys support field-level and object-level declarations:
   - `key primary`

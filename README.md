@@ -64,6 +64,8 @@ Turtle target conformance notes:
 ## How Prophet Is Used
 
 1. Define your business domain in Prophet DSL.
+   - Keep technical symbols stable for references and generated wire keys.
+   - Use `name "..."` metadata for human-facing labels.
 2. Run validation.
 3. Generate artifacts.
 4. Add your business logic in user-owned extension points.
@@ -110,6 +112,8 @@ python3 -m venv .venv --system-site-packages
 | Python | Flask | SQLModel | `python_flask_sqlmodel` | [Flask + SQLModel Example](examples/python/prophet_example_flask_sqlmodel) |
 | Python | Django | Django ORM | `python_django_django_orm` | [Django + Django ORM Example](examples/python/prophet_example_django) |
 | Turtle | SHACL/RDF | Ontology projection | N/A | [Minimal Turtle Example](examples/turtle/prophet_example_turtle_minimal) · [Small Business Turtle Example](examples/turtle/prophet_example_turtle_small_business) |
+
+Each example includes a README describing the domain model and stack-specific integration surfaces.
 
 ## License
 

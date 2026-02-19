@@ -2,7 +2,7 @@
   "schema_version": 1,
   "toolchain_version": "0.20.0",
   "stack_id": "python_django_django_orm",
-  "signature": "038dbeb89d75fc56d622a28c2bdffda550cb6622ecc2253b06111b8c9fe07d93",
-  "ir_hash": "11d80de956863e05d45fcd958134a99237823d4ea06eda6a385379796c72e0e7",
+  "signature": "3098185bbe28eaf54135abe9a236d82d4032ecee1906971041a9f32f3ab34a90",
+  "ir_hash": "211facecc42e6e0e449a6a116867d04a9ef14dcba13622094bebc8bccbc6bca3",
   "out_dir": "gen"
 }

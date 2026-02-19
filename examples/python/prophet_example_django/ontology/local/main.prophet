@@ -1,19 +1,23 @@
 ontology commerce_local {
+  name "Commerce Local"
   id "ont_commerce_local"
   version "1.0.0"
   description "Commerce ontology for order creation, approval, and shipping."
 
   type Money {
+    name "Money"
     id "type_money"
     base decimal
     constraint min "0.00"
   }
 
   object User {
+    name "User"
     id "obj_user"
     description "Platform user who can place or approve orders."
 
     field user_id {
+      name "User ID"
       id "fld_user_user_id"
       type string
       key primary
@@ -21,16 +25,19 @@ ontology commerce_local {
     }
 
     field email {
+      name "Email"
       id "fld_user_email"
       type string
     }
   }
 
   object Order {
+    name "Order"
     id "obj_order"
     description "Customer order aggregate."
 
     field order_id {
+      name "Order ID"
       id "fld_order_order_id"
       type string
       key primary
@@ -38,99 +45,117 @@ ontology commerce_local {
     }
 
     field customer {
+      name "Customer"
       id "fld_order_customer"
       type ref(User)
     }
 
     field total_amount {
+      name "Total Amount"
       id "fld_order_total_amount"
       type Money
     }
 
     field discount_code {
+      name "Discount Code"
       id "fld_order_discount_code"
       type string
       optional
     }
 
     field tags {
+      name "Tags"
       id "fld_order_tags"
       type string[]
       optional
     }
 
     field shipping_address {
+      name "Shipping Address"
       id "fld_order_shipping_address"
       type Address
       optional
     }
 
     field approved_by_user_id {
+      name "Approved By User ID"
       id "fld_order_approved_by_user_id"
       type string
       optional
     }
 
     field approval_notes {
+      name "Approval Notes"
       id "fld_order_approval_notes"
       type string[]
       optional
     }
 
     field approval_reason {
+      name "Approval Reason"
       id "fld_order_approval_reason"
       type string
       optional
     }
 
     field shipping_carrier {
+      name "Shipping Carrier"
       id "fld_order_shipping_carrier"
       type string
       optional
     }
 
     field shipping_tracking_number {
+      name "Shipping Tracking Number"
       id "fld_order_shipping_tracking_number"
       type string
       optional
     }
 
     field shipping_package_ids {
+      name "Shipping Package IDs"
       id "fld_order_shipping_package_ids"
       type string[]
       optional
     }
 
     state created {
+      name "Created"
       id "state_order_created"
       initial
     }
 
     state approved {
+      name "Approved"
       id "state_order_approved"
     }
 
     state shipped {
+      name "Shipped"
       id "state_order_shipped"
     }
 
     transition approve {
+      name "Approve"
       id "trans_order_approve"
       from created
       to approved
 
       field approvedByUserId {
+        name "Approved By User ID"
         id "fld_trans_order_approve_approved_by_user_id"
         type string
         optional
       }
 
       field noteCount {
+        name "Note Count"
         id "fld_trans_order_approve_note_count"
         type int
       }
 
       field approvalReason {
+        name "Approval Reason"
         id "fld_trans_order_approve_approval_reason"
         type string
         optional
@@ -138,21 +163,25 @@ ontology commerce_local {
     }
 
     transition ship {
+      name "Ship"
       id "trans_order_ship"
       from approved
       to shipped
 
       field carrier {
+        name "Carrier"
         id "fld_trans_order_ship_carrier"
         type string
       }
 
       field trackingNumber {
+        name "Tracking Number"
         id "fld_trans_order_ship_tracking_number"
         type string
       }
 
       field packageIds {
+        name "Package IDs"
         id "fld_trans_order_ship_package_ids"
         type string[]
       }
@@ -160,39 +189,47 @@ ontology commerce_local {
   }
 
   struct Address {
+    name "Address"
     id "struct_address"
 
     field line1 {
+      name "Line 1"
       id "fld_struct_address_line1"
       type string
     }
 
     field city {
+      name "City"
       id "fld_struct_address_city"
       type string
     }
 
     field countryCode {
+      name "Country Code"
       id "fld_struct_address_country_code"
       type string
     }
   }
 
   struct ApprovalContext {
+    name "Approval Context"
     id "struct_approval_context"
 
     field approver {
+      name "Approver"
       id "fld_struct_approval_context_approver"
       type ref(User)
     }
 
     field watchers {
+      name "Watchers"
       id "fld_struct_approval_context_watchers"
       type ref(User)[]
       optional
     }
 
     field reason {
+      name "Reason"
       id "fld_struct_approval_context_reason"
       type string
       optional
@@ -200,6 +237,7 @@ ontology commerce_local {
   }
 
   action createOrder {
+    name "Create Order"
     id "act_create_order"
     kind process
     description "Creates a new order."
@@ -208,28 +246,33 @@ ontology commerce_local {
       id "ain_create_order"
 
       field customer {
+        name "Customer"
         id "fld_ain_create_order_customer"
         type ref(User)
       }
 
       field totalAmount {
+        name "Total Amount"
         id "fld_ain_create_order_total_amount"
         type Money
       }
 
       field discountCode {
+        name "Discount Code"
         id "fld_ain_create_order_discount_code"
         type string
         optional
       }
 
       field tags {
+        name "Tags"
         id "fld_ain_create_order_tags"
         type string[]
         optional
       }
 
       field shippingAddress {
+        name "Shipping Address"
         id "fld_ain_create_order_shipping_address"
         type Address
         optional
@@ -240,6 +283,7 @@ ontology commerce_local {
       id "aout_create_order"
 
       field order {
+        name "Order"
         id "fld_aout_create_order_order"
         type ref(Order)
       }
@@ -247,6 +291,7 @@ ontology commerce_local {
   }
 
   action approveOrder {
+    name "Approve Order"
     id "act_approve_order"
     kind process
     description "Approves an existing order."
@@ -256,23 +301,27 @@ ontology commerce_local {
       description "Input payload for approving an order."
 
       field order {
+        name "Order"
         id "fld_ain_approve_order_order"
         type ref(Order)
       }
 
       field approvedBy {
+        name "Approved By"
         id "fld_ain_approve_order_approved_by"
         type ref(User)
         optional
       }
 
       field notes {
+        name "Notes"
         id "fld_ain_approve_order_notes"
         type list(string)
         optional
       }
 
       field context {
+        name "Context"
         id "fld_ain_approve_order_context"
         type ApprovalContext
         optional
@@ -283,6 +332,7 @@ ontology commerce_local {
   }
 
   action shipOrder {
+    name "Ship Order"
     id "act_ship_order"
     kind workflow
     description "Ships an approved order."
@@ -291,21 +341,25 @@ ontology commerce_local {
       id "ain_ship_order"
 
       field order {
+        name "Order"
         id "fld_ain_ship_order_order"
         type ref(Order)
       }
 
       field carrier {
+        name "Carrier"
         id "fld_ain_ship_order_carrier"
         type string
       }
 
       field trackingNumber {
+        name "Tracking Number"
         id "fld_ain_ship_order_tracking_number"
         type string
       }
 
       field packageIds {
+        name "Package IDs"
         id "fld_ain_ship_order_package_ids"
         type string[]
       }
@@ -315,21 +369,25 @@ ontology commerce_local {
   }
 
   signal PaymentCaptured {
+    name "Payment Captured"
     id "sig_payment_captured"
 
     field order {
+      name "Order"
       id "fld_sig_payment_captured_order"
       type ref(Order)
     }
   }
 
   trigger onPaymentCaptured {
+    name "On Payment Captured"
     id "trg_on_payment_captured"
     when event PaymentCaptured
     invoke approveOrder
   }
 
   trigger onOrderApproved {
+    name "On Order Approved"
     id "trg_on_order_approved"
     when event OrderApproveTransition
     invoke shipOrder

@@ -17,6 +17,7 @@ A neighborhood bakery operations domain with connected business workflows:
 - Self-reference (`Employee.manager -> ref(Employee)`)
 - Reusable structs (`Address`, `ContactPoint`, line-item structs, payment details)
 - Custom constrained types (`Money`, `Quantity`, `Email`, `CurrencyCode`, `PhoneNumber`)
+- Human-facing labels via DSL `name "..."` metadata
 - Multiple state machines with transitions:
   - `PurchaseOrder`: `draft -> submitted -> received -> closed`
   - `SalesOrder`: `pending_payment -> paid -> fulfilled` and cancellation path

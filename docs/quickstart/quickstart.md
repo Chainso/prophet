@@ -39,14 +39,16 @@ Edit `ontology/local/main.prophet` to model objects, structs, actions, and signa
 
 ```prophet
 ontology CommerceLocal {
+  name "Commerce Local"
   version "0.1.0"
 
   object Order {
-    field orderId { type string key primary }
-    field customerUserId { type string }
-    field totalAmount { type decimal }
-    field discountCode { type string optional }
-    field tags { type string[] optional }
+    name "Order"
+    field orderId { name "Order ID" type string key primary }
+    field customerUserId { name "Customer User ID" type string }
+    field totalAmount { name "Total Amount" type decimal }
+    field discountCode { name "Discount Code" type string optional }
+    field tags { name "Tags" type string[] optional }
     state pending { initial }
     state approved {}
     transition approve {
@@ -56,29 +58,36 @@ ontology CommerceLocal {
   }
 
   struct ShippingAddress {
-    field line1 { type string }
-    field city { type string }
-    field countryCode { type string }
+    name "Shipping Address"
+    field line1 { name "Line 1" type string }
+    field city { name "City" type string }
+    field countryCode { name "Country Code" type string }
   }
 
   action createOrder {
+    name "Create Order"
     kind process
     input {
-      field customerUserId { type string }
-      field totalAmount { type decimal }
-      field shippingAddress { type ShippingAddress }
+      field customerUserId { name "Customer User ID" type string }
+      field totalAmount { name "Total Amount" type decimal }
+      field shippingAddress { name "Shipping Address" type ShippingAddress }
     }
     output {
-      field order { type ref(Order) }
+      field order { name "Order" type ref(Order) }
     }
   }
 
   signal PaymentCaptured {
-    field order { type ref(Order) }
-    field providerRef { type string }
+    name "Payment Captured"
+    field order { name "Order" type ref(Order) }
+    field providerRef { name "Provider Reference" type string }
   }
 }
 ```
+
+Naming guidance:
+- Keep technical symbols (`object Order`, `field orderId`) stable for references and wire keys.
+- Use `name "..."` metadata for human-facing labels in docs/UIs.
 
 Action output forms:
 - `output { ... }` for inline signal payloads (derived event `<ActionName>Result`)

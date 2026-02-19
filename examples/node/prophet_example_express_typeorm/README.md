@@ -1,42 +1,61 @@
 # Prophet Example: Express + TypeORM
 
-This example demonstrates Prophet generation for the `node_express_typeorm` stack.
+This example is a runnable Node/Express app generated from a Prophet ontology for a small commerce workflow.
+
+## What This Example Models
+
+A commerce domain with:
+- users and orders
+- order lifecycle transitions (`created -> approved -> shipped`)
+- actions for create/approve/ship
+- signal and transition events
+- UI-facing display labels via DSL `name "..."` metadata
+
+## What This Example Showcases
+
+- `node_express_typeorm` generation end-to-end
+- generated typed contracts, routes, and service seams
+- generated TypeORM entities + repository adapters
+- OpenAPI + SQL generation from one ontology
+
+## Files to Inspect
+
+- DSL source: `ontology/local/main.prophet`
+- App wiring + handlers: `src/server.ts`
+- Generated Node artifacts: `gen/node-express/src/generated/`
+- Generated TypeORM entities: `gen/node-express/src/generated/typeorm-entities.ts`
+- Generated OpenAPI: `gen/openapi/openapi.yaml`
 
 ## Generate
 
 ```bash
 cd examples/node/prophet_example_express_typeorm
-../../../.venv/bin/prophet gen
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
 ```
-
-Generated output includes:
-
-- `gen/node-express/src/generated/**`
-- `gen/node-express/src/generated/typeorm-entities.ts`
-- `gen/openapi/openapi.yaml`
-- `gen/sql/schema.sql`
 
 ## Run
 
 ```bash
+cd examples/node/prophet_example_express_typeorm
 npm install
 npm run dev
 ```
 
-The example boots a local SQLite database (`prophet_example.sqlite`) and wires concrete action handlers in `src/server.ts`.
-Try:
+## Try
 
 1. `POST /actions/createOrder`
 2. `POST /actions/approveOrder`
 3. `POST /actions/shipOrder`
 4. `POST /orders/query`
 
-## Production DB Notes
+## Test
 
-This example uses `sqlite` with `synchronize: true` for fast local testing.
+```bash
+cd examples/node/prophet_example_express_typeorm
+npm run build
+npm run test:integration
+```
 
-For production:
-- configure TypeORM `DataSource` from environment (host/port/user/password/db/ssl/pool)
-- use your production driver (`postgres`, `mysql`, `mssql`, etc.)
-- set `synchronize: false`
-- manage schema changes with migrations
+## Production DB Note
+
+This example uses SQLite + `synchronize: true` for local speed. Use migrations and `synchronize: false` for production.

@@ -15,6 +15,11 @@
 - `gen/manifest/generated-files.json`
 - `gen/manifest/extension-hooks.json`
 
+Display-name metadata behavior:
+- DSL `name "..."` is carried as `display_name` in IR.
+- OpenAPI keeps technical property keys but may include display hints (`title`, `x-prophet-display-name`).
+- Turtle uses display names for `prophet:name` and keeps technical field symbols in `prophet:fieldKey`.
+
 Turtle details:
 - [Turtle Target Reference](turtle.md)
 - output is designed to conform to [`prophet.ttl`](../../prophet.ttl) and can be validated with `pyshacl`

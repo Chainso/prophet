@@ -1,32 +1,59 @@
 # Prophet Example: FastAPI + SQLModel
 
-This example demonstrates Prophet generation for the `python_fastapi_sqlmodel` stack.
+This example is a runnable FastAPI app generated from a Prophet ontology for a small commerce workflow.
+
+## What This Example Models
+
+A commerce domain with:
+- users and orders
+- order lifecycle transitions (`created -> approved -> shipped`)
+- actions for create/approve/ship
+- signal and transition events
+- UI-facing display labels via DSL `name "..."` metadata
+
+## What This Example Showcases
+
+- `python_fastapi_sqlmodel` generation end-to-end
+- generated Python contracts, query/action routes, and services
+- generated SQLModel models + adapters
+- OpenAPI + SQL generation from one ontology
+
+## Files to Inspect
+
+- DSL source: `ontology/local/main.prophet`
+- App wiring + handlers: `src/app.py`
+- Generated Python artifacts: `gen/python/src/generated/`
+- Generated SQLModel models: `gen/python/src/generated/sqlmodel_models.py`
+- Generated OpenAPI: `gen/openapi/openapi.yaml`
 
 ## Generate
 
 ```bash
 cd examples/python/prophet_example_fastapi_sqlmodel
-../../../.venv/bin/prophet gen
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
 ```
-
-Generated output includes:
-
-- `gen/python/src/generated/**`
-- `gen/openapi/openapi.yaml`
-- `gen/sql/schema.sql`
 
 ## Run
 
 ```bash
+cd examples/python/prophet_example_fastapi_sqlmodel
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
-../../../.venv/bin/prophet gen
+$(git rev-parse --show-toplevel)/.venv/bin/prophet gen
 .venv/bin/uvicorn src.app:app --host 0.0.0.0 --port 8080
 ```
 
-Try:
+## Try
 
 1. `POST /actions/createOrder`
 2. `POST /actions/approveOrder`
 3. `POST /actions/shipOrder`
 4. `POST /orders/query`
+
+## Test
+
+```bash
+cd examples/python/prophet_example_fastapi_sqlmodel
+PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src:src:gen/python/src \
+.venv/bin/python -m unittest tests.test_http_flow -v
+```

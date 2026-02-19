@@ -780,6 +780,21 @@ def render_openapi(ir: Dict[str, Any]) -> str:
     action_input_by_id = {s["id"]: s for s in action_inputs}
     event_by_id = {e["id"]: e for e in events if isinstance(e, dict) and "id" in e}
 
+    def _resolved_display_name(item: Dict[str, Any]) -> str:
+        explicit = str(item.get("display_name", "")).strip()
+        if explicit:
+            return explicit
+        return str(item.get("name", "")).strip()
+
+    def _apply_display_name_hint(schema: Dict[str, Any], item: Dict[str, Any]) -> None:
+        if "$ref" in schema:
+            return
+        resolved = _resolved_display_name(item)
+        symbol = str(item.get("name", "")).strip()
+        if resolved and resolved != symbol:
+            schema.setdefault("title", resolved)
+            schema.setdefault("x-prophet-display-name", resolved)
+
     components_schemas: Dict[str, Any] = {}
 
     for source in list(objects) + list(structs) + list(action_inputs) + [e for e in events if isinstance(e, dict)]:
@@ -806,7 +821,10 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         properties: Dict[str, Any] = {}
         for f in struct.get("fields", []):
             prop = camel_case(f["name"])
-            properties[prop] = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            field_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            if isinstance(field_schema, dict):
+                _apply_display_name_hint(field_schema, f)
+            properties[prop] = field_schema
             if f.get("cardinality", {}).get("min", 0) > 0:
                 required_props.append(prop)
         components_schemas[struct["name"]] = {
@@ -814,6 +832,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        _apply_display_name_hint(components_schemas[struct["name"]], struct)
         if struct.get("description"):
             components_schemas[struct["name"]]["description"] = struct["description"]
 
@@ -822,7 +841,10 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         properties: Dict[str, Any] = {}
         for f in obj.get("fields", []):
             prop = camel_case(f["name"])
-            properties[prop] = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            field_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            if isinstance(field_schema, dict):
+                _apply_display_name_hint(field_schema, f)
+            properties[prop] = field_schema
             if f.get("cardinality", {}).get("min", 0) > 0:
                 required_props.append(prop)
         if obj.get("states"):
@@ -837,6 +859,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        _apply_display_name_hint(components_schemas[obj["name"]], obj)
         if obj.get("description"):
             components_schemas[obj["name"]]["description"] = obj["description"]
         components_schemas[f"{obj['name']}ListResponse"] = {
@@ -859,7 +882,10 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         properties: Dict[str, Any] = {}
         for f in shape.get("fields", []):
             prop = camel_case(f["name"])
-            properties[prop] = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            field_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            if isinstance(field_schema, dict):
+                _apply_display_name_hint(field_schema, f)
+            properties[prop] = field_schema
             if f.get("cardinality", {}).get("min", 0) > 0:
                 required_props.append(prop)
         components_schemas[shape["name"]] = {
@@ -867,6 +893,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        _apply_display_name_hint(components_schemas[shape["name"]], shape)
         if shape.get("description"):
             components_schemas[shape["name"]]["description"] = shape["description"]
 
@@ -878,7 +905,10 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         properties: Dict[str, Any] = {}
         for f in [field for field in event.get("fields", []) if isinstance(field, dict)]:
             prop = camel_case(str(f.get("name", "field")))
-            properties[prop] = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            field_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            if isinstance(field_schema, dict):
+                _apply_display_name_hint(field_schema, f)
+            properties[prop] = field_schema
             if f.get("cardinality", {}).get("min", 0) > 0:
                 required_props.append(prop)
         components_schemas[event_name] = {
@@ -886,6 +916,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             "required": required_props,
             "properties": properties,
         }
+        _apply_display_name_hint(components_schemas[event_name], event)
         if event.get("description"):
             components_schemas[event_name]["description"] = event["description"]
 
@@ -1063,7 +1094,15 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         paths[f"/actions/{action['name']}"] = {
             "post": {
                 "operationId": op_id,
-                **({"summary": action["description"]} if action.get("description") else {}),
+                **(
+                    {"summary": action["description"]}
+                    if action.get("description")
+                    else (
+                        {"summary": _resolved_display_name(action)}
+                        if _resolved_display_name(action)
+                        else {}
+                    )
+                ),
                 "requestBody": {
                     "required": True,
                     "content": {
@@ -1088,7 +1127,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
     spec = {
         "openapi": "3.1.0",
         "info": {
-            "title": f"{pascal_case(ir['ontology']['name'])} API",
+            "title": f"{str(ir.get('ontology', {}).get('display_name') or pascal_case(ir['ontology']['name']) or ir['ontology']['name'])} API",
             "version": ir["ontology"]["version"],
         },
         "servers": [{"url": "https://api.example.com"}],

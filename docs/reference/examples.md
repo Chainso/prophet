@@ -3,6 +3,7 @@
 This page is the sample catalog (runnable apps + Turtle target examples).
 
 Use [Quickstart](../quickstart/quickstart.md) when integrating Prophet into your own project.
+Each example directory includes a dedicated README describing the modeled domain and what that stack showcases.
 
 ## Java
 
@@ -10,6 +11,7 @@ Use [Quickstart](../quickstart/quickstart.md) when integrating Prophet into your
 
 Path:
 - [examples/java/prophet_example_spring](../../examples/java/prophet_example_spring)
+- [README](../../examples/java/prophet_example_spring/README.md)
 
 Run:
 
@@ -26,6 +28,7 @@ prophet gen --wire-gradle
 
 Path:
 - [examples/node/prophet_example_express_prisma](../../examples/node/prophet_example_express_prisma)
+- [README](../../examples/node/prophet_example_express_prisma/README.md)
 
 Run:
 
@@ -42,6 +45,7 @@ npm run dev
 
 Path:
 - [examples/node/prophet_example_express_typeorm](../../examples/node/prophet_example_express_typeorm)
+- [README](../../examples/node/prophet_example_express_typeorm/README.md)
 
 Run:
 
@@ -56,6 +60,7 @@ npm run dev
 
 Path:
 - [examples/node/prophet_example_express_mongoose](../../examples/node/prophet_example_express_mongoose)
+- [README](../../examples/node/prophet_example_express_mongoose/README.md)
 
 Run:
 
@@ -72,6 +77,7 @@ MONGO_URL="mongodb://127.0.0.1:27017/prophet_example_mongoose" npm run dev
 
 Path:
 - [examples/python/prophet_example_fastapi_sqlalchemy](../../examples/python/prophet_example_fastapi_sqlalchemy)
+- [README](../../examples/python/prophet_example_fastapi_sqlalchemy/README.md)
 
 Run:
 
@@ -88,6 +94,7 @@ PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src \
 
 Path:
 - [examples/python/prophet_example_fastapi_sqlmodel](../../examples/python/prophet_example_fastapi_sqlmodel)
+- [README](../../examples/python/prophet_example_fastapi_sqlmodel/README.md)
 
 Run:
 
@@ -104,6 +111,7 @@ PYTHONPATH=$(git rev-parse --show-toplevel)/prophet-lib/python/src \
 
 Path:
 - [examples/python/prophet_example_flask_sqlalchemy](../../examples/python/prophet_example_flask_sqlalchemy)
+- [README](../../examples/python/prophet_example_flask_sqlalchemy/README.md)
 
 Run:
 
@@ -120,6 +128,7 @@ FLASK_APP=src.app:app .venv/bin/flask run --host 0.0.0.0 --port 8080
 
 Path:
 - [examples/python/prophet_example_flask_sqlmodel](../../examples/python/prophet_example_flask_sqlmodel)
+- [README](../../examples/python/prophet_example_flask_sqlmodel/README.md)
 
 Run:
 
@@ -136,6 +145,7 @@ FLASK_APP=src.app:app .venv/bin/flask run --host 0.0.0.0 --port 8080
 
 Path:
 - [examples/python/prophet_example_django](../../examples/python/prophet_example_django)
+- [README](../../examples/python/prophet_example_django/README.md)
 
 Run:
 
@@ -161,6 +171,7 @@ From repository root:
 
 Path:
 - [examples/turtle/prophet_example_turtle_minimal](../../examples/turtle/prophet_example_turtle_minimal)
+- [README](../../examples/turtle/prophet_example_turtle_minimal/README.md)
 
 Generate Turtle output in any Prophet project by enabling `turtle` in `generation.targets`, then running:
 
@@ -181,6 +192,7 @@ pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_min
 
 Path:
 - [examples/turtle/prophet_example_turtle_small_business](../../examples/turtle/prophet_example_turtle_small_business)
+- [README](../../examples/turtle/prophet_example_turtle_small_business/README.md)
 
 This example models a realistic small-business domain with:
 - customers, employees, suppliers, products, inventory, purchase orders, sales orders, invoices, and deliveries
