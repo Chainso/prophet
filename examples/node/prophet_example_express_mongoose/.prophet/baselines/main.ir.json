@@ -1,10 +1,11 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.19.0",
+  "toolchain_version": "0.20.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_commerce_local",
     "name": "commerce_local",
+    "display_name": "Commerce Local",
     "version": "1.0.0",
     "description": "Commerce ontology for order creation, approval, and shipping."
   },
@@ -12,6 +13,7 @@
     {
       "id": "type_money",
       "name": "Money",
+      "display_name": "Money",
       "kind": "custom",
       "base": "decimal",
       "constraints": {
@@ -23,10 +25,12 @@
     {
       "id": "obj_order",
       "name": "Order",
+      "display_name": "Order",
       "fields": [
         {
           "id": "fld_order_order_id",
           "name": "order_id",
+          "display_name": "Order ID",
           "type": {
             "kind": "base",
             "name": "string"
@@ -41,6 +45,7 @@
         {
           "id": "fld_order_customer",
           "name": "customer",
+          "display_name": "Customer",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_user"
@@ -53,6 +58,7 @@
         {
           "id": "fld_order_total_amount",
           "name": "total_amount",
+          "display_name": "Total Amount",
           "type": {
             "kind": "custom",
             "target_type_id": "type_money"
@@ -65,6 +71,7 @@
         {
           "id": "fld_order_discount_code",
           "name": "discount_code",
+          "display_name": "Discount Code",
           "type": {
             "kind": "base",
             "name": "string"
@@ -77,6 +84,7 @@
         {
           "id": "fld_order_tags",
           "name": "tags",
+          "display_name": "Tags",
           "type": {
             "kind": "list",
             "element": {
@@ -92,6 +100,7 @@
         {
           "id": "fld_order_shipping_address",
           "name": "shipping_address",
+          "display_name": "Shipping Address",
           "type": {
             "kind": "struct",
             "target_struct_id": "struct_address"
@@ -104,6 +113,7 @@
         {
           "id": "fld_order_approved_by_user_id",
           "name": "approved_by_user_id",
+          "display_name": "Approved By User ID",
           "type": {
             "kind": "base",
             "name": "string"
@@ -116,6 +126,7 @@
         {
           "id": "fld_order_approval_notes",
           "name": "approval_notes",
+          "display_name": "Approval Notes",
           "type": {
             "kind": "list",
             "element": {
@@ -131,6 +142,7 @@
         {
           "id": "fld_order_approval_reason",
           "name": "approval_reason",
+          "display_name": "Approval Reason",
           "type": {
             "kind": "base",
             "name": "string"
@@ -143,6 +155,7 @@
         {
           "id": "fld_order_shipping_carrier",
           "name": "shipping_carrier",
+          "display_name": "Shipping Carrier",
           "type": {
             "kind": "base",
             "name": "string"
@@ -155,6 +168,7 @@
         {
           "id": "fld_order_shipping_tracking_number",
           "name": "shipping_tracking_number",
+          "display_name": "Shipping Tracking Number",
           "type": {
             "kind": "base",
             "name": "string"
@@ -167,6 +181,7 @@
         {
           "id": "fld_order_shipping_package_ids",
           "name": "shipping_package_ids",
+          "display_name": "Shipping Package IDs",
           "type": {
             "kind": "list",
             "element": {
@@ -194,16 +209,19 @@
         {
           "id": "state_order_created",
           "name": "created",
+          "display_name": "Created",
           "initial": true
         },
         {
           "id": "state_order_approved",
           "name": "approved",
+          "display_name": "Approved",
           "initial": false
         },
         {
           "id": "state_order_shipped",
           "name": "shipped",
+          "display_name": "Shipped",
           "initial": false
         }
       ],
@@ -211,12 +229,14 @@
         {
           "id": "trans_order_approve",
           "name": "approve",
+          "display_name": "Approve",
           "from_state_id": "state_order_created",
           "to_state_id": "state_order_approved"
         },
         {
           "id": "trans_order_ship",
           "name": "ship",
+          "display_name": "Ship",
           "from_state_id": "state_order_approved",
           "to_state_id": "state_order_shipped"
         }
@@ -226,10 +246,12 @@
     {
       "id": "obj_user",
       "name": "User",
+      "display_name": "User",
       "fields": [
         {
           "id": "fld_user_user_id",
           "name": "user_id",
+          "display_name": "User ID",
           "type": {
             "kind": "base",
             "name": "string"
@@ -244,6 +266,7 @@
         {
           "id": "fld_user_email",
           "name": "email",
+          "display_name": "Email",
           "type": {
             "kind": "base",
             "name": "string"
@@ -273,10 +296,12 @@
     {
       "id": "struct_address",
       "name": "Address",
+      "display_name": "Address",
       "fields": [
         {
           "id": "fld_struct_address_line1",
           "name": "line1",
+          "display_name": "Line 1",
           "type": {
             "kind": "base",
             "name": "string"
@@ -289,6 +314,7 @@
         {
           "id": "fld_struct_address_city",
           "name": "city",
+          "display_name": "City",
           "type": {
             "kind": "base",
             "name": "string"
@@ -301,6 +327,7 @@
         {
           "id": "fld_struct_address_country_code",
           "name": "countryCode",
+          "display_name": "Country Code",
           "type": {
             "kind": "base",
             "name": "string"
@@ -315,10 +342,12 @@
     {
       "id": "struct_approval_context",
       "name": "ApprovalContext",
+      "display_name": "Approval Context",
       "fields": [
         {
           "id": "fld_struct_approval_context_approver",
           "name": "approver",
+          "display_name": "Approver",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_user"
@@ -331,6 +360,7 @@
         {
           "id": "fld_struct_approval_context_watchers",
           "name": "watchers",
+          "display_name": "Watchers",
           "type": {
             "kind": "list",
             "element": {
@@ -346,6 +376,7 @@
         {
           "id": "fld_struct_approval_context_reason",
           "name": "reason",
+          "display_name": "Reason",
           "type": {
             "kind": "base",
             "name": "string"
@@ -362,10 +393,12 @@
     {
       "id": "ain_approve_order",
       "name": "ApproveOrderCommand",
+      "display_name": "ApproveOrderCommand",
       "fields": [
         {
           "id": "fld_ain_approve_order_order",
           "name": "order",
+          "display_name": "Order",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_order"
@@ -378,6 +411,7 @@
         {
           "id": "fld_ain_approve_order_approved_by",
           "name": "approvedBy",
+          "display_name": "Approved By",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_user"
@@ -390,6 +424,7 @@
         {
           "id": "fld_ain_approve_order_notes",
           "name": "notes",
+          "display_name": "Notes",
           "type": {
             "kind": "list",
             "element": {
@@ -405,6 +440,7 @@
         {
           "id": "fld_ain_approve_order_context",
           "name": "context",
+          "display_name": "Context",
           "type": {
             "kind": "struct",
             "target_struct_id": "struct_approval_context"
@@ -420,10 +456,12 @@
     {
       "id": "ain_create_order",
       "name": "CreateOrderCommand",
+      "display_name": "CreateOrderCommand",
       "fields": [
         {
           "id": "fld_ain_create_order_customer",
           "name": "customer",
+          "display_name": "Customer",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_user"
@@ -436,6 +474,7 @@
         {
           "id": "fld_ain_create_order_total_amount",
           "name": "totalAmount",
+          "display_name": "Total Amount",
           "type": {
             "kind": "custom",
             "target_type_id": "type_money"
@@ -448,6 +487,7 @@
         {
           "id": "fld_ain_create_order_discount_code",
           "name": "discountCode",
+          "display_name": "Discount Code",
           "type": {
             "kind": "base",
             "name": "string"
@@ -460,6 +500,7 @@
         {
           "id": "fld_ain_create_order_tags",
           "name": "tags",
+          "display_name": "Tags",
           "type": {
             "kind": "list",
             "element": {
@@ -475,6 +516,7 @@
         {
           "id": "fld_ain_create_order_shipping_address",
           "name": "shippingAddress",
+          "display_name": "Shipping Address",
           "type": {
             "kind": "struct",
             "target_struct_id": "struct_address"
@@ -489,10 +531,12 @@
     {
       "id": "ain_ship_order",
       "name": "ShipOrderCommand",
+      "display_name": "ShipOrderCommand",
       "fields": [
         {
           "id": "fld_ain_ship_order_order",
           "name": "order",
+          "display_name": "Order",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_order"
@@ -505,6 +549,7 @@
         {
           "id": "fld_ain_ship_order_carrier",
           "name": "carrier",
+          "display_name": "Carrier",
           "type": {
             "kind": "base",
             "name": "string"
@@ -517,6 +562,7 @@
         {
           "id": "fld_ain_ship_order_tracking_number",
           "name": "trackingNumber",
+          "display_name": "Tracking Number",
           "type": {
             "kind": "base",
             "name": "string"
@@ -529,6 +575,7 @@
         {
           "id": "fld_ain_ship_order_package_ids",
           "name": "packageIds",
+          "display_name": "Package IDs",
           "type": {
             "kind": "list",
             "element": {
@@ -548,6 +595,7 @@
     {
       "id": "act_approve_order",
       "name": "approveOrder",
+      "display_name": "Approve Order",
       "kind": "process",
       "input_shape_id": "ain_approve_order",
       "output_event_id": "trans_order_approve",
@@ -556,6 +604,7 @@
     {
       "id": "act_create_order",
       "name": "createOrder",
+      "display_name": "Create Order",
       "kind": "process",
       "input_shape_id": "ain_create_order",
       "output_event_id": "aout_create_order",
@@ -564,6 +613,7 @@
     {
       "id": "act_ship_order",
       "name": "shipOrder",
+      "display_name": "Ship Order",
       "kind": "workflow",
       "input_shape_id": "ain_ship_order",
       "output_event_id": "trans_order_ship",
@@ -574,11 +624,13 @@
     {
       "id": "aout_create_order",
       "name": "CreateOrderResult",
+      "display_name": "CreateOrderResult",
       "kind": "signal",
       "fields": [
         {
           "id": "fld_aout_create_order_order",
           "name": "order",
+          "display_name": "Order",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_order"
@@ -593,11 +645,13 @@
     {
       "id": "sig_payment_captured",
       "name": "PaymentCaptured",
+      "display_name": "Payment Captured",
       "kind": "signal",
       "fields": [
         {
           "id": "fld_sig_payment_captured_order",
           "name": "order",
+          "display_name": "Order",
           "type": {
             "kind": "object_ref",
             "target_object_id": "obj_order"
@@ -612,6 +666,7 @@
     {
       "id": "trans_order_approve",
       "name": "OrderApproveTransition",
+      "display_name": "Approve",
       "kind": "transition",
       "fields": [
         {
@@ -653,6 +708,7 @@
         {
           "id": "fld_trans_order_approve_approved_by_user_id",
           "name": "approvedByUserId",
+          "display_name": "Approved By User ID",
           "type": {
             "kind": "base",
             "name": "string"
@@ -665,6 +721,7 @@
         {
           "id": "fld_trans_order_approve_note_count",
           "name": "noteCount",
+          "display_name": "Note Count",
           "type": {
             "kind": "base",
             "name": "int"
@@ -677,6 +734,7 @@
         {
           "id": "fld_trans_order_approve_approval_reason",
           "name": "approvalReason",
+          "display_name": "Approval Reason",
           "type": {
             "kind": "base",
             "name": "string"
@@ -695,6 +753,7 @@
     {
       "id": "trans_order_ship",
       "name": "OrderShipTransition",
+      "display_name": "Ship",
       "kind": "transition",
       "fields": [
         {
@@ -736,6 +795,7 @@
         {
           "id": "fld_trans_order_ship_carrier",
           "name": "carrier",
+          "display_name": "Carrier",
           "type": {
             "kind": "base",
             "name": "string"
@@ -748,6 +808,7 @@
         {
           "id": "fld_trans_order_ship_tracking_number",
           "name": "trackingNumber",
+          "display_name": "Tracking Number",
           "type": {
             "kind": "base",
             "name": "string"
@@ -760,6 +821,7 @@
         {
           "id": "fld_trans_order_ship_package_ids",
           "name": "packageIds",
+          "display_name": "Package IDs",
           "type": {
             "kind": "list",
             "element": {
@@ -783,12 +845,14 @@
     {
       "id": "trg_on_order_approved",
       "name": "onOrderApproved",
+      "display_name": "On Order Approved",
       "event_id": "trans_order_approve",
       "action_id": "act_ship_order"
     },
     {
       "id": "trg_on_payment_captured",
       "name": "onPaymentCaptured",
+      "display_name": "On Payment Captured",
       "event_id": "sig_payment_captured",
       "action_id": "act_approve_order"
     }
@@ -936,5 +1000,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "026cc621cb86c87effeb4d1c95d64d9f993c65869a205b9346d57dc90f5ad261",
-  "ir_hash": "bf94a5dbe9a5d0fc40d8fe996210a74c675adfc3b235cb05dcbcb0f038feafb9"
+  "ir_hash": "211facecc42e6e0e449a6a116867d04a9ef14dcba13622094bebc8bccbc6bca3"
 }
