@@ -1,12 +1,12 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.22.0",
+  "toolchain_version": "0.23.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_commerce_local",
     "name": "commerce_local",
     "display_name": "Commerce Local",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "Commerce ontology for order creation, approval, and shipping."
   },
   "types": [
@@ -392,8 +392,8 @@
   "action_inputs": [
     {
       "id": "ain_approve_order",
-      "name": "ApproveOrderCommand",
-      "display_name": "ApproveOrderCommand",
+      "name": "Approve Order Command",
+      "display_name": "Approve Order Command",
       "fields": [
         {
           "id": "fld_ain_approve_order_order",
@@ -455,8 +455,8 @@
     },
     {
       "id": "ain_create_order",
-      "name": "CreateOrderCommand",
-      "display_name": "CreateOrderCommand",
+      "name": "Create Order Command",
+      "display_name": "Create Order Command",
       "fields": [
         {
           "id": "fld_ain_create_order_customer",
@@ -530,8 +530,8 @@
     },
     {
       "id": "ain_ship_order",
-      "name": "ShipOrderCommand",
-      "display_name": "ShipOrderCommand",
+      "name": "Ship Order Command",
+      "display_name": "Ship Order Command",
       "fields": [
         {
           "id": "fld_ain_ship_order_order",
@@ -623,8 +623,8 @@
   "events": [
     {
       "id": "aout_create_order",
-      "name": "CreateOrderResult",
-      "display_name": "CreateOrderResult",
+      "name": "Create Order Result",
+      "display_name": "Create Order Result",
       "kind": "signal",
       "fields": [
         {
@@ -1000,5 +1000,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "026cc621cb86c87effeb4d1c95d64d9f993c65869a205b9346d57dc90f5ad261",
-  "ir_hash": "f6458e7ed74a0199b9ec02192d6024830c937a6f9f54726add8bf76a69d19752"
+  "ir_hash": "30d3ada2058aeb6d5767181fcade6e20fa46cc617ac569e0013564166ce444d8"
 }

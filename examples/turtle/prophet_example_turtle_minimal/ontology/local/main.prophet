@@ -1,7 +1,7 @@
 ontology support_local {
   name "Support Local"
   id "ont_support_local"
-  version "1.0.0"
+  version "2.0.0"
   description "Minimal support ontology used for Turtle target examples."
 
   type Email {

@@ -148,6 +148,7 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     # action contract records
     action_shapes = sorted(action_inputs, key=lambda x: x["id"])
     for shape in action_shapes:
+        shape_name = pascal_case(str(shape.get("name", "ActionInput"))) or "ActionInput"
         imports: set[str] = set()
         shape_fields: List[Tuple[str, str, bool]] = []
         shape_field_descriptions: Dict[str, str] = {}
@@ -168,18 +169,19 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
         record_src = render_java_record_with_builder(
             f"{base_package}.generated.actions",
             imports,
-            shape["name"],
+            shape_name,
             shape_fields,
             record_description=str(shape.get("description", "")) or None,
             field_descriptions=shape_field_descriptions,
         )
-        files[f"src/main/java/{package_path}/generated/actions/{shape['name']}.java"] = record_src
+        files[f"src/main/java/{package_path}/generated/actions/{shape_name}.java"] = record_src
 
     # event payload contracts and domain event wrappers
     domain_event_specs: List[Dict[str, Any]] = []
 
     for event in sorted(events, key=lambda x: x["id"]):
         event_name = str(event["name"])
+        event_java_name = pascal_case(event_name) or "Event"
 
         event_fields: List[Tuple[str, str, bool]] = []
         event_imports: set[str] = set()
@@ -212,23 +214,24 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
         event_record_src = render_java_record_with_builder(
             f"{base_package}.generated.events",
             event_imports,
-            event_name,
+            event_java_name,
             event_fields,
             record_description=str(event.get("description", "")).strip() or f"Event payload for '{event_name}'.",
             field_descriptions=event_field_descriptions,
         )
-        files[f"src/main/java/{package_path}/generated/events/{event_name}.java"] = event_record_src
+        files[f"src/main/java/{package_path}/generated/events/{event_java_name}.java"] = event_record_src
 
         domain_event_specs.append(
             {
                 "event_name": event_name,
-                "payload_type": event_name,
+                "payload_type": event_java_name,
+                "wrapper_name": f"{event_java_name}Event",
                 "ref_specs": event_ref_specs,
             }
         )
 
     if domain_event_specs:
-        permits = ", ".join([f"{spec['event_name']}Event" for spec in domain_event_specs])
+        permits = ", ".join([str(spec["wrapper_name"]) for spec in domain_event_specs])
         domain_event_interface = (
             f"package {base_package}.generated.events;\n\n"
             + "public sealed interface DomainEvent permits "
@@ -245,14 +248,14 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     files[f"src/main/java/{package_path}/generated/events/DomainEvent.java"] = domain_event_interface
 
     for spec in domain_event_specs:
-        event_name = str(spec["event_name"])
+        wrapper_name = str(spec["wrapper_name"])
         payload_type = str(spec["payload_type"])
         wrapper_src = (
             f"package {base_package}.generated.events;\n\n"
-            + f"public record {event_name}Event({payload_type} payload) implements DomainEvent {{\n"
+            + f"public record {wrapper_name}({payload_type} payload) implements DomainEvent {{\n"
             + "}\n"
         )
-        files[f"src/main/java/{package_path}/generated/events/{event_name}Event.java"] = wrapper_src
+        files[f"src/main/java/{package_path}/generated/events/{wrapper_name}.java"] = wrapper_src
 
     action_outcome_src = (
         f"package {base_package}.generated.events;\n\n"
@@ -398,7 +401,7 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
 
     for idx, spec in enumerate(domain_event_specs):
         event_name = str(spec["event_name"])
-        wrapper_name = f"{event_name}Event"
+        wrapper_name = str(spec["wrapper_name"])
         ref_specs = [item for item in spec.get("ref_specs", []) if isinstance(item, dict)]
         keyword = "if" if idx == 0 else "else if"
         mapper_lines.extend(

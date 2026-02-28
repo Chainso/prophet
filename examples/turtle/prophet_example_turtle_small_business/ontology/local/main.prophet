@@ -1,7 +1,7 @@
 ontology artisan_bakery_local {
   name "Artisan Bakery Local"
   id "ont_artisan_bakery_local"
-  version "1.0.0"
+  version "2.0.0"
   description "Operations ontology for a neighborhood bakery: catalog, customers, inventory, purchasing, invoicing, and fulfillment."
 
   type Money {

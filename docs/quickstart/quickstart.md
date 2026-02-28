@@ -90,7 +90,7 @@ Naming guidance:
 - Use `name "..."` metadata for human-facing labels in docs/UIs.
 
 Action output forms:
-- `output { ... }` for inline signal payloads (derived event `<ActionName>Result`)
+- `output { ... }` for inline signal payloads (derived event `<ActionName> Result`)
 - `output signal <SignalName>`
 - `output transition <ObjectName>.<TransitionName>`
 

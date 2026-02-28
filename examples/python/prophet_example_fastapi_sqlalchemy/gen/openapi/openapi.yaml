@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Commerce Local API
-  version: 1.0.0
+  version: 2.0.0
 servers:
 - url: https://api.example.com
 paths:
@@ -158,7 +158,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ApproveOrderCommand'
+              $ref: '#/components/schemas/Approve Order Command'
       responses:
         '200':
           description: Action response
@@ -175,14 +175,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateOrderCommand'
+              $ref: '#/components/schemas/Create Order Command'
       responses:
         '200':
           description: Action response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateOrderResult'
+                $ref: '#/components/schemas/Create Order Result'
   /actions/shipOrder:
     post:
       operationId: shipOrderAction
@@ -192,7 +192,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ShipOrderCommand'
+              $ref: '#/components/schemas/Ship Order Command'
       responses:
         '200':
           description: Action response
@@ -377,7 +377,7 @@ components:
           type: integer
         totalPages:
           type: integer
-    ApproveOrderCommand:
+    Approve Order Command:
       type: object
       required:
       - order
@@ -395,7 +395,7 @@ components:
         context:
           $ref: '#/components/schemas/ApprovalContext'
       description: Input payload for approving an order.
-    CreateOrderCommand:
+    Create Order Command:
       type: object
       required:
       - customer
@@ -420,7 +420,7 @@ components:
           x-prophet-display-name: Tags
         shippingAddress:
           $ref: '#/components/schemas/Address'
-    ShipOrderCommand:
+    Ship Order Command:
       type: object
       required:
       - order
@@ -444,7 +444,7 @@ components:
             type: string
           title: Package IDs
           x-prophet-display-name: Package IDs
-    CreateOrderResult:
+    Create Order Result:
       type: object
       required:
       - order

@@ -119,7 +119,7 @@ output {
   field ...
 }
 ```
-Compiles to a derived signal event named `<ActionName>Result`.
+Compiles to a derived signal event named `<ActionName> Result`.
 
 2. Referenced signal form:
 ```prophet

@@ -111,7 +111,7 @@ public final class EventPublishingSupport {
         Object payloadValue;
         List<RefBinding> refBindings;
         if (event instanceof CreateOrderResultEvent typed) {
-            eventType = "CreateOrderResult";
+            eventType = "Create Order Result";
             payloadValue = typed.payload();
             refBindings = List.of(
                 new RefBinding("Order", List.of("order"), List.of("orderId"))
@@ -145,7 +145,7 @@ public final class EventPublishingSupport {
             eventId,
             traceId,
             eventType,
-            "1.0.0",
+            "2.0.0",
             EventTime.nowIso(),
             source,
             payload,

@@ -163,7 +163,7 @@ def _to_event_wire_envelope(event: DomainEvent, metadata: EventPublishMetadata) 
         event_id=create_event_id(),
         trace_id=metadata.trace_id,
         event_type=getattr(event, 'type', 'unknown'),
-        schema_version='1.0.0',
+        schema_version='2.0.0',
         occurred_at=now_iso(),
         source=metadata.source,
         payload=payload,

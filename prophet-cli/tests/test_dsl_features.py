@@ -284,8 +284,50 @@ ontology MinimalCommerce {
 
         input_names = {shape["name"] for shape in ir.get("action_inputs", [])}
         output_names = {event["name"] for event in ir.get("events", [])}
-        self.assertIn("CreateOrderCommand", input_names)
-        self.assertIn("CreateOrderResult", output_names)
+        self.assertIn("CreateOrder Command", input_names)
+        self.assertIn("CreateOrder Result", output_names)
+
+    def test_action_custom_name_drives_derived_input_and_result_names(self) -> None:
+        ontology_text = """
+ontology MinimalCommerce {
+  version "0.1.0"
+
+  object Order {
+    field orderId {
+      type string
+      key primary
+    }
+  }
+
+  action createOrder {
+    kind process
+
+    input {
+      field notes {
+        type string
+        optional
+      }
+    }
+
+    output {
+      field order {
+        type ref(Order)
+      }
+    }
+
+    name "Create Order"
+  }
+}
+"""
+        ontology = parse_ontology(ontology_text)
+        errors = validate_ontology(ontology)
+        self.assertEqual(errors, [])
+
+        ir = build_ir(ontology, {})
+        input_names = {shape["name"] for shape in ir.get("action_inputs", [])}
+        output_names = {event["name"] for event in ir.get("events", [])}
+        self.assertIn("Create Order Command", input_names)
+        self.assertIn("Create Order Result", output_names)
 
 
 if __name__ == "__main__":

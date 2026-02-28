@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.22.0",
+  "toolchain_version": "0.23.0",
   "stack": {
     "id": "python_flask_sqlmodel",
     "language": "python",
     "framework": "flask",
     "orm": "sqlmodel"
   },
-  "ir_hash": "f6458e7ed74a0199b9ec02192d6024830c937a6f9f54726add8bf76a69d19752",
+  "ir_hash": "30d3ada2058aeb6d5767181fcade6e20fa46cc617ac569e0013564166ce444d8",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "33438e4b8dde03d089c836ac9f70e13a244d44c3ef1b1c8c8e4123e1722e18e5"
+      "sha256": "71fc619483ec1ec3b76bdfc96b5be698c49ca065aeca34e0906313e82458c768"
     },
     {
       "path": "gen/python/pyproject.toml",
@@ -51,7 +51,7 @@
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "e66b47a74a02fe8ac1a71ecba192d87a9160916115ea8e244f0871877a99daaf"
+      "sha256": "bdd0b64f2bdce4c167a21c63a6f4dc6d1c8b0d1f110df71892d6e9882e8da2c4"
     },
     {
       "path": "gen/python/src/generated/flask_routes.py",

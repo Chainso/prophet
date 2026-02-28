@@ -15,7 +15,7 @@ Naming model:
 
 Event categories in the model:
 - Signals are explicitly defined in DSL (`signal` blocks).
-- Inline action `output { ... }` blocks derive a signal event (`<ActionName>Result`).
+- Inline action `output { ... }` blocks derive a signal event (`<ActionName> Result`).
 - Actions can also reference existing events via `output signal <SignalName>` and `output transition <Object>.<transition>`.
 - Object transitions are events by definition (derived from object transition definitions).
 

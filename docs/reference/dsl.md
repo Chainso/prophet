@@ -110,7 +110,7 @@ action createOrder {
 Supported output forms:
 - Inline signal payload:
   - `output { ... }`
-  - derives signal event `<ActionName>Result`
+  - derives signal event `<ActionName> Result`
 - Referenced signal:
   - `output signal <SignalName>`
 - Referenced transition:
@@ -123,9 +123,10 @@ Supported output forms:
 - Action output always resolves to an event (`signal` or `transition`).
 - Triggers can reference:
   - signal name (for example `PaymentCaptured`)
-  - derived inline output signal name `<ActionName>Result` (for example `ApproveOrderResult`)
+  - derived inline output signal name `<ActionName> Result` (for example `ApproveOrder Result`)
   - derived transition event name `<Object><Transition>Transition` (for example `OrderApproveTransition`)
-- Action input shape names are derived as `<ActionName>Command` (for example `ApproveOrderCommand`).
+- Action input shape names are derived as `<ActionName> Command` (for example `ApproveOrder Command`).
+- If an action defines display metadata (`name "..."`), derived inline names use that display value as the `<ActionName>` base.
 - Transition events automatically include object primary key fields, `fromState`, and `toState`.
 
 Signal example:

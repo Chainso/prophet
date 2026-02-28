@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.22.0",
+  "toolchain_version": "0.23.0",
   "stack": {
     "id": "node_express_typeorm",
     "language": "node",
     "framework": "express",
     "orm": "typeorm"
   },
-  "ir_hash": "f6458e7ed74a0199b9ec02192d6024830c937a6f9f54726add8bf76a69d19752",
+  "ir_hash": "30d3ada2058aeb6d5767181fcade6e20fa46cc617ac569e0013564166ce444d8",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -47,7 +47,7 @@
     },
     {
       "path": "gen/node-express/src/generated/events.ts",
-      "sha256": "19f964ab074b882d14eb1e2effb38229762e7e1c609c0e3d7f4fd98fcf709ae0"
+      "sha256": "103a72c12119b9e3f216208dd35519df7e954247750a354f68028e80110611dd"
     },
     {
       "path": "gen/node-express/src/generated/index.ts",
@@ -87,7 +87,7 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "33438e4b8dde03d089c836ac9f70e13a244d44c3ef1b1c8c8e4123e1722e18e5"
+      "sha256": "71fc619483ec1ec3b76bdfc96b5be698c49ca065aeca34e0906313e82458c768"
     },
     {
       "path": "gen/sql/schema.sql",

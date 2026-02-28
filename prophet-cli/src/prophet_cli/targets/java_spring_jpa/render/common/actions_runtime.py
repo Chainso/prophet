@@ -17,9 +17,9 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
 
     # action handler interfaces
     for action in sorted(actions, key=lambda x: x["id"]):
-        req_name = action_input_by_id[action["input_shape_id"]]["name"]
+        req_name = pascal_case(str(action_input_by_id[action["input_shape_id"]]["name"])) or "ActionInput"
         output_event = event_by_id[action["output_event_id"]]
-        res_name = str(output_event["name"])
+        res_name = pascal_case(str(output_event["name"])) or "Event"
         handler_name = f"{pascal_case(action['name'])}ActionHandler"
         service_name = f"{pascal_case(action['name'])}ActionService"
         action_description = str(action.get("description", "")) or None
@@ -70,7 +70,7 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
         files[f"src/main/java/{package_path}/generated/actions/services/{service_name}.java"] = service_src
 
         default_service_name = f"{service_name}Default"
-        primary_event_wrapper = f"{pascal_case(res_name)}Event"
+        primary_event_wrapper = f"{res_name}Event"
         service_default_imports = {
             f"import {base_package}.generated.actions.{req_name};",
             f"import {base_package}.generated.events.{res_name};",
@@ -154,9 +154,9 @@ def render_action_runtime_artifacts(files: Dict[str, str], state: Dict[str, Any]
     ctor_assigns: List[str] = []
     controller_methods: List[str] = []
     for action in sorted(actions, key=lambda x: x["id"]):
-        req_name = action_input_by_id[action["input_shape_id"]]["name"]
+        req_name = pascal_case(str(action_input_by_id[action["input_shape_id"]]["name"])) or "ActionInput"
         output_event = event_by_id[action["output_event_id"]]
-        res_name = str(output_event["name"])
+        res_name = pascal_case(str(output_event["name"])) or "Event"
         service_name = f"{pascal_case(action['name'])}ActionService"
         service_var = f"{camel_case(action['name'])}Service"
         method_name = camel_case(action["name"])

@@ -4,6 +4,19 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-02-28
+
+### Changed
+- Updated inline action-derived contract naming to use spaced names:
+  - input shape: `<ActionName> Command`,
+  - inline output signal: `<ActionName> Result`.
+- Updated derivation to use action display metadata (`name "..."`) as the action-name base when present.
+- Updated Java Spring generation to normalize spaced action/event contract names into valid Java type/file identifiers while preserving IR/wire event names.
+- Updated DSL/quickstart/concepts/developer docs to reflect spaced action-derived naming.
+- Regenerated maintained Java example artifacts and snapshot manifests for the naming behavior change.
+- Bumped maintained example ontology versions from `1.0.0` to `2.0.0` and regenerated Java/Node/Python artifacts to satisfy compatibility checks for the breaking event-name change.
+- Toolchain/package version advanced to `0.23.0`.
+
 ## [0.22.0] - 2026-02-19
 
 ### Changed

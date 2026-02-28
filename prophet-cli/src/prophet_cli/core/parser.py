@@ -112,6 +112,21 @@ def transition_event_name(object_name: str, transition_name: str) -> str:
     return f"{object_name}{_pascal_case(transition_name)}Transition"
 
 
+def _derived_action_contract_base_name(action_name: str, action_display_name: Optional[str]) -> str:
+    explicit = str(action_display_name or "").strip()
+    if explicit:
+        return explicit
+    return _pascal_case(action_name)
+
+
+def _derived_action_input_shape_name(action_name: str, action_display_name: Optional[str]) -> str:
+    return f"{_derived_action_contract_base_name(action_name, action_display_name)} Command"
+
+
+def _derived_action_output_event_name(action_name: str, action_display_name: Optional[str]) -> str:
+    return f"{_derived_action_contract_base_name(action_name, action_display_name)} Result"
+
+
 def _extract_explicit_ids(lines: List[Tuple[int, str]]) -> set[str]:
     ids: set[str] = set()
     for _, line in lines:
@@ -731,6 +746,7 @@ def parse_action_block(
     display_name: Optional[str] = None
     inline_input: Optional[ActionShapeDef] = None
     inline_output_event: Optional[EventDef] = None
+    has_inline_output_event = False
     while not p.eof():
         ln, line = p.peek()
         if line == "}":
@@ -750,7 +766,7 @@ def parse_action_block(
             p.pop()
             if input_shape is not None:
                 raise ProphetError(f"Action {name} defines input more than once (line {ln})")
-            input_shape = f"{_pascal_case(name)}Command"
+            input_shape = _derived_action_input_shape_name(name, display_name)
             inline_input = parse_inline_action_shape_block(
                 p,
                 input_shape,
@@ -764,7 +780,7 @@ def parse_action_block(
             p.pop()
             if produces_event is not None:
                 raise ProphetError(f"Action {name} defines output more than once (line {ln})")
-            produces_event = f"{_pascal_case(name)}Result"
+            produces_event = _derived_action_output_event_name(name, display_name)
             inline_output_event = parse_inline_signal_block(
                 p,
                 produces_event,
@@ -773,6 +789,7 @@ def parse_action_block(
                 id_allocator,
                 f"sig_action_{name}",
             )
+            has_inline_output_event = True
             continue
         m = re.match(r"^output\s+signal\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
         if m:
@@ -815,6 +832,19 @@ def parse_action_block(
 
     if kind is None or input_shape is None or produces_event is None:
         raise ProphetError(f"Action {name} missing kind/input/output (line {block_line})")
+    # Ensure derived names follow action display metadata even when `name "..."` appears
+    # after inline input/output blocks.
+    derived_input_shape = _derived_action_input_shape_name(name, display_name)
+    if input_shape != derived_input_shape:
+        input_shape = derived_input_shape
+        if inline_input is not None:
+            inline_input.name = derived_input_shape
+    if has_inline_output_event:
+        derived_output_event = _derived_action_output_event_name(name, display_name)
+        if produces_event != derived_output_event:
+            produces_event = derived_output_event
+            if inline_output_event is not None:
+                inline_output_event.name = derived_output_event
     if a_id is None:
         a_id = id_allocator.generate(f"act_{name}")
     return (

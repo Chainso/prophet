@@ -5,7 +5,7 @@ import com.example.prophet.commerce_local.generated.domain.OrderRefOrObject;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Event payload for 'CreateOrderResult'.
+ * Event payload for 'Create Order Result'.
  */
 @Generated("prophet-cli")
 public record CreateOrderResult(
