@@ -12,9 +12,21 @@ import java.util.List;
  */
 @Generated("prophet-cli")
 public record ApproveOrderCommand(
+    /**
+     * Order that should be approved.
+     */
     @NotNull OrderRef order,
+    /**
+     * Optional user reference for who approved the order.
+     */
     UserRef approvedBy,
+    /**
+     * Optional notes captured as part of approval.
+     */
     List<String> notes,
+    /**
+     * Optional structured context for approval decisions.
+     */
     ApprovalContext context
 ) {
 

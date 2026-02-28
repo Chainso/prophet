@@ -21,30 +21,35 @@ artisan_bakery_local:ont_artisan_bakery_local a prophet:LocalOntology ;
 
 artisan_bakery_local:type_currency_code a prophet:CustomType ;
   prophet:name "Currency Code" ;
+  prophet:description "Three-letter uppercase ISO-style code used for currency and code fields." ;
   prophet:derivedFrom std:String ;
   prophet:hasConstraint artisan_bakery_local:type_currency_code_constraint ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:type_email a prophet:CustomType ;
   prophet:name "Email" ;
+  prophet:description "Email address string validated with a basic local@domain pattern." ;
   prophet:derivedFrom std:String ;
   prophet:hasConstraint artisan_bakery_local:type_email_constraint ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:type_money a prophet:CustomType ;
   prophet:name "Money" ;
+  prophet:description "Non-negative monetary amount used for prices, totals, and balances." ;
   prophet:derivedFrom std:Decimal ;
   prophet:hasConstraint artisan_bakery_local:type_money_constraint ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:type_phone_number a prophet:CustomType ;
   prophet:name "Phone Number" ;
+  prophet:description "Phone number string supporting optional leading plus and separators." ;
   prophet:derivedFrom std:String ;
   prophet:hasConstraint artisan_bakery_local:type_phone_number_constraint ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:type_quantity a prophet:CustomType ;
   prophet:name "Quantity" ;
+  prophet:description "Non-negative quantity used for inventory counts and ordered amounts." ;
   prophet:derivedFrom std:Decimal ;
   prophet:hasConstraint artisan_bakery_local:type_quantity_constraint ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
@@ -74,6 +79,7 @@ artisan_bakery_local:type_quantity_constraint a sh:NodeShape ;
 
 artisan_bakery_local:struct_address a prophet:StructType ;
   prophet:name "Address" ;
+  prophet:description "Postal address structure used for customer, supplier, and delivery locations." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_struct_address_city ;
   prophet:hasProperty artisan_bakery_local:fld_struct_address_country_code ;
@@ -84,6 +90,7 @@ artisan_bakery_local:struct_address a prophet:StructType ;
 
 artisan_bakery_local:fld_struct_address_city a prophet:PropertyDefinition ;
   prophet:name "City" ;
+  prophet:description "City or locality component of the address." ;
   prophet:fieldKey "city" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -92,6 +99,7 @@ artisan_bakery_local:fld_struct_address_city a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_struct_address_country_code a prophet:PropertyDefinition ;
   prophet:name "Country Code" ;
+  prophet:description "Three-letter country code for the address destination." ;
   prophet:fieldKey "country_code" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -100,6 +108,7 @@ artisan_bakery_local:fld_struct_address_country_code a prophet:PropertyDefinitio
 
 artisan_bakery_local:fld_struct_address_line1 a prophet:PropertyDefinition ;
   prophet:name "Line 1" ;
+  prophet:description "Primary street line for the address." ;
   prophet:fieldKey "line1" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -108,6 +117,7 @@ artisan_bakery_local:fld_struct_address_line1 a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_struct_address_line2 a prophet:PropertyDefinition ;
   prophet:name "Line 2" ;
+  prophet:description "Secondary street line such as suite, unit, or apartment." ;
   prophet:fieldKey "line2" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -116,6 +126,7 @@ artisan_bakery_local:fld_struct_address_line2 a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_struct_address_postal_code a prophet:PropertyDefinition ;
   prophet:name "Postal Code" ;
+  prophet:description "Postal or ZIP code used for mail routing." ;
   prophet:fieldKey "postal_code" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -124,6 +135,7 @@ artisan_bakery_local:fld_struct_address_postal_code a prophet:PropertyDefinition
 
 artisan_bakery_local:fld_struct_address_region a prophet:PropertyDefinition ;
   prophet:name "Region" ;
+  prophet:description "Optional state, province, or administrative region." ;
   prophet:fieldKey "region" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -132,6 +144,7 @@ artisan_bakery_local:fld_struct_address_region a prophet:PropertyDefinition ;
 
 artisan_bakery_local:struct_contact_point a prophet:StructType ;
   prophet:name "Contact Point" ;
+  prophet:description "Reusable contact details for a person or business representative." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_struct_contact_point_email ;
   prophet:hasProperty artisan_bakery_local:fld_struct_contact_point_name ;
@@ -139,6 +152,7 @@ artisan_bakery_local:struct_contact_point a prophet:StructType ;
 
 artisan_bakery_local:fld_struct_contact_point_email a prophet:PropertyDefinition ;
   prophet:name "Email" ;
+  prophet:description "Contact email address for correspondence." ;
   prophet:fieldKey "email" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -147,6 +161,7 @@ artisan_bakery_local:fld_struct_contact_point_email a prophet:PropertyDefinition
 
 artisan_bakery_local:fld_struct_contact_point_name a prophet:PropertyDefinition ;
   prophet:name "Name" ;
+  prophet:description "Contact person's display name." ;
   prophet:fieldKey "name" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -155,6 +170,7 @@ artisan_bakery_local:fld_struct_contact_point_name a prophet:PropertyDefinition 
 
 artisan_bakery_local:fld_struct_contact_point_phone a prophet:PropertyDefinition ;
   prophet:name "Phone" ;
+  prophet:description "Contact phone number for voice or SMS communication." ;
   prophet:fieldKey "phone" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -163,6 +179,7 @@ artisan_bakery_local:fld_struct_contact_point_phone a prophet:PropertyDefinition
 
 artisan_bakery_local:struct_payment_method_details a prophet:StructType ;
   prophet:name "Payment Method Details" ;
+  prophet:description "Structured payment metadata captured when recording an invoice payment." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_struct_payment_method_details_method ;
   prophet:hasProperty artisan_bakery_local:fld_struct_payment_method_details_note ;
@@ -170,6 +187,7 @@ artisan_bakery_local:struct_payment_method_details a prophet:StructType ;
 
 artisan_bakery_local:fld_struct_payment_method_details_method a prophet:PropertyDefinition ;
   prophet:name "Method" ;
+  prophet:description "Payment method used, such as card, cash, or bank transfer." ;
   prophet:fieldKey "method" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -178,6 +196,7 @@ artisan_bakery_local:fld_struct_payment_method_details_method a prophet:Property
 
 artisan_bakery_local:fld_struct_payment_method_details_note a prophet:PropertyDefinition ;
   prophet:name "Note" ;
+  prophet:description "Optional internal note about the payment method or transaction." ;
   prophet:fieldKey "note" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -186,6 +205,7 @@ artisan_bakery_local:fld_struct_payment_method_details_note a prophet:PropertyDe
 
 artisan_bakery_local:fld_struct_payment_method_details_provider_reference a prophet:PropertyDefinition ;
   prophet:name "Provider Reference" ;
+  prophet:description "Optional processor or gateway reference identifier." ;
   prophet:fieldKey "provider_reference" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -194,6 +214,7 @@ artisan_bakery_local:fld_struct_payment_method_details_provider_reference a prop
 
 artisan_bakery_local:struct_purchase_order_line a prophet:StructType ;
   prophet:name "Purchase Order Line" ;
+  prophet:description "Line item representing a product, quantity, and unit cost on a purchase order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_struct_purchase_order_line_product ;
   prophet:hasProperty artisan_bakery_local:fld_struct_purchase_order_line_quantity ;
@@ -201,6 +222,7 @@ artisan_bakery_local:struct_purchase_order_line a prophet:StructType ;
 
 artisan_bakery_local:fld_struct_purchase_order_line_product a prophet:PropertyDefinition ;
   prophet:name "Product" ;
+  prophet:description "Referenced product being purchased from the supplier." ;
   prophet:fieldKey "product" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -209,6 +231,7 @@ artisan_bakery_local:fld_struct_purchase_order_line_product a prophet:PropertyDe
 
 artisan_bakery_local:fld_struct_purchase_order_line_quantity a prophet:PropertyDefinition ;
   prophet:name "Quantity" ;
+  prophet:description "Requested quantity for the referenced product." ;
   prophet:fieldKey "quantity" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -217,6 +240,7 @@ artisan_bakery_local:fld_struct_purchase_order_line_quantity a prophet:PropertyD
 
 artisan_bakery_local:fld_struct_purchase_order_line_unit_cost a prophet:PropertyDefinition ;
   prophet:name "Unit Cost" ;
+  prophet:description "Per-unit acquisition cost expected for this line." ;
   prophet:fieldKey "unit_cost" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -225,6 +249,7 @@ artisan_bakery_local:fld_struct_purchase_order_line_unit_cost a prophet:Property
 
 artisan_bakery_local:struct_sales_order_line a prophet:StructType ;
   prophet:name "Sales Order Line" ;
+  prophet:description "Line item representing a product, quantity, and unit price on a sales order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_struct_sales_order_line_note ;
   prophet:hasProperty artisan_bakery_local:fld_struct_sales_order_line_product ;
@@ -233,6 +258,7 @@ artisan_bakery_local:struct_sales_order_line a prophet:StructType ;
 
 artisan_bakery_local:fld_struct_sales_order_line_note a prophet:PropertyDefinition ;
   prophet:name "Note" ;
+  prophet:description "Optional free-text note specific to this sales line." ;
   prophet:fieldKey "note" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -241,6 +267,7 @@ artisan_bakery_local:fld_struct_sales_order_line_note a prophet:PropertyDefiniti
 
 artisan_bakery_local:fld_struct_sales_order_line_product a prophet:PropertyDefinition ;
   prophet:name "Product" ;
+  prophet:description "Referenced product being sold on this line." ;
   prophet:fieldKey "product" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -249,6 +276,7 @@ artisan_bakery_local:fld_struct_sales_order_line_product a prophet:PropertyDefin
 
 artisan_bakery_local:fld_struct_sales_order_line_quantity a prophet:PropertyDefinition ;
   prophet:name "Quantity" ;
+  prophet:description "Ordered quantity for the referenced product." ;
   prophet:fieldKey "quantity" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -257,6 +285,7 @@ artisan_bakery_local:fld_struct_sales_order_line_quantity a prophet:PropertyDefi
 
 artisan_bakery_local:fld_struct_sales_order_line_unit_price a prophet:PropertyDefinition ;
   prophet:name "Unit Price" ;
+  prophet:description "Per-unit sales price applied to this line item." ;
   prophet:fieldKey "unit_price" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -269,6 +298,7 @@ artisan_bakery_local:fld_struct_sales_order_line_unit_price a prophet:PropertyDe
 
 artisan_bakery_local:obj_customer a prophet:ObjectModel ;
   prophet:name "Customer" ;
+  prophet:description "Customer account used for sales, invoicing, and fulfillment preferences." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_customer_billing_address ;
   prophet:hasProperty artisan_bakery_local:fld_customer_customer_id ;
@@ -284,6 +314,7 @@ artisan_bakery_local:obj_customer a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_customer_billing_address a prophet:PropertyDefinition ;
   prophet:name "Billing Address" ;
+  prophet:description "Optional billing address used for invoices and statements." ;
   prophet:fieldKey "billing_address" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -292,6 +323,7 @@ artisan_bakery_local:fld_customer_billing_address a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_customer_customer_id a prophet:PropertyDefinition ;
   prophet:name "Customer ID" ;
+  prophet:description "Stable primary identifier for the customer record." ;
   prophet:fieldKey "customer_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -300,6 +332,7 @@ artisan_bakery_local:fld_customer_customer_id a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_customer_email a prophet:PropertyDefinition ;
   prophet:name "Email" ;
+  prophet:description "Optional primary email address for customer contact." ;
   prophet:fieldKey "email" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -308,6 +341,7 @@ artisan_bakery_local:fld_customer_email a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_customer_full_name a prophet:PropertyDefinition ;
   prophet:name "Full Name" ;
+  prophet:description "Customer's full display name." ;
   prophet:fieldKey "full_name" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -316,6 +350,7 @@ artisan_bakery_local:fld_customer_full_name a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_customer_loyalty_points a prophet:PropertyDefinition ;
   prophet:name "Loyalty Points" ;
+  prophet:description "Optional accumulated loyalty points for rewards programs." ;
   prophet:fieldKey "loyalty_points" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -324,6 +359,7 @@ artisan_bakery_local:fld_customer_loyalty_points a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_customer_phone a prophet:PropertyDefinition ;
   prophet:name "Phone" ;
+  prophet:description "Optional primary phone number for customer contact." ;
   prophet:fieldKey "phone" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -332,6 +368,7 @@ artisan_bakery_local:fld_customer_phone a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_customer_preferred_currency a prophet:PropertyDefinition ;
   prophet:name "Preferred Currency" ;
+  prophet:description "Optional preferred currency code for quotes and invoices." ;
   prophet:fieldKey "preferred_currency" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -340,6 +377,7 @@ artisan_bakery_local:fld_customer_preferred_currency a prophet:PropertyDefinitio
 
 artisan_bakery_local:fld_customer_shipping_address a prophet:PropertyDefinition ;
   prophet:name "Shipping Address" ;
+  prophet:description "Optional default shipping destination for deliveries." ;
   prophet:fieldKey "shipping_address" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -348,6 +386,7 @@ artisan_bakery_local:fld_customer_shipping_address a prophet:PropertyDefinition 
 
 artisan_bakery_local:fld_customer_tags a prophet:PropertyDefinition ;
   prophet:name "Tags" ;
+  prophet:description "Optional labels used for segmentation and outreach workflows." ;
   prophet:fieldKey "tags" ;
   prophet:minCardinality 0 ;
   prophet:valueType artisan_bakery_local:fld_customer_tags_list_type ;
@@ -377,6 +416,7 @@ artisan_bakery_local:obj_customer_display_part_0 a prophet:KeyPart ;
 
 artisan_bakery_local:obj_delivery a prophet:ObjectModel ;
   prophet:name "Delivery" ;
+  prophet:description "Delivery record for shipping or handoff logistics tied to a sales order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_delivery_carrier ;
   prophet:hasProperty artisan_bakery_local:fld_delivery_delivered_at ;
@@ -391,6 +431,7 @@ artisan_bakery_local:obj_delivery a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_delivery_carrier a prophet:PropertyDefinition ;
   prophet:name "Carrier" ;
+  prophet:description "Optional carrier responsible for transport." ;
   prophet:fieldKey "carrier" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -399,6 +440,7 @@ artisan_bakery_local:fld_delivery_carrier a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_delivery_delivered_at a prophet:PropertyDefinition ;
   prophet:name "Delivered At" ;
+  prophet:description "Optional timestamp when delivery completion was confirmed." ;
   prophet:fieldKey "delivered_at" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -407,6 +449,7 @@ artisan_bakery_local:fld_delivery_delivered_at a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_delivery_delivery_id a prophet:PropertyDefinition ;
   prophet:name "Delivery ID" ;
+  prophet:description "Stable primary identifier for the delivery." ;
   prophet:fieldKey "delivery_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -415,6 +458,7 @@ artisan_bakery_local:fld_delivery_delivery_id a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_delivery_destination a prophet:PropertyDefinition ;
   prophet:name "Destination" ;
+  prophet:description "Destination address where the delivery should arrive." ;
   prophet:fieldKey "destination" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -423,6 +467,7 @@ artisan_bakery_local:fld_delivery_destination a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_delivery_sales_order a prophet:PropertyDefinition ;
   prophet:name "Sales Order" ;
+  prophet:description "Sales order fulfilled by this delivery." ;
   prophet:fieldKey "sales_order" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -431,6 +476,7 @@ artisan_bakery_local:fld_delivery_sales_order a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_delivery_scheduled_for a prophet:PropertyDefinition ;
   prophet:name "Scheduled For" ;
+  prophet:description "Optional scheduled delivery or dispatch timestamp." ;
   prophet:fieldKey "scheduled_for" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -439,6 +485,7 @@ artisan_bakery_local:fld_delivery_scheduled_for a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_delivery_status_text a prophet:PropertyDefinition ;
   prophet:name "Status Text" ;
+  prophet:description "Current human-readable delivery status." ;
   prophet:fieldKey "status_text" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -447,6 +494,7 @@ artisan_bakery_local:fld_delivery_status_text a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_delivery_tracking_number a prophet:PropertyDefinition ;
   prophet:name "Tracking Number" ;
+  prophet:description "Optional carrier tracking number for shipment visibility." ;
   prophet:fieldKey "tracking_number" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -477,6 +525,7 @@ artisan_bakery_local:obj_delivery_display_part_0 a prophet:KeyPart ;
 
 artisan_bakery_local:obj_employee a prophet:ObjectModel ;
   prophet:name "Employee" ;
+  prophet:description "Employee record for staff members who operate and approve bakery workflows." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_employee_active ;
   prophet:hasProperty artisan_bakery_local:fld_employee_email ;
@@ -490,6 +539,7 @@ artisan_bakery_local:obj_employee a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_employee_active a prophet:PropertyDefinition ;
   prophet:name "Active" ;
+  prophet:description "Indicates whether the employee is currently active." ;
   prophet:fieldKey "active" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -498,6 +548,7 @@ artisan_bakery_local:fld_employee_active a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_employee_email a prophet:PropertyDefinition ;
   prophet:name "Email" ;
+  prophet:description "Work email address used for communication and notifications." ;
   prophet:fieldKey "email" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -506,6 +557,7 @@ artisan_bakery_local:fld_employee_email a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_employee_employee_id a prophet:PropertyDefinition ;
   prophet:name "Employee ID" ;
+  prophet:description "Stable primary identifier for the employee record." ;
   prophet:fieldKey "employee_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -514,6 +566,7 @@ artisan_bakery_local:fld_employee_employee_id a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_employee_full_name a prophet:PropertyDefinition ;
   prophet:name "Full Name" ;
+  prophet:description "Employee's full display name." ;
   prophet:fieldKey "full_name" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -522,6 +575,7 @@ artisan_bakery_local:fld_employee_full_name a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_employee_manager a prophet:PropertyDefinition ;
   prophet:name "Manager" ;
+  prophet:description "Optional manager reference for reporting structure." ;
   prophet:fieldKey "manager" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -530,6 +584,7 @@ artisan_bakery_local:fld_employee_manager a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_employee_phone a prophet:PropertyDefinition ;
   prophet:name "Phone" ;
+  prophet:description "Optional work or mobile phone number for the employee." ;
   prophet:fieldKey "phone" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -538,6 +593,7 @@ artisan_bakery_local:fld_employee_phone a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_employee_role a prophet:PropertyDefinition ;
   prophet:name "Role" ;
+  prophet:description "Role or job function assigned to the employee." ;
   prophet:fieldKey "role" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -568,6 +624,7 @@ artisan_bakery_local:obj_employee_display_part_0 a prophet:KeyPart ;
 
 artisan_bakery_local:obj_inventory_item a prophet:ObjectModel ;
   prophet:name "Inventory Item" ;
+  prophet:description "Inventory position tracking on-hand quantities and reorder settings for a product." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_inventory_item_expires_on ;
   prophet:hasProperty artisan_bakery_local:fld_inventory_item_inventory_item_id ;
@@ -583,6 +640,7 @@ artisan_bakery_local:obj_inventory_item a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_inventory_item_expires_on a prophet:PropertyDefinition ;
   prophet:name "Expires On" ;
+  prophet:description "Optional expiration date for perishable inventory." ;
   prophet:fieldKey "expires_on" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -591,6 +649,7 @@ artisan_bakery_local:fld_inventory_item_expires_on a prophet:PropertyDefinition 
 
 artisan_bakery_local:fld_inventory_item_inventory_item_id a prophet:PropertyDefinition ;
   prophet:name "Inventory Item ID" ;
+  prophet:description "Stable primary identifier for the inventory item." ;
   prophet:fieldKey "inventory_item_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -599,6 +658,7 @@ artisan_bakery_local:fld_inventory_item_inventory_item_id a prophet:PropertyDefi
 
 artisan_bakery_local:fld_inventory_item_last_restocked_at a prophet:PropertyDefinition ;
   prophet:name "Last Restocked At" ;
+  prophet:description "Optional timestamp of the most recent restock event." ;
   prophet:fieldKey "last_restocked_at" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -607,6 +667,7 @@ artisan_bakery_local:fld_inventory_item_last_restocked_at a prophet:PropertyDefi
 
 artisan_bakery_local:fld_inventory_item_location_code a prophet:PropertyDefinition ;
   prophet:name "Location Code" ;
+  prophet:description "Storage location code where this inventory is kept." ;
   prophet:fieldKey "location_code" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -615,6 +676,7 @@ artisan_bakery_local:fld_inventory_item_location_code a prophet:PropertyDefiniti
 
 artisan_bakery_local:fld_inventory_item_lot_code a prophet:PropertyDefinition ;
   prophet:name "Lot Code" ;
+  prophet:description "Optional lot or batch identifier for traceability." ;
   prophet:fieldKey "lot_code" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -623,6 +685,7 @@ artisan_bakery_local:fld_inventory_item_lot_code a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_inventory_item_product a prophet:PropertyDefinition ;
   prophet:name "Product" ;
+  prophet:description "Product reference represented by this inventory position." ;
   prophet:fieldKey "product" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -631,6 +694,7 @@ artisan_bakery_local:fld_inventory_item_product a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_inventory_item_quantity_on_hand a prophet:PropertyDefinition ;
   prophet:name "Quantity On Hand" ;
+  prophet:description "Current available stock quantity in inventory." ;
   prophet:fieldKey "quantity_on_hand" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -639,6 +703,7 @@ artisan_bakery_local:fld_inventory_item_quantity_on_hand a prophet:PropertyDefin
 
 artisan_bakery_local:fld_inventory_item_reorder_quantity a prophet:PropertyDefinition ;
   prophet:name "Reorder Quantity" ;
+  prophet:description "Suggested replenishment quantity when stock is low." ;
   prophet:fieldKey "reorder_quantity" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -647,6 +712,7 @@ artisan_bakery_local:fld_inventory_item_reorder_quantity a prophet:PropertyDefin
 
 artisan_bakery_local:fld_inventory_item_reorder_threshold a prophet:PropertyDefinition ;
   prophet:name "Reorder Threshold" ;
+  prophet:description "Quantity threshold that indicates low-stock risk." ;
   prophet:fieldKey "reorder_threshold" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -677,6 +743,7 @@ artisan_bakery_local:obj_inventory_item_display_part_0 a prophet:KeyPart ;
 
 artisan_bakery_local:obj_invoice a prophet:ObjectModel ;
   prophet:name "Invoice" ;
+  prophet:description "Invoice record for billing and payment tracking of a sales order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_invoice_balance_due ;
   prophet:hasProperty artisan_bakery_local:fld_invoice_currency ;
@@ -696,6 +763,7 @@ artisan_bakery_local:obj_invoice a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_invoice_balance_due a prophet:PropertyDefinition ;
   prophet:name "Balance Due" ;
+  prophet:description "Remaining unpaid balance on the invoice." ;
   prophet:fieldKey "balance_due" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -704,6 +772,7 @@ artisan_bakery_local:fld_invoice_balance_due a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_invoice_currency a prophet:PropertyDefinition ;
   prophet:name "Currency" ;
+  prophet:description "Currency code used for invoice monetary values." ;
   prophet:fieldKey "currency" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -712,6 +781,7 @@ artisan_bakery_local:fld_invoice_currency a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_invoice_due_on a prophet:PropertyDefinition ;
   prophet:name "Due On" ;
+  prophet:description "Payment due date for the invoice." ;
   prophet:fieldKey "due_on" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -720,6 +790,7 @@ artisan_bakery_local:fld_invoice_due_on a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_invoice_invoice_id a prophet:PropertyDefinition ;
   prophet:name "Invoice ID" ;
+  prophet:description "Stable primary identifier for the invoice." ;
   prophet:fieldKey "invoice_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -728,6 +799,7 @@ artisan_bakery_local:fld_invoice_invoice_id a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_invoice_issued_at a prophet:PropertyDefinition ;
   prophet:name "Issued At" ;
+  prophet:description "Timestamp when the invoice was issued." ;
   prophet:fieldKey "issued_at" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -736,6 +808,7 @@ artisan_bakery_local:fld_invoice_issued_at a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_invoice_sales_order a prophet:PropertyDefinition ;
   prophet:name "Sales Order" ;
+  prophet:description "Sales order that this invoice bills." ;
   prophet:fieldKey "sales_order" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -744,6 +817,7 @@ artisan_bakery_local:fld_invoice_sales_order a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_invoice_subtotal a prophet:PropertyDefinition ;
   prophet:name "Subtotal" ;
+  prophet:description "Pre-tax billed amount on the invoice." ;
   prophet:fieldKey "subtotal" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -752,6 +826,7 @@ artisan_bakery_local:fld_invoice_subtotal a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_invoice_tax_amount a prophet:PropertyDefinition ;
   prophet:name "Tax Amount" ;
+  prophet:description "Tax component billed on the invoice." ;
   prophet:fieldKey "tax_amount" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -760,6 +835,7 @@ artisan_bakery_local:fld_invoice_tax_amount a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_invoice_total_due a prophet:PropertyDefinition ;
   prophet:name "Total Due" ;
+  prophet:description "Total amount due on the invoice." ;
   prophet:fieldKey "total_due" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -790,21 +866,25 @@ artisan_bakery_local:obj_invoice_display_part_0 a prophet:KeyPart ;
 
 artisan_bakery_local:state_invoice_issued a prophet:State ;
   prophet:name "Issued" ;
+  prophet:description "Initial state after the invoice has been issued." ;
   prophet:stateOf artisan_bakery_local:obj_invoice ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:state_invoice_overdue a prophet:State ;
   prophet:name "Overdue" ;
+  prophet:description "State when payment is past due and outstanding." ;
   prophet:stateOf artisan_bakery_local:obj_invoice ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:state_invoice_paid a prophet:State ;
   prophet:name "Paid" ;
+  prophet:description "State after the invoice has been fully paid." ;
   prophet:stateOf artisan_bakery_local:obj_invoice ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:trans_invoice_mark_overdue a prophet:Transition ;
   prophet:name "Mark Overdue" ;
+  prophet:description "Moves an invoice from issued to overdue." ;
   prophet:transitionOf artisan_bakery_local:obj_invoice ;
   prophet:fromState artisan_bakery_local:state_invoice_issued ;
   prophet:toState artisan_bakery_local:state_invoice_overdue ;
@@ -816,6 +896,7 @@ artisan_bakery_local:trans_invoice_mark_overdue a prophet:Transition ;
 
 artisan_bakery_local:fld_trans_invoice_mark_overdue_marked_at a prophet:PropertyDefinition ;
   prophet:name "Marked At" ;
+  prophet:description "Timestamp when the invoice was marked overdue." ;
   prophet:fieldKey "markedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -848,6 +929,7 @@ artisan_bakery_local:trans_invoice_mark_overdue__to_state a prophet:PropertyDefi
 
 artisan_bakery_local:trans_invoice_mark_paid a prophet:Transition ;
   prophet:name "Mark Paid" ;
+  prophet:description "Moves an invoice from issued to paid." ;
   prophet:transitionOf artisan_bakery_local:obj_invoice ;
   prophet:fromState artisan_bakery_local:state_invoice_issued ;
   prophet:toState artisan_bakery_local:state_invoice_paid ;
@@ -860,6 +942,7 @@ artisan_bakery_local:trans_invoice_mark_paid a prophet:Transition ;
 
 artisan_bakery_local:fld_trans_invoice_mark_paid_paid_at a prophet:PropertyDefinition ;
   prophet:name "Paid At" ;
+  prophet:description "Timestamp when the invoice payment was settled." ;
   prophet:fieldKey "paidAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -868,6 +951,7 @@ artisan_bakery_local:fld_trans_invoice_mark_paid_paid_at a prophet:PropertyDefin
 
 artisan_bakery_local:fld_trans_invoice_mark_paid_payment_reference a prophet:PropertyDefinition ;
   prophet:name "Payment Reference" ;
+  prophet:description "Optional external payment reference identifier." ;
   prophet:fieldKey "paymentReference" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -900,6 +984,7 @@ artisan_bakery_local:trans_invoice_mark_paid__to_state a prophet:PropertyDefinit
 
 artisan_bakery_local:obj_product a prophet:ObjectModel ;
   prophet:name "Product" ;
+  prophet:description "Catalog product sold to customers and sourced from a supplier." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_product_active ;
   prophet:hasProperty artisan_bakery_local:fld_product_cost_price ;
@@ -915,6 +1000,7 @@ artisan_bakery_local:obj_product a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_product_active a prophet:PropertyDefinition ;
   prophet:name "Active" ;
+  prophet:description "Indicates whether the product is currently offered." ;
   prophet:fieldKey "active" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -923,6 +1009,7 @@ artisan_bakery_local:fld_product_active a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_product_cost_price a prophet:PropertyDefinition ;
   prophet:name "Cost Price" ;
+  prophet:description "Optional unit cost paid to acquire this product." ;
   prophet:fieldKey "cost_price" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -931,6 +1018,7 @@ artisan_bakery_local:fld_product_cost_price a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_product_description a prophet:PropertyDefinition ;
   prophet:name "Description" ;
+  prophet:description "Optional customer-facing or internal product description text." ;
   prophet:fieldKey "description" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -939,6 +1027,7 @@ artisan_bakery_local:fld_product_description a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_product_list_price a prophet:PropertyDefinition ;
   prophet:name "List Price" ;
+  prophet:description "Standard sales price before discounts or adjustments." ;
   prophet:fieldKey "list_price" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -947,6 +1036,7 @@ artisan_bakery_local:fld_product_list_price a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_product_name a prophet:PropertyDefinition ;
   prophet:name "Name" ;
+  prophet:description "Display name of the product in catalogs and order lines." ;
   prophet:fieldKey "name" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -955,6 +1045,7 @@ artisan_bakery_local:fld_product_name a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_product_product_id a prophet:PropertyDefinition ;
   prophet:name "Product ID" ;
+  prophet:description "Stable primary identifier for the product." ;
   prophet:fieldKey "product_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -963,6 +1054,7 @@ artisan_bakery_local:fld_product_product_id a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_product_sku a prophet:PropertyDefinition ;
   prophet:name "SKU" ;
+  prophet:description "Display key stock-keeping unit used in operations and labeling." ;
   prophet:fieldKey "sku" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -971,6 +1063,7 @@ artisan_bakery_local:fld_product_sku a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_product_supplier a prophet:PropertyDefinition ;
   prophet:name "Supplier" ;
+  prophet:description "Supplier reference that provides this product." ;
   prophet:fieldKey "supplier" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -979,6 +1072,7 @@ artisan_bakery_local:fld_product_supplier a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_product_tags a prophet:PropertyDefinition ;
   prophet:name "Tags" ;
+  prophet:description "Optional labels used for merchandising and reporting." ;
   prophet:fieldKey "tags" ;
   prophet:minCardinality 0 ;
   prophet:valueType artisan_bakery_local:fld_product_tags_list_type ;
@@ -1015,6 +1109,7 @@ artisan_bakery_local:obj_product_display_part_1 a prophet:KeyPart ;
 
 artisan_bakery_local:obj_purchase_order a prophet:ObjectModel ;
   prophet:name "Purchase Order" ;
+  prophet:description "Supplier procurement order tracked through draft, submission, receipt, and closure." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_purchase_order_lines ;
   prophet:hasProperty artisan_bakery_local:fld_purchase_order_notes ;
@@ -1034,6 +1129,7 @@ artisan_bakery_local:obj_purchase_order a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_purchase_order_lines a prophet:PropertyDefinition ;
   prophet:name "Lines" ;
+  prophet:description "Line items describing products, quantities, and costs to procure." ;
   prophet:fieldKey "lines" ;
   prophet:minCardinality 1 ;
   prophet:valueType artisan_bakery_local:fld_purchase_order_lines_list_type ;
@@ -1041,6 +1137,7 @@ artisan_bakery_local:fld_purchase_order_lines a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_purchase_order_notes a prophet:PropertyDefinition ;
   prophet:name "Notes" ;
+  prophet:description "Optional internal procurement notes for this order." ;
   prophet:fieldKey "notes" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1049,6 +1146,7 @@ artisan_bakery_local:fld_purchase_order_notes a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_purchase_order_purchase_order_id a prophet:PropertyDefinition ;
   prophet:name "Purchase Order ID" ;
+  prophet:description "Stable primary identifier for the purchase order." ;
   prophet:fieldKey "purchase_order_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1057,6 +1155,7 @@ artisan_bakery_local:fld_purchase_order_purchase_order_id a prophet:PropertyDefi
 
 artisan_bakery_local:fld_purchase_order_received_at a prophet:PropertyDefinition ;
   prophet:name "Received At" ;
+  prophet:description "Optional timestamp when goods were received." ;
   prophet:fieldKey "received_at" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1065,6 +1164,7 @@ artisan_bakery_local:fld_purchase_order_received_at a prophet:PropertyDefinition
 
 artisan_bakery_local:fld_purchase_order_requested_by a prophet:PropertyDefinition ;
   prophet:name "Requested By" ;
+  prophet:description "Employee who requested creation of this purchase order." ;
   prophet:fieldKey "requested_by" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1073,6 +1173,7 @@ artisan_bakery_local:fld_purchase_order_requested_by a prophet:PropertyDefinitio
 
 artisan_bakery_local:fld_purchase_order_submitted_at a prophet:PropertyDefinition ;
   prophet:name "Submitted At" ;
+  prophet:description "Optional timestamp when the order was submitted to the supplier." ;
   prophet:fieldKey "submitted_at" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1081,6 +1182,7 @@ artisan_bakery_local:fld_purchase_order_submitted_at a prophet:PropertyDefinitio
 
 artisan_bakery_local:fld_purchase_order_supplier a prophet:PropertyDefinition ;
   prophet:name "Supplier" ;
+  prophet:description "Supplier receiving and fulfilling this purchase order." ;
   prophet:fieldKey "supplier" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1089,6 +1191,7 @@ artisan_bakery_local:fld_purchase_order_supplier a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_purchase_order_total_cost a prophet:PropertyDefinition ;
   prophet:name "Total Cost" ;
+  prophet:description "Optional total expected or actual cost for the order." ;
   prophet:fieldKey "total_cost" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1119,26 +1222,31 @@ artisan_bakery_local:obj_purchase_order_display_part_0 a prophet:KeyPart ;
 
 artisan_bakery_local:state_purchase_order_closed a prophet:State ;
   prophet:name "Closed" ;
+  prophet:description "Final state once the purchase order lifecycle is complete." ;
   prophet:stateOf artisan_bakery_local:obj_purchase_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:state_purchase_order_draft a prophet:State ;
   prophet:name "Draft" ;
+  prophet:description "Initial state while purchase details are still being prepared." ;
   prophet:stateOf artisan_bakery_local:obj_purchase_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:state_purchase_order_received a prophet:State ;
   prophet:name "Received" ;
+  prophet:description "State after ordered goods have been received." ;
   prophet:stateOf artisan_bakery_local:obj_purchase_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:state_purchase_order_submitted a prophet:State ;
   prophet:name "Submitted" ;
+  prophet:description "State after the purchase order has been sent to the supplier." ;
   prophet:stateOf artisan_bakery_local:obj_purchase_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:trans_purchase_order_close a prophet:Transition ;
   prophet:name "Close" ;
+  prophet:description "Moves a purchase order from received to closed." ;
   prophet:transitionOf artisan_bakery_local:obj_purchase_order ;
   prophet:fromState artisan_bakery_local:state_purchase_order_received ;
   prophet:toState artisan_bakery_local:state_purchase_order_closed ;
@@ -1150,6 +1258,7 @@ artisan_bakery_local:trans_purchase_order_close a prophet:Transition ;
 
 artisan_bakery_local:fld_trans_purchase_order_close_closed_at a prophet:PropertyDefinition ;
   prophet:name "Closed At" ;
+  prophet:description "Timestamp recorded when the purchase order is closed." ;
   prophet:fieldKey "closedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1182,6 +1291,7 @@ artisan_bakery_local:trans_purchase_order_close__to_state a prophet:PropertyDefi
 
 artisan_bakery_local:trans_purchase_order_receive a prophet:Transition ;
   prophet:name "Receive" ;
+  prophet:description "Moves a purchase order from submitted to received." ;
   prophet:transitionOf artisan_bakery_local:obj_purchase_order ;
   prophet:fromState artisan_bakery_local:state_purchase_order_submitted ;
   prophet:toState artisan_bakery_local:state_purchase_order_received ;
@@ -1194,6 +1304,7 @@ artisan_bakery_local:trans_purchase_order_receive a prophet:Transition ;
 
 artisan_bakery_local:fld_trans_purchase_order_receive_invoice_number a prophet:PropertyDefinition ;
   prophet:name "Invoice Number" ;
+  prophet:description "Optional supplier invoice number associated with receipt." ;
   prophet:fieldKey "invoiceNumber" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1202,6 +1313,7 @@ artisan_bakery_local:fld_trans_purchase_order_receive_invoice_number a prophet:P
 
 artisan_bakery_local:fld_trans_purchase_order_receive_received_at a prophet:PropertyDefinition ;
   prophet:name "Received At" ;
+  prophet:description "Timestamp recorded when goods are received." ;
   prophet:fieldKey "receivedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1234,6 +1346,7 @@ artisan_bakery_local:trans_purchase_order_receive__to_state a prophet:PropertyDe
 
 artisan_bakery_local:trans_purchase_order_submit a prophet:Transition ;
   prophet:name "Submit" ;
+  prophet:description "Moves a purchase order from draft to submitted." ;
   prophet:transitionOf artisan_bakery_local:obj_purchase_order ;
   prophet:fromState artisan_bakery_local:state_purchase_order_draft ;
   prophet:toState artisan_bakery_local:state_purchase_order_submitted ;
@@ -1246,6 +1359,7 @@ artisan_bakery_local:trans_purchase_order_submit a prophet:Transition ;
 
 artisan_bakery_local:fld_trans_purchase_order_submit_buyer_note a prophet:PropertyDefinition ;
   prophet:name "Buyer Note" ;
+  prophet:description "Optional note provided by the buyer at submission time." ;
   prophet:fieldKey "buyerNote" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1254,6 +1368,7 @@ artisan_bakery_local:fld_trans_purchase_order_submit_buyer_note a prophet:Proper
 
 artisan_bakery_local:fld_trans_purchase_order_submit_submitted_at a prophet:PropertyDefinition ;
   prophet:name "Submitted At" ;
+  prophet:description "Timestamp captured when the order is submitted." ;
   prophet:fieldKey "submittedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1286,6 +1401,7 @@ artisan_bakery_local:trans_purchase_order_submit__to_state a prophet:PropertyDef
 
 artisan_bakery_local:obj_sales_order a prophet:ObjectModel ;
   prophet:name "Sales Order" ;
+  prophet:description "Customer sales order tracked through payment and fulfillment lifecycle states." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_sales_order_created_by ;
   prophet:hasProperty artisan_bakery_local:fld_sales_order_customer ;
@@ -1307,6 +1423,7 @@ artisan_bakery_local:obj_sales_order a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_sales_order_created_by a prophet:PropertyDefinition ;
   prophet:name "Created By" ;
+  prophet:description "Employee who created the sales order record." ;
   prophet:fieldKey "created_by" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1315,6 +1432,7 @@ artisan_bakery_local:fld_sales_order_created_by a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_sales_order_customer a prophet:PropertyDefinition ;
   prophet:name "Customer" ;
+  prophet:description "Customer placing this sales order." ;
   prophet:fieldKey "customer" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1323,6 +1441,7 @@ artisan_bakery_local:fld_sales_order_customer a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_sales_order_invoice a prophet:PropertyDefinition ;
   prophet:name "Invoice" ;
+  prophet:description "Optional invoice generated for this sales order." ;
   prophet:fieldKey "invoice" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1331,6 +1450,7 @@ artisan_bakery_local:fld_sales_order_invoice a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_sales_order_lines a prophet:PropertyDefinition ;
   prophet:name "Lines" ;
+  prophet:description "Ordered product line items with quantities and unit prices." ;
   prophet:fieldKey "lines" ;
   prophet:minCardinality 1 ;
   prophet:valueType artisan_bakery_local:fld_sales_order_lines_list_type ;
@@ -1338,6 +1458,7 @@ artisan_bakery_local:fld_sales_order_lines a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_sales_order_notes a prophet:PropertyDefinition ;
   prophet:name "Notes" ;
+  prophet:description "Optional notes about customer requests or handling." ;
   prophet:fieldKey "notes" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1346,6 +1467,7 @@ artisan_bakery_local:fld_sales_order_notes a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_sales_order_requested_fulfillment_date a prophet:PropertyDefinition ;
   prophet:name "Requested Fulfillment Date" ;
+  prophet:description "Optional customer-requested date for fulfillment." ;
   prophet:fieldKey "requested_fulfillment_date" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1354,6 +1476,7 @@ artisan_bakery_local:fld_sales_order_requested_fulfillment_date a prophet:Proper
 
 artisan_bakery_local:fld_sales_order_sales_order_id a prophet:PropertyDefinition ;
   prophet:name "Sales Order ID" ;
+  prophet:description "Stable primary identifier for the sales order." ;
   prophet:fieldKey "sales_order_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1362,6 +1485,7 @@ artisan_bakery_local:fld_sales_order_sales_order_id a prophet:PropertyDefinition
 
 artisan_bakery_local:fld_sales_order_subtotal a prophet:PropertyDefinition ;
   prophet:name "Subtotal" ;
+  prophet:description "Pre-tax total amount for all order lines." ;
   prophet:fieldKey "subtotal" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1370,6 +1494,7 @@ artisan_bakery_local:fld_sales_order_subtotal a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_sales_order_tax_amount a prophet:PropertyDefinition ;
   prophet:name "Tax Amount" ;
+  prophet:description "Tax amount applied to the sales order." ;
   prophet:fieldKey "tax_amount" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1378,6 +1503,7 @@ artisan_bakery_local:fld_sales_order_tax_amount a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_sales_order_total_amount a prophet:PropertyDefinition ;
   prophet:name "Total Amount" ;
+  prophet:description "Final amount due including taxes and adjustments." ;
   prophet:fieldKey "total_amount" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1408,26 +1534,31 @@ artisan_bakery_local:obj_sales_order_display_part_0 a prophet:KeyPart ;
 
 artisan_bakery_local:state_sales_order_cancelled a prophet:State ;
   prophet:name "Cancelled" ;
+  prophet:description "Terminal state for orders cancelled before completion." ;
   prophet:stateOf artisan_bakery_local:obj_sales_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:state_sales_order_fulfilled a prophet:State ;
   prophet:name "Fulfilled" ;
+  prophet:description "State after order items have been delivered or completed." ;
   prophet:stateOf artisan_bakery_local:obj_sales_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:state_sales_order_paid a prophet:State ;
   prophet:name "Paid" ;
+  prophet:description "State after full payment has been recorded." ;
   prophet:stateOf artisan_bakery_local:obj_sales_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:state_sales_order_pending_payment a prophet:State ;
   prophet:name "Pending Payment" ;
+  prophet:description "Initial state while payment is still outstanding." ;
   prophet:stateOf artisan_bakery_local:obj_sales_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:trans_sales_order_cancel a prophet:Transition ;
   prophet:name "Cancel" ;
+  prophet:description "Moves a pending-payment sales order to cancelled." ;
   prophet:transitionOf artisan_bakery_local:obj_sales_order ;
   prophet:fromState artisan_bakery_local:state_sales_order_pending_payment ;
   prophet:toState artisan_bakery_local:state_sales_order_cancelled ;
@@ -1440,6 +1571,7 @@ artisan_bakery_local:trans_sales_order_cancel a prophet:Transition ;
 
 artisan_bakery_local:fld_trans_sales_order_cancel_cancelled_at a prophet:PropertyDefinition ;
   prophet:name "Cancelled At" ;
+  prophet:description "Timestamp when the cancellation was applied." ;
   prophet:fieldKey "cancelledAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1448,6 +1580,7 @@ artisan_bakery_local:fld_trans_sales_order_cancel_cancelled_at a prophet:Propert
 
 artisan_bakery_local:fld_trans_sales_order_cancel_reason a prophet:PropertyDefinition ;
   prophet:name "Reason" ;
+  prophet:description "Optional reason recorded for cancellation." ;
   prophet:fieldKey "reason" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1480,6 +1613,7 @@ artisan_bakery_local:trans_sales_order_cancel__to_state a prophet:PropertyDefini
 
 artisan_bakery_local:trans_sales_order_fulfill a prophet:Transition ;
   prophet:name "Fulfill" ;
+  prophet:description "Moves a paid sales order to fulfilled." ;
   prophet:transitionOf artisan_bakery_local:obj_sales_order ;
   prophet:fromState artisan_bakery_local:state_sales_order_paid ;
   prophet:toState artisan_bakery_local:state_sales_order_fulfilled ;
@@ -1492,6 +1626,7 @@ artisan_bakery_local:trans_sales_order_fulfill a prophet:Transition ;
 
 artisan_bakery_local:fld_trans_sales_order_fulfill_fulfilled_at a prophet:PropertyDefinition ;
   prophet:name "Fulfilled At" ;
+  prophet:description "Timestamp when fulfillment completed." ;
   prophet:fieldKey "fulfilledAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1500,6 +1635,7 @@ artisan_bakery_local:fld_trans_sales_order_fulfill_fulfilled_at a prophet:Proper
 
 artisan_bakery_local:fld_trans_sales_order_fulfill_shipment_tracking a prophet:PropertyDefinition ;
   prophet:name "Shipment Tracking" ;
+  prophet:description "Optional shipment tracking identifier captured at fulfillment." ;
   prophet:fieldKey "shipmentTracking" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1532,6 +1668,7 @@ artisan_bakery_local:trans_sales_order_fulfill__to_state a prophet:PropertyDefin
 
 artisan_bakery_local:trans_sales_order_mark_paid a prophet:Transition ;
   prophet:name "Mark Paid" ;
+  prophet:description "Moves a sales order from pending payment to paid." ;
   prophet:transitionOf artisan_bakery_local:obj_sales_order ;
   prophet:fromState artisan_bakery_local:state_sales_order_pending_payment ;
   prophet:toState artisan_bakery_local:state_sales_order_paid ;
@@ -1544,6 +1681,7 @@ artisan_bakery_local:trans_sales_order_mark_paid a prophet:Transition ;
 
 artisan_bakery_local:fld_trans_sales_order_mark_paid_paid_at a prophet:PropertyDefinition ;
   prophet:name "Paid At" ;
+  prophet:description "Timestamp when payment was recorded." ;
   prophet:fieldKey "paidAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1552,6 +1690,7 @@ artisan_bakery_local:fld_trans_sales_order_mark_paid_paid_at a prophet:PropertyD
 
 artisan_bakery_local:fld_trans_sales_order_mark_paid_payment_amount a prophet:PropertyDefinition ;
   prophet:name "Payment Amount" ;
+  prophet:description "Amount received for this payment transition." ;
   prophet:fieldKey "paymentAmount" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1584,6 +1723,7 @@ artisan_bakery_local:trans_sales_order_mark_paid__to_state a prophet:PropertyDef
 
 artisan_bakery_local:obj_supplier a prophet:ObjectModel ;
   prophet:name "Supplier" ;
+  prophet:description "Supplier organization that provides products and procurement terms." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_supplier_active ;
   prophet:hasProperty artisan_bakery_local:fld_supplier_address ;
@@ -1596,6 +1736,7 @@ artisan_bakery_local:obj_supplier a prophet:ObjectModel ;
 
 artisan_bakery_local:fld_supplier_active a prophet:PropertyDefinition ;
   prophet:name "Active" ;
+  prophet:description "Indicates whether the supplier is currently approved for use." ;
   prophet:fieldKey "active" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1604,6 +1745,7 @@ artisan_bakery_local:fld_supplier_active a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_supplier_address a prophet:PropertyDefinition ;
   prophet:name "Address" ;
+  prophet:description "Optional mailing or fulfillment address for the supplier." ;
   prophet:fieldKey "address" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1612,6 +1754,7 @@ artisan_bakery_local:fld_supplier_address a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_supplier_legal_name a prophet:PropertyDefinition ;
   prophet:name "Legal Name" ;
+  prophet:description "Registered legal name of the supplier organization." ;
   prophet:fieldKey "legal_name" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1620,6 +1763,7 @@ artisan_bakery_local:fld_supplier_legal_name a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_supplier_payment_terms_days a prophet:PropertyDefinition ;
   prophet:name "Payment Terms Days" ;
+  prophet:description "Optional payment term duration in days." ;
   prophet:fieldKey "payment_terms_days" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1628,6 +1772,7 @@ artisan_bakery_local:fld_supplier_payment_terms_days a prophet:PropertyDefinitio
 
 artisan_bakery_local:fld_supplier_primary_contact a prophet:PropertyDefinition ;
   prophet:name "Primary Contact" ;
+  prophet:description "Primary contact details for day-to-day supplier communication." ;
   prophet:fieldKey "primary_contact" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1636,6 +1781,7 @@ artisan_bakery_local:fld_supplier_primary_contact a prophet:PropertyDefinition ;
 
 artisan_bakery_local:fld_supplier_supplier_id a prophet:PropertyDefinition ;
   prophet:name "Supplier ID" ;
+  prophet:description "Stable primary identifier for the supplier." ;
   prophet:fieldKey "supplier_id" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1669,7 +1815,8 @@ artisan_bakery_local:obj_supplier_display_part_0 a prophet:KeyPart ;
 # ============================================================
 
 artisan_bakery_local:ain_adjust_inventory a prophet:ActionInput ;
-  prophet:name "AdjustInventoryCommand" ;
+  prophet:name "Adjust Inventory Command" ;
+  prophet:description "Input payload for manually adjusting inventory levels." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_adjust_inventory_delta ;
   prophet:hasProperty artisan_bakery_local:fld_ain_adjust_inventory_inventory_item ;
@@ -1677,6 +1824,7 @@ artisan_bakery_local:ain_adjust_inventory a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_adjust_inventory_delta a prophet:PropertyDefinition ;
   prophet:name "Delta" ;
+  prophet:description "Quantity adjustment magnitude to apply to the inventory item." ;
   prophet:fieldKey "delta" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1685,6 +1833,7 @@ artisan_bakery_local:fld_ain_adjust_inventory_delta a prophet:PropertyDefinition
 
 artisan_bakery_local:fld_ain_adjust_inventory_inventory_item a prophet:PropertyDefinition ;
   prophet:name "Inventory Item" ;
+  prophet:description "Inventory item whose quantity should be adjusted." ;
   prophet:fieldKey "inventoryItem" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1693,6 +1842,7 @@ artisan_bakery_local:fld_ain_adjust_inventory_inventory_item a prophet:PropertyD
 
 artisan_bakery_local:fld_ain_adjust_inventory_reason a prophet:PropertyDefinition ;
   prophet:name "Reason" ;
+  prophet:description "Business reason for the inventory adjustment." ;
   prophet:fieldKey "reason" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1700,7 +1850,8 @@ artisan_bakery_local:fld_ain_adjust_inventory_reason a prophet:PropertyDefinitio
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_cancel_sales_order a prophet:ActionInput ;
-  prophet:name "CancelSalesOrderCommand" ;
+  prophet:name "Cancel Sales Order Command" ;
+  prophet:description "Input payload for cancelling a pending sales order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_cancel_sales_order_cancelled_at ;
   prophet:hasProperty artisan_bakery_local:fld_ain_cancel_sales_order_reason ;
@@ -1708,6 +1859,7 @@ artisan_bakery_local:ain_cancel_sales_order a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_cancel_sales_order_cancelled_at a prophet:PropertyDefinition ;
   prophet:name "Cancelled At" ;
+  prophet:description "Timestamp when cancellation should be recorded." ;
   prophet:fieldKey "cancelledAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1716,6 +1868,7 @@ artisan_bakery_local:fld_ain_cancel_sales_order_cancelled_at a prophet:PropertyD
 
 artisan_bakery_local:fld_ain_cancel_sales_order_reason a prophet:PropertyDefinition ;
   prophet:name "Reason" ;
+  prophet:description "Reason supplied for cancelling the order." ;
   prophet:fieldKey "reason" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1724,6 +1877,7 @@ artisan_bakery_local:fld_ain_cancel_sales_order_reason a prophet:PropertyDefinit
 
 artisan_bakery_local:fld_ain_cancel_sales_order_sales_order a prophet:PropertyDefinition ;
   prophet:name "Sales Order" ;
+  prophet:description "Sales order to cancel." ;
   prophet:fieldKey "salesOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1731,13 +1885,15 @@ artisan_bakery_local:fld_ain_cancel_sales_order_sales_order a prophet:PropertyDe
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_close_purchase_order a prophet:ActionInput ;
-  prophet:name "ClosePurchaseOrderCommand" ;
+  prophet:name "Close Purchase Order Command" ;
+  prophet:description "Input payload for closing a received purchase order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_close_purchase_order_closed_at ;
   prophet:hasProperty artisan_bakery_local:fld_ain_close_purchase_order_purchase_order .
 
 artisan_bakery_local:fld_ain_close_purchase_order_closed_at a prophet:PropertyDefinition ;
   prophet:name "Closed At" ;
+  prophet:description "Timestamp when the order closure is recorded." ;
   prophet:fieldKey "closedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1746,6 +1902,7 @@ artisan_bakery_local:fld_ain_close_purchase_order_closed_at a prophet:PropertyDe
 
 artisan_bakery_local:fld_ain_close_purchase_order_purchase_order a prophet:PropertyDefinition ;
   prophet:name "Purchase Order" ;
+  prophet:description "Received purchase order to close." ;
   prophet:fieldKey "purchaseOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1753,7 +1910,8 @@ artisan_bakery_local:fld_ain_close_purchase_order_purchase_order a prophet:Prope
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_create_purchase_order a prophet:ActionInput ;
-  prophet:name "CreatePurchaseOrderCommand" ;
+  prophet:name "Create Purchase Order Command" ;
+  prophet:description "Input payload required to create a purchase order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_create_purchase_order_lines ;
   prophet:hasProperty artisan_bakery_local:fld_ain_create_purchase_order_notes ;
@@ -1762,6 +1920,7 @@ artisan_bakery_local:ain_create_purchase_order a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_create_purchase_order_lines a prophet:PropertyDefinition ;
   prophet:name "Lines" ;
+  prophet:description "Purchase line items to include on the order." ;
   prophet:fieldKey "lines" ;
   prophet:minCardinality 1 ;
   prophet:valueType artisan_bakery_local:fld_ain_create_purchase_order_lines_list_type ;
@@ -1769,6 +1928,7 @@ artisan_bakery_local:fld_ain_create_purchase_order_lines a prophet:PropertyDefin
 
 artisan_bakery_local:fld_ain_create_purchase_order_notes a prophet:PropertyDefinition ;
   prophet:name "Notes" ;
+  prophet:description "Optional internal note for procurement context." ;
   prophet:fieldKey "notes" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1777,6 +1937,7 @@ artisan_bakery_local:fld_ain_create_purchase_order_notes a prophet:PropertyDefin
 
 artisan_bakery_local:fld_ain_create_purchase_order_requested_by a prophet:PropertyDefinition ;
   prophet:name "Requested By" ;
+  prophet:description "Employee requesting the purchase." ;
   prophet:fieldKey "requestedBy" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1785,6 +1946,7 @@ artisan_bakery_local:fld_ain_create_purchase_order_requested_by a prophet:Proper
 
 artisan_bakery_local:fld_ain_create_purchase_order_supplier a prophet:PropertyDefinition ;
   prophet:name "Supplier" ;
+  prophet:description "Supplier to receive the purchase order." ;
   prophet:fieldKey "supplier" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1792,7 +1954,8 @@ artisan_bakery_local:fld_ain_create_purchase_order_supplier a prophet:PropertyDe
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_create_sales_order a prophet:ActionInput ;
-  prophet:name "CreateSalesOrderCommand" ;
+  prophet:name "Create Sales Order Command" ;
+  prophet:description "Input payload required to create a sales order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_create_sales_order_created_by ;
   prophet:hasProperty artisan_bakery_local:fld_ain_create_sales_order_customer ;
@@ -1801,6 +1964,7 @@ artisan_bakery_local:ain_create_sales_order a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_create_sales_order_created_by a prophet:PropertyDefinition ;
   prophet:name "Created By" ;
+  prophet:description "Employee creating the sales order." ;
   prophet:fieldKey "createdBy" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1809,6 +1973,7 @@ artisan_bakery_local:fld_ain_create_sales_order_created_by a prophet:PropertyDef
 
 artisan_bakery_local:fld_ain_create_sales_order_customer a prophet:PropertyDefinition ;
   prophet:name "Customer" ;
+  prophet:description "Customer for whom the sales order is created." ;
   prophet:fieldKey "customer" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1817,6 +1982,7 @@ artisan_bakery_local:fld_ain_create_sales_order_customer a prophet:PropertyDefin
 
 artisan_bakery_local:fld_ain_create_sales_order_lines a prophet:PropertyDefinition ;
   prophet:name "Lines" ;
+  prophet:description "Line items to include in the new sales order." ;
   prophet:fieldKey "lines" ;
   prophet:minCardinality 1 ;
   prophet:valueType artisan_bakery_local:fld_ain_create_sales_order_lines_list_type ;
@@ -1824,6 +1990,7 @@ artisan_bakery_local:fld_ain_create_sales_order_lines a prophet:PropertyDefiniti
 
 artisan_bakery_local:fld_ain_create_sales_order_requested_fulfillment_date a prophet:PropertyDefinition ;
   prophet:name "Requested Fulfillment Date" ;
+  prophet:description "Optional requested date for order fulfillment." ;
   prophet:fieldKey "requestedFulfillmentDate" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1831,7 +1998,8 @@ artisan_bakery_local:fld_ain_create_sales_order_requested_fulfillment_date a pro
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_fulfill_sales_order a prophet:ActionInput ;
-  prophet:name "FulfillSalesOrderCommand" ;
+  prophet:name "Fulfill Sales Order Command" ;
+  prophet:description "Input payload for fulfilling a paid sales order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_fulfill_sales_order_fulfilled_at ;
   prophet:hasProperty artisan_bakery_local:fld_ain_fulfill_sales_order_sales_order ;
@@ -1839,6 +2007,7 @@ artisan_bakery_local:ain_fulfill_sales_order a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_fulfill_sales_order_fulfilled_at a prophet:PropertyDefinition ;
   prophet:name "Fulfilled At" ;
+  prophet:description "Timestamp when fulfillment was completed." ;
   prophet:fieldKey "fulfilledAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1847,6 +2016,7 @@ artisan_bakery_local:fld_ain_fulfill_sales_order_fulfilled_at a prophet:Property
 
 artisan_bakery_local:fld_ain_fulfill_sales_order_sales_order a prophet:PropertyDefinition ;
   prophet:name "Sales Order" ;
+  prophet:description "Paid sales order to fulfill." ;
   prophet:fieldKey "salesOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1855,6 +2025,7 @@ artisan_bakery_local:fld_ain_fulfill_sales_order_sales_order a prophet:PropertyD
 
 artisan_bakery_local:fld_ain_fulfill_sales_order_shipment_tracking a prophet:PropertyDefinition ;
   prophet:name "Shipment Tracking" ;
+  prophet:description "Optional shipment tracking identifier to store." ;
   prophet:fieldKey "shipmentTracking" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1862,13 +2033,15 @@ artisan_bakery_local:fld_ain_fulfill_sales_order_shipment_tracking a prophet:Pro
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_mark_invoice_overdue a prophet:ActionInput ;
-  prophet:name "MarkInvoiceOverdueCommand" ;
+  prophet:name "Mark Invoice Overdue Command" ;
+  prophet:description "Input payload for marking an invoice as overdue." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_mark_invoice_overdue_invoice ;
   prophet:hasProperty artisan_bakery_local:fld_ain_mark_invoice_overdue_marked_at .
 
 artisan_bakery_local:fld_ain_mark_invoice_overdue_invoice a prophet:PropertyDefinition ;
   prophet:name "Invoice" ;
+  prophet:description "Invoice to transition into overdue state." ;
   prophet:fieldKey "invoice" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1877,6 +2050,7 @@ artisan_bakery_local:fld_ain_mark_invoice_overdue_invoice a prophet:PropertyDefi
 
 artisan_bakery_local:fld_ain_mark_invoice_overdue_marked_at a prophet:PropertyDefinition ;
   prophet:name "Marked At" ;
+  prophet:description "Timestamp when overdue status was assigned." ;
   prophet:fieldKey "markedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1884,7 +2058,8 @@ artisan_bakery_local:fld_ain_mark_invoice_overdue_marked_at a prophet:PropertyDe
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_mark_invoice_paid a prophet:ActionInput ;
-  prophet:name "MarkInvoicePaidCommand" ;
+  prophet:name "Mark Invoice Paid Command" ;
+  prophet:description "Input payload for marking an invoice as paid." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_mark_invoice_paid_invoice ;
   prophet:hasProperty artisan_bakery_local:fld_ain_mark_invoice_paid_paid_at ;
@@ -1892,6 +2067,7 @@ artisan_bakery_local:ain_mark_invoice_paid a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_mark_invoice_paid_invoice a prophet:PropertyDefinition ;
   prophet:name "Invoice" ;
+  prophet:description "Invoice to transition into the paid state." ;
   prophet:fieldKey "invoice" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1900,6 +2076,7 @@ artisan_bakery_local:fld_ain_mark_invoice_paid_invoice a prophet:PropertyDefinit
 
 artisan_bakery_local:fld_ain_mark_invoice_paid_paid_at a prophet:PropertyDefinition ;
   prophet:name "Paid At" ;
+  prophet:description "Timestamp when payment settlement occurred." ;
   prophet:fieldKey "paidAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1908,6 +2085,7 @@ artisan_bakery_local:fld_ain_mark_invoice_paid_paid_at a prophet:PropertyDefinit
 
 artisan_bakery_local:fld_ain_mark_invoice_paid_payment_reference a prophet:PropertyDefinition ;
   prophet:name "Payment Reference" ;
+  prophet:description "Optional external payment reference to persist." ;
   prophet:fieldKey "paymentReference" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1915,7 +2093,8 @@ artisan_bakery_local:fld_ain_mark_invoice_paid_payment_reference a prophet:Prope
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_mark_sales_order_paid a prophet:ActionInput ;
-  prophet:name "MarkSalesOrderPaidCommand" ;
+  prophet:name "Mark Sales Order Paid Command" ;
+  prophet:description "Input payload for marking a sales order as paid." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_mark_sales_order_paid_amount ;
   prophet:hasProperty artisan_bakery_local:fld_ain_mark_sales_order_paid_paid_at ;
@@ -1923,6 +2102,7 @@ artisan_bakery_local:ain_mark_sales_order_paid a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_mark_sales_order_paid_amount a prophet:PropertyDefinition ;
   prophet:name "Amount" ;
+  prophet:description "Amount being recorded as paid." ;
   prophet:fieldKey "amount" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1931,6 +2111,7 @@ artisan_bakery_local:fld_ain_mark_sales_order_paid_amount a prophet:PropertyDefi
 
 artisan_bakery_local:fld_ain_mark_sales_order_paid_paid_at a prophet:PropertyDefinition ;
   prophet:name "Paid At" ;
+  prophet:description "Timestamp when payment was received or confirmed." ;
   prophet:fieldKey "paidAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1939,6 +2120,7 @@ artisan_bakery_local:fld_ain_mark_sales_order_paid_paid_at a prophet:PropertyDef
 
 artisan_bakery_local:fld_ain_mark_sales_order_paid_sales_order a prophet:PropertyDefinition ;
   prophet:name "Sales Order" ;
+  prophet:description "Sales order to transition into the paid state." ;
   prophet:fieldKey "salesOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1946,7 +2128,8 @@ artisan_bakery_local:fld_ain_mark_sales_order_paid_sales_order a prophet:Propert
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_receive_purchase_order a prophet:ActionInput ;
-  prophet:name "ReceivePurchaseOrderCommand" ;
+  prophet:name "Receive Purchase Order Command" ;
+  prophet:description "Input payload for receiving a submitted purchase order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_receive_purchase_order_invoice_number ;
   prophet:hasProperty artisan_bakery_local:fld_ain_receive_purchase_order_purchase_order ;
@@ -1954,6 +2137,7 @@ artisan_bakery_local:ain_receive_purchase_order a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_receive_purchase_order_invoice_number a prophet:PropertyDefinition ;
   prophet:name "Invoice Number" ;
+  prophet:description "Optional supplier invoice number for received goods." ;
   prophet:fieldKey "invoiceNumber" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -1962,6 +2146,7 @@ artisan_bakery_local:fld_ain_receive_purchase_order_invoice_number a prophet:Pro
 
 artisan_bakery_local:fld_ain_receive_purchase_order_purchase_order a prophet:PropertyDefinition ;
   prophet:name "Purchase Order" ;
+  prophet:description "Submitted purchase order being received." ;
   prophet:fieldKey "purchaseOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1970,6 +2155,7 @@ artisan_bakery_local:fld_ain_receive_purchase_order_purchase_order a prophet:Pro
 
 artisan_bakery_local:fld_ain_receive_purchase_order_received_at a prophet:PropertyDefinition ;
   prophet:name "Received At" ;
+  prophet:description "Timestamp when goods were received." ;
   prophet:fieldKey "receivedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1977,7 +2163,8 @@ artisan_bakery_local:fld_ain_receive_purchase_order_received_at a prophet:Proper
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_record_invoice_payment a prophet:ActionInput ;
-  prophet:name "RecordInvoicePaymentCommand" ;
+  prophet:name "Record Invoice Payment Command" ;
+  prophet:description "Input payload for recording an invoice payment." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_record_invoice_payment_amount ;
   prophet:hasProperty artisan_bakery_local:fld_ain_record_invoice_payment_invoice ;
@@ -1985,6 +2172,7 @@ artisan_bakery_local:ain_record_invoice_payment a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_record_invoice_payment_amount a prophet:PropertyDefinition ;
   prophet:name "Amount" ;
+  prophet:description "Payment amount to record against the invoice." ;
   prophet:fieldKey "amount" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -1993,6 +2181,7 @@ artisan_bakery_local:fld_ain_record_invoice_payment_amount a prophet:PropertyDef
 
 artisan_bakery_local:fld_ain_record_invoice_payment_invoice a prophet:PropertyDefinition ;
   prophet:name "Invoice" ;
+  prophet:description "Invoice receiving the payment." ;
   prophet:fieldKey "invoice" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2001,6 +2190,7 @@ artisan_bakery_local:fld_ain_record_invoice_payment_invoice a prophet:PropertyDe
 
 artisan_bakery_local:fld_ain_record_invoice_payment_method_details a prophet:PropertyDefinition ;
   prophet:name "Method Details" ;
+  prophet:description "Details describing payment method and provider metadata." ;
   prophet:fieldKey "methodDetails" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2008,7 +2198,8 @@ artisan_bakery_local:fld_ain_record_invoice_payment_method_details a prophet:Pro
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_register_customer a prophet:ActionInput ;
-  prophet:name "RegisterCustomerCommand" ;
+  prophet:name "Register Customer Command" ;
+  prophet:description "Input payload for creating a new customer." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_register_customer_billing_address ;
   prophet:hasProperty artisan_bakery_local:fld_ain_register_customer_email ;
@@ -2019,6 +2210,7 @@ artisan_bakery_local:ain_register_customer a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_register_customer_billing_address a prophet:PropertyDefinition ;
   prophet:name "Billing Address" ;
+  prophet:description "Optional billing address to associate with the customer." ;
   prophet:fieldKey "billingAddress" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -2027,6 +2219,7 @@ artisan_bakery_local:fld_ain_register_customer_billing_address a prophet:Propert
 
 artisan_bakery_local:fld_ain_register_customer_email a prophet:PropertyDefinition ;
   prophet:name "Email" ;
+  prophet:description "Optional customer email to capture at registration." ;
   prophet:fieldKey "email" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -2035,6 +2228,7 @@ artisan_bakery_local:fld_ain_register_customer_email a prophet:PropertyDefinitio
 
 artisan_bakery_local:fld_ain_register_customer_full_name a prophet:PropertyDefinition ;
   prophet:name "Full Name" ;
+  prophet:description "Customer full name to store on the new profile." ;
   prophet:fieldKey "fullName" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2043,6 +2237,7 @@ artisan_bakery_local:fld_ain_register_customer_full_name a prophet:PropertyDefin
 
 artisan_bakery_local:fld_ain_register_customer_phone a prophet:PropertyDefinition ;
   prophet:name "Phone" ;
+  prophet:description "Optional customer phone number to capture at registration." ;
   prophet:fieldKey "phone" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -2051,6 +2246,7 @@ artisan_bakery_local:fld_ain_register_customer_phone a prophet:PropertyDefinitio
 
 artisan_bakery_local:fld_ain_register_customer_preferred_currency a prophet:PropertyDefinition ;
   prophet:name "Preferred Currency" ;
+  prophet:description "Optional preferred currency code for customer transactions." ;
   prophet:fieldKey "preferredCurrency" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -2059,6 +2255,7 @@ artisan_bakery_local:fld_ain_register_customer_preferred_currency a prophet:Prop
 
 artisan_bakery_local:fld_ain_register_customer_shipping_address a prophet:PropertyDefinition ;
   prophet:name "Shipping Address" ;
+  prophet:description "Optional default shipping address for future deliveries." ;
   prophet:fieldKey "shippingAddress" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -2066,13 +2263,15 @@ artisan_bakery_local:fld_ain_register_customer_shipping_address a prophet:Proper
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_restock_inventory a prophet:ActionInput ;
-  prophet:name "RestockInventoryCommand" ;
+  prophet:name "Restock Inventory Command" ;
+  prophet:description "Input payload for restocking inventory from a purchase order receipt." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_restock_inventory_purchase_order ;
   prophet:hasProperty artisan_bakery_local:fld_ain_restock_inventory_received_at .
 
 artisan_bakery_local:fld_ain_restock_inventory_purchase_order a prophet:PropertyDefinition ;
   prophet:name "Purchase Order" ;
+  prophet:description "Purchase order whose received lines should restock inventory." ;
   prophet:fieldKey "purchaseOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2081,6 +2280,7 @@ artisan_bakery_local:fld_ain_restock_inventory_purchase_order a prophet:Property
 
 artisan_bakery_local:fld_ain_restock_inventory_received_at a prophet:PropertyDefinition ;
   prophet:name "Received At" ;
+  prophet:description "Timestamp used to mark inventory restock completion." ;
   prophet:fieldKey "receivedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2088,7 +2288,8 @@ artisan_bakery_local:fld_ain_restock_inventory_received_at a prophet:PropertyDef
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:ain_submit_purchase_order a prophet:ActionInput ;
-  prophet:name "SubmitPurchaseOrderCommand" ;
+  prophet:name "Submit Purchase Order Command" ;
+  prophet:description "Input payload for submitting a purchase order." ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local ;
   prophet:hasProperty artisan_bakery_local:fld_ain_submit_purchase_order_buyer_note ;
   prophet:hasProperty artisan_bakery_local:fld_ain_submit_purchase_order_purchase_order ;
@@ -2096,6 +2297,7 @@ artisan_bakery_local:ain_submit_purchase_order a prophet:ActionInput ;
 
 artisan_bakery_local:fld_ain_submit_purchase_order_buyer_note a prophet:PropertyDefinition ;
   prophet:name "Buyer Note" ;
+  prophet:description "Optional buyer note attached to submission." ;
   prophet:fieldKey "buyerNote" ;
   prophet:minCardinality 0 ;
   prophet:maxCardinality 1 ;
@@ -2104,6 +2306,7 @@ artisan_bakery_local:fld_ain_submit_purchase_order_buyer_note a prophet:Property
 
 artisan_bakery_local:fld_ain_submit_purchase_order_purchase_order a prophet:PropertyDefinition ;
   prophet:name "Purchase Order" ;
+  prophet:description "Draft purchase order to submit." ;
   prophet:fieldKey "purchaseOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2112,6 +2315,7 @@ artisan_bakery_local:fld_ain_submit_purchase_order_purchase_order a prophet:Prop
 
 artisan_bakery_local:fld_ain_submit_purchase_order_submitted_at a prophet:PropertyDefinition ;
   prophet:name "Submitted At" ;
+  prophet:description "Timestamp to record as submission time." ;
   prophet:fieldKey "submittedAt" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2124,84 +2328,98 @@ artisan_bakery_local:fld_ain_submit_purchase_order_submitted_at a prophet:Proper
 
 artisan_bakery_local:act_adjust_inventory a prophet:Process ;
   prophet:name "Adjust Inventory" ;
+  prophet:description "Applies a direct quantity adjustment to an inventory item." ;
   prophet:acceptsInput artisan_bakery_local:ain_adjust_inventory ;
   prophet:producesEvent artisan_bakery_local:aout_adjust_inventory ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_cancel_sales_order a prophet:Process ;
   prophet:name "Cancel Sales Order" ;
+  prophet:description "Cancels an unpaid sales order through its cancellation transition." ;
   prophet:acceptsInput artisan_bakery_local:ain_cancel_sales_order ;
   prophet:producesEvent artisan_bakery_local:trans_sales_order_cancel ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_close_purchase_order a prophet:Workflow ;
   prophet:name "Close Purchase Order" ;
+  prophet:description "Closes a received purchase order after post-receipt tasks complete." ;
   prophet:acceptsInput artisan_bakery_local:ain_close_purchase_order ;
   prophet:producesEvent artisan_bakery_local:trans_purchase_order_close ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_create_purchase_order a prophet:Process ;
   prophet:name "Create Purchase Order" ;
+  prophet:description "Creates a purchase order for supplier replenishment." ;
   prophet:acceptsInput artisan_bakery_local:ain_create_purchase_order ;
   prophet:producesEvent artisan_bakery_local:aout_create_purchase_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_create_sales_order a prophet:Process ;
   prophet:name "Create Sales Order" ;
+  prophet:description "Creates a sales order, computes totals, and returns linked billing references." ;
   prophet:acceptsInput artisan_bakery_local:ain_create_sales_order ;
   prophet:producesEvent artisan_bakery_local:aout_create_sales_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_fulfill_sales_order a prophet:Workflow ;
   prophet:name "Fulfill Sales Order" ;
+  prophet:description "Applies the sales-order fulfillment transition after payment." ;
   prophet:acceptsInput artisan_bakery_local:ain_fulfill_sales_order ;
   prophet:producesEvent artisan_bakery_local:trans_sales_order_fulfill ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_mark_invoice_overdue a prophet:Workflow ;
   prophet:name "Mark Invoice Overdue" ;
+  prophet:description "Applies the invoice overdue transition for unpaid invoices." ;
   prophet:acceptsInput artisan_bakery_local:ain_mark_invoice_overdue ;
   prophet:producesEvent artisan_bakery_local:trans_invoice_mark_overdue ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_mark_invoice_paid a prophet:Workflow ;
   prophet:name "Mark Invoice Paid" ;
+  prophet:description "Applies the invoice paid transition once payment is confirmed." ;
   prophet:acceptsInput artisan_bakery_local:ain_mark_invoice_paid ;
   prophet:producesEvent artisan_bakery_local:trans_invoice_mark_paid ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_mark_sales_order_paid a prophet:Workflow ;
   prophet:name "Mark Sales Order Paid" ;
+  prophet:description "Applies the sales-order payment transition with payment details." ;
   prophet:acceptsInput artisan_bakery_local:ain_mark_sales_order_paid ;
   prophet:producesEvent artisan_bakery_local:trans_sales_order_mark_paid ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_receive_purchase_order a prophet:Workflow ;
   prophet:name "Receive Purchase Order" ;
+  prophet:description "Marks a submitted purchase order as received." ;
   prophet:acceptsInput artisan_bakery_local:ain_receive_purchase_order ;
   prophet:producesEvent artisan_bakery_local:trans_purchase_order_receive ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_record_invoice_payment a prophet:Process ;
   prophet:name "Record Invoice Payment" ;
+  prophet:description "Records invoice payment details and emits a payment-recorded signal." ;
   prophet:acceptsInput artisan_bakery_local:ain_record_invoice_payment ;
   prophet:producesEvent artisan_bakery_local:sig_invoice_payment_recorded ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_register_customer a prophet:Process ;
   prophet:name "Register Customer" ;
+  prophet:description "Creates and returns a new customer profile for bakery operations." ;
   prophet:acceptsInput artisan_bakery_local:ain_register_customer ;
   prophet:producesEvent artisan_bakery_local:aout_register_customer ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_restock_inventory a prophet:Workflow ;
   prophet:name "Restock Inventory" ;
+  prophet:description "Updates inventory quantities based on received purchase orders." ;
   prophet:acceptsInput artisan_bakery_local:ain_restock_inventory ;
   prophet:producesEvent artisan_bakery_local:aout_restock_inventory ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:act_submit_purchase_order a prophet:Workflow ;
   prophet:name "Submit Purchase Order" ;
+  prophet:description "Submits a draft purchase order to the supplier." ;
   prophet:acceptsInput artisan_bakery_local:ain_submit_purchase_order ;
   prophet:producesEvent artisan_bakery_local:trans_purchase_order_submit ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
@@ -2211,13 +2429,15 @@ artisan_bakery_local:act_submit_purchase_order a prophet:Workflow ;
 # ============================================================
 
 artisan_bakery_local:aout_adjust_inventory a prophet:Signal ;
-  prophet:name "AdjustInventoryResult" ;
+  prophet:name "Adjust Inventory Result" ;
+  prophet:description "Output payload with the adjusted inventory item and resulting quantity." ;
   prophet:hasProperty artisan_bakery_local:fld_aout_adjust_inventory_inventory_item ;
   prophet:hasProperty artisan_bakery_local:fld_aout_adjust_inventory_new_quantity ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:fld_aout_adjust_inventory_inventory_item a prophet:PropertyDefinition ;
   prophet:name "Inventory Item" ;
+  prophet:description "Reference to the inventory item after adjustment." ;
   prophet:fieldKey "inventoryItem" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2226,6 +2446,7 @@ artisan_bakery_local:fld_aout_adjust_inventory_inventory_item a prophet:Property
 
 artisan_bakery_local:fld_aout_adjust_inventory_new_quantity a prophet:PropertyDefinition ;
   prophet:name "New Quantity" ;
+  prophet:description "Resulting quantity after applying the adjustment." ;
   prophet:fieldKey "newQuantity" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2233,13 +2454,15 @@ artisan_bakery_local:fld_aout_adjust_inventory_new_quantity a prophet:PropertyDe
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:aout_create_purchase_order a prophet:Signal ;
-  prophet:name "CreatePurchaseOrderResult" ;
+  prophet:name "Create Purchase Order Result" ;
+  prophet:description "Output payload with created purchase order and estimated total." ;
   prophet:hasProperty artisan_bakery_local:fld_aout_create_purchase_order_estimated_total ;
   prophet:hasProperty artisan_bakery_local:fld_aout_create_purchase_order_purchase_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:fld_aout_create_purchase_order_estimated_total a prophet:PropertyDefinition ;
   prophet:name "Estimated Total" ;
+  prophet:description "Estimated monetary total for the requested purchase lines." ;
   prophet:fieldKey "estimatedTotal" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2248,6 +2471,7 @@ artisan_bakery_local:fld_aout_create_purchase_order_estimated_total a prophet:Pr
 
 artisan_bakery_local:fld_aout_create_purchase_order_purchase_order a prophet:PropertyDefinition ;
   prophet:name "Purchase Order" ;
+  prophet:description "Reference to the newly created purchase order." ;
   prophet:fieldKey "purchaseOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2255,7 +2479,8 @@ artisan_bakery_local:fld_aout_create_purchase_order_purchase_order a prophet:Pro
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:aout_create_sales_order a prophet:Signal ;
-  prophet:name "CreateSalesOrderResult" ;
+  prophet:name "Create Sales Order Result" ;
+  prophet:description "Output payload with created order, invoice, and final total." ;
   prophet:hasProperty artisan_bakery_local:fld_aout_create_sales_order_invoice ;
   prophet:hasProperty artisan_bakery_local:fld_aout_create_sales_order_sales_order ;
   prophet:hasProperty artisan_bakery_local:fld_aout_create_sales_order_total_amount ;
@@ -2263,6 +2488,7 @@ artisan_bakery_local:aout_create_sales_order a prophet:Signal ;
 
 artisan_bakery_local:fld_aout_create_sales_order_invoice a prophet:PropertyDefinition ;
   prophet:name "Invoice" ;
+  prophet:description "Invoice generated for the created sales order." ;
   prophet:fieldKey "invoice" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2271,6 +2497,7 @@ artisan_bakery_local:fld_aout_create_sales_order_invoice a prophet:PropertyDefin
 
 artisan_bakery_local:fld_aout_create_sales_order_sales_order a prophet:PropertyDefinition ;
   prophet:name "Sales Order" ;
+  prophet:description "Reference to the newly created sales order." ;
   prophet:fieldKey "salesOrder" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2279,6 +2506,7 @@ artisan_bakery_local:fld_aout_create_sales_order_sales_order a prophet:PropertyD
 
 artisan_bakery_local:fld_aout_create_sales_order_total_amount a prophet:PropertyDefinition ;
   prophet:name "Total Amount" ;
+  prophet:description "Final computed total amount for the sales order." ;
   prophet:fieldKey "totalAmount" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2286,13 +2514,15 @@ artisan_bakery_local:fld_aout_create_sales_order_total_amount a prophet:Property
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:aout_register_customer a prophet:Signal ;
-  prophet:name "RegisterCustomerResult" ;
+  prophet:name "Register Customer Result" ;
+  prophet:description "Output payload containing the created customer and onboarding tier." ;
   prophet:hasProperty artisan_bakery_local:fld_aout_register_customer_customer ;
   prophet:hasProperty artisan_bakery_local:fld_aout_register_customer_welcome_tier ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:fld_aout_register_customer_customer a prophet:PropertyDefinition ;
   prophet:name "Customer" ;
+  prophet:description "Reference to the newly registered customer." ;
   prophet:fieldKey "customer" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2301,6 +2531,7 @@ artisan_bakery_local:fld_aout_register_customer_customer a prophet:PropertyDefin
 
 artisan_bakery_local:fld_aout_register_customer_welcome_tier a prophet:PropertyDefinition ;
   prophet:name "Welcome Tier" ;
+  prophet:description "Assigned welcome tier label from onboarding logic." ;
   prophet:fieldKey "welcomeTier" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2308,12 +2539,14 @@ artisan_bakery_local:fld_aout_register_customer_welcome_tier a prophet:PropertyD
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:aout_restock_inventory a prophet:Signal ;
-  prophet:name "RestockInventoryResult" ;
+  prophet:name "Restock Inventory Result" ;
+  prophet:description "Output payload listing inventory items updated during restocking." ;
   prophet:hasProperty artisan_bakery_local:fld_aout_restock_inventory_updated_items ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:fld_aout_restock_inventory_updated_items a prophet:PropertyDefinition ;
   prophet:name "Updated Items" ;
+  prophet:description "Inventory items that were modified by restock processing." ;
   prophet:fieldKey "updatedItems" ;
   prophet:minCardinality 1 ;
   prophet:valueType artisan_bakery_local:fld_aout_restock_inventory_updated_items_list_type ;
@@ -2321,6 +2554,7 @@ artisan_bakery_local:fld_aout_restock_inventory_updated_items a prophet:Property
 
 artisan_bakery_local:sig_invoice_payment_recorded a prophet:Signal ;
   prophet:name "Invoice Payment Recorded" ;
+  prophet:description "Signal emitted when a payment is recorded against an invoice." ;
   prophet:hasProperty artisan_bakery_local:fld_sig_invoice_payment_recorded_amount ;
   prophet:hasProperty artisan_bakery_local:fld_sig_invoice_payment_recorded_invoice ;
   prophet:hasProperty artisan_bakery_local:fld_sig_invoice_payment_recorded_method_details ;
@@ -2328,6 +2562,7 @@ artisan_bakery_local:sig_invoice_payment_recorded a prophet:Signal ;
 
 artisan_bakery_local:fld_sig_invoice_payment_recorded_amount a prophet:PropertyDefinition ;
   prophet:name "Amount" ;
+  prophet:description "Payment amount recorded for the invoice." ;
   prophet:fieldKey "amount" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2336,6 +2571,7 @@ artisan_bakery_local:fld_sig_invoice_payment_recorded_amount a prophet:PropertyD
 
 artisan_bakery_local:fld_sig_invoice_payment_recorded_invoice a prophet:PropertyDefinition ;
   prophet:name "Invoice" ;
+  prophet:description "Invoice reference associated with the recorded payment." ;
   prophet:fieldKey "invoice" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2344,6 +2580,7 @@ artisan_bakery_local:fld_sig_invoice_payment_recorded_invoice a prophet:Property
 
 artisan_bakery_local:fld_sig_invoice_payment_recorded_method_details a prophet:PropertyDefinition ;
   prophet:name "Method Details" ;
+  prophet:description "Structured details describing how the payment was made." ;
   prophet:fieldKey "method_details" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2352,6 +2589,7 @@ artisan_bakery_local:fld_sig_invoice_payment_recorded_method_details a prophet:P
 
 artisan_bakery_local:sig_low_stock_detected a prophet:Signal ;
   prophet:name "Low Stock Detected" ;
+  prophet:description "Signal emitted when an inventory item drops below its reorder threshold." ;
   prophet:hasProperty artisan_bakery_local:fld_sig_low_stock_detected_current_quantity ;
   prophet:hasProperty artisan_bakery_local:fld_sig_low_stock_detected_inventory_item ;
   prophet:hasProperty artisan_bakery_local:fld_sig_low_stock_detected_threshold ;
@@ -2359,6 +2597,7 @@ artisan_bakery_local:sig_low_stock_detected a prophet:Signal ;
 
 artisan_bakery_local:fld_sig_low_stock_detected_current_quantity a prophet:PropertyDefinition ;
   prophet:name "Current Quantity" ;
+  prophet:description "Current on-hand quantity at detection time." ;
   prophet:fieldKey "current_quantity" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2367,6 +2606,7 @@ artisan_bakery_local:fld_sig_low_stock_detected_current_quantity a prophet:Prope
 
 artisan_bakery_local:fld_sig_low_stock_detected_inventory_item a prophet:PropertyDefinition ;
   prophet:name "Inventory Item" ;
+  prophet:description "Inventory item that triggered the low-stock condition." ;
   prophet:fieldKey "inventory_item" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2375,6 +2615,7 @@ artisan_bakery_local:fld_sig_low_stock_detected_inventory_item a prophet:Propert
 
 artisan_bakery_local:fld_sig_low_stock_detected_threshold a prophet:PropertyDefinition ;
   prophet:name "Threshold" ;
+  prophet:description "Configured reorder threshold that was crossed." ;
   prophet:fieldKey "threshold" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2383,12 +2624,14 @@ artisan_bakery_local:fld_sig_low_stock_detected_threshold a prophet:PropertyDefi
 
 artisan_bakery_local:sig_supplier_lead_time_updated a prophet:Signal ;
   prophet:name "Supplier Lead Time Updated" ;
+  prophet:description "Signal emitted when supplier lead-time assumptions are updated." ;
   prophet:hasProperty artisan_bakery_local:fld_sig_supplier_lead_time_updated_lead_time_days ;
   prophet:hasProperty artisan_bakery_local:fld_sig_supplier_lead_time_updated_supplier ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:fld_sig_supplier_lead_time_updated_lead_time_days a prophet:PropertyDefinition ;
   prophet:name "Lead Time Days" ;
+  prophet:description "Updated lead time in days for the supplier." ;
   prophet:fieldKey "lead_time_days" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2397,6 +2640,7 @@ artisan_bakery_local:fld_sig_supplier_lead_time_updated_lead_time_days a prophet
 
 artisan_bakery_local:fld_sig_supplier_lead_time_updated_supplier a prophet:PropertyDefinition ;
   prophet:name "Supplier" ;
+  prophet:description "Supplier whose lead-time information changed." ;
   prophet:fieldKey "supplier" ;
   prophet:minCardinality 1 ;
   prophet:maxCardinality 1 ;
@@ -2409,24 +2653,28 @@ artisan_bakery_local:fld_sig_supplier_lead_time_updated_supplier a prophet:Prope
 
 artisan_bakery_local:trg_on_invoice_payment_recorded a prophet:EventTrigger ;
   prophet:name "On Invoice Payment Recorded" ;
+  prophet:description "Invokes invoice payment transition after payment-recorded signals." ;
   prophet:listensTo artisan_bakery_local:sig_invoice_payment_recorded ;
   prophet:invokes artisan_bakery_local:act_mark_invoice_paid ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:trg_on_low_stock_detected a prophet:EventTrigger ;
   prophet:name "On Low Stock Detected" ;
+  prophet:description "Invokes purchase-order creation when low-stock events are observed." ;
   prophet:listensTo artisan_bakery_local:sig_low_stock_detected ;
   prophet:invokes artisan_bakery_local:act_create_purchase_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:trg_on_purchase_order_received a prophet:EventTrigger ;
   prophet:name "On Purchase Order Received" ;
+  prophet:description "Invokes inventory restocking when purchase-order receipt transitions occur." ;
   prophet:listensTo artisan_bakery_local:trans_purchase_order_receive ;
   prophet:invokes artisan_bakery_local:act_restock_inventory ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
 artisan_bakery_local:trg_on_sales_order_marked_paid a prophet:EventTrigger ;
   prophet:name "On Sales Order Marked Paid" ;
+  prophet:description "Invokes order fulfillment after sales-order payment transitions." ;
   prophet:listensTo artisan_bakery_local:trans_sales_order_mark_paid ;
   prophet:invokes artisan_bakery_local:act_fulfill_sales_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .

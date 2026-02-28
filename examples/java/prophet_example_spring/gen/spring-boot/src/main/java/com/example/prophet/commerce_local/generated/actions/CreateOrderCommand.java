@@ -7,12 +7,30 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Input payload for creating a new order.
+ */
 @Generated("prophet-cli")
 public record CreateOrderCommand(
+    /**
+     * Customer who is placing the order.
+     */
     @NotNull UserRef customer,
+    /**
+     * Requested total amount for the new order.
+     */
     @NotNull BigDecimal totalAmount,
+    /**
+     * Optional discount code applied to the order.
+     */
     String discountCode,
+    /**
+     * Optional labels attached at order creation.
+     */
     List<String> tags,
+    /**
+     * Optional shipping destination for the order.
+     */
     Address shippingAddress
 ) {
 

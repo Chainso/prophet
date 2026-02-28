@@ -4,15 +4,24 @@ import javax.annotation.processing.Generated;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Event payload for 'OrderApproveTransition'.
+ * Moves an order from created to approved.
  */
 @Generated("prophet-cli")
 public record OrderApproveTransition(
     @NotNull String orderId,
     @NotNull String fromState,
     @NotNull String toState,
+    /**
+     * Optional approver identifier captured in the transition.
+     */
     String approvedByUserId,
+    /**
+     * Count of approval notes included with this transition.
+     */
     @NotNull Integer noteCount,
+    /**
+     * Optional reason text supplied for approval.
+     */
     String approvalReason
 ) {
 

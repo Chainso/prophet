@@ -7,6 +7,7 @@ ontology commerce_local {
   type Money {
     name "Money"
     id "type_money"
+    description "Non-negative monetary amount used for order totals."
     base decimal
     constraint min "0.00"
   }
@@ -28,6 +29,7 @@ ontology commerce_local {
       name "Email"
       id "fld_user_email"
       type string
+      description "Primary contact email address for the user."
     }
   }
 
@@ -48,12 +50,14 @@ ontology commerce_local {
       name "Customer"
       id "fld_order_customer"
       type ref(User)
+      description "User who placed the order."
     }
 
     field total_amount {
       name "Total Amount"
       id "fld_order_total_amount"
       type Money
+      description "Total payable amount for the order."
     }
 
     field discount_code {
@@ -61,6 +65,7 @@ ontology commerce_local {
       id "fld_order_discount_code"
       type string
       optional
+      description "Optional promotion code applied to the order."
     }
 
     field tags {
@@ -68,6 +73,7 @@ ontology commerce_local {
       id "fld_order_tags"
       type string[]
       optional
+      description "Optional labels for search, routing, or analytics."
     }
 
     field shipping_address {
@@ -75,6 +81,7 @@ ontology commerce_local {
       id "fld_order_shipping_address"
       type Address
       optional
+      description "Optional destination address for shipment delivery."
     }
 
     field approved_by_user_id {
@@ -82,6 +89,7 @@ ontology commerce_local {
       id "fld_order_approved_by_user_id"
       type string
       optional
+      description "Identifier of the user who approved the order."
     }
 
     field approval_notes {
@@ -89,6 +97,7 @@ ontology commerce_local {
       id "fld_order_approval_notes"
       type string[]
       optional
+      description "Optional reviewer notes captured during approval."
     }
 
     field approval_reason {
@@ -96,6 +105,7 @@ ontology commerce_local {
       id "fld_order_approval_reason"
       type string
       optional
+      description "Optional business reason recorded for approval."
     }
 
     field shipping_carrier {
@@ -103,6 +113,7 @@ ontology commerce_local {
       id "fld_order_shipping_carrier"
       type string
       optional
+      description "Carrier selected to deliver the order."
     }
 
     field shipping_tracking_number {
@@ -110,6 +121,7 @@ ontology commerce_local {
       id "fld_order_shipping_tracking_number"
       type string
       optional
+      description "Tracking identifier assigned by the carrier."
     }
 
     field shipping_package_ids {
@@ -117,27 +129,32 @@ ontology commerce_local {
       id "fld_order_shipping_package_ids"
       type string[]
       optional
+      description "Identifiers for packages included in the shipment."
     }
 
     state created {
       name "Created"
       id "state_order_created"
+      description "Initial lifecycle state before approval."
       initial
     }
 
     state approved {
       name "Approved"
       id "state_order_approved"
+      description "Order has been approved and is ready to ship."
     }
 
     state shipped {
       name "Shipped"
       id "state_order_shipped"
+      description "Order has been shipped to the customer."
     }
 
     transition approve {
       name "Approve"
       id "trans_order_approve"
+      description "Transitions an order from created to approved."
       from created
       to approved
 
@@ -146,12 +163,14 @@ ontology commerce_local {
         id "fld_trans_order_approve_approved_by_user_id"
         type string
         optional
+        description "Optional approver identifier supplied for this transition."
       }
 
       field noteCount {
         name "Note Count"
         id "fld_trans_order_approve_note_count"
         type int
+        description "Number of approval notes included in the request."
       }
 
       field approvalReason {
@@ -159,12 +178,14 @@ ontology commerce_local {
         id "fld_trans_order_approve_approval_reason"
         type string
         optional
+        description "Optional rationale attached to this approval."
       }
     }
 
     transition ship {
       name "Ship"
       id "trans_order_ship"
+      description "Transitions an order from approved to shipped."
       from approved
       to shipped
 
@@ -172,18 +193,21 @@ ontology commerce_local {
         name "Carrier"
         id "fld_trans_order_ship_carrier"
         type string
+        description "Shipping carrier handling delivery."
       }
 
       field trackingNumber {
         name "Tracking Number"
         id "fld_trans_order_ship_tracking_number"
         type string
+        description "Carrier-provided tracking number for the shipment."
       }
 
       field packageIds {
         name "Package IDs"
         id "fld_trans_order_ship_package_ids"
         type string[]
+        description "Package identifiers recorded for this shipment."
       }
     }
   }
@@ -191,34 +215,40 @@ ontology commerce_local {
   struct Address {
     name "Address"
     id "struct_address"
+    description "Postal destination details for shipment delivery."
 
     field line1 {
       name "Line 1"
       id "fld_struct_address_line1"
       type string
+      description "Primary street line of the address."
     }
 
     field city {
       name "City"
       id "fld_struct_address_city"
       type string
+      description "City or locality for the address."
     }
 
     field countryCode {
       name "Country Code"
       id "fld_struct_address_country_code"
       type string
+      description "Country code for the destination address."
     }
   }
 
   struct ApprovalContext {
     name "Approval Context"
     id "struct_approval_context"
+    description "Supplemental context used during order approval."
 
     field approver {
       name "Approver"
       id "fld_struct_approval_context_approver"
       type ref(User)
+      description "Primary user responsible for the approval decision."
     }
 
     field watchers {
@@ -226,6 +256,7 @@ ontology commerce_local {
       id "fld_struct_approval_context_watchers"
       type ref(User)[]
       optional
+      description "Optional users who should be notified of approval updates."
     }
 
     field reason {
@@ -233,6 +264,7 @@ ontology commerce_local {
       id "fld_struct_approval_context_reason"
       type string
       optional
+      description "Optional narrative context for the approval request."
     }
   }
 
@@ -244,17 +276,20 @@ ontology commerce_local {
 
     input {
       id "ain_create_order"
+      description "Input payload required to create a new order."
 
       field customer {
         name "Customer"
         id "fld_ain_create_order_customer"
         type ref(User)
+        description "User for whom the order is being created."
       }
 
       field totalAmount {
         name "Total Amount"
         id "fld_ain_create_order_total_amount"
         type Money
+        description "Total payable amount submitted at order creation."
       }
 
       field discountCode {
@@ -262,6 +297,7 @@ ontology commerce_local {
         id "fld_ain_create_order_discount_code"
         type string
         optional
+        description "Optional promotion code applied during order creation."
       }
 
       field tags {
@@ -269,6 +305,7 @@ ontology commerce_local {
         id "fld_ain_create_order_tags"
         type string[]
         optional
+        description "Optional labels attached when creating the order."
       }
 
       field shippingAddress {
@@ -276,16 +313,19 @@ ontology commerce_local {
         id "fld_ain_create_order_shipping_address"
         type Address
         optional
+        description "Optional shipping destination captured at creation time."
       }
     }
 
     output {
       id "aout_create_order"
+      description "Output payload returning the created order reference."
 
       field order {
         name "Order"
         id "fld_aout_create_order_order"
         type ref(Order)
+        description "Reference to the newly created order."
       }
     }
   }
@@ -304,6 +344,7 @@ ontology commerce_local {
         name "Order"
         id "fld_ain_approve_order_order"
         type ref(Order)
+        description "Order to transition into the approved state."
       }
 
       field approvedBy {
@@ -311,6 +352,7 @@ ontology commerce_local {
         id "fld_ain_approve_order_approved_by"
         type ref(User)
         optional
+        description "Optional user reference for the approver."
       }
 
       field notes {
@@ -318,6 +360,7 @@ ontology commerce_local {
         id "fld_ain_approve_order_notes"
         type list(string)
         optional
+        description "Optional approval notes supplied by the reviewer."
       }
 
       field context {
@@ -325,6 +368,7 @@ ontology commerce_local {
         id "fld_ain_approve_order_context"
         type ApprovalContext
         optional
+        description "Optional structured context accompanying approval."
       }
     }
 
@@ -339,29 +383,34 @@ ontology commerce_local {
 
     input {
       id "ain_ship_order"
+      description "Input payload required to ship an approved order."
 
       field order {
         name "Order"
         id "fld_ain_ship_order_order"
         type ref(Order)
+        description "Approved order to ship."
       }
 
       field carrier {
         name "Carrier"
         id "fld_ain_ship_order_carrier"
         type string
+        description "Carrier responsible for transporting the order."
       }
 
       field trackingNumber {
         name "Tracking Number"
         id "fld_ain_ship_order_tracking_number"
         type string
+        description "Tracking number assigned for shipment monitoring."
       }
 
       field packageIds {
         name "Package IDs"
         id "fld_ain_ship_order_package_ids"
         type string[]
+        description "Package identifiers included in this shipping request."
       }
     }
 
@@ -371,17 +420,20 @@ ontology commerce_local {
   signal PaymentCaptured {
     name "Payment Captured"
     id "sig_payment_captured"
+    description "Event emitted when payment capture for an order succeeds."
 
     field order {
       name "Order"
       id "fld_sig_payment_captured_order"
       type ref(Order)
+      description "Order whose payment was successfully captured."
     }
   }
 
   trigger onPaymentCaptured {
     name "On Payment Captured"
     id "trg_on_payment_captured"
+    description "Invokes order approval after payment capture."
     when event PaymentCaptured
     invoke approveOrder
   }
@@ -389,6 +441,7 @@ ontology commerce_local {
   trigger onOrderApproved {
     name "On Order Approved"
     id "trg_on_order_approved"
+    description "Invokes shipping after the order approval transition."
     when event OrderApproveTransition
     invoke shipOrder
   }

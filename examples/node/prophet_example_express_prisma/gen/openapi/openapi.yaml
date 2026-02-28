@@ -235,6 +235,7 @@ components:
           type: string
           title: Country Code
           x-prophet-display-name: Country Code
+      description: Postal shipping address details.
     ApprovalContext:
       type: object
       required:
@@ -254,6 +255,7 @@ components:
           x-prophet-display-name: Reason
       title: Approval Context
       x-prophet-display-name: Approval Context
+      description: Additional context captured during order approval.
     Order:
       type: object
       required:
@@ -420,6 +422,7 @@ components:
           x-prophet-display-name: Tags
         shippingAddress:
           $ref: '#/components/schemas/Address'
+      description: Input payload for creating a new order.
     Ship Order Command:
       type: object
       required:
@@ -444,6 +447,7 @@ components:
             type: string
           title: Package IDs
           x-prophet-display-name: Package IDs
+      description: Input payload for shipping an approved order.
     Create Order Result:
       type: object
       required:
@@ -451,6 +455,7 @@ components:
       properties:
         order:
           $ref: '#/components/schemas/OrderRef'
+      description: Output payload containing the created order reference.
     PaymentCaptured:
       type: object
       required:
@@ -460,6 +465,7 @@ components:
           $ref: '#/components/schemas/OrderRef'
       title: Payment Captured
       x-prophet-display-name: Payment Captured
+      description: Signal emitted when payment is successfully captured.
     OrderApproveTransition:
       type: object
       required:
@@ -488,6 +494,7 @@ components:
           x-prophet-display-name: Approval Reason
       title: Approve
       x-prophet-display-name: Approve
+      description: Moves an order from created to approved.
     OrderShipTransition:
       type: object
       required:
@@ -520,6 +527,7 @@ components:
           x-prophet-display-name: Package IDs
       title: Ship
       x-prophet-display-name: Ship
+      description: Moves an order from approved to shipped.
     OrderOrderIdFilter:
       type: object
       properties:

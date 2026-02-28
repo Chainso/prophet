@@ -3,10 +3,22 @@ package com.example.prophet.commerce_local.generated.domain;
 import javax.annotation.processing.Generated;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Postal address used for shipping destinations.
+ */
 @Generated("prophet-cli")
 public record Address(
+    /**
+     * Primary street address line.
+     */
     @NotNull String line1,
+    /**
+     * City or locality for the address.
+     */
     @NotNull String city,
+    /**
+     * Country code representing the destination nation.
+     */
     @NotNull String countryCode
 ) {
 

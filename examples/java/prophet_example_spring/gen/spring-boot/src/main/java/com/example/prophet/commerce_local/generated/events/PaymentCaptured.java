@@ -5,10 +5,13 @@ import com.example.prophet.commerce_local.generated.domain.OrderRefOrObject;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Event payload for 'PaymentCaptured'.
+ * Event emitted when payment is successfully captured.
  */
 @Generated("prophet-cli")
 public record PaymentCaptured(
+    /**
+     * Order associated with the captured payment.
+     */
     @NotNull OrderRefOrObject order
 ) {
 

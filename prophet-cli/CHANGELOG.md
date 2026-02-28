@@ -4,6 +4,13 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.24.0] - 2026-02-28
+
+### Changed
+- Added high-quality descriptions across all maintained example ontologies for all DSL concept blocks that support `description` metadata.
+- Regenerated maintained Java/Node/Python/Turtle example artifacts and manifests to reflect ontology description coverage.
+- Toolchain/package version advanced to `0.24.0`.
+
 ## [0.23.0] - 2026-02-28
 
 ### Changed

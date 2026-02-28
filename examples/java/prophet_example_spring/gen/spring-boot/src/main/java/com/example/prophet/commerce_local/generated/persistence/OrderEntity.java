@@ -35,40 +35,73 @@ public class OrderEntity {
     @Column(name = "order_id", nullable = false)
     private String orderId;
 
+    /**
+     * Reference to the user who placed the order.
+     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_user_id", nullable = false)
     private UserEntity customer;
 
+    /**
+     * Total monetary amount recorded for the order.
+     */
     @Column(name = "total_amount", nullable = false)
     private BigDecimal totalAmount;
 
+    /**
+     * Optional promotional code applied during checkout.
+     */
     @Column(name = "discount_code", nullable = true)
     private String discountCode;
 
+    /**
+     * Optional labels used for filtering and analytics.
+     */
     @Convert(converter = OrderTagsListConverter.class)
     @Column(name = "tags", nullable = true, columnDefinition = "text")
     private List<String> tags;
 
+    /**
+     * Optional destination address for order fulfillment.
+     */
     @Convert(converter = OrderShippingAddressStructConverter.class)
     @Column(name = "shipping_address", nullable = true, columnDefinition = "text")
     private Address shippingAddress;
 
+    /**
+     * Optional identifier of the user who approved the order.
+     */
     @Column(name = "approved_by_user_id", nullable = true)
     private String approvedByUserId;
 
+    /**
+     * Optional notes captured while approving the order.
+     */
     @Convert(converter = OrderApprovalNotesListConverter.class)
     @Column(name = "approval_notes", nullable = true, columnDefinition = "text")
     private List<String> approvalNotes;
 
+    /**
+     * Optional reason recorded for the approval decision.
+     */
     @Column(name = "approval_reason", nullable = true)
     private String approvalReason;
 
+    /**
+     * Optional carrier name used for shipment.
+     */
     @Column(name = "shipping_carrier", nullable = true)
     private String shippingCarrier;
 
+    /**
+     * Optional tracking number assigned by the carrier.
+     */
     @Column(name = "shipping_tracking_number", nullable = true)
     private String shippingTrackingNumber;
 
+    /**
+     * Optional identifiers for packages in the shipment.
+     */
     @Convert(converter = OrderShippingPackageIdsListConverter.class)
     @Column(name = "shipping_package_ids", nullable = true, columnDefinition = "text")
     private List<String> shippingPackageIds;

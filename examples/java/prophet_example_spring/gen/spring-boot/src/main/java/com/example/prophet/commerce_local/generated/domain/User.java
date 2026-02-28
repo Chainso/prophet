@@ -12,6 +12,9 @@ public record User(
      * Stable user identifier.
      */
     @NotNull String userId,
+    /**
+     * Email address used to contact the user.
+     */
     @NotNull String email
 ) implements UserRefOrObject {
 

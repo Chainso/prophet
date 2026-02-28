@@ -1,12 +1,12 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.22.0",
+  "toolchain_version": "0.24.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_support_local",
     "name": "support_local",
     "display_name": "Support Local",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "Minimal support ontology used for Turtle target examples."
   },
   "types": [
@@ -18,7 +18,8 @@
       "base": "string",
       "constraints": {
         "pattern": "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$"
-      }
+      },
+      "description": "Email address value validated by a lightweight format pattern."
     }
   ],
   "objects": [
@@ -39,7 +40,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable ticket identifier."
         },
         {
           "id": "fld_ticket_title",
@@ -52,7 +54,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Short summary describing the support issue."
         },
         {
           "id": "fld_ticket_assignee",
@@ -65,7 +68,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional assignee details for the user handling the ticket."
         },
         {
           "id": "fld_ticket_tags",
@@ -81,7 +85,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Optional labels used to categorize or filter tickets."
         }
       ],
       "keys": {
@@ -99,13 +104,15 @@
           "id": "state_ticket_new",
           "name": "New",
           "display_name": "New",
-          "initial": true
+          "initial": true,
+          "description": "Initial lifecycle state before triage occurs."
         },
         {
           "id": "state_ticket_triaged",
           "name": "Triaged",
           "display_name": "Triaged",
-          "initial": false
+          "initial": false,
+          "description": "Lifecycle state after the ticket has been triaged."
         }
       ],
       "transitions": [
@@ -114,9 +121,11 @@
           "name": "Triage",
           "display_name": "Triage",
           "from_state_id": "state_ticket_new",
-          "to_state_id": "state_ticket_triaged"
+          "to_state_id": "state_ticket_triaged",
+          "description": "Moves a ticket from New to Triaged."
         }
-      ]
+      ],
+      "description": "Support request tracked through a minimal triage lifecycle."
     }
   ],
   "structs": [
@@ -136,7 +145,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Stable user identifier for the referenced assignee."
         },
         {
           "id": "fld_struct_user_ref_email",
@@ -149,16 +159,18 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional email address for contacting the assignee."
         }
-      ]
+      ],
+      "description": "Lightweight user identity details used for ticket assignment."
     }
   ],
   "action_inputs": [
     {
       "id": "ain_triage_ticket",
-      "name": "TriageTicketCommand",
-      "display_name": "TriageTicketCommand",
+      "name": "Triage Ticket Command",
+      "display_name": "Triage Ticket Command",
       "fields": [
         {
           "id": "fld_ain_triage_ticket_ticket",
@@ -171,9 +183,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the ticket that should be triaged."
         }
-      ]
+      ],
+      "description": "Input payload identifying which ticket to triage."
     }
   ],
   "actions": [
@@ -183,14 +197,15 @@
       "display_name": "Triage Ticket",
       "kind": "process",
       "input_shape_id": "ain_triage_ticket",
-      "output_event_id": "aout_triage_ticket"
+      "output_event_id": "aout_triage_ticket",
+      "description": "Runs ticket triage and returns the updated ticket state."
     }
   ],
   "events": [
     {
       "id": "aout_triage_ticket",
-      "name": "TriageTicketResult",
-      "display_name": "TriageTicketResult",
+      "name": "Triage Ticket Result",
+      "display_name": "Triage Ticket Result",
       "kind": "signal",
       "fields": [
         {
@@ -204,7 +219,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the ticket after triage processing."
         },
         {
           "id": "fld_aout_triage_ticket_new_state",
@@ -217,9 +233,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "State name assigned to the ticket after triage."
         }
-      ]
+      ],
+      "description": "Result payload with the triaged ticket and resulting state."
     },
     {
       "id": "sig_ticket_created",
@@ -238,9 +256,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the newly created ticket."
         }
-      ]
+      ],
+      "description": "Event emitted when a new ticket is created."
     },
     {
       "id": "trans_ticket_triage",
@@ -288,7 +308,8 @@
       "object_id": "obj_ticket",
       "transition_id": "trans_ticket_triage",
       "from_state_id": "state_ticket_new",
-      "to_state_id": "state_ticket_triaged"
+      "to_state_id": "state_ticket_triaged",
+      "description": "Moves a ticket from New to Triaged."
     }
   ],
   "triggers": [
@@ -297,7 +318,8 @@
       "name": "onTicketCreated",
       "display_name": "On Ticket Created",
       "event_id": "sig_ticket_created",
-      "action_id": "act_triage_ticket"
+      "action_id": "act_triage_ticket",
+      "description": "Starts triage when the TicketCreated event is observed."
     }
   ],
   "query_contracts": [
@@ -355,5 +377,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "fa69e4300b3d10c42435b689a584fc0d9713d0fa7137130dda42950aac6ef377",
-  "ir_hash": "38a045cef21e6817ab756e0375362c464509502f70922d3edce0c7cf90e9ca0e"
+  "ir_hash": "749eaaffd12fb40bf34fd2579421cdec07f7312bf26c939c7e72dce5e9a90007"
 }

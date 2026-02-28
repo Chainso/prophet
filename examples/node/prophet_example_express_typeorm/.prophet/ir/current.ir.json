@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.23.0",
+  "toolchain_version": "0.24.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_commerce_local",
@@ -18,7 +18,8 @@
       "base": "decimal",
       "constraints": {
         "min": "0.00"
-      }
+      },
+      "description": "Monetary amount expressed as a non-negative decimal value."
     }
   ],
   "objects": [
@@ -53,7 +54,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the customer who owns the order."
         },
         {
           "id": "fld_order_total_amount",
@@ -66,7 +68,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Total payable amount for the order before shipment."
         },
         {
           "id": "fld_order_discount_code",
@@ -79,7 +82,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Promotional code applied during order creation."
         },
         {
           "id": "fld_order_tags",
@@ -95,7 +99,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Optional labels used to categorize or search orders."
         },
         {
           "id": "fld_order_shipping_address",
@@ -108,7 +113,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Destination address used when fulfilling the order."
         },
         {
           "id": "fld_order_approved_by_user_id",
@@ -121,7 +127,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Identifier of the user who approved the order."
         },
         {
           "id": "fld_order_approval_notes",
@@ -137,7 +144,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Optional notes recorded as part of order approval."
         },
         {
           "id": "fld_order_approval_reason",
@@ -150,7 +158,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Business reason captured when the order is approved."
         },
         {
           "id": "fld_order_shipping_carrier",
@@ -163,7 +172,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Carrier selected to transport the order."
         },
         {
           "id": "fld_order_shipping_tracking_number",
@@ -176,7 +186,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Tracking number assigned by the shipping carrier."
         },
         {
           "id": "fld_order_shipping_package_ids",
@@ -192,7 +203,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Identifiers for packages included in this shipment."
         }
       ],
       "keys": {
@@ -210,19 +222,22 @@
           "id": "state_order_created",
           "name": "created",
           "display_name": "Created",
-          "initial": true
+          "initial": true,
+          "description": "Initial state after order creation and before approval."
         },
         {
           "id": "state_order_approved",
           "name": "approved",
           "display_name": "Approved",
-          "initial": false
+          "initial": false,
+          "description": "State indicating the order has been approved for shipping."
         },
         {
           "id": "state_order_shipped",
           "name": "shipped",
           "display_name": "Shipped",
-          "initial": false
+          "initial": false,
+          "description": "Final state after shipment details are recorded."
         }
       ],
       "transitions": [
@@ -231,14 +246,16 @@
           "name": "approve",
           "display_name": "Approve",
           "from_state_id": "state_order_created",
-          "to_state_id": "state_order_approved"
+          "to_state_id": "state_order_approved",
+          "description": "Moves an order from created to approved."
         },
         {
           "id": "trans_order_ship",
           "name": "ship",
           "display_name": "Ship",
           "from_state_id": "state_order_approved",
-          "to_state_id": "state_order_shipped"
+          "to_state_id": "state_order_shipped",
+          "description": "Moves an order from approved to shipped."
         }
       ],
       "description": "Customer order aggregate."
@@ -274,7 +291,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Primary contact email address for the user."
         }
       ],
       "keys": {
@@ -309,7 +327,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Primary street address line."
         },
         {
           "id": "fld_struct_address_city",
@@ -322,7 +341,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "City or locality for the address."
         },
         {
           "id": "fld_struct_address_country_code",
@@ -335,9 +355,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "ISO-like country code for the shipping destination."
         }
-      ]
+      ],
+      "description": "Postal address details used for shipping destinations."
     },
     {
       "id": "struct_approval_context",
@@ -355,7 +377,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "User reference for the approver in the provided context."
         },
         {
           "id": "fld_struct_approval_context_watchers",
@@ -371,7 +394,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Optional users who should be informed about approval."
         },
         {
           "id": "fld_struct_approval_context_reason",
@@ -384,9 +408,11 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional free-form rationale in approval context."
         }
-      ]
+      ],
+      "description": "Supplemental context supplied when approving an order."
     }
   ],
   "action_inputs": [
@@ -406,7 +432,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Order reference to approve."
         },
         {
           "id": "fld_ain_approve_order_approved_by",
@@ -419,7 +446,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional approver reference for audit and tracing."
         },
         {
           "id": "fld_ain_approve_order_notes",
@@ -435,7 +463,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Optional approval notes supplied as a list of strings."
         },
         {
           "id": "fld_ain_approve_order_context",
@@ -448,7 +477,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional structured context passed into approval."
         }
       ],
       "description": "Input payload for approving an order."
@@ -469,7 +499,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Customer reference for the order being created."
         },
         {
           "id": "fld_ain_create_order_total_amount",
@@ -482,7 +513,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Order total amount supplied at creation."
         },
         {
           "id": "fld_ain_create_order_discount_code",
@@ -495,7 +527,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional promotion code to apply at creation."
         },
         {
           "id": "fld_ain_create_order_tags",
@@ -511,7 +544,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Optional labels attached when creating the order."
         },
         {
           "id": "fld_ain_create_order_shipping_address",
@@ -524,9 +558,11 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional shipping destination provided at creation."
         }
-      ]
+      ],
+      "description": "Input payload used to create a new order."
     },
     {
       "id": "ain_ship_order",
@@ -544,7 +580,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Order reference to ship."
         },
         {
           "id": "fld_ain_ship_order_carrier",
@@ -557,7 +594,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Shipping carrier chosen for fulfillment."
         },
         {
           "id": "fld_ain_ship_order_tracking_number",
@@ -570,7 +608,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Carrier-provided tracking number for the shipment."
         },
         {
           "id": "fld_ain_ship_order_package_ids",
@@ -586,9 +625,11 @@
           "cardinality": {
             "min": 1,
             "max": "many"
-          }
+          },
+          "description": "Package identifiers included in this shipment."
         }
-      ]
+      ],
+      "description": "Input payload used to ship an approved order."
     }
   ],
   "actions": [
@@ -638,9 +679,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the newly created order."
         }
-      ]
+      ],
+      "description": "Output payload returned after creating an order."
     },
     {
       "id": "sig_payment_captured",
@@ -659,9 +702,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Order associated with the captured payment signal."
         }
-      ]
+      ],
+      "description": "Signal emitted when payment is successfully captured."
     },
     {
       "id": "trans_order_approve",
@@ -716,7 +761,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "User identifier supplied with the approval transition."
         },
         {
           "id": "fld_trans_order_approve_note_count",
@@ -729,7 +775,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Number of approval notes included with this transition."
         },
         {
           "id": "fld_trans_order_approve_approval_reason",
@@ -742,13 +789,15 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Reason supplied by the approver for this transition."
         }
       ],
       "object_id": "obj_order",
       "transition_id": "trans_order_approve",
       "from_state_id": "state_order_created",
-      "to_state_id": "state_order_approved"
+      "to_state_id": "state_order_approved",
+      "description": "Moves an order from created to approved."
     },
     {
       "id": "trans_order_ship",
@@ -803,7 +852,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Carrier used to fulfill this shipment transition."
         },
         {
           "id": "fld_trans_order_ship_tracking_number",
@@ -816,7 +866,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Carrier tracking number captured at shipment time."
         },
         {
           "id": "fld_trans_order_ship_package_ids",
@@ -832,13 +883,15 @@
           "cardinality": {
             "min": 1,
             "max": "many"
-          }
+          },
+          "description": "Package identifiers associated with this shipment."
         }
       ],
       "object_id": "obj_order",
       "transition_id": "trans_order_ship",
       "from_state_id": "state_order_approved",
-      "to_state_id": "state_order_shipped"
+      "to_state_id": "state_order_shipped",
+      "description": "Moves an order from approved to shipped."
     }
   ],
   "triggers": [
@@ -847,14 +900,16 @@
       "name": "onOrderApproved",
       "display_name": "On Order Approved",
       "event_id": "trans_order_approve",
-      "action_id": "act_ship_order"
+      "action_id": "act_ship_order",
+      "description": "Automatically invokes shipping after order approval."
     },
     {
       "id": "trg_on_payment_captured",
       "name": "onPaymentCaptured",
       "display_name": "On Payment Captured",
       "event_id": "sig_payment_captured",
-      "action_id": "act_approve_order"
+      "action_id": "act_approve_order",
+      "description": "Automatically invokes order approval after payment capture."
     }
   ],
   "query_contracts": [
@@ -1000,5 +1055,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "026cc621cb86c87effeb4d1c95d64d9f993c65869a205b9346d57dc90f5ad261",
-  "ir_hash": "30d3ada2058aeb6d5767181fcade6e20fa46cc617ac569e0013564166ce444d8"
+  "ir_hash": "5fb742423e3260e5f69faf4f0890743452a562de20b32aeed9962662e4bc355b"
 }

@@ -1,12 +1,12 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.22.0",
+  "toolchain_version": "0.24.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_artisan_bakery_local",
     "name": "artisan_bakery_local",
     "display_name": "Artisan Bakery Local",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "Operations ontology for a neighborhood bakery: catalog, customers, inventory, purchasing, invoicing, and fulfillment."
   },
   "types": [
@@ -18,7 +18,8 @@
       "base": "string",
       "constraints": {
         "pattern": "^[A-Z]{3}$"
-      }
+      },
+      "description": "Three-letter uppercase ISO-style code used for currency and code fields."
     },
     {
       "id": "type_email",
@@ -28,7 +29,8 @@
       "base": "string",
       "constraints": {
         "pattern": "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$"
-      }
+      },
+      "description": "Email address string validated with a basic local@domain pattern."
     },
     {
       "id": "type_money",
@@ -38,7 +40,8 @@
       "base": "decimal",
       "constraints": {
         "min": "0.00"
-      }
+      },
+      "description": "Non-negative monetary amount used for prices, totals, and balances."
     },
     {
       "id": "type_phone_number",
@@ -48,7 +51,8 @@
       "base": "string",
       "constraints": {
         "pattern": "^\\\\+?[0-9][0-9\\\\- ]{7,19}$"
-      }
+      },
+      "description": "Phone number string supporting optional leading plus and separators."
     },
     {
       "id": "type_quantity",
@@ -58,7 +62,8 @@
       "base": "decimal",
       "constraints": {
         "min": "0.00"
-      }
+      },
+      "description": "Non-negative quantity used for inventory counts and ordered amounts."
     }
   ],
   "objects": [
@@ -79,7 +84,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the customer record."
         },
         {
           "id": "fld_customer_full_name",
@@ -92,7 +98,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Customer's full display name."
         },
         {
           "id": "fld_customer_email",
@@ -105,7 +112,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional primary email address for customer contact."
         },
         {
           "id": "fld_customer_phone",
@@ -118,7 +126,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional primary phone number for customer contact."
         },
         {
           "id": "fld_customer_billing_address",
@@ -131,7 +140,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional billing address used for invoices and statements."
         },
         {
           "id": "fld_customer_shipping_address",
@@ -144,7 +154,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional default shipping destination for deliveries."
         },
         {
           "id": "fld_customer_preferred_currency",
@@ -157,7 +168,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional preferred currency code for quotes and invoices."
         },
         {
           "id": "fld_customer_loyalty_points",
@@ -170,7 +182,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional accumulated loyalty points for rewards programs."
         },
         {
           "id": "fld_customer_tags",
@@ -186,7 +199,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Optional labels used for segmentation and outreach workflows."
         }
       ],
       "keys": {
@@ -200,7 +214,8 @@
         }
       },
       "states": [],
-      "transitions": []
+      "transitions": [],
+      "description": "Customer account used for sales, invoicing, and fulfillment preferences."
     },
     {
       "id": "obj_delivery",
@@ -219,7 +234,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the delivery."
         },
         {
           "id": "fld_delivery_sales_order",
@@ -232,7 +248,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Sales order fulfilled by this delivery."
         },
         {
           "id": "fld_delivery_destination",
@@ -245,7 +262,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Destination address where the delivery should arrive."
         },
         {
           "id": "fld_delivery_carrier",
@@ -258,7 +276,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional carrier responsible for transport."
         },
         {
           "id": "fld_delivery_tracking_number",
@@ -271,7 +290,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional carrier tracking number for shipment visibility."
         },
         {
           "id": "fld_delivery_scheduled_for",
@@ -284,7 +304,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional scheduled delivery or dispatch timestamp."
         },
         {
           "id": "fld_delivery_delivered_at",
@@ -297,7 +318,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional timestamp when delivery completion was confirmed."
         },
         {
           "id": "fld_delivery_status_text",
@@ -310,7 +332,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Current human-readable delivery status."
         }
       ],
       "keys": {
@@ -324,7 +347,8 @@
         }
       },
       "states": [],
-      "transitions": []
+      "transitions": [],
+      "description": "Delivery record for shipping or handoff logistics tied to a sales order."
     },
     {
       "id": "obj_employee",
@@ -343,7 +367,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the employee record."
         },
         {
           "id": "fld_employee_full_name",
@@ -356,7 +381,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Employee's full display name."
         },
         {
           "id": "fld_employee_email",
@@ -369,7 +395,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Work email address used for communication and notifications."
         },
         {
           "id": "fld_employee_phone",
@@ -382,7 +409,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional work or mobile phone number for the employee."
         },
         {
           "id": "fld_employee_role",
@@ -395,7 +423,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Role or job function assigned to the employee."
         },
         {
           "id": "fld_employee_manager",
@@ -408,7 +437,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional manager reference for reporting structure."
         },
         {
           "id": "fld_employee_active",
@@ -421,7 +451,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Indicates whether the employee is currently active."
         }
       ],
       "keys": {
@@ -435,7 +466,8 @@
         }
       },
       "states": [],
-      "transitions": []
+      "transitions": [],
+      "description": "Employee record for staff members who operate and approve bakery workflows."
     },
     {
       "id": "obj_inventory_item",
@@ -454,7 +486,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the inventory item."
         },
         {
           "id": "fld_inventory_item_product",
@@ -467,7 +500,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Product reference represented by this inventory position."
         },
         {
           "id": "fld_inventory_item_quantity_on_hand",
@@ -480,7 +514,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Current available stock quantity in inventory."
         },
         {
           "id": "fld_inventory_item_reorder_threshold",
@@ -493,7 +528,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Quantity threshold that indicates low-stock risk."
         },
         {
           "id": "fld_inventory_item_reorder_quantity",
@@ -506,7 +542,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Suggested replenishment quantity when stock is low."
         },
         {
           "id": "fld_inventory_item_location_code",
@@ -519,7 +556,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Storage location code where this inventory is kept."
         },
         {
           "id": "fld_inventory_item_lot_code",
@@ -532,7 +570,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional lot or batch identifier for traceability."
         },
         {
           "id": "fld_inventory_item_expires_on",
@@ -545,7 +584,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional expiration date for perishable inventory."
         },
         {
           "id": "fld_inventory_item_last_restocked_at",
@@ -558,7 +598,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional timestamp of the most recent restock event."
         }
       ],
       "keys": {
@@ -572,7 +613,8 @@
         }
       },
       "states": [],
-      "transitions": []
+      "transitions": [],
+      "description": "Inventory position tracking on-hand quantities and reorder settings for a product."
     },
     {
       "id": "obj_invoice",
@@ -591,7 +633,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the invoice."
         },
         {
           "id": "fld_invoice_sales_order",
@@ -604,7 +647,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Sales order that this invoice bills."
         },
         {
           "id": "fld_invoice_issued_at",
@@ -617,7 +661,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when the invoice was issued."
         },
         {
           "id": "fld_invoice_due_on",
@@ -630,7 +675,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Payment due date for the invoice."
         },
         {
           "id": "fld_invoice_subtotal",
@@ -643,7 +689,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Pre-tax billed amount on the invoice."
         },
         {
           "id": "fld_invoice_tax_amount",
@@ -656,7 +703,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Tax component billed on the invoice."
         },
         {
           "id": "fld_invoice_total_due",
@@ -669,7 +717,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Total amount due on the invoice."
         },
         {
           "id": "fld_invoice_balance_due",
@@ -682,7 +731,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Remaining unpaid balance on the invoice."
         },
         {
           "id": "fld_invoice_currency",
@@ -695,7 +745,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Currency code used for invoice monetary values."
         }
       ],
       "keys": {
@@ -713,19 +764,22 @@
           "id": "state_invoice_issued",
           "name": "issued",
           "display_name": "Issued",
-          "initial": true
+          "initial": true,
+          "description": "Initial state after the invoice has been issued."
         },
         {
           "id": "state_invoice_paid",
           "name": "paid",
           "display_name": "Paid",
-          "initial": false
+          "initial": false,
+          "description": "State after the invoice has been fully paid."
         },
         {
           "id": "state_invoice_overdue",
           "name": "overdue",
           "display_name": "Overdue",
-          "initial": false
+          "initial": false,
+          "description": "State when payment is past due and outstanding."
         }
       ],
       "transitions": [
@@ -734,16 +788,19 @@
           "name": "markPaid",
           "display_name": "Mark Paid",
           "from_state_id": "state_invoice_issued",
-          "to_state_id": "state_invoice_paid"
+          "to_state_id": "state_invoice_paid",
+          "description": "Moves an invoice from issued to paid."
         },
         {
           "id": "trans_invoice_mark_overdue",
           "name": "markOverdue",
           "display_name": "Mark Overdue",
           "from_state_id": "state_invoice_issued",
-          "to_state_id": "state_invoice_overdue"
+          "to_state_id": "state_invoice_overdue",
+          "description": "Moves an invoice from issued to overdue."
         }
-      ]
+      ],
+      "description": "Invoice record for billing and payment tracking of a sales order."
     },
     {
       "id": "obj_product",
@@ -762,7 +819,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the product."
         },
         {
           "id": "fld_product_sku",
@@ -776,7 +834,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "display"
+          "key": "display",
+          "description": "Display key stock-keeping unit used in operations and labeling."
         },
         {
           "id": "fld_product_name",
@@ -790,7 +849,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "display"
+          "key": "display",
+          "description": "Display name of the product in catalogs and order lines."
         },
         {
           "id": "fld_product_description",
@@ -803,7 +863,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional customer-facing or internal product description text."
         },
         {
           "id": "fld_product_supplier",
@@ -816,7 +877,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Supplier reference that provides this product."
         },
         {
           "id": "fld_product_list_price",
@@ -829,7 +891,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Standard sales price before discounts or adjustments."
         },
         {
           "id": "fld_product_cost_price",
@@ -842,7 +905,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional unit cost paid to acquire this product."
         },
         {
           "id": "fld_product_active",
@@ -855,7 +919,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Indicates whether the product is currently offered."
         },
         {
           "id": "fld_product_tags",
@@ -871,7 +936,8 @@
           "cardinality": {
             "min": 0,
             "max": "many"
-          }
+          },
+          "description": "Optional labels used for merchandising and reporting."
         }
       ],
       "keys": {
@@ -888,7 +954,8 @@
         }
       },
       "states": [],
-      "transitions": []
+      "transitions": [],
+      "description": "Catalog product sold to customers and sourced from a supplier."
     },
     {
       "id": "obj_purchase_order",
@@ -907,7 +974,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the purchase order."
         },
         {
           "id": "fld_purchase_order_supplier",
@@ -920,7 +988,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Supplier receiving and fulfilling this purchase order."
         },
         {
           "id": "fld_purchase_order_requested_by",
@@ -933,7 +1002,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Employee who requested creation of this purchase order."
         },
         {
           "id": "fld_purchase_order_lines",
@@ -949,7 +1019,8 @@
           "cardinality": {
             "min": 1,
             "max": "many"
-          }
+          },
+          "description": "Line items describing products, quantities, and costs to procure."
         },
         {
           "id": "fld_purchase_order_notes",
@@ -962,7 +1033,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional internal procurement notes for this order."
         },
         {
           "id": "fld_purchase_order_submitted_at",
@@ -975,7 +1047,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional timestamp when the order was submitted to the supplier."
         },
         {
           "id": "fld_purchase_order_received_at",
@@ -988,7 +1061,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional timestamp when goods were received."
         },
         {
           "id": "fld_purchase_order_total_cost",
@@ -1001,7 +1075,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional total expected or actual cost for the order."
         }
       ],
       "keys": {
@@ -1019,25 +1094,29 @@
           "id": "state_purchase_order_draft",
           "name": "draft",
           "display_name": "Draft",
-          "initial": true
+          "initial": true,
+          "description": "Initial state while purchase details are still being prepared."
         },
         {
           "id": "state_purchase_order_submitted",
           "name": "submitted",
           "display_name": "Submitted",
-          "initial": false
+          "initial": false,
+          "description": "State after the purchase order has been sent to the supplier."
         },
         {
           "id": "state_purchase_order_received",
           "name": "received",
           "display_name": "Received",
-          "initial": false
+          "initial": false,
+          "description": "State after ordered goods have been received."
         },
         {
           "id": "state_purchase_order_closed",
           "name": "closed",
           "display_name": "Closed",
-          "initial": false
+          "initial": false,
+          "description": "Final state once the purchase order lifecycle is complete."
         }
       ],
       "transitions": [
@@ -1046,23 +1125,27 @@
           "name": "submit",
           "display_name": "Submit",
           "from_state_id": "state_purchase_order_draft",
-          "to_state_id": "state_purchase_order_submitted"
+          "to_state_id": "state_purchase_order_submitted",
+          "description": "Moves a purchase order from draft to submitted."
         },
         {
           "id": "trans_purchase_order_receive",
           "name": "receive",
           "display_name": "Receive",
           "from_state_id": "state_purchase_order_submitted",
-          "to_state_id": "state_purchase_order_received"
+          "to_state_id": "state_purchase_order_received",
+          "description": "Moves a purchase order from submitted to received."
         },
         {
           "id": "trans_purchase_order_close",
           "name": "close",
           "display_name": "Close",
           "from_state_id": "state_purchase_order_received",
-          "to_state_id": "state_purchase_order_closed"
+          "to_state_id": "state_purchase_order_closed",
+          "description": "Moves a purchase order from received to closed."
         }
-      ]
+      ],
+      "description": "Supplier procurement order tracked through draft, submission, receipt, and closure."
     },
     {
       "id": "obj_sales_order",
@@ -1081,7 +1164,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the sales order."
         },
         {
           "id": "fld_sales_order_customer",
@@ -1094,7 +1178,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Customer placing this sales order."
         },
         {
           "id": "fld_sales_order_created_by",
@@ -1107,7 +1192,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Employee who created the sales order record."
         },
         {
           "id": "fld_sales_order_lines",
@@ -1123,7 +1209,8 @@
           "cardinality": {
             "min": 1,
             "max": "many"
-          }
+          },
+          "description": "Ordered product line items with quantities and unit prices."
         },
         {
           "id": "fld_sales_order_requested_fulfillment_date",
@@ -1136,7 +1223,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional customer-requested date for fulfillment."
         },
         {
           "id": "fld_sales_order_subtotal",
@@ -1149,7 +1237,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Pre-tax total amount for all order lines."
         },
         {
           "id": "fld_sales_order_tax_amount",
@@ -1162,7 +1251,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Tax amount applied to the sales order."
         },
         {
           "id": "fld_sales_order_total_amount",
@@ -1175,7 +1265,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Final amount due including taxes and adjustments."
         },
         {
           "id": "fld_sales_order_invoice",
@@ -1188,7 +1279,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional invoice generated for this sales order."
         },
         {
           "id": "fld_sales_order_notes",
@@ -1201,7 +1293,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional notes about customer requests or handling."
         }
       ],
       "keys": {
@@ -1219,25 +1312,29 @@
           "id": "state_sales_order_pending_payment",
           "name": "pending_payment",
           "display_name": "Pending Payment",
-          "initial": true
+          "initial": true,
+          "description": "Initial state while payment is still outstanding."
         },
         {
           "id": "state_sales_order_paid",
           "name": "paid",
           "display_name": "Paid",
-          "initial": false
+          "initial": false,
+          "description": "State after full payment has been recorded."
         },
         {
           "id": "state_sales_order_fulfilled",
           "name": "fulfilled",
           "display_name": "Fulfilled",
-          "initial": false
+          "initial": false,
+          "description": "State after order items have been delivered or completed."
         },
         {
           "id": "state_sales_order_cancelled",
           "name": "cancelled",
           "display_name": "Cancelled",
-          "initial": false
+          "initial": false,
+          "description": "Terminal state for orders cancelled before completion."
         }
       ],
       "transitions": [
@@ -1246,23 +1343,27 @@
           "name": "markPaid",
           "display_name": "Mark Paid",
           "from_state_id": "state_sales_order_pending_payment",
-          "to_state_id": "state_sales_order_paid"
+          "to_state_id": "state_sales_order_paid",
+          "description": "Moves a sales order from pending payment to paid."
         },
         {
           "id": "trans_sales_order_fulfill",
           "name": "fulfill",
           "display_name": "Fulfill",
           "from_state_id": "state_sales_order_paid",
-          "to_state_id": "state_sales_order_fulfilled"
+          "to_state_id": "state_sales_order_fulfilled",
+          "description": "Moves a paid sales order to fulfilled."
         },
         {
           "id": "trans_sales_order_cancel",
           "name": "cancel",
           "display_name": "Cancel",
           "from_state_id": "state_sales_order_pending_payment",
-          "to_state_id": "state_sales_order_cancelled"
+          "to_state_id": "state_sales_order_cancelled",
+          "description": "Moves a pending-payment sales order to cancelled."
         }
-      ]
+      ],
+      "description": "Customer sales order tracked through payment and fulfillment lifecycle states."
     },
     {
       "id": "obj_supplier",
@@ -1281,7 +1382,8 @@
             "min": 1,
             "max": 1
           },
-          "key": "primary"
+          "key": "primary",
+          "description": "Stable primary identifier for the supplier."
         },
         {
           "id": "fld_supplier_legal_name",
@@ -1294,7 +1396,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Registered legal name of the supplier organization."
         },
         {
           "id": "fld_supplier_primary_contact",
@@ -1307,7 +1410,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Primary contact details for day-to-day supplier communication."
         },
         {
           "id": "fld_supplier_payment_terms_days",
@@ -1320,7 +1424,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional payment term duration in days."
         },
         {
           "id": "fld_supplier_address",
@@ -1333,7 +1438,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional mailing or fulfillment address for the supplier."
         },
         {
           "id": "fld_supplier_active",
@@ -1346,7 +1452,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Indicates whether the supplier is currently approved for use."
         }
       ],
       "keys": {
@@ -1360,7 +1467,8 @@
         }
       },
       "states": [],
-      "transitions": []
+      "transitions": [],
+      "description": "Supplier organization that provides products and procurement terms."
     }
   ],
   "structs": [
@@ -1380,7 +1488,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Primary street line for the address."
         },
         {
           "id": "fld_struct_address_line2",
@@ -1393,7 +1502,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Secondary street line such as suite, unit, or apartment."
         },
         {
           "id": "fld_struct_address_city",
@@ -1406,7 +1516,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "City or locality component of the address."
         },
         {
           "id": "fld_struct_address_region",
@@ -1419,7 +1530,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional state, province, or administrative region."
         },
         {
           "id": "fld_struct_address_postal_code",
@@ -1432,7 +1544,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Postal or ZIP code used for mail routing."
         },
         {
           "id": "fld_struct_address_country_code",
@@ -1445,9 +1558,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Three-letter country code for the address destination."
         }
-      ]
+      ],
+      "description": "Postal address structure used for customer, supplier, and delivery locations."
     },
     {
       "id": "struct_contact_point",
@@ -1465,7 +1580,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Contact person's display name."
         },
         {
           "id": "fld_struct_contact_point_email",
@@ -1478,7 +1594,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Contact email address for correspondence."
         },
         {
           "id": "fld_struct_contact_point_phone",
@@ -1491,9 +1608,11 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Contact phone number for voice or SMS communication."
         }
-      ]
+      ],
+      "description": "Reusable contact details for a person or business representative."
     },
     {
       "id": "struct_payment_method_details",
@@ -1511,7 +1630,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Payment method used, such as card, cash, or bank transfer."
         },
         {
           "id": "fld_struct_payment_method_details_provider_reference",
@@ -1524,7 +1644,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional processor or gateway reference identifier."
         },
         {
           "id": "fld_struct_payment_method_details_note",
@@ -1537,9 +1658,11 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional internal note about the payment method or transaction."
         }
-      ]
+      ],
+      "description": "Structured payment metadata captured when recording an invoice payment."
     },
     {
       "id": "struct_purchase_order_line",
@@ -1557,7 +1680,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Referenced product being purchased from the supplier."
         },
         {
           "id": "fld_struct_purchase_order_line_quantity",
@@ -1570,7 +1694,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Requested quantity for the referenced product."
         },
         {
           "id": "fld_struct_purchase_order_line_unit_cost",
@@ -1583,9 +1708,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Per-unit acquisition cost expected for this line."
         }
-      ]
+      ],
+      "description": "Line item representing a product, quantity, and unit cost on a purchase order."
     },
     {
       "id": "struct_sales_order_line",
@@ -1603,7 +1730,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Referenced product being sold on this line."
         },
         {
           "id": "fld_struct_sales_order_line_quantity",
@@ -1616,7 +1744,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Ordered quantity for the referenced product."
         },
         {
           "id": "fld_struct_sales_order_line_unit_price",
@@ -1629,7 +1758,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Per-unit sales price applied to this line item."
         },
         {
           "id": "fld_struct_sales_order_line_note",
@@ -1642,16 +1772,18 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional free-text note specific to this sales line."
         }
-      ]
+      ],
+      "description": "Line item representing a product, quantity, and unit price on a sales order."
     }
   ],
   "action_inputs": [
     {
       "id": "ain_adjust_inventory",
-      "name": "AdjustInventoryCommand",
-      "display_name": "AdjustInventoryCommand",
+      "name": "Adjust Inventory Command",
+      "display_name": "Adjust Inventory Command",
       "fields": [
         {
           "id": "fld_ain_adjust_inventory_inventory_item",
@@ -1664,7 +1796,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Inventory item whose quantity should be adjusted."
         },
         {
           "id": "fld_ain_adjust_inventory_delta",
@@ -1677,7 +1810,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Quantity adjustment magnitude to apply to the inventory item."
         },
         {
           "id": "fld_ain_adjust_inventory_reason",
@@ -1690,14 +1824,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Business reason for the inventory adjustment."
         }
-      ]
+      ],
+      "description": "Input payload for manually adjusting inventory levels."
     },
     {
       "id": "ain_cancel_sales_order",
-      "name": "CancelSalesOrderCommand",
-      "display_name": "CancelSalesOrderCommand",
+      "name": "Cancel Sales Order Command",
+      "display_name": "Cancel Sales Order Command",
       "fields": [
         {
           "id": "fld_ain_cancel_sales_order_sales_order",
@@ -1710,7 +1846,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Sales order to cancel."
         },
         {
           "id": "fld_ain_cancel_sales_order_reason",
@@ -1723,7 +1860,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reason supplied for cancelling the order."
         },
         {
           "id": "fld_ain_cancel_sales_order_cancelled_at",
@@ -1736,14 +1874,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when cancellation should be recorded."
         }
-      ]
+      ],
+      "description": "Input payload for cancelling a pending sales order."
     },
     {
       "id": "ain_close_purchase_order",
-      "name": "ClosePurchaseOrderCommand",
-      "display_name": "ClosePurchaseOrderCommand",
+      "name": "Close Purchase Order Command",
+      "display_name": "Close Purchase Order Command",
       "fields": [
         {
           "id": "fld_ain_close_purchase_order_purchase_order",
@@ -1756,7 +1896,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Received purchase order to close."
         },
         {
           "id": "fld_ain_close_purchase_order_closed_at",
@@ -1769,14 +1910,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when the order closure is recorded."
         }
-      ]
+      ],
+      "description": "Input payload for closing a received purchase order."
     },
     {
       "id": "ain_create_purchase_order",
-      "name": "CreatePurchaseOrderCommand",
-      "display_name": "CreatePurchaseOrderCommand",
+      "name": "Create Purchase Order Command",
+      "display_name": "Create Purchase Order Command",
       "fields": [
         {
           "id": "fld_ain_create_purchase_order_supplier",
@@ -1789,7 +1932,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Supplier to receive the purchase order."
         },
         {
           "id": "fld_ain_create_purchase_order_requested_by",
@@ -1802,7 +1946,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Employee requesting the purchase."
         },
         {
           "id": "fld_ain_create_purchase_order_lines",
@@ -1818,7 +1963,8 @@
           "cardinality": {
             "min": 1,
             "max": "many"
-          }
+          },
+          "description": "Purchase line items to include on the order."
         },
         {
           "id": "fld_ain_create_purchase_order_notes",
@@ -1831,14 +1977,16 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional internal note for procurement context."
         }
-      ]
+      ],
+      "description": "Input payload required to create a purchase order."
     },
     {
       "id": "ain_create_sales_order",
-      "name": "CreateSalesOrderCommand",
-      "display_name": "CreateSalesOrderCommand",
+      "name": "Create Sales Order Command",
+      "display_name": "Create Sales Order Command",
       "fields": [
         {
           "id": "fld_ain_create_sales_order_customer",
@@ -1851,7 +1999,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Customer for whom the sales order is created."
         },
         {
           "id": "fld_ain_create_sales_order_created_by",
@@ -1864,7 +2013,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Employee creating the sales order."
         },
         {
           "id": "fld_ain_create_sales_order_lines",
@@ -1880,7 +2030,8 @@
           "cardinality": {
             "min": 1,
             "max": "many"
-          }
+          },
+          "description": "Line items to include in the new sales order."
         },
         {
           "id": "fld_ain_create_sales_order_requested_fulfillment_date",
@@ -1893,14 +2044,16 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional requested date for order fulfillment."
         }
-      ]
+      ],
+      "description": "Input payload required to create a sales order."
     },
     {
       "id": "ain_fulfill_sales_order",
-      "name": "FulfillSalesOrderCommand",
-      "display_name": "FulfillSalesOrderCommand",
+      "name": "Fulfill Sales Order Command",
+      "display_name": "Fulfill Sales Order Command",
       "fields": [
         {
           "id": "fld_ain_fulfill_sales_order_sales_order",
@@ -1913,7 +2066,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Paid sales order to fulfill."
         },
         {
           "id": "fld_ain_fulfill_sales_order_fulfilled_at",
@@ -1926,7 +2080,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when fulfillment was completed."
         },
         {
           "id": "fld_ain_fulfill_sales_order_shipment_tracking",
@@ -1939,14 +2094,16 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional shipment tracking identifier to store."
         }
-      ]
+      ],
+      "description": "Input payload for fulfilling a paid sales order."
     },
     {
       "id": "ain_mark_invoice_overdue",
-      "name": "MarkInvoiceOverdueCommand",
-      "display_name": "MarkInvoiceOverdueCommand",
+      "name": "Mark Invoice Overdue Command",
+      "display_name": "Mark Invoice Overdue Command",
       "fields": [
         {
           "id": "fld_ain_mark_invoice_overdue_invoice",
@@ -1959,7 +2116,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Invoice to transition into overdue state."
         },
         {
           "id": "fld_ain_mark_invoice_overdue_marked_at",
@@ -1972,14 +2130,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when overdue status was assigned."
         }
-      ]
+      ],
+      "description": "Input payload for marking an invoice as overdue."
     },
     {
       "id": "ain_mark_invoice_paid",
-      "name": "MarkInvoicePaidCommand",
-      "display_name": "MarkInvoicePaidCommand",
+      "name": "Mark Invoice Paid Command",
+      "display_name": "Mark Invoice Paid Command",
       "fields": [
         {
           "id": "fld_ain_mark_invoice_paid_invoice",
@@ -1992,7 +2152,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Invoice to transition into the paid state."
         },
         {
           "id": "fld_ain_mark_invoice_paid_paid_at",
@@ -2005,7 +2166,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when payment settlement occurred."
         },
         {
           "id": "fld_ain_mark_invoice_paid_payment_reference",
@@ -2018,14 +2180,16 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional external payment reference to persist."
         }
-      ]
+      ],
+      "description": "Input payload for marking an invoice as paid."
     },
     {
       "id": "ain_mark_sales_order_paid",
-      "name": "MarkSalesOrderPaidCommand",
-      "display_name": "MarkSalesOrderPaidCommand",
+      "name": "Mark Sales Order Paid Command",
+      "display_name": "Mark Sales Order Paid Command",
       "fields": [
         {
           "id": "fld_ain_mark_sales_order_paid_sales_order",
@@ -2038,7 +2202,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Sales order to transition into the paid state."
         },
         {
           "id": "fld_ain_mark_sales_order_paid_amount",
@@ -2051,7 +2216,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Amount being recorded as paid."
         },
         {
           "id": "fld_ain_mark_sales_order_paid_paid_at",
@@ -2064,14 +2230,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when payment was received or confirmed."
         }
-      ]
+      ],
+      "description": "Input payload for marking a sales order as paid."
     },
     {
       "id": "ain_receive_purchase_order",
-      "name": "ReceivePurchaseOrderCommand",
-      "display_name": "ReceivePurchaseOrderCommand",
+      "name": "Receive Purchase Order Command",
+      "display_name": "Receive Purchase Order Command",
       "fields": [
         {
           "id": "fld_ain_receive_purchase_order_purchase_order",
@@ -2084,7 +2252,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Submitted purchase order being received."
         },
         {
           "id": "fld_ain_receive_purchase_order_received_at",
@@ -2097,7 +2266,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when goods were received."
         },
         {
           "id": "fld_ain_receive_purchase_order_invoice_number",
@@ -2110,14 +2280,16 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional supplier invoice number for received goods."
         }
-      ]
+      ],
+      "description": "Input payload for receiving a submitted purchase order."
     },
     {
       "id": "ain_record_invoice_payment",
-      "name": "RecordInvoicePaymentCommand",
-      "display_name": "RecordInvoicePaymentCommand",
+      "name": "Record Invoice Payment Command",
+      "display_name": "Record Invoice Payment Command",
       "fields": [
         {
           "id": "fld_ain_record_invoice_payment_invoice",
@@ -2130,7 +2302,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Invoice receiving the payment."
         },
         {
           "id": "fld_ain_record_invoice_payment_amount",
@@ -2143,7 +2316,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Payment amount to record against the invoice."
         },
         {
           "id": "fld_ain_record_invoice_payment_method_details",
@@ -2156,14 +2330,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Details describing payment method and provider metadata."
         }
-      ]
+      ],
+      "description": "Input payload for recording an invoice payment."
     },
     {
       "id": "ain_register_customer",
-      "name": "RegisterCustomerCommand",
-      "display_name": "RegisterCustomerCommand",
+      "name": "Register Customer Command",
+      "display_name": "Register Customer Command",
       "fields": [
         {
           "id": "fld_ain_register_customer_full_name",
@@ -2176,7 +2352,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Customer full name to store on the new profile."
         },
         {
           "id": "fld_ain_register_customer_email",
@@ -2189,7 +2366,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional customer email to capture at registration."
         },
         {
           "id": "fld_ain_register_customer_phone",
@@ -2202,7 +2380,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional customer phone number to capture at registration."
         },
         {
           "id": "fld_ain_register_customer_billing_address",
@@ -2215,7 +2394,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional billing address to associate with the customer."
         },
         {
           "id": "fld_ain_register_customer_shipping_address",
@@ -2228,7 +2408,8 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional default shipping address for future deliveries."
         },
         {
           "id": "fld_ain_register_customer_preferred_currency",
@@ -2241,14 +2422,16 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional preferred currency code for customer transactions."
         }
-      ]
+      ],
+      "description": "Input payload for creating a new customer."
     },
     {
       "id": "ain_restock_inventory",
-      "name": "RestockInventoryCommand",
-      "display_name": "RestockInventoryCommand",
+      "name": "Restock Inventory Command",
+      "display_name": "Restock Inventory Command",
       "fields": [
         {
           "id": "fld_ain_restock_inventory_purchase_order",
@@ -2261,7 +2444,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Purchase order whose received lines should restock inventory."
         },
         {
           "id": "fld_ain_restock_inventory_received_at",
@@ -2274,14 +2458,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp used to mark inventory restock completion."
         }
-      ]
+      ],
+      "description": "Input payload for restocking inventory from a purchase order receipt."
     },
     {
       "id": "ain_submit_purchase_order",
-      "name": "SubmitPurchaseOrderCommand",
-      "display_name": "SubmitPurchaseOrderCommand",
+      "name": "Submit Purchase Order Command",
+      "display_name": "Submit Purchase Order Command",
       "fields": [
         {
           "id": "fld_ain_submit_purchase_order_purchase_order",
@@ -2294,7 +2480,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Draft purchase order to submit."
         },
         {
           "id": "fld_ain_submit_purchase_order_submitted_at",
@@ -2307,7 +2494,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp to record as submission time."
         },
         {
           "id": "fld_ain_submit_purchase_order_buyer_note",
@@ -2320,9 +2508,11 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional buyer note attached to submission."
         }
-      ]
+      ],
+      "description": "Input payload for submitting a purchase order."
     }
   ],
   "actions": [
@@ -2332,7 +2522,8 @@
       "display_name": "Adjust Inventory",
       "kind": "process",
       "input_shape_id": "ain_adjust_inventory",
-      "output_event_id": "aout_adjust_inventory"
+      "output_event_id": "aout_adjust_inventory",
+      "description": "Applies a direct quantity adjustment to an inventory item."
     },
     {
       "id": "act_cancel_sales_order",
@@ -2340,7 +2531,8 @@
       "display_name": "Cancel Sales Order",
       "kind": "process",
       "input_shape_id": "ain_cancel_sales_order",
-      "output_event_id": "trans_sales_order_cancel"
+      "output_event_id": "trans_sales_order_cancel",
+      "description": "Cancels an unpaid sales order through its cancellation transition."
     },
     {
       "id": "act_close_purchase_order",
@@ -2348,7 +2540,8 @@
       "display_name": "Close Purchase Order",
       "kind": "workflow",
       "input_shape_id": "ain_close_purchase_order",
-      "output_event_id": "trans_purchase_order_close"
+      "output_event_id": "trans_purchase_order_close",
+      "description": "Closes a received purchase order after post-receipt tasks complete."
     },
     {
       "id": "act_create_purchase_order",
@@ -2356,7 +2549,8 @@
       "display_name": "Create Purchase Order",
       "kind": "process",
       "input_shape_id": "ain_create_purchase_order",
-      "output_event_id": "aout_create_purchase_order"
+      "output_event_id": "aout_create_purchase_order",
+      "description": "Creates a purchase order for supplier replenishment."
     },
     {
       "id": "act_create_sales_order",
@@ -2364,7 +2558,8 @@
       "display_name": "Create Sales Order",
       "kind": "process",
       "input_shape_id": "ain_create_sales_order",
-      "output_event_id": "aout_create_sales_order"
+      "output_event_id": "aout_create_sales_order",
+      "description": "Creates a sales order, computes totals, and returns linked billing references."
     },
     {
       "id": "act_fulfill_sales_order",
@@ -2372,7 +2567,8 @@
       "display_name": "Fulfill Sales Order",
       "kind": "workflow",
       "input_shape_id": "ain_fulfill_sales_order",
-      "output_event_id": "trans_sales_order_fulfill"
+      "output_event_id": "trans_sales_order_fulfill",
+      "description": "Applies the sales-order fulfillment transition after payment."
     },
     {
       "id": "act_mark_invoice_overdue",
@@ -2380,7 +2576,8 @@
       "display_name": "Mark Invoice Overdue",
       "kind": "workflow",
       "input_shape_id": "ain_mark_invoice_overdue",
-      "output_event_id": "trans_invoice_mark_overdue"
+      "output_event_id": "trans_invoice_mark_overdue",
+      "description": "Applies the invoice overdue transition for unpaid invoices."
     },
     {
       "id": "act_mark_invoice_paid",
@@ -2388,7 +2585,8 @@
       "display_name": "Mark Invoice Paid",
       "kind": "workflow",
       "input_shape_id": "ain_mark_invoice_paid",
-      "output_event_id": "trans_invoice_mark_paid"
+      "output_event_id": "trans_invoice_mark_paid",
+      "description": "Applies the invoice paid transition once payment is confirmed."
     },
     {
       "id": "act_mark_sales_order_paid",
@@ -2396,7 +2594,8 @@
       "display_name": "Mark Sales Order Paid",
       "kind": "workflow",
       "input_shape_id": "ain_mark_sales_order_paid",
-      "output_event_id": "trans_sales_order_mark_paid"
+      "output_event_id": "trans_sales_order_mark_paid",
+      "description": "Applies the sales-order payment transition with payment details."
     },
     {
       "id": "act_receive_purchase_order",
@@ -2404,7 +2603,8 @@
       "display_name": "Receive Purchase Order",
       "kind": "workflow",
       "input_shape_id": "ain_receive_purchase_order",
-      "output_event_id": "trans_purchase_order_receive"
+      "output_event_id": "trans_purchase_order_receive",
+      "description": "Marks a submitted purchase order as received."
     },
     {
       "id": "act_record_invoice_payment",
@@ -2412,7 +2612,8 @@
       "display_name": "Record Invoice Payment",
       "kind": "process",
       "input_shape_id": "ain_record_invoice_payment",
-      "output_event_id": "sig_invoice_payment_recorded"
+      "output_event_id": "sig_invoice_payment_recorded",
+      "description": "Records invoice payment details and emits a payment-recorded signal."
     },
     {
       "id": "act_register_customer",
@@ -2420,7 +2621,8 @@
       "display_name": "Register Customer",
       "kind": "process",
       "input_shape_id": "ain_register_customer",
-      "output_event_id": "aout_register_customer"
+      "output_event_id": "aout_register_customer",
+      "description": "Creates and returns a new customer profile for bakery operations."
     },
     {
       "id": "act_restock_inventory",
@@ -2428,7 +2630,8 @@
       "display_name": "Restock Inventory",
       "kind": "workflow",
       "input_shape_id": "ain_restock_inventory",
-      "output_event_id": "aout_restock_inventory"
+      "output_event_id": "aout_restock_inventory",
+      "description": "Updates inventory quantities based on received purchase orders."
     },
     {
       "id": "act_submit_purchase_order",
@@ -2436,14 +2639,15 @@
       "display_name": "Submit Purchase Order",
       "kind": "workflow",
       "input_shape_id": "ain_submit_purchase_order",
-      "output_event_id": "trans_purchase_order_submit"
+      "output_event_id": "trans_purchase_order_submit",
+      "description": "Submits a draft purchase order to the supplier."
     }
   ],
   "events": [
     {
       "id": "aout_adjust_inventory",
-      "name": "AdjustInventoryResult",
-      "display_name": "AdjustInventoryResult",
+      "name": "Adjust Inventory Result",
+      "display_name": "Adjust Inventory Result",
       "kind": "signal",
       "fields": [
         {
@@ -2457,7 +2661,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the inventory item after adjustment."
         },
         {
           "id": "fld_aout_adjust_inventory_new_quantity",
@@ -2470,14 +2675,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Resulting quantity after applying the adjustment."
         }
-      ]
+      ],
+      "description": "Output payload with the adjusted inventory item and resulting quantity."
     },
     {
       "id": "aout_create_purchase_order",
-      "name": "CreatePurchaseOrderResult",
-      "display_name": "CreatePurchaseOrderResult",
+      "name": "Create Purchase Order Result",
+      "display_name": "Create Purchase Order Result",
       "kind": "signal",
       "fields": [
         {
@@ -2491,7 +2698,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the newly created purchase order."
         },
         {
           "id": "fld_aout_create_purchase_order_estimated_total",
@@ -2504,14 +2712,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Estimated monetary total for the requested purchase lines."
         }
-      ]
+      ],
+      "description": "Output payload with created purchase order and estimated total."
     },
     {
       "id": "aout_create_sales_order",
-      "name": "CreateSalesOrderResult",
-      "display_name": "CreateSalesOrderResult",
+      "name": "Create Sales Order Result",
+      "display_name": "Create Sales Order Result",
       "kind": "signal",
       "fields": [
         {
@@ -2525,7 +2735,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the newly created sales order."
         },
         {
           "id": "fld_aout_create_sales_order_invoice",
@@ -2538,7 +2749,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Invoice generated for the created sales order."
         },
         {
           "id": "fld_aout_create_sales_order_total_amount",
@@ -2551,14 +2763,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Final computed total amount for the sales order."
         }
-      ]
+      ],
+      "description": "Output payload with created order, invoice, and final total."
     },
     {
       "id": "aout_register_customer",
-      "name": "RegisterCustomerResult",
-      "display_name": "RegisterCustomerResult",
+      "name": "Register Customer Result",
+      "display_name": "Register Customer Result",
       "kind": "signal",
       "fields": [
         {
@@ -2572,7 +2786,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Reference to the newly registered customer."
         },
         {
           "id": "fld_aout_register_customer_welcome_tier",
@@ -2585,14 +2800,16 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Assigned welcome tier label from onboarding logic."
         }
-      ]
+      ],
+      "description": "Output payload containing the created customer and onboarding tier."
     },
     {
       "id": "aout_restock_inventory",
-      "name": "RestockInventoryResult",
-      "display_name": "RestockInventoryResult",
+      "name": "Restock Inventory Result",
+      "display_name": "Restock Inventory Result",
       "kind": "signal",
       "fields": [
         {
@@ -2609,9 +2826,11 @@
           "cardinality": {
             "min": 1,
             "max": "many"
-          }
+          },
+          "description": "Inventory items that were modified by restock processing."
         }
-      ]
+      ],
+      "description": "Output payload listing inventory items updated during restocking."
     },
     {
       "id": "sig_invoice_payment_recorded",
@@ -2630,7 +2849,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Invoice reference associated with the recorded payment."
         },
         {
           "id": "fld_sig_invoice_payment_recorded_amount",
@@ -2643,7 +2863,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Payment amount recorded for the invoice."
         },
         {
           "id": "fld_sig_invoice_payment_recorded_method_details",
@@ -2656,9 +2877,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Structured details describing how the payment was made."
         }
-      ]
+      ],
+      "description": "Signal emitted when a payment is recorded against an invoice."
     },
     {
       "id": "sig_low_stock_detected",
@@ -2677,7 +2900,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Inventory item that triggered the low-stock condition."
         },
         {
           "id": "fld_sig_low_stock_detected_current_quantity",
@@ -2690,7 +2914,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Current on-hand quantity at detection time."
         },
         {
           "id": "fld_sig_low_stock_detected_threshold",
@@ -2703,9 +2928,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Configured reorder threshold that was crossed."
         }
-      ]
+      ],
+      "description": "Signal emitted when an inventory item drops below its reorder threshold."
     },
     {
       "id": "sig_supplier_lead_time_updated",
@@ -2724,7 +2951,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Supplier whose lead-time information changed."
         },
         {
           "id": "fld_sig_supplier_lead_time_updated_lead_time_days",
@@ -2737,9 +2965,11 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Updated lead time in days for the supplier."
         }
-      ]
+      ],
+      "description": "Signal emitted when supplier lead-time assumptions are updated."
     },
     {
       "id": "trans_invoice_mark_overdue",
@@ -2794,13 +3024,15 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when the invoice was marked overdue."
         }
       ],
       "object_id": "obj_invoice",
       "transition_id": "trans_invoice_mark_overdue",
       "from_state_id": "state_invoice_issued",
-      "to_state_id": "state_invoice_overdue"
+      "to_state_id": "state_invoice_overdue",
+      "description": "Moves an invoice from issued to overdue."
     },
     {
       "id": "trans_invoice_mark_paid",
@@ -2855,7 +3087,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when the invoice payment was settled."
         },
         {
           "id": "fld_trans_invoice_mark_paid_payment_reference",
@@ -2868,13 +3101,15 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional external payment reference identifier."
         }
       ],
       "object_id": "obj_invoice",
       "transition_id": "trans_invoice_mark_paid",
       "from_state_id": "state_invoice_issued",
-      "to_state_id": "state_invoice_paid"
+      "to_state_id": "state_invoice_paid",
+      "description": "Moves an invoice from issued to paid."
     },
     {
       "id": "trans_purchase_order_close",
@@ -2929,13 +3164,15 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp recorded when the purchase order is closed."
         }
       ],
       "object_id": "obj_purchase_order",
       "transition_id": "trans_purchase_order_close",
       "from_state_id": "state_purchase_order_received",
-      "to_state_id": "state_purchase_order_closed"
+      "to_state_id": "state_purchase_order_closed",
+      "description": "Moves a purchase order from received to closed."
     },
     {
       "id": "trans_purchase_order_receive",
@@ -2990,7 +3227,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp recorded when goods are received."
         },
         {
           "id": "fld_trans_purchase_order_receive_invoice_number",
@@ -3003,13 +3241,15 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional supplier invoice number associated with receipt."
         }
       ],
       "object_id": "obj_purchase_order",
       "transition_id": "trans_purchase_order_receive",
       "from_state_id": "state_purchase_order_submitted",
-      "to_state_id": "state_purchase_order_received"
+      "to_state_id": "state_purchase_order_received",
+      "description": "Moves a purchase order from submitted to received."
     },
     {
       "id": "trans_purchase_order_submit",
@@ -3064,7 +3304,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp captured when the order is submitted."
         },
         {
           "id": "fld_trans_purchase_order_submit_buyer_note",
@@ -3077,13 +3318,15 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional note provided by the buyer at submission time."
         }
       ],
       "object_id": "obj_purchase_order",
       "transition_id": "trans_purchase_order_submit",
       "from_state_id": "state_purchase_order_draft",
-      "to_state_id": "state_purchase_order_submitted"
+      "to_state_id": "state_purchase_order_submitted",
+      "description": "Moves a purchase order from draft to submitted."
     },
     {
       "id": "trans_sales_order_cancel",
@@ -3138,7 +3381,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when the cancellation was applied."
         },
         {
           "id": "fld_trans_sales_order_cancel_reason",
@@ -3151,13 +3395,15 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional reason recorded for cancellation."
         }
       ],
       "object_id": "obj_sales_order",
       "transition_id": "trans_sales_order_cancel",
       "from_state_id": "state_sales_order_pending_payment",
-      "to_state_id": "state_sales_order_cancelled"
+      "to_state_id": "state_sales_order_cancelled",
+      "description": "Moves a pending-payment sales order to cancelled."
     },
     {
       "id": "trans_sales_order_fulfill",
@@ -3212,7 +3458,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when fulfillment completed."
         },
         {
           "id": "fld_trans_sales_order_fulfill_shipment_tracking",
@@ -3225,13 +3472,15 @@
           "cardinality": {
             "min": 0,
             "max": 1
-          }
+          },
+          "description": "Optional shipment tracking identifier captured at fulfillment."
         }
       ],
       "object_id": "obj_sales_order",
       "transition_id": "trans_sales_order_fulfill",
       "from_state_id": "state_sales_order_paid",
-      "to_state_id": "state_sales_order_fulfilled"
+      "to_state_id": "state_sales_order_fulfilled",
+      "description": "Moves a paid sales order to fulfilled."
     },
     {
       "id": "trans_sales_order_mark_paid",
@@ -3286,7 +3535,8 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Amount received for this payment transition."
         },
         {
           "id": "fld_trans_sales_order_mark_paid_paid_at",
@@ -3299,13 +3549,15 @@
           "cardinality": {
             "min": 1,
             "max": 1
-          }
+          },
+          "description": "Timestamp when payment was recorded."
         }
       ],
       "object_id": "obj_sales_order",
       "transition_id": "trans_sales_order_mark_paid",
       "from_state_id": "state_sales_order_pending_payment",
-      "to_state_id": "state_sales_order_paid"
+      "to_state_id": "state_sales_order_paid",
+      "description": "Moves a sales order from pending payment to paid."
     }
   ],
   "triggers": [
@@ -3314,28 +3566,32 @@
       "name": "onInvoicePaymentRecorded",
       "display_name": "On Invoice Payment Recorded",
       "event_id": "sig_invoice_payment_recorded",
-      "action_id": "act_mark_invoice_paid"
+      "action_id": "act_mark_invoice_paid",
+      "description": "Invokes invoice payment transition after payment-recorded signals."
     },
     {
       "id": "trg_on_low_stock_detected",
       "name": "onLowStockDetected",
       "display_name": "On Low Stock Detected",
       "event_id": "sig_low_stock_detected",
-      "action_id": "act_create_purchase_order"
+      "action_id": "act_create_purchase_order",
+      "description": "Invokes purchase-order creation when low-stock events are observed."
     },
     {
       "id": "trg_on_purchase_order_received",
       "name": "onPurchaseOrderReceived",
       "display_name": "On Purchase Order Received",
       "event_id": "trans_purchase_order_receive",
-      "action_id": "act_restock_inventory"
+      "action_id": "act_restock_inventory",
+      "description": "Invokes inventory restocking when purchase-order receipt transitions occur."
     },
     {
       "id": "trg_on_sales_order_marked_paid",
       "name": "onSalesOrderMarkedPaid",
       "display_name": "On Sales Order Marked Paid",
       "event_id": "trans_sales_order_mark_paid",
-      "action_id": "act_fulfill_sales_order"
+      "action_id": "act_fulfill_sales_order",
+      "description": "Invokes order fulfillment after sales-order payment transitions."
     }
   ],
   "query_contracts": [
@@ -4121,5 +4377,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "6b94790e01efa543badd3ea7189d16b84fb2cb485afac0ef486457dbef8bf641",
-  "ir_hash": "9b081af50cd5c05cb8d283d0448973ba4616cc9a9d0b07eb8e71c250a77ffedb"
+  "ir_hash": "8bd058466978963573d44db6f11a617454da35e264c22e8d012c4319ed59e657"
 }

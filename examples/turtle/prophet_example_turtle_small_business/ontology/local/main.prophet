@@ -7,6 +7,7 @@ ontology artisan_bakery_local {
   type Money {
     name "Money"
     id "type_money"
+    description "Non-negative monetary amount used for prices, totals, and balances."
     base decimal
     constraint min "0.00"
   }
@@ -14,6 +15,7 @@ ontology artisan_bakery_local {
   type Quantity {
     name "Quantity"
     id "type_quantity"
+    description "Non-negative quantity used for inventory counts and ordered amounts."
     base decimal
     constraint min "0.00"
   }
@@ -21,6 +23,7 @@ ontology artisan_bakery_local {
   type Email {
     name "Email"
     id "type_email"
+    description "Email address string validated with a basic local@domain pattern."
     base string
     constraint pattern "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
   }
@@ -28,6 +31,7 @@ ontology artisan_bakery_local {
   type CurrencyCode {
     name "Currency Code"
     id "type_currency_code"
+    description "Three-letter uppercase ISO-style code used for currency and code fields."
     base string
     constraint pattern "^[A-Z]{3}$"
   }
@@ -35,6 +39,7 @@ ontology artisan_bakery_local {
   type PhoneNumber {
     name "Phone Number"
     id "type_phone_number"
+    description "Phone number string supporting optional leading plus and separators."
     base string
     constraint pattern "^\\+?[0-9][0-9\\- ]{7,19}$"
   }
@@ -42,16 +47,19 @@ ontology artisan_bakery_local {
   struct Address {
     name "Address"
     id "struct_address"
+    description "Postal address structure used for customer, supplier, and delivery locations."
 
     field line1 {
       name "Line 1"
       id "fld_struct_address_line1"
+      description "Primary street line for the address."
       type string
     }
 
     field line2 {
       name "Line 2"
       id "fld_struct_address_line2"
+      description "Secondary street line such as suite, unit, or apartment."
       type string
       optional
     }
@@ -59,12 +67,14 @@ ontology artisan_bakery_local {
     field city {
       name "City"
       id "fld_struct_address_city"
+      description "City or locality component of the address."
       type string
     }
 
     field region {
       name "Region"
       id "fld_struct_address_region"
+      description "Optional state, province, or administrative region."
       type string
       optional
     }
@@ -72,12 +82,14 @@ ontology artisan_bakery_local {
     field postal_code {
       name "Postal Code"
       id "fld_struct_address_postal_code"
+      description "Postal or ZIP code used for mail routing."
       type string
     }
 
     field country_code {
       name "Country Code"
       id "fld_struct_address_country_code"
+      description "Three-letter country code for the address destination."
       type CurrencyCode
     }
   }
@@ -85,10 +97,12 @@ ontology artisan_bakery_local {
   struct ContactPoint {
     name "Contact Point"
     id "struct_contact_point"
+    description "Reusable contact details for a person or business representative."
 
     field name {
       name "Name"
       id "fld_struct_contact_point_name"
+      description "Contact person's display name."
       type string
       optional
     }
@@ -96,6 +110,7 @@ ontology artisan_bakery_local {
     field email {
       name "Email"
       id "fld_struct_contact_point_email"
+      description "Contact email address for correspondence."
       type Email
       optional
     }
@@ -103,6 +118,7 @@ ontology artisan_bakery_local {
     field phone {
       name "Phone"
       id "fld_struct_contact_point_phone"
+      description "Contact phone number for voice or SMS communication."
       type PhoneNumber
       optional
     }
@@ -111,28 +127,33 @@ ontology artisan_bakery_local {
   struct SalesOrderLine {
     name "Sales Order Line"
     id "struct_sales_order_line"
+    description "Line item representing a product, quantity, and unit price on a sales order."
 
     field product {
       name "Product"
       id "fld_struct_sales_order_line_product"
+      description "Referenced product being sold on this line."
       type ref(Product)
     }
 
     field quantity {
       name "Quantity"
       id "fld_struct_sales_order_line_quantity"
+      description "Ordered quantity for the referenced product."
       type Quantity
     }
 
     field unit_price {
       name "Unit Price"
       id "fld_struct_sales_order_line_unit_price"
+      description "Per-unit sales price applied to this line item."
       type Money
     }
 
     field note {
       name "Note"
       id "fld_struct_sales_order_line_note"
+      description "Optional free-text note specific to this sales line."
       type string
       optional
     }
@@ -141,22 +162,26 @@ ontology artisan_bakery_local {
   struct PurchaseOrderLine {
     name "Purchase Order Line"
     id "struct_purchase_order_line"
+    description "Line item representing a product, quantity, and unit cost on a purchase order."
 
     field product {
       name "Product"
       id "fld_struct_purchase_order_line_product"
+      description "Referenced product being purchased from the supplier."
       type ref(Product)
     }
 
     field quantity {
       name "Quantity"
       id "fld_struct_purchase_order_line_quantity"
+      description "Requested quantity for the referenced product."
       type Quantity
     }
 
     field unit_cost {
       name "Unit Cost"
       id "fld_struct_purchase_order_line_unit_cost"
+      description "Per-unit acquisition cost expected for this line."
       type Money
     }
   }
@@ -164,16 +189,19 @@ ontology artisan_bakery_local {
   struct PaymentMethodDetails {
     name "Payment Method Details"
     id "struct_payment_method_details"
+    description "Structured payment metadata captured when recording an invoice payment."
 
     field method {
       name "Method"
       id "fld_struct_payment_method_details_method"
+      description "Payment method used, such as card, cash, or bank transfer."
       type string
     }
 
     field provider_reference {
       name "Provider Reference"
       id "fld_struct_payment_method_details_provider_reference"
+      description "Optional processor or gateway reference identifier."
       type string
       optional
     }
@@ -181,6 +209,7 @@ ontology artisan_bakery_local {
     field note {
       name "Note"
       id "fld_struct_payment_method_details_note"
+      description "Optional internal note about the payment method or transaction."
       type string
       optional
     }
@@ -189,10 +218,12 @@ ontology artisan_bakery_local {
   object Customer {
     name "Customer"
     id "obj_customer"
+    description "Customer account used for sales, invoicing, and fulfillment preferences."
 
     field customer_id {
       name "Customer ID"
       id "fld_customer_customer_id"
+      description "Stable primary identifier for the customer record."
       type string
       key primary
     }
@@ -200,12 +231,14 @@ ontology artisan_bakery_local {
     field full_name {
       name "Full Name"
       id "fld_customer_full_name"
+      description "Customer's full display name."
       type string
     }
 
     field email {
       name "Email"
       id "fld_customer_email"
+      description "Optional primary email address for customer contact."
       type Email
       optional
     }
@@ -213,6 +246,7 @@ ontology artisan_bakery_local {
     field phone {
       name "Phone"
       id "fld_customer_phone"
+      description "Optional primary phone number for customer contact."
       type PhoneNumber
       optional
     }
@@ -220,6 +254,7 @@ ontology artisan_bakery_local {
     field billing_address {
       name "Billing Address"
       id "fld_customer_billing_address"
+      description "Optional billing address used for invoices and statements."
       type Address
       optional
     }
@@ -227,6 +262,7 @@ ontology artisan_bakery_local {
     field shipping_address {
       name "Shipping Address"
       id "fld_customer_shipping_address"
+      description "Optional default shipping destination for deliveries."
       type Address
       optional
     }
@@ -234,6 +270,7 @@ ontology artisan_bakery_local {
     field preferred_currency {
       name "Preferred Currency"
       id "fld_customer_preferred_currency"
+      description "Optional preferred currency code for quotes and invoices."
       type CurrencyCode
       optional
     }
@@ -241,6 +278,7 @@ ontology artisan_bakery_local {
     field loyalty_points {
       name "Loyalty Points"
       id "fld_customer_loyalty_points"
+      description "Optional accumulated loyalty points for rewards programs."
       type int
       optional
     }
@@ -248,6 +286,7 @@ ontology artisan_bakery_local {
     field tags {
       name "Tags"
       id "fld_customer_tags"
+      description "Optional labels used for segmentation and outreach workflows."
       type string[]
       optional
     }
@@ -256,10 +295,12 @@ ontology artisan_bakery_local {
   object Employee {
     name "Employee"
     id "obj_employee"
+    description "Employee record for staff members who operate and approve bakery workflows."
 
     field employee_id {
       name "Employee ID"
       id "fld_employee_employee_id"
+      description "Stable primary identifier for the employee record."
       type string
       key primary
     }
@@ -267,18 +308,21 @@ ontology artisan_bakery_local {
     field full_name {
       name "Full Name"
       id "fld_employee_full_name"
+      description "Employee's full display name."
       type string
     }
 
     field email {
       name "Email"
       id "fld_employee_email"
+      description "Work email address used for communication and notifications."
       type Email
     }
 
     field phone {
       name "Phone"
       id "fld_employee_phone"
+      description "Optional work or mobile phone number for the employee."
       type PhoneNumber
       optional
     }
@@ -286,12 +330,14 @@ ontology artisan_bakery_local {
     field role {
       name "Role"
       id "fld_employee_role"
+      description "Role or job function assigned to the employee."
       type string
     }
 
     field manager {
       name "Manager"
       id "fld_employee_manager"
+      description "Optional manager reference for reporting structure."
       type ref(Employee)
       optional
     }
@@ -299,6 +345,7 @@ ontology artisan_bakery_local {
     field active {
       name "Active"
       id "fld_employee_active"
+      description "Indicates whether the employee is currently active."
       type boolean
     }
   }
@@ -306,10 +353,12 @@ ontology artisan_bakery_local {
   object Supplier {
     name "Supplier"
     id "obj_supplier"
+    description "Supplier organization that provides products and procurement terms."
 
     field supplier_id {
       name "Supplier ID"
       id "fld_supplier_supplier_id"
+      description "Stable primary identifier for the supplier."
       type string
       key primary
     }
@@ -317,18 +366,21 @@ ontology artisan_bakery_local {
     field legal_name {
       name "Legal Name"
       id "fld_supplier_legal_name"
+      description "Registered legal name of the supplier organization."
       type string
     }
 
     field primary_contact {
       name "Primary Contact"
       id "fld_supplier_primary_contact"
+      description "Primary contact details for day-to-day supplier communication."
       type ContactPoint
     }
 
     field payment_terms_days {
       name "Payment Terms Days"
       id "fld_supplier_payment_terms_days"
+      description "Optional payment term duration in days."
       type int
       optional
     }
@@ -336,6 +388,7 @@ ontology artisan_bakery_local {
     field address {
       name "Address"
       id "fld_supplier_address"
+      description "Optional mailing or fulfillment address for the supplier."
       type Address
       optional
     }
@@ -343,6 +396,7 @@ ontology artisan_bakery_local {
     field active {
       name "Active"
       id "fld_supplier_active"
+      description "Indicates whether the supplier is currently approved for use."
       type boolean
     }
   }
@@ -350,10 +404,12 @@ ontology artisan_bakery_local {
   object Product {
     name "Product"
     id "obj_product"
+    description "Catalog product sold to customers and sourced from a supplier."
 
     field product_id {
       name "Product ID"
       id "fld_product_product_id"
+      description "Stable primary identifier for the product."
       type string
       key primary
     }
@@ -361,6 +417,7 @@ ontology artisan_bakery_local {
     field sku {
       name "SKU"
       id "fld_product_sku"
+      description "Display key stock-keeping unit used in operations and labeling."
       type string
       key display
     }
@@ -368,6 +425,7 @@ ontology artisan_bakery_local {
     field name {
       name "Name"
       id "fld_product_name"
+      description "Display name of the product in catalogs and order lines."
       type string
       key display
     }
@@ -375,6 +433,7 @@ ontology artisan_bakery_local {
     field description {
       name "Description"
       id "fld_product_description"
+      description "Optional customer-facing or internal product description text."
       type string
       optional
     }
@@ -382,18 +441,21 @@ ontology artisan_bakery_local {
     field supplier {
       name "Supplier"
       id "fld_product_supplier"
+      description "Supplier reference that provides this product."
       type ref(Supplier)
     }
 
     field list_price {
       name "List Price"
       id "fld_product_list_price"
+      description "Standard sales price before discounts or adjustments."
       type Money
     }
 
     field cost_price {
       name "Cost Price"
       id "fld_product_cost_price"
+      description "Optional unit cost paid to acquire this product."
       type Money
       optional
     }
@@ -401,12 +463,14 @@ ontology artisan_bakery_local {
     field active {
       name "Active"
       id "fld_product_active"
+      description "Indicates whether the product is currently offered."
       type boolean
     }
 
     field tags {
       name "Tags"
       id "fld_product_tags"
+      description "Optional labels used for merchandising and reporting."
       type string[]
       optional
     }
@@ -415,10 +479,12 @@ ontology artisan_bakery_local {
   object InventoryItem {
     name "Inventory Item"
     id "obj_inventory_item"
+    description "Inventory position tracking on-hand quantities and reorder settings for a product."
 
     field inventory_item_id {
       name "Inventory Item ID"
       id "fld_inventory_item_inventory_item_id"
+      description "Stable primary identifier for the inventory item."
       type string
       key primary
     }
@@ -426,36 +492,42 @@ ontology artisan_bakery_local {
     field product {
       name "Product"
       id "fld_inventory_item_product"
+      description "Product reference represented by this inventory position."
       type ref(Product)
     }
 
     field quantity_on_hand {
       name "Quantity On Hand"
       id "fld_inventory_item_quantity_on_hand"
+      description "Current available stock quantity in inventory."
       type Quantity
     }
 
     field reorder_threshold {
       name "Reorder Threshold"
       id "fld_inventory_item_reorder_threshold"
+      description "Quantity threshold that indicates low-stock risk."
       type Quantity
     }
 
     field reorder_quantity {
       name "Reorder Quantity"
       id "fld_inventory_item_reorder_quantity"
+      description "Suggested replenishment quantity when stock is low."
       type Quantity
     }
 
     field location_code {
       name "Location Code"
       id "fld_inventory_item_location_code"
+      description "Storage location code where this inventory is kept."
       type string
     }
 
     field lot_code {
       name "Lot Code"
       id "fld_inventory_item_lot_code"
+      description "Optional lot or batch identifier for traceability."
       type string
       optional
     }
@@ -463,6 +535,7 @@ ontology artisan_bakery_local {
     field expires_on {
       name "Expires On"
       id "fld_inventory_item_expires_on"
+      description "Optional expiration date for perishable inventory."
       type date
       optional
     }
@@ -470,6 +543,7 @@ ontology artisan_bakery_local {
     field last_restocked_at {
       name "Last Restocked At"
       id "fld_inventory_item_last_restocked_at"
+      description "Optional timestamp of the most recent restock event."
       type datetime
       optional
     }
@@ -478,10 +552,12 @@ ontology artisan_bakery_local {
   object PurchaseOrder {
     name "Purchase Order"
     id "obj_purchase_order"
+    description "Supplier procurement order tracked through draft, submission, receipt, and closure."
 
     field purchase_order_id {
       name "Purchase Order ID"
       id "fld_purchase_order_purchase_order_id"
+      description "Stable primary identifier for the purchase order."
       type string
       key primary
     }
@@ -489,24 +565,28 @@ ontology artisan_bakery_local {
     field supplier {
       name "Supplier"
       id "fld_purchase_order_supplier"
+      description "Supplier receiving and fulfilling this purchase order."
       type ref(Supplier)
     }
 
     field requested_by {
       name "Requested By"
       id "fld_purchase_order_requested_by"
+      description "Employee who requested creation of this purchase order."
       type ref(Employee)
     }
 
     field lines {
       name "Lines"
       id "fld_purchase_order_lines"
+      description "Line items describing products, quantities, and costs to procure."
       type PurchaseOrderLine[]
     }
 
     field notes {
       name "Notes"
       id "fld_purchase_order_notes"
+      description "Optional internal procurement notes for this order."
       type string
       optional
     }
@@ -514,6 +594,7 @@ ontology artisan_bakery_local {
     field submitted_at {
       name "Submitted At"
       id "fld_purchase_order_submitted_at"
+      description "Optional timestamp when the order was submitted to the supplier."
       type datetime
       optional
     }
@@ -521,6 +602,7 @@ ontology artisan_bakery_local {
     field received_at {
       name "Received At"
       id "fld_purchase_order_received_at"
+      description "Optional timestamp when goods were received."
       type datetime
       optional
     }
@@ -528,6 +610,7 @@ ontology artisan_bakery_local {
     field total_cost {
       name "Total Cost"
       id "fld_purchase_order_total_cost"
+      description "Optional total expected or actual cost for the order."
       type Money
       optional
     }
@@ -535,39 +618,46 @@ ontology artisan_bakery_local {
     state draft {
       name "Draft"
       id "state_purchase_order_draft"
+      description "Initial state while purchase details are still being prepared."
       initial
     }
 
     state submitted {
       name "Submitted"
       id "state_purchase_order_submitted"
+      description "State after the purchase order has been sent to the supplier."
     }
 
     state received {
       name "Received"
       id "state_purchase_order_received"
+      description "State after ordered goods have been received."
     }
 
     state closed {
       name "Closed"
       id "state_purchase_order_closed"
+      description "Final state once the purchase order lifecycle is complete."
     }
 
     transition submit {
       name "Submit"
       id "trans_purchase_order_submit"
+      description "Moves a purchase order from draft to submitted."
       from draft
       to submitted
 
       field submittedAt {
         name "Submitted At"
         id "fld_trans_purchase_order_submit_submitted_at"
+        description "Timestamp captured when the order is submitted."
         type datetime
       }
 
       field buyerNote {
         name "Buyer Note"
         id "fld_trans_purchase_order_submit_buyer_note"
+        description "Optional note provided by the buyer at submission time."
         type string
         optional
       }
@@ -576,18 +666,21 @@ ontology artisan_bakery_local {
     transition receive {
       name "Receive"
       id "trans_purchase_order_receive"
+      description "Moves a purchase order from submitted to received."
       from submitted
       to received
 
       field receivedAt {
         name "Received At"
         id "fld_trans_purchase_order_receive_received_at"
+        description "Timestamp recorded when goods are received."
         type datetime
       }
 
       field invoiceNumber {
         name "Invoice Number"
         id "fld_trans_purchase_order_receive_invoice_number"
+        description "Optional supplier invoice number associated with receipt."
         type string
         optional
       }
@@ -596,12 +689,14 @@ ontology artisan_bakery_local {
     transition close {
       name "Close"
       id "trans_purchase_order_close"
+      description "Moves a purchase order from received to closed."
       from received
       to closed
 
       field closedAt {
         name "Closed At"
         id "fld_trans_purchase_order_close_closed_at"
+        description "Timestamp recorded when the purchase order is closed."
         type datetime
       }
     }
@@ -610,10 +705,12 @@ ontology artisan_bakery_local {
   object SalesOrder {
     name "Sales Order"
     id "obj_sales_order"
+    description "Customer sales order tracked through payment and fulfillment lifecycle states."
 
     field sales_order_id {
       name "Sales Order ID"
       id "fld_sales_order_sales_order_id"
+      description "Stable primary identifier for the sales order."
       type string
       key primary
     }
@@ -621,24 +718,28 @@ ontology artisan_bakery_local {
     field customer {
       name "Customer"
       id "fld_sales_order_customer"
+      description "Customer placing this sales order."
       type ref(Customer)
     }
 
     field created_by {
       name "Created By"
       id "fld_sales_order_created_by"
+      description "Employee who created the sales order record."
       type ref(Employee)
     }
 
     field lines {
       name "Lines"
       id "fld_sales_order_lines"
+      description "Ordered product line items with quantities and unit prices."
       type SalesOrderLine[]
     }
 
     field requested_fulfillment_date {
       name "Requested Fulfillment Date"
       id "fld_sales_order_requested_fulfillment_date"
+      description "Optional customer-requested date for fulfillment."
       type date
       optional
     }
@@ -646,24 +747,28 @@ ontology artisan_bakery_local {
     field subtotal {
       name "Subtotal"
       id "fld_sales_order_subtotal"
+      description "Pre-tax total amount for all order lines."
       type Money
     }
 
     field tax_amount {
       name "Tax Amount"
       id "fld_sales_order_tax_amount"
+      description "Tax amount applied to the sales order."
       type Money
     }
 
     field total_amount {
       name "Total Amount"
       id "fld_sales_order_total_amount"
+      description "Final amount due including taxes and adjustments."
       type Money
     }
 
     field invoice {
       name "Invoice"
       id "fld_sales_order_invoice"
+      description "Optional invoice generated for this sales order."
       type ref(Invoice)
       optional
     }
@@ -671,6 +776,7 @@ ontology artisan_bakery_local {
     field notes {
       name "Notes"
       id "fld_sales_order_notes"
+      description "Optional notes about customer requests or handling."
       type string
       optional
     }
@@ -678,39 +784,46 @@ ontology artisan_bakery_local {
     state pending_payment {
       name "Pending Payment"
       id "state_sales_order_pending_payment"
+      description "Initial state while payment is still outstanding."
       initial
     }
 
     state paid {
       name "Paid"
       id "state_sales_order_paid"
+      description "State after full payment has been recorded."
     }
 
     state fulfilled {
       name "Fulfilled"
       id "state_sales_order_fulfilled"
+      description "State after order items have been delivered or completed."
     }
 
     state cancelled {
       name "Cancelled"
       id "state_sales_order_cancelled"
+      description "Terminal state for orders cancelled before completion."
     }
 
     transition markPaid {
       name "Mark Paid"
       id "trans_sales_order_mark_paid"
+      description "Moves a sales order from pending payment to paid."
       from pending_payment
       to paid
 
       field paymentAmount {
         name "Payment Amount"
         id "fld_trans_sales_order_mark_paid_payment_amount"
+        description "Amount received for this payment transition."
         type Money
       }
 
       field paidAt {
         name "Paid At"
         id "fld_trans_sales_order_mark_paid_paid_at"
+        description "Timestamp when payment was recorded."
         type datetime
       }
     }
@@ -718,18 +831,21 @@ ontology artisan_bakery_local {
     transition fulfill {
       name "Fulfill"
       id "trans_sales_order_fulfill"
+      description "Moves a paid sales order to fulfilled."
       from paid
       to fulfilled
 
       field fulfilledAt {
         name "Fulfilled At"
         id "fld_trans_sales_order_fulfill_fulfilled_at"
+        description "Timestamp when fulfillment completed."
         type datetime
       }
 
       field shipmentTracking {
         name "Shipment Tracking"
         id "fld_trans_sales_order_fulfill_shipment_tracking"
+        description "Optional shipment tracking identifier captured at fulfillment."
         type string
         optional
       }
@@ -738,18 +854,21 @@ ontology artisan_bakery_local {
     transition cancel {
       name "Cancel"
       id "trans_sales_order_cancel"
+      description "Moves a pending-payment sales order to cancelled."
       from pending_payment
       to cancelled
 
       field cancelledAt {
         name "Cancelled At"
         id "fld_trans_sales_order_cancel_cancelled_at"
+        description "Timestamp when the cancellation was applied."
         type datetime
       }
 
       field reason {
         name "Reason"
         id "fld_trans_sales_order_cancel_reason"
+        description "Optional reason recorded for cancellation."
         type string
         optional
       }
@@ -759,10 +878,12 @@ ontology artisan_bakery_local {
   object Invoice {
     name "Invoice"
     id "obj_invoice"
+    description "Invoice record for billing and payment tracking of a sales order."
 
     field invoice_id {
       name "Invoice ID"
       id "fld_invoice_invoice_id"
+      description "Stable primary identifier for the invoice."
       type string
       key primary
     }
@@ -770,82 +891,96 @@ ontology artisan_bakery_local {
     field sales_order {
       name "Sales Order"
       id "fld_invoice_sales_order"
+      description "Sales order that this invoice bills."
       type ref(SalesOrder)
     }
 
     field issued_at {
       name "Issued At"
       id "fld_invoice_issued_at"
+      description "Timestamp when the invoice was issued."
       type datetime
     }
 
     field due_on {
       name "Due On"
       id "fld_invoice_due_on"
+      description "Payment due date for the invoice."
       type date
     }
 
     field subtotal {
       name "Subtotal"
       id "fld_invoice_subtotal"
+      description "Pre-tax billed amount on the invoice."
       type Money
     }
 
     field tax_amount {
       name "Tax Amount"
       id "fld_invoice_tax_amount"
+      description "Tax component billed on the invoice."
       type Money
     }
 
     field total_due {
       name "Total Due"
       id "fld_invoice_total_due"
+      description "Total amount due on the invoice."
       type Money
     }
 
     field balance_due {
       name "Balance Due"
       id "fld_invoice_balance_due"
+      description "Remaining unpaid balance on the invoice."
       type Money
     }
 
     field currency {
       name "Currency"
       id "fld_invoice_currency"
+      description "Currency code used for invoice monetary values."
       type CurrencyCode
     }
 
     state issued {
       name "Issued"
       id "state_invoice_issued"
+      description "Initial state after the invoice has been issued."
       initial
     }
 
     state paid {
       name "Paid"
       id "state_invoice_paid"
+      description "State after the invoice has been fully paid."
     }
 
     state overdue {
       name "Overdue"
       id "state_invoice_overdue"
+      description "State when payment is past due and outstanding."
     }
 
     transition markPaid {
       name "Mark Paid"
       id "trans_invoice_mark_paid"
+      description "Moves an invoice from issued to paid."
       from issued
       to paid
 
       field paidAt {
         name "Paid At"
         id "fld_trans_invoice_mark_paid_paid_at"
+        description "Timestamp when the invoice payment was settled."
         type datetime
       }
 
       field paymentReference {
         name "Payment Reference"
         id "fld_trans_invoice_mark_paid_payment_reference"
+        description "Optional external payment reference identifier."
         type string
         optional
       }
@@ -854,12 +989,14 @@ ontology artisan_bakery_local {
     transition markOverdue {
       name "Mark Overdue"
       id "trans_invoice_mark_overdue"
+      description "Moves an invoice from issued to overdue."
       from issued
       to overdue
 
       field markedAt {
         name "Marked At"
         id "fld_trans_invoice_mark_overdue_marked_at"
+        description "Timestamp when the invoice was marked overdue."
         type datetime
       }
     }
@@ -868,10 +1005,12 @@ ontology artisan_bakery_local {
   object Delivery {
     name "Delivery"
     id "obj_delivery"
+    description "Delivery record for shipping or handoff logistics tied to a sales order."
 
     field delivery_id {
       name "Delivery ID"
       id "fld_delivery_delivery_id"
+      description "Stable primary identifier for the delivery."
       type string
       key primary
     }
@@ -879,18 +1018,21 @@ ontology artisan_bakery_local {
     field sales_order {
       name "Sales Order"
       id "fld_delivery_sales_order"
+      description "Sales order fulfilled by this delivery."
       type ref(SalesOrder)
     }
 
     field destination {
       name "Destination"
       id "fld_delivery_destination"
+      description "Destination address where the delivery should arrive."
       type Address
     }
 
     field carrier {
       name "Carrier"
       id "fld_delivery_carrier"
+      description "Optional carrier responsible for transport."
       type string
       optional
     }
@@ -898,6 +1040,7 @@ ontology artisan_bakery_local {
     field tracking_number {
       name "Tracking Number"
       id "fld_delivery_tracking_number"
+      description "Optional carrier tracking number for shipment visibility."
       type string
       optional
     }
@@ -905,6 +1048,7 @@ ontology artisan_bakery_local {
     field scheduled_for {
       name "Scheduled For"
       id "fld_delivery_scheduled_for"
+      description "Optional scheduled delivery or dispatch timestamp."
       type datetime
       optional
     }
@@ -912,6 +1056,7 @@ ontology artisan_bakery_local {
     field delivered_at {
       name "Delivered At"
       id "fld_delivery_delivered_at"
+      description "Optional timestamp when delivery completion was confirmed."
       type datetime
       optional
     }
@@ -919,6 +1064,7 @@ ontology artisan_bakery_local {
     field status_text {
       name "Status Text"
       id "fld_delivery_status_text"
+      description "Current human-readable delivery status."
       type string
     }
   }
@@ -926,22 +1072,26 @@ ontology artisan_bakery_local {
   signal LowStockDetected {
     name "Low Stock Detected"
     id "sig_low_stock_detected"
+    description "Signal emitted when an inventory item drops below its reorder threshold."
 
     field inventory_item {
       name "Inventory Item"
       id "fld_sig_low_stock_detected_inventory_item"
+      description "Inventory item that triggered the low-stock condition."
       type ref(InventoryItem)
     }
 
     field current_quantity {
       name "Current Quantity"
       id "fld_sig_low_stock_detected_current_quantity"
+      description "Current on-hand quantity at detection time."
       type Quantity
     }
 
     field threshold {
       name "Threshold"
       id "fld_sig_low_stock_detected_threshold"
+      description "Configured reorder threshold that was crossed."
       type Quantity
     }
   }
@@ -949,22 +1099,26 @@ ontology artisan_bakery_local {
   signal InvoicePaymentRecorded {
     name "Invoice Payment Recorded"
     id "sig_invoice_payment_recorded"
+    description "Signal emitted when a payment is recorded against an invoice."
 
     field invoice {
       name "Invoice"
       id "fld_sig_invoice_payment_recorded_invoice"
+      description "Invoice reference associated with the recorded payment."
       type ref(Invoice)
     }
 
     field amount {
       name "Amount"
       id "fld_sig_invoice_payment_recorded_amount"
+      description "Payment amount recorded for the invoice."
       type Money
     }
 
     field method_details {
       name "Method Details"
       id "fld_sig_invoice_payment_recorded_method_details"
+      description "Structured details describing how the payment was made."
       type PaymentMethodDetails
     }
   }
@@ -972,16 +1126,19 @@ ontology artisan_bakery_local {
   signal SupplierLeadTimeUpdated {
     name "Supplier Lead Time Updated"
     id "sig_supplier_lead_time_updated"
+    description "Signal emitted when supplier lead-time assumptions are updated."
 
     field supplier {
       name "Supplier"
       id "fld_sig_supplier_lead_time_updated_supplier"
+      description "Supplier whose lead-time information changed."
       type ref(Supplier)
     }
 
     field lead_time_days {
       name "Lead Time Days"
       id "fld_sig_supplier_lead_time_updated_lead_time_days"
+      description "Updated lead time in days for the supplier."
       type int
     }
   }
@@ -989,20 +1146,24 @@ ontology artisan_bakery_local {
   action registerCustomer {
     name "Register Customer"
     id "act_register_customer"
+    description "Creates and returns a new customer profile for bakery operations."
     kind process
 
     input {
       id "ain_register_customer"
+      description "Input payload for creating a new customer."
 
       field fullName {
         name "Full Name"
         id "fld_ain_register_customer_full_name"
+        description "Customer full name to store on the new profile."
         type string
       }
 
       field email {
         name "Email"
         id "fld_ain_register_customer_email"
+        description "Optional customer email to capture at registration."
         type Email
         optional
       }
@@ -1010,6 +1171,7 @@ ontology artisan_bakery_local {
       field phone {
         name "Phone"
         id "fld_ain_register_customer_phone"
+        description "Optional customer phone number to capture at registration."
         type PhoneNumber
         optional
       }
@@ -1017,6 +1179,7 @@ ontology artisan_bakery_local {
       field billingAddress {
         name "Billing Address"
         id "fld_ain_register_customer_billing_address"
+        description "Optional billing address to associate with the customer."
         type Address
         optional
       }
@@ -1024,6 +1187,7 @@ ontology artisan_bakery_local {
       field shippingAddress {
         name "Shipping Address"
         id "fld_ain_register_customer_shipping_address"
+        description "Optional default shipping address for future deliveries."
         type Address
         optional
       }
@@ -1031,6 +1195,7 @@ ontology artisan_bakery_local {
       field preferredCurrency {
         name "Preferred Currency"
         id "fld_ain_register_customer_preferred_currency"
+        description "Optional preferred currency code for customer transactions."
         type CurrencyCode
         optional
       }
@@ -1038,16 +1203,19 @@ ontology artisan_bakery_local {
 
     output {
       id "aout_register_customer"
+      description "Output payload containing the created customer and onboarding tier."
 
       field customer {
         name "Customer"
         id "fld_aout_register_customer_customer"
+        description "Reference to the newly registered customer."
         type ref(Customer)
       }
 
       field welcomeTier {
         name "Welcome Tier"
         id "fld_aout_register_customer_welcome_tier"
+        description "Assigned welcome tier label from onboarding logic."
         type string
       }
     }
@@ -1056,32 +1224,38 @@ ontology artisan_bakery_local {
   action createSalesOrder {
     name "Create Sales Order"
     id "act_create_sales_order"
+    description "Creates a sales order, computes totals, and returns linked billing references."
     kind process
 
     input {
       id "ain_create_sales_order"
+      description "Input payload required to create a sales order."
 
       field customer {
         name "Customer"
         id "fld_ain_create_sales_order_customer"
+        description "Customer for whom the sales order is created."
         type ref(Customer)
       }
 
       field createdBy {
         name "Created By"
         id "fld_ain_create_sales_order_created_by"
+        description "Employee creating the sales order."
         type ref(Employee)
       }
 
       field lines {
         name "Lines"
         id "fld_ain_create_sales_order_lines"
+        description "Line items to include in the new sales order."
         type SalesOrderLine[]
       }
 
       field requestedFulfillmentDate {
         name "Requested Fulfillment Date"
         id "fld_ain_create_sales_order_requested_fulfillment_date"
+        description "Optional requested date for order fulfillment."
         type date
         optional
       }
@@ -1089,22 +1263,26 @@ ontology artisan_bakery_local {
 
     output {
       id "aout_create_sales_order"
+      description "Output payload with created order, invoice, and final total."
 
       field salesOrder {
         name "Sales Order"
         id "fld_aout_create_sales_order_sales_order"
+        description "Reference to the newly created sales order."
         type ref(SalesOrder)
       }
 
       field invoice {
         name "Invoice"
         id "fld_aout_create_sales_order_invoice"
+        description "Invoice generated for the created sales order."
         type ref(Invoice)
       }
 
       field totalAmount {
         name "Total Amount"
         id "fld_aout_create_sales_order_total_amount"
+        description "Final computed total amount for the sales order."
         type Money
       }
     }
@@ -1113,26 +1291,31 @@ ontology artisan_bakery_local {
   action markSalesOrderPaid {
     name "Mark Sales Order Paid"
     id "act_mark_sales_order_paid"
+    description "Applies the sales-order payment transition with payment details."
     kind workflow
 
     input {
       id "ain_mark_sales_order_paid"
+      description "Input payload for marking a sales order as paid."
 
       field salesOrder {
         name "Sales Order"
         id "fld_ain_mark_sales_order_paid_sales_order"
+        description "Sales order to transition into the paid state."
         type ref(SalesOrder)
       }
 
       field amount {
         name "Amount"
         id "fld_ain_mark_sales_order_paid_amount"
+        description "Amount being recorded as paid."
         type Money
       }
 
       field paidAt {
         name "Paid At"
         id "fld_ain_mark_sales_order_paid_paid_at"
+        description "Timestamp when payment was received or confirmed."
         type datetime
       }
     }
@@ -1143,26 +1326,31 @@ ontology artisan_bakery_local {
   action fulfillSalesOrder {
     name "Fulfill Sales Order"
     id "act_fulfill_sales_order"
+    description "Applies the sales-order fulfillment transition after payment."
     kind workflow
 
     input {
       id "ain_fulfill_sales_order"
+      description "Input payload for fulfilling a paid sales order."
 
       field salesOrder {
         name "Sales Order"
         id "fld_ain_fulfill_sales_order_sales_order"
+        description "Paid sales order to fulfill."
         type ref(SalesOrder)
       }
 
       field fulfilledAt {
         name "Fulfilled At"
         id "fld_ain_fulfill_sales_order_fulfilled_at"
+        description "Timestamp when fulfillment was completed."
         type datetime
       }
 
       field shipmentTracking {
         name "Shipment Tracking"
         id "fld_ain_fulfill_sales_order_shipment_tracking"
+        description "Optional shipment tracking identifier to store."
         type string
         optional
       }
@@ -1174,26 +1362,31 @@ ontology artisan_bakery_local {
   action cancelSalesOrder {
     name "Cancel Sales Order"
     id "act_cancel_sales_order"
+    description "Cancels an unpaid sales order through its cancellation transition."
     kind process
 
     input {
       id "ain_cancel_sales_order"
+      description "Input payload for cancelling a pending sales order."
 
       field salesOrder {
         name "Sales Order"
         id "fld_ain_cancel_sales_order_sales_order"
+        description "Sales order to cancel."
         type ref(SalesOrder)
       }
 
       field reason {
         name "Reason"
         id "fld_ain_cancel_sales_order_reason"
+        description "Reason supplied for cancelling the order."
         type string
       }
 
       field cancelledAt {
         name "Cancelled At"
         id "fld_ain_cancel_sales_order_cancelled_at"
+        description "Timestamp when cancellation should be recorded."
         type datetime
       }
     }
@@ -1204,32 +1397,38 @@ ontology artisan_bakery_local {
   action createPurchaseOrder {
     name "Create Purchase Order"
     id "act_create_purchase_order"
+    description "Creates a purchase order for supplier replenishment."
     kind process
 
     input {
       id "ain_create_purchase_order"
+      description "Input payload required to create a purchase order."
 
       field supplier {
         name "Supplier"
         id "fld_ain_create_purchase_order_supplier"
+        description "Supplier to receive the purchase order."
         type ref(Supplier)
       }
 
       field requestedBy {
         name "Requested By"
         id "fld_ain_create_purchase_order_requested_by"
+        description "Employee requesting the purchase."
         type ref(Employee)
       }
 
       field lines {
         name "Lines"
         id "fld_ain_create_purchase_order_lines"
+        description "Purchase line items to include on the order."
         type PurchaseOrderLine[]
       }
 
       field notes {
         name "Notes"
         id "fld_ain_create_purchase_order_notes"
+        description "Optional internal note for procurement context."
         type string
         optional
       }
@@ -1237,16 +1436,19 @@ ontology artisan_bakery_local {
 
     output {
       id "aout_create_purchase_order"
+      description "Output payload with created purchase order and estimated total."
 
       field purchaseOrder {
         name "Purchase Order"
         id "fld_aout_create_purchase_order_purchase_order"
+        description "Reference to the newly created purchase order."
         type ref(PurchaseOrder)
       }
 
       field estimatedTotal {
         name "Estimated Total"
         id "fld_aout_create_purchase_order_estimated_total"
+        description "Estimated monetary total for the requested purchase lines."
         type Money
       }
     }
@@ -1255,26 +1457,31 @@ ontology artisan_bakery_local {
   action submitPurchaseOrder {
     name "Submit Purchase Order"
     id "act_submit_purchase_order"
+    description "Submits a draft purchase order to the supplier."
     kind workflow
 
     input {
       id "ain_submit_purchase_order"
+      description "Input payload for submitting a purchase order."
 
       field purchaseOrder {
         name "Purchase Order"
         id "fld_ain_submit_purchase_order_purchase_order"
+        description "Draft purchase order to submit."
         type ref(PurchaseOrder)
       }
 
       field submittedAt {
         name "Submitted At"
         id "fld_ain_submit_purchase_order_submitted_at"
+        description "Timestamp to record as submission time."
         type datetime
       }
 
       field buyerNote {
         name "Buyer Note"
         id "fld_ain_submit_purchase_order_buyer_note"
+        description "Optional buyer note attached to submission."
         type string
         optional
       }
@@ -1286,26 +1493,31 @@ ontology artisan_bakery_local {
   action receivePurchaseOrder {
     name "Receive Purchase Order"
     id "act_receive_purchase_order"
+    description "Marks a submitted purchase order as received."
     kind workflow
 
     input {
       id "ain_receive_purchase_order"
+      description "Input payload for receiving a submitted purchase order."
 
       field purchaseOrder {
         name "Purchase Order"
         id "fld_ain_receive_purchase_order_purchase_order"
+        description "Submitted purchase order being received."
         type ref(PurchaseOrder)
       }
 
       field receivedAt {
         name "Received At"
         id "fld_ain_receive_purchase_order_received_at"
+        description "Timestamp when goods were received."
         type datetime
       }
 
       field invoiceNumber {
         name "Invoice Number"
         id "fld_ain_receive_purchase_order_invoice_number"
+        description "Optional supplier invoice number for received goods."
         type string
         optional
       }
@@ -1317,20 +1529,24 @@ ontology artisan_bakery_local {
   action closePurchaseOrder {
     name "Close Purchase Order"
     id "act_close_purchase_order"
+    description "Closes a received purchase order after post-receipt tasks complete."
     kind workflow
 
     input {
       id "ain_close_purchase_order"
+      description "Input payload for closing a received purchase order."
 
       field purchaseOrder {
         name "Purchase Order"
         id "fld_ain_close_purchase_order_purchase_order"
+        description "Received purchase order to close."
         type ref(PurchaseOrder)
       }
 
       field closedAt {
         name "Closed At"
         id "fld_ain_close_purchase_order_closed_at"
+        description "Timestamp when the order closure is recorded."
         type datetime
       }
     }
@@ -1341,26 +1557,31 @@ ontology artisan_bakery_local {
   action recordInvoicePayment {
     name "Record Invoice Payment"
     id "act_record_invoice_payment"
+    description "Records invoice payment details and emits a payment-recorded signal."
     kind process
 
     input {
       id "ain_record_invoice_payment"
+      description "Input payload for recording an invoice payment."
 
       field invoice {
         name "Invoice"
         id "fld_ain_record_invoice_payment_invoice"
+        description "Invoice receiving the payment."
         type ref(Invoice)
       }
 
       field amount {
         name "Amount"
         id "fld_ain_record_invoice_payment_amount"
+        description "Payment amount to record against the invoice."
         type Money
       }
 
       field methodDetails {
         name "Method Details"
         id "fld_ain_record_invoice_payment_method_details"
+        description "Details describing payment method and provider metadata."
         type PaymentMethodDetails
       }
     }
@@ -1371,26 +1592,31 @@ ontology artisan_bakery_local {
   action markInvoicePaid {
     name "Mark Invoice Paid"
     id "act_mark_invoice_paid"
+    description "Applies the invoice paid transition once payment is confirmed."
     kind workflow
 
     input {
       id "ain_mark_invoice_paid"
+      description "Input payload for marking an invoice as paid."
 
       field invoice {
         name "Invoice"
         id "fld_ain_mark_invoice_paid_invoice"
+        description "Invoice to transition into the paid state."
         type ref(Invoice)
       }
 
       field paidAt {
         name "Paid At"
         id "fld_ain_mark_invoice_paid_paid_at"
+        description "Timestamp when payment settlement occurred."
         type datetime
       }
 
       field paymentReference {
         name "Payment Reference"
         id "fld_ain_mark_invoice_paid_payment_reference"
+        description "Optional external payment reference to persist."
         type string
         optional
       }
@@ -1402,20 +1628,24 @@ ontology artisan_bakery_local {
   action markInvoiceOverdue {
     name "Mark Invoice Overdue"
     id "act_mark_invoice_overdue"
+    description "Applies the invoice overdue transition for unpaid invoices."
     kind workflow
 
     input {
       id "ain_mark_invoice_overdue"
+      description "Input payload for marking an invoice as overdue."
 
       field invoice {
         name "Invoice"
         id "fld_ain_mark_invoice_overdue_invoice"
+        description "Invoice to transition into overdue state."
         type ref(Invoice)
       }
 
       field markedAt {
         name "Marked At"
         id "fld_ain_mark_invoice_overdue_marked_at"
+        description "Timestamp when overdue status was assigned."
         type datetime
       }
     }
@@ -1426,42 +1656,50 @@ ontology artisan_bakery_local {
   action adjustInventory {
     name "Adjust Inventory"
     id "act_adjust_inventory"
+    description "Applies a direct quantity adjustment to an inventory item."
     kind process
 
     input {
       id "ain_adjust_inventory"
+      description "Input payload for manually adjusting inventory levels."
 
       field inventoryItem {
         name "Inventory Item"
         id "fld_ain_adjust_inventory_inventory_item"
+        description "Inventory item whose quantity should be adjusted."
         type ref(InventoryItem)
       }
 
       field delta {
         name "Delta"
         id "fld_ain_adjust_inventory_delta"
+        description "Quantity adjustment magnitude to apply to the inventory item."
         type Quantity
       }
 
       field reason {
         name "Reason"
         id "fld_ain_adjust_inventory_reason"
+        description "Business reason for the inventory adjustment."
         type string
       }
     }
 
     output {
       id "aout_adjust_inventory"
+      description "Output payload with the adjusted inventory item and resulting quantity."
 
       field inventoryItem {
         name "Inventory Item"
         id "fld_aout_adjust_inventory_inventory_item"
+        description "Reference to the inventory item after adjustment."
         type ref(InventoryItem)
       }
 
       field newQuantity {
         name "New Quantity"
         id "fld_aout_adjust_inventory_new_quantity"
+        description "Resulting quantity after applying the adjustment."
         type Quantity
       }
     }
@@ -1470,30 +1708,36 @@ ontology artisan_bakery_local {
   action restockInventory {
     name "Restock Inventory"
     id "act_restock_inventory"
+    description "Updates inventory quantities based on received purchase orders."
     kind workflow
 
     input {
       id "ain_restock_inventory"
+      description "Input payload for restocking inventory from a purchase order receipt."
 
       field purchaseOrder {
         name "Purchase Order"
         id "fld_ain_restock_inventory_purchase_order"
+        description "Purchase order whose received lines should restock inventory."
         type ref(PurchaseOrder)
       }
 
       field receivedAt {
         name "Received At"
         id "fld_ain_restock_inventory_received_at"
+        description "Timestamp used to mark inventory restock completion."
         type datetime
       }
     }
 
     output {
       id "aout_restock_inventory"
+      description "Output payload listing inventory items updated during restocking."
 
       field updatedItems {
         name "Updated Items"
         id "fld_aout_restock_inventory_updated_items"
+        description "Inventory items that were modified by restock processing."
         type ref(InventoryItem)[]
       }
     }
@@ -1502,6 +1746,7 @@ ontology artisan_bakery_local {
   trigger onLowStockDetected {
     name "On Low Stock Detected"
     id "trg_on_low_stock_detected"
+    description "Invokes purchase-order creation when low-stock events are observed."
     when event LowStockDetected
     invoke createPurchaseOrder
   }
@@ -1509,6 +1754,7 @@ ontology artisan_bakery_local {
   trigger onPurchaseOrderReceived {
     name "On Purchase Order Received"
     id "trg_on_purchase_order_received"
+    description "Invokes inventory restocking when purchase-order receipt transitions occur."
     when event PurchaseOrderReceiveTransition
     invoke restockInventory
   }
@@ -1516,6 +1762,7 @@ ontology artisan_bakery_local {
   trigger onInvoicePaymentRecorded {
     name "On Invoice Payment Recorded"
     id "trg_on_invoice_payment_recorded"
+    description "Invokes invoice payment transition after payment-recorded signals."
     when event InvoicePaymentRecorded
     invoke markInvoicePaid
   }
@@ -1523,6 +1770,7 @@ ontology artisan_bakery_local {
   trigger onSalesOrderMarkedPaid {
     name "On Sales Order Marked Paid"
     id "trg_on_sales_order_marked_paid"
+    description "Invokes order fulfillment after sales-order payment transitions."
     when event SalesOrderMarkPaidTransition
     invoke fulfillSalesOrder
   }

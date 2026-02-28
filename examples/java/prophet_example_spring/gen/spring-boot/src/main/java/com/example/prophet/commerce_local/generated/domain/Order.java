@@ -16,16 +16,49 @@ public record Order(
      * Stable order identifier.
      */
     @NotNull String orderId,
+    /**
+     * Reference to the user who placed the order.
+     */
     @NotNull UserRef customer,
+    /**
+     * Total monetary amount recorded for the order.
+     */
     @NotNull BigDecimal totalAmount,
+    /**
+     * Optional promotional code applied during checkout.
+     */
     String discountCode,
+    /**
+     * Optional labels used for filtering and analytics.
+     */
     List<String> tags,
+    /**
+     * Optional destination address for order fulfillment.
+     */
     Address shippingAddress,
+    /**
+     * Optional identifier of the user who approved the order.
+     */
     String approvedByUserId,
+    /**
+     * Optional notes captured while approving the order.
+     */
     List<String> approvalNotes,
+    /**
+     * Optional reason recorded for the approval decision.
+     */
     String approvalReason,
+    /**
+     * Optional carrier name used for shipment.
+     */
     String shippingCarrier,
+    /**
+     * Optional tracking number assigned by the carrier.
+     */
     String shippingTrackingNumber,
+    /**
+     * Optional identifiers for packages in the shipment.
+     */
     List<String> shippingPackageIds,
     @NotNull OrderState state
 ) implements OrderRefOrObject {

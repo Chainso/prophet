@@ -5,15 +5,24 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 /**
- * Event payload for 'OrderShipTransition'.
+ * Moves an order from approved to shipped.
  */
 @Generated("prophet-cli")
 public record OrderShipTransition(
     @NotNull String orderId,
     @NotNull String fromState,
     @NotNull String toState,
+    /**
+     * Carrier service handling shipment delivery.
+     */
     @NotNull String carrier,
+    /**
+     * Tracking reference assigned for the shipment.
+     */
     @NotNull String trackingNumber,
+    /**
+     * Package identifiers included in this shipment.
+     */
     @NotNull List<String> packageIds
 ) {
 

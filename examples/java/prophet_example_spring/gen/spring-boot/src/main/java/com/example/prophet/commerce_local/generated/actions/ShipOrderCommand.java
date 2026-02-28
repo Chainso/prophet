@@ -5,11 +5,26 @@ import com.example.prophet.commerce_local.generated.domain.OrderRef;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
+/**
+ * Input payload for shipping an approved order.
+ */
 @Generated("prophet-cli")
 public record ShipOrderCommand(
+    /**
+     * Approved order that should be shipped.
+     */
     @NotNull OrderRef order,
+    /**
+     * Carrier service selected for shipment.
+     */
     @NotNull String carrier,
+    /**
+     * Tracking number assigned by the carrier.
+     */
     @NotNull String trackingNumber,
+    /**
+     * Package identifiers included in this shipment.
+     */
     @NotNull List<String> packageIds
 ) {
 

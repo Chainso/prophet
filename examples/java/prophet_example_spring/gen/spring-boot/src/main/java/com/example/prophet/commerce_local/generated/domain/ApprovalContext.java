@@ -5,10 +5,22 @@ import com.example.prophet.commerce_local.generated.domain.UserRef;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
+/**
+ * Supplemental approval context for review workflows.
+ */
 @Generated("prophet-cli")
 public record ApprovalContext(
+    /**
+     * User acting as the primary approver.
+     */
     @NotNull UserRef approver,
+    /**
+     * Optional users copied on approval activity.
+     */
     List<UserRef> watchers,
+    /**
+     * Optional rationale included with approval context.
+     */
     String reason
 ) {
 

@@ -26,6 +26,9 @@ public class UserEntity {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
+    /**
+     * Email address used to contact the user.
+     */
     @Column(name = "email", nullable = false)
     private String email;
 

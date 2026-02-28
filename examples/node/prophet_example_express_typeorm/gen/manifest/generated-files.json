@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.23.0",
+  "toolchain_version": "0.24.0",
   "stack": {
     "id": "node_express_typeorm",
     "language": "node",
     "framework": "express",
     "orm": "typeorm"
   },
-  "ir_hash": "30d3ada2058aeb6d5767181fcade6e20fa46cc617ac569e0013564166ce444d8",
+  "ir_hash": "5fb742423e3260e5f69faf4f0890743452a562de20b32aeed9962662e4bc355b",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -87,7 +87,7 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "71fc619483ec1ec3b76bdfc96b5be698c49ca065aeca34e0906313e82458c768"
+      "sha256": "1f9eb52261eb93ade0d23875e478fb38ac959b3f284eaf1760702505e0e3cdef"
     },
     {
       "path": "gen/sql/schema.sql",

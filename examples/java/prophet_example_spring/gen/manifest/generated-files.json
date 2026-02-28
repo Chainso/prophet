@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.23.0",
+  "toolchain_version": "0.24.0",
   "stack": {
     "id": "java_spring_jpa",
     "language": "java",
     "framework": "spring_boot",
     "orm": "jpa"
   },
-  "ir_hash": "30d3ada2058aeb6d5767181fcade6e20fa46cc617ac569e0013564166ce444d8",
+  "ir_hash": "9eb0c1f13538a27653b7021d919d98ba331335afab1af0cecabed4429993583c",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -31,23 +31,23 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "71fc619483ec1ec3b76bdfc96b5be698c49ca065aeca34e0906313e82458c768"
+      "sha256": "5a0bd05d4da25b09e21a0a88d09a6bfbf25ceaf042ccf72b099da0cdc23474a7"
     },
     {
       "path": "gen/spring-boot/build.gradle.kts",
-      "sha256": "c0130b18ec829fc3ee337b9992bd63d3c1a287b03adefe6b8f277f6eca0330bc"
+      "sha256": "11e9d5f2d6716dc2ffa8c193c77d3e0d574945700863d374384321e1d34929bb"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/actions/ApproveOrderCommand.java",
-      "sha256": "16d670b48f6efb3acb653aac6700d2d498ae783f0a566630aa048f5cf9fb94e1"
+      "sha256": "6d8218064a4c64287cb28155ecd1ffa22b61e1c2218b047d85daf1dcdda977a6"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/actions/CreateOrderCommand.java",
-      "sha256": "ecd570d702396f7f6688c2d6a4b7f7b29bcd8c88321fd4f6d5c90c88fb4e0e17"
+      "sha256": "d8f2d7261bcc1ab0d055b4c4ab9071802637f323bdf4b7ade97d75650d7c5a75"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/actions/ShipOrderCommand.java",
-      "sha256": "e884e31ea806513182bcec56819e366d717e88caf8265d601a045b2671c5fe8a"
+      "sha256": "4a8122919d9e8c1a5c0cd83edfdca7052730691ee11d23d7558b12e28b64e221"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/actions/handlers/ApproveOrderActionHandler.java",
@@ -175,15 +175,15 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/Address.java",
-      "sha256": "7cfe675c95b6c21ff846ffd08f3f7c1c44415f8c5d7e3185ee1c2bd0672cb4f2"
+      "sha256": "8349000f07b243d257ba303265fdc2931e7306548cd69b31a0610252320834c2"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/ApprovalContext.java",
-      "sha256": "dba6f420c4b42b116e9802df6774360b1ada4c85ae59166129f0a39e51da7511"
+      "sha256": "f47ef43174b14012df6fbc1f7e54e1d5ceaf0580d4e7a0e06fc97abae9221e7d"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/Order.java",
-      "sha256": "bbc074868a57aac6978fa45e0f174cc6b2a3ec97bafbb133803695d2dd1a3d13"
+      "sha256": "87735eddad594bd6646a7858fb96a8377ebc7a84fb70acf560320a62efb4fa0e"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/OrderRef.java",
@@ -199,7 +199,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/User.java",
-      "sha256": "8f1c7d9aa2b552785d842fe7a64ac369da6e791dd490a38dd272c2b7fb1f6d4f"
+      "sha256": "90224ffe20a4ae1f94171ab2d9780c005d946b7ef871e746ffa771bde78fe960"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/UserRef.java",
@@ -219,7 +219,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/CreateOrderResult.java",
-      "sha256": "9d2a68c92f4386d28e67456aad02ccd1e0132e0656bf5bba700b2debc6ff5de6"
+      "sha256": "31f85faa0d82760c8e2f3fe32c600f314b16828edf66eaf09884235df3ee2de7"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/CreateOrderResultEvent.java",
@@ -239,7 +239,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/OrderApproveTransition.java",
-      "sha256": "050e52b120942cc2213302ca005efa8519471ed17bd9b9a580df4ed82dbaba72"
+      "sha256": "e6f9122e5bd84660468bfea41f984c960cfdf1ff53c3ae55ba6b975ba5d51f41"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/OrderApproveTransitionDraft.java",
@@ -251,7 +251,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/OrderShipTransition.java",
-      "sha256": "424b8833d63de29e717d6c7083505811d435e9c3936ae8fe3394c05dcdac4840"
+      "sha256": "84f2167b0289a89d0281f3becf8860f646fa04863b715be25bc39c8a870c729f"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/OrderShipTransitionDraft.java",
@@ -263,7 +263,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/PaymentCaptured.java",
-      "sha256": "8f8c67f5814f7bd24ea795f1acec48eb603cde307edd2964964f706e9d4c8873"
+      "sha256": "c4f24b7438d2d57a054b80f243dc6d5162195a2117857771b0efeeaec6096db6"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/events/PaymentCapturedEvent.java",
@@ -283,7 +283,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/persistence/OrderEntity.java",
-      "sha256": "f847b63a513f214d69eb36ee02f54bb891b4f76cf0d7e4cf2b1ade72f3d65ef4"
+      "sha256": "f558dc4dba392489f3e730db117107377f2e61f2a41c5b74002940c3ec4bbbc6"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/persistence/OrderRepository.java",
@@ -311,7 +311,7 @@
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/persistence/UserEntity.java",
-      "sha256": "aa251d89604741bfdb5946a5a4cfca7cebcda0041347648ebc2dde33c14cbbe6"
+      "sha256": "c082e356a73161b0cbae26d5fb82071bb44b6afca7fcd7d06c3a3b74ef076ec3"
     },
     {
       "path": "gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/persistence/UserRepository.java",

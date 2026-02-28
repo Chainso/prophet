@@ -7,6 +7,7 @@ ontology support_local {
   type Email {
     name "Email"
     id "type_email"
+    description "Email address value validated by a lightweight format pattern."
     base string
     constraint pattern "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
   }
@@ -14,16 +15,19 @@ ontology support_local {
   struct UserRef {
     name "User Ref"
     id "struct_user_ref"
+    description "Lightweight user identity details used for ticket assignment."
 
     field userId {
       name "User ID"
       id "fld_struct_user_ref_user_id"
+      description "Stable user identifier for the referenced assignee."
       type string
     }
 
     field email {
       name "Email"
       id "fld_struct_user_ref_email"
+      description "Optional email address for contacting the assignee."
       type Email
       optional
     }
@@ -32,10 +36,12 @@ ontology support_local {
   object Ticket {
     name "Ticket"
     id "obj_ticket"
+    description "Support request tracked through a minimal triage lifecycle."
 
     field id {
       name "ID"
       id "fld_ticket_id"
+      description "Stable ticket identifier."
       type string
       key primary
     }
@@ -43,12 +49,14 @@ ontology support_local {
     field title {
       name "Title"
       id "fld_ticket_title"
+      description "Short summary describing the support issue."
       type string
     }
 
     field assignee {
       name "Assignee"
       id "fld_ticket_assignee"
+      description "Optional assignee details for the user handling the ticket."
       type UserRef
       optional
     }
@@ -56,6 +64,7 @@ ontology support_local {
     field tags {
       name "Tags"
       id "fld_ticket_tags"
+      description "Optional labels used to categorize or filter tickets."
       type string[]
       optional
     }
@@ -63,17 +72,20 @@ ontology support_local {
     state New {
       name "New"
       id "state_ticket_new"
+      description "Initial lifecycle state before triage occurs."
       initial
     }
 
     state Triaged {
       name "Triaged"
       id "state_ticket_triaged"
+      description "Lifecycle state after the ticket has been triaged."
     }
 
     transition Triage {
       name "Triage"
       id "trans_ticket_triage"
+      description "Moves a ticket from New to Triaged."
       from New
       to Triaged
     }
@@ -82,10 +94,12 @@ ontology support_local {
   signal TicketCreated {
     name "Ticket Created"
     id "sig_ticket_created"
+    description "Event emitted when a new ticket is created."
 
     field ticket {
       name "Ticket"
       id "fld_sig_ticket_created_ticket"
+      description "Reference to the newly created ticket."
       type ref(Ticket)
     }
   }
@@ -93,30 +107,36 @@ ontology support_local {
   action triageTicket {
     name "Triage Ticket"
     id "act_triage_ticket"
+    description "Runs ticket triage and returns the updated ticket state."
     kind process
 
     input {
       id "ain_triage_ticket"
+      description "Input payload identifying which ticket to triage."
 
       field ticket {
         name "Ticket"
         id "fld_ain_triage_ticket_ticket"
+        description "Reference to the ticket that should be triaged."
         type ref(Ticket)
       }
     }
 
     output {
       id "aout_triage_ticket"
+      description "Result payload with the triaged ticket and resulting state."
 
       field ticket {
         name "Ticket"
         id "fld_aout_triage_ticket_ticket"
+        description "Reference to the ticket after triage processing."
         type ref(Ticket)
       }
 
       field newState {
         name "New State"
         id "fld_aout_triage_ticket_new_state"
+        description "State name assigned to the ticket after triage."
         type string
       }
     }
@@ -125,6 +145,7 @@ ontology support_local {
   trigger onTicketCreated {
     name "On Ticket Created"
     id "trg_on_ticket_created"
+    description "Starts triage when the TicketCreated event is observed."
     when event TicketCreated
     invoke triageTicket
   }
