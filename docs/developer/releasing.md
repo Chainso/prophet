@@ -9,6 +9,7 @@ Update both:
 ## Validation Before Tag
 
 ```bash
+.venv/bin/pip install -r requirements-dev.txt
 python3 -m unittest discover -s prophet-cli/tests -p 'test_*.py' -v
 cd examples/java/prophet_example_spring
 $(git rev-parse --show-toplevel)/.venv/bin/prophet gen --wire-gradle
@@ -19,8 +20,8 @@ $(git rev-parse --show-toplevel)/.venv/bin/prophet check --show-reasons
 ## Build + Metadata Checks
 
 ```bash
-python3 -m build prophet-cli
-python3 -m twine check prophet-cli/dist/*
+.venv/bin/python -m build prophet-cli
+.venv/bin/python -m twine check prophet-cli/dist/*
 ```
 
 ## Cut Release

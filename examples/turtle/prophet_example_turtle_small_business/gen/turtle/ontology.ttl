@@ -2326,98 +2326,98 @@ artisan_bakery_local:fld_ain_submit_purchase_order_submitted_at a prophet:Proper
 # Actions
 # ============================================================
 
-artisan_bakery_local:act_adjust_inventory a prophet:Process ;
+artisan_bakery_local:act_adjust_inventory a prophet:Action ;
   prophet:name "Adjust Inventory" ;
   prophet:description "Applies a direct quantity adjustment to an inventory item." ;
   prophet:acceptsInput artisan_bakery_local:ain_adjust_inventory ;
   prophet:producesEvent artisan_bakery_local:aout_adjust_inventory ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_cancel_sales_order a prophet:Process ;
+artisan_bakery_local:act_cancel_sales_order a prophet:Action ;
   prophet:name "Cancel Sales Order" ;
   prophet:description "Cancels an unpaid sales order through its cancellation transition." ;
   prophet:acceptsInput artisan_bakery_local:ain_cancel_sales_order ;
   prophet:producesEvent artisan_bakery_local:trans_sales_order_cancel ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_close_purchase_order a prophet:Workflow ;
+artisan_bakery_local:act_close_purchase_order a prophet:Action ;
   prophet:name "Close Purchase Order" ;
   prophet:description "Closes a received purchase order after post-receipt tasks complete." ;
   prophet:acceptsInput artisan_bakery_local:ain_close_purchase_order ;
   prophet:producesEvent artisan_bakery_local:trans_purchase_order_close ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_create_purchase_order a prophet:Process ;
+artisan_bakery_local:act_create_purchase_order a prophet:Action ;
   prophet:name "Create Purchase Order" ;
   prophet:description "Creates a purchase order for supplier replenishment." ;
   prophet:acceptsInput artisan_bakery_local:ain_create_purchase_order ;
   prophet:producesEvent artisan_bakery_local:aout_create_purchase_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_create_sales_order a prophet:Process ;
+artisan_bakery_local:act_create_sales_order a prophet:Action ;
   prophet:name "Create Sales Order" ;
   prophet:description "Creates a sales order, computes totals, and returns linked billing references." ;
   prophet:acceptsInput artisan_bakery_local:ain_create_sales_order ;
   prophet:producesEvent artisan_bakery_local:aout_create_sales_order ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_fulfill_sales_order a prophet:Workflow ;
+artisan_bakery_local:act_fulfill_sales_order a prophet:Action ;
   prophet:name "Fulfill Sales Order" ;
   prophet:description "Applies the sales-order fulfillment transition after payment." ;
   prophet:acceptsInput artisan_bakery_local:ain_fulfill_sales_order ;
   prophet:producesEvent artisan_bakery_local:trans_sales_order_fulfill ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_mark_invoice_overdue a prophet:Workflow ;
+artisan_bakery_local:act_mark_invoice_overdue a prophet:Action ;
   prophet:name "Mark Invoice Overdue" ;
   prophet:description "Applies the invoice overdue transition for unpaid invoices." ;
   prophet:acceptsInput artisan_bakery_local:ain_mark_invoice_overdue ;
   prophet:producesEvent artisan_bakery_local:trans_invoice_mark_overdue ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_mark_invoice_paid a prophet:Workflow ;
+artisan_bakery_local:act_mark_invoice_paid a prophet:Action ;
   prophet:name "Mark Invoice Paid" ;
   prophet:description "Applies the invoice paid transition once payment is confirmed." ;
   prophet:acceptsInput artisan_bakery_local:ain_mark_invoice_paid ;
   prophet:producesEvent artisan_bakery_local:trans_invoice_mark_paid ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_mark_sales_order_paid a prophet:Workflow ;
+artisan_bakery_local:act_mark_sales_order_paid a prophet:Action ;
   prophet:name "Mark Sales Order Paid" ;
   prophet:description "Applies the sales-order payment transition with payment details." ;
   prophet:acceptsInput artisan_bakery_local:ain_mark_sales_order_paid ;
   prophet:producesEvent artisan_bakery_local:trans_sales_order_mark_paid ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_receive_purchase_order a prophet:Workflow ;
+artisan_bakery_local:act_receive_purchase_order a prophet:Action ;
   prophet:name "Receive Purchase Order" ;
   prophet:description "Marks a submitted purchase order as received." ;
   prophet:acceptsInput artisan_bakery_local:ain_receive_purchase_order ;
   prophet:producesEvent artisan_bakery_local:trans_purchase_order_receive ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_record_invoice_payment a prophet:Process ;
+artisan_bakery_local:act_record_invoice_payment a prophet:Action ;
   prophet:name "Record Invoice Payment" ;
   prophet:description "Records invoice payment details and emits a payment-recorded signal." ;
   prophet:acceptsInput artisan_bakery_local:ain_record_invoice_payment ;
   prophet:producesEvent artisan_bakery_local:sig_invoice_payment_recorded ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_register_customer a prophet:Process ;
+artisan_bakery_local:act_register_customer a prophet:Action ;
   prophet:name "Register Customer" ;
   prophet:description "Creates and returns a new customer profile for bakery operations." ;
   prophet:acceptsInput artisan_bakery_local:ain_register_customer ;
   prophet:producesEvent artisan_bakery_local:aout_register_customer ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_restock_inventory a prophet:Workflow ;
+artisan_bakery_local:act_restock_inventory a prophet:Action ;
   prophet:name "Restock Inventory" ;
   prophet:description "Updates inventory quantities based on received purchase orders." ;
   prophet:acceptsInput artisan_bakery_local:ain_restock_inventory ;
   prophet:producesEvent artisan_bakery_local:aout_restock_inventory ;
   prophet:inLocalOntology artisan_bakery_local:ont_artisan_bakery_local .
 
-artisan_bakery_local:act_submit_purchase_order a prophet:Workflow ;
+artisan_bakery_local:act_submit_purchase_order a prophet:Action ;
   prophet:name "Submit Purchase Order" ;
   prophet:description "Submits a draft purchase order to the supplier." ;
   prophet:acceptsInput artisan_bakery_local:ain_submit_purchase_order ;

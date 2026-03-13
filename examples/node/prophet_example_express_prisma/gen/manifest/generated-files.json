@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.24.0",
+  "toolchain_version": "0.25.0",
   "stack": {
     "id": "node_express_prisma",
     "language": "node",
     "framework": "express",
     "orm": "prisma"
   },
-  "ir_hash": "03457b3229ac104999559a08a86500ec5edd1edc850085b0e3627b578c97a1b3",
+  "ir_hash": "489f23b568d85db57882e80fc854c9f242855fb86cf02fce8ce668df663ef03f",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/node-express/package.json",
-      "sha256": "d1cfbe7de4a48a46c04a11e7907ddbc5dd67499977dadabbc829ff8c109f8c91"
+      "sha256": "8b84963638d03c354464855517f94d14ab900391ff62ef1d19c2bade98560335"
     },
     {
       "path": "gen/node-express/prisma/schema.prisma",

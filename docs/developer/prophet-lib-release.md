@@ -56,11 +56,11 @@ npm --prefix prophet-lib/javascript pack --dry-run
 ### Python runtime
 
 ```bash
-python3 -m pip install --upgrade build twine
+.venv/bin/pip install -r requirements-dev.txt
 PYTHONPATH=prophet-lib/python/src \
 python3 -m unittest discover -s prophet-lib/python/tests -p 'test_*.py' -v
-python3 -m build prophet-lib/python
-python3 -m twine check prophet-lib/python/dist/*
+.venv/bin/python -m build prophet-lib/python
+.venv/bin/python -m twine check prophet-lib/python/dist/*
 ```
 
 ### Java runtime

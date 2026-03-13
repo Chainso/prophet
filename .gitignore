@@ -39,3 +39,4 @@ prophet-lib/java/bin/
 prophet-lib/python/build/
 prophet-lib/python/dist/
 prophet-lib/python/*.egg-info/
+prophet-lib/python/src/*.egg-info/

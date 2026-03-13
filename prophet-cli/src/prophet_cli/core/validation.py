@@ -263,8 +263,6 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         validate_action_shape_fields("actionInput", shape.name, shape.fields)
 
     for a in ont.actions:
-        if a.kind not in {"process", "workflow"}:
-            errors.append(f"line {a.line}: action {a.name} kind must be process or workflow")
         if a.input_shape not in action_input_names:
             errors.append(f"line {a.line}: action {a.name} input shape '{a.input_shape}' not found")
 

@@ -100,9 +100,9 @@ From repository root:
 
 ```bash
 PYTHONPATH=prophet-lib/python/src python3 -m unittest discover -s prophet-lib/python/tests -p 'test_*.py' -v
-python3 -m pip install --upgrade build twine
-python3 -m build prophet-lib/python
-python3 -m twine check prophet-lib/python/dist/*
+.venv/bin/pip install -r requirements-dev.txt
+.venv/bin/python -m build prophet-lib/python
+.venv/bin/python -m twine check prophet-lib/python/dist/*
 ```
 
 ## More Information

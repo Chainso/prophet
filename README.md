@@ -85,6 +85,7 @@ From source (editable install):
 ```bash
 python3 -m venv .venv --system-site-packages
 .venv/bin/pip install --no-build-isolation -e ./prophet-cli
+.venv/bin/pip install -r requirements-dev.txt
 ```
 
 ## Get Started

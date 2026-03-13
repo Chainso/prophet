@@ -95,8 +95,6 @@ Action output is an event, and can be declared in three forms.
 
 ```prophet
 action createOrder {
-  kind process
-
   input {
     field customer_id {
       type string

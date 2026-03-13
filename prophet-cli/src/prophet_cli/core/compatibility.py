@@ -313,7 +313,7 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
     def compare_named_list(kind: str, old_list: List[Dict[str, Any]], new_list: List[Dict[str, Any]]) -> None:
         def comparable_payload(item: Dict[str, Any]) -> Dict[str, Any]:
             if kind == "action":
-                keep = ("id", "name", "kind", "input_shape_id", "output_event_id")
+                keep = ("id", "name", "input_shape_id", "output_event_id")
                 return {k: item.get(k) for k in keep}
             if kind == "event":
                 keep = (

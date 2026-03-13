@@ -24,7 +24,6 @@ REQUIRED_TOP_LEVEL_KEYS = (
 class ActionContractView:
     id: str
     name: str
-    kind: str
     input_shape_id: str
     output_event_id: str
 
@@ -129,7 +128,6 @@ class IRReader:
                 ActionContractView(
                     id=str(action.get("id", "")),
                     name=str(action.get("name", "")),
-                    kind=str(action.get("kind", "")),
                     input_shape_id=str(action.get("input_shape_id", "")),
                     output_event_id=str(action.get("output_event_id", "")),
                 )

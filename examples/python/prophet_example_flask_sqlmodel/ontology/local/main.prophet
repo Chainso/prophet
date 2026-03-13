@@ -271,7 +271,6 @@ ontology commerce_local {
   action createOrder {
     name "Create Order"
     id "act_create_order"
-    kind process
     description "Creates a new order."
 
     input {
@@ -333,7 +332,6 @@ ontology commerce_local {
   action approveOrder {
     name "Approve Order"
     id "act_approve_order"
-    kind process
     description "Approves an existing order."
 
     input {
@@ -378,7 +376,6 @@ ontology commerce_local {
   action shipOrder {
     name "Ship Order"
     id "act_ship_order"
-    kind workflow
     description "Ships an approved order."
 
     input {

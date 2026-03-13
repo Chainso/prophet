@@ -61,7 +61,7 @@ from prophet_cli.targets.python import generate_outputs as generate_python_outpu
 from prophet_cli.targets.turtle import render_turtle
 
 
-TOOLCHAIN_VERSION = "0.24.0"
+TOOLCHAIN_VERSION = "0.25.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
@@ -139,7 +139,6 @@ class StructDef:
 class ActionDef:
     name: str
     id: str
-    kind: str
     input_shape: str
     output_shape: str
     line: int
@@ -620,7 +619,6 @@ def parse_action_shape_block(p: Parser, name: str, block_line: int, block_kind: 
 
 def parse_action_block(p: Parser, name: str, block_line: int) -> ActionDef:
     a_id: Optional[str] = None
-    kind: Optional[str] = None
     input_shape: Optional[str] = None
     output_shape: Optional[str] = None
     while not p.eof():
@@ -632,11 +630,6 @@ def parse_action_block(p: Parser, name: str, block_line: int) -> ActionDef:
             _, row = p.pop()
             a_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
             continue
-        m = re.match(r"^kind\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
-        if m:
-            p.pop()
-            kind = m.group(1)
-            continue
         m = re.match(r"^input\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
         if m:
             p.pop()
@@ -647,11 +640,15 @@ def parse_action_block(p: Parser, name: str, block_line: int) -> ActionDef:
             p.pop()
             output_shape = m.group(1)
             continue
+        if line.startswith("kind "):
+            raise ProphetError(
+                f"Action {name} no longer supports 'kind'; remove the line and use a plain action block (line {ln})"
+            )
         raise ProphetError(f"Unexpected action line {ln}: {line}")
 
-    if a_id is None or kind is None or input_shape is None or output_shape is None:
-        raise ProphetError(f"Action {name} missing id/kind/input/output (line {block_line})")
-    return ActionDef(name=name, id=a_id, kind=kind, input_shape=input_shape, output_shape=output_shape, line=block_line)
+    if a_id is None or input_shape is None or output_shape is None:
+        raise ProphetError(f"Action {name} missing id/input/output (line {block_line})")
+    return ActionDef(name=name, id=a_id, input_shape=input_shape, output_shape=output_shape, line=block_line)
 
 
 def parse_event_block(p: Parser, name: str, block_line: int) -> EventDef:
@@ -922,8 +919,6 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         validate_action_shape_fields("actionOutput", shape.name, shape.fields)
 
     for a in ont.actions:
-        if a.kind not in {"process", "workflow"}:
-            errors.append(f"line {a.line}: action {a.name} kind must be process or workflow")
         if a.input_shape not in action_input_names:
             errors.append(f"line {a.line}: action {a.name} input shape '{a.input_shape}' not found")
         if a.output_shape not in action_output_names:
@@ -1122,7 +1117,6 @@ def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
             {
                 "id": a.id,
                 "name": a.name,
-                "kind": a.kind,
                 "input_shape_id": action_input_name_to_id[a.input_shape],
                 "output_shape_id": action_output_name_to_id[a.output_shape],
             }

@@ -84,7 +84,6 @@ ontology commerce_local {
 
   action approveOrder {
     id "act_approve_order"
-    kind process
 
     input {
       id "ain_approve_order"
@@ -172,9 +171,8 @@ Use this as the default decision guide when applying ontology changes.
    - Declares allowed lifecycle state changes.
    - Also creates derived transition events for trigger wiring.
 
-11. `action <ActionName> { kind ... input { ... } output { ... } }`
-   - Command/process API boundary generated as action endpoint + contracts.
-   - `kind` is semantic metadata (commonly `process`, `workflow`).
+11. `action <ActionName> { input { ... } output { ... } }`
+   - Command API boundary generated as action endpoint + contracts.
    - Keep action contracts explicit and stable; evolve additively when possible.
 
 12. Action `input` / `output` blocks

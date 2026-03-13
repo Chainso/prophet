@@ -83,7 +83,6 @@ class StructDef:
 class ActionDef:
     name: str
     id: str
-    kind: str
     input_shape: str
     produces_event: str
     description: Optional[str]

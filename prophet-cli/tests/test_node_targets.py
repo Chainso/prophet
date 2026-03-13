@@ -117,7 +117,9 @@ class NodeTargetTests(unittest.TestCase):
         turtle = outputs["gen/turtle/ontology.ttl"]
         self.assertIn("@prefix prophet:", turtle)
         self.assertIn("prophet:LocalOntology", turtle)
-        self.assertIn("prophet:Process", turtle)
+        self.assertIn("prophet:Action", turtle)
+        self.assertNotIn("prophet:Process", turtle)
+        self.assertNotIn("prophet:Workflow", turtle)
 
     def test_autodetect_selects_node_prisma_and_rewrites_default_targets(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-prisma-") as tmp:

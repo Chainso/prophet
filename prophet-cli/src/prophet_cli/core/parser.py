@@ -739,7 +739,6 @@ def parse_action_block(
     id_allocator: IdAllocator,
 ) -> Tuple[ActionDef, Optional[ActionShapeDef], Optional[EventDef]]:
     a_id: Optional[str] = None
-    kind: Optional[str] = None
     input_shape: Optional[str] = None
     produces_event: Optional[str] = None
     description: Optional[str] = None
@@ -756,11 +755,6 @@ def parse_action_block(
             _, row = p.pop()
             a_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
             id_allocator.reserve(a_id)
-            continue
-        m = re.match(r"^kind\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
-        if m:
-            p.pop()
-            kind = m.group(1)
             continue
         if line == "input {":
             p.pop()
@@ -809,6 +803,10 @@ def parse_action_block(
             raise ProphetError(
                 f"Action {name} input must be declared as 'input {{ ... }}' (line {ln})"
             )
+        if line.startswith("kind "):
+            raise ProphetError(
+                f"Action {name} no longer supports 'kind'; remove the line and use a plain action block (line {ln})"
+            )
         if line.startswith("output "):
             raise ProphetError(
                 f"Action {name} output must be one of 'output {{ ... }}', 'output signal <SignalName>', or 'output transition <ObjectName>.<TransitionName>' (line {ln})"
@@ -830,8 +828,8 @@ def parse_action_block(
             continue
         raise ProphetError(f"Unexpected action line {ln}: {line}")
 
-    if kind is None or input_shape is None or produces_event is None:
-        raise ProphetError(f"Action {name} missing kind/input/output (line {block_line})")
+    if input_shape is None or produces_event is None:
+        raise ProphetError(f"Action {name} missing input/output (line {block_line})")
     # Ensure derived names follow action display metadata even when `name "..."` appears
     # after inline input/output blocks.
     derived_input_shape = _derived_action_input_shape_name(name, display_name)
@@ -851,7 +849,6 @@ def parse_action_block(
         ActionDef(
             name=name,
             id=a_id,
-            kind=kind,
             input_shape=input_shape,
             produces_event=produces_event,
             description=description,

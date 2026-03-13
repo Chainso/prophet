@@ -66,7 +66,6 @@ ontology CommerceLocal {
 
   action createOrder {
     name "Create Order"
-    kind process
     input {
       field customerUserId { name "Customer User ID" type string }
       field totalAmount { name "Total Amount" type decimal }

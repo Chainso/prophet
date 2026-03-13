@@ -5,7 +5,7 @@
 ```bash
 python3 -m venv .venv --system-site-packages
 .venv/bin/pip install --no-build-isolation -e ./prophet-cli
-.venv/bin/pip install build twine
+.venv/bin/pip install -r requirements-dev.txt
 ```
 
 ## Expectations
@@ -30,8 +30,8 @@ From repository root:
 
 ```bash
 ./scripts/test-all.sh
-python3 -m build prophet-cli
-python3 -m twine check prophet-cli/dist/*
+.venv/bin/python -m build prophet-cli
+.venv/bin/python -m twine check prophet-cli/dist/*
 ```
 
 Target-specific coverage (example for Turtle):

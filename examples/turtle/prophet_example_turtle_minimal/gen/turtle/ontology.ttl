@@ -207,7 +207,7 @@ support_local:fld_ain_triage_ticket_ticket a prophet:PropertyDefinition ;
 # Actions
 # ============================================================
 
-support_local:act_triage_ticket a prophet:Process ;
+support_local:act_triage_ticket a prophet:Action ;
   prophet:name "Triage Ticket" ;
   prophet:description "Runs ticket triage and returns the updated ticket state." ;
   prophet:acceptsInput support_local:ain_triage_ticket ;

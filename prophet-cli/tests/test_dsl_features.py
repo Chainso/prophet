@@ -243,8 +243,6 @@ ontology MinimalCommerce {
   }
 
   action createOrder {
-    kind process
-
     input {
       field notes {
         type string
@@ -300,8 +298,6 @@ ontology MinimalCommerce {
   }
 
   action createOrder {
-    kind process
-
     input {
       field notes {
         type string
@@ -328,6 +324,38 @@ ontology MinimalCommerce {
         output_names = {event["name"] for event in ir.get("events", [])}
         self.assertIn("Create Order Command", input_names)
         self.assertIn("Create Order Result", output_names)
+
+    def test_action_kind_lines_are_rejected(self) -> None:
+        ontology_text = """
+ontology MinimalCommerce {
+  version "0.1.0"
+
+  object Order {
+    field orderId {
+      type string
+      key primary
+    }
+  }
+
+  action createOrder {
+    kind process
+
+    input {
+      field order {
+        type ref(Order)
+      }
+    }
+
+    output {
+      field order {
+        type ref(Order)
+      }
+    }
+  }
+}
+"""
+        with self.assertRaisesRegex(Exception, "no longer supports 'kind'"):
+            parse_ontology(ontology_text)
 
 
 if __name__ == "__main__":

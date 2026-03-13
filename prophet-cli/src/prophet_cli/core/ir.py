@@ -322,7 +322,6 @@ def build_ir(
             "id": a.id,
             "name": a.name,
             "display_name": _resolved_display_name(a.name, a.display_name),
-            "kind": a.kind,
             "input_shape_id": action_input_name_to_id[a.input_shape],
             "output_event_id": event_name_to_id[a.produces_event],
         }

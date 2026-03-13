@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.24.0",
+  "toolchain_version": "0.25.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_support_local",
@@ -195,7 +195,6 @@
       "id": "act_triage_ticket",
       "name": "triageTicket",
       "display_name": "Triage Ticket",
-      "kind": "process",
       "input_shape_id": "ain_triage_ticket",
       "output_event_id": "aout_triage_ticket",
       "description": "Runs ticket triage and returns the updated ticket state."
@@ -377,5 +376,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "fa69e4300b3d10c42435b689a584fc0d9713d0fa7137130dda42950aac6ef377",
-  "ir_hash": "749eaaffd12fb40bf34fd2579421cdec07f7312bf26c939c7e72dce5e9a90007"
+  "ir_hash": "5c5b1905d65ed15e06b6af63f4714c2d2ff3278e0a873c5a15001060ecbe1a66"
 }

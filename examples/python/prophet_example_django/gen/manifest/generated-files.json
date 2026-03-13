@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.24.0",
+  "toolchain_version": "0.25.0",
   "stack": {
     "id": "python_django_django_orm",
     "language": "python",
     "framework": "django",
     "orm": "django_orm"
   },
-  "ir_hash": "53134933cfc15c9a18705ec8b6ff73e6a2e792115db94a7169b70c3088aaacd5",
+  "ir_hash": "1e2b4f8aea959ce1d7de792d309229c78c0d14b9c80a26def6b24cfdff7f0f97",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "1961c66abf0c4a09b465b5ac103c89cfe1ffbf68aafb02b25f95810a6a50e996"
+      "sha256": "8521023375bcb21406da799a9c0272bb81b239ef9ee86d785e95ebba44b41b2f"
     },
     {
       "path": "gen/python/src/generated/__init__.py",

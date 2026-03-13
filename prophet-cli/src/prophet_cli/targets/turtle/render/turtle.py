@@ -496,7 +496,6 @@ def render_turtle(ir: Dict[str, Any]) -> str:
         action_subject = context.local_resource(str(action.get("id", "")))
         statements: List[Tuple[str, str]] = []
         _append_name_description(statements, action)
-        action_kind = str(action.get("kind", "")).strip()
         statements.extend(
             [
                 ("prophet:acceptsInput", context.local_resource(str(action.get("input_shape_id", "")))),
@@ -504,8 +503,7 @@ def render_turtle(ir: Dict[str, Any]) -> str:
                 ("prophet:inLocalOntology", ontology_subject),
             ]
         )
-        action_rdf_type = "prophet:Workflow" if action_kind == "workflow" else "prophet:Process"
-        _emit_resource(lines, action_subject, action_rdf_type, statements)
+        _emit_resource(lines, action_subject, "prophet:Action", statements)
 
     signal_events = [event for event in events if str(event.get("kind", "")) == "signal"]
     signal_subjects_by_event_id: Dict[str, str] = {}

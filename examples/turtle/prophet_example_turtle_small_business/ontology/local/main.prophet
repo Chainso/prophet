@@ -1147,8 +1147,6 @@ ontology artisan_bakery_local {
     name "Register Customer"
     id "act_register_customer"
     description "Creates and returns a new customer profile for bakery operations."
-    kind process
-
     input {
       id "ain_register_customer"
       description "Input payload for creating a new customer."
@@ -1225,8 +1223,6 @@ ontology artisan_bakery_local {
     name "Create Sales Order"
     id "act_create_sales_order"
     description "Creates a sales order, computes totals, and returns linked billing references."
-    kind process
-
     input {
       id "ain_create_sales_order"
       description "Input payload required to create a sales order."
@@ -1292,8 +1288,6 @@ ontology artisan_bakery_local {
     name "Mark Sales Order Paid"
     id "act_mark_sales_order_paid"
     description "Applies the sales-order payment transition with payment details."
-    kind workflow
-
     input {
       id "ain_mark_sales_order_paid"
       description "Input payload for marking a sales order as paid."
@@ -1327,8 +1321,6 @@ ontology artisan_bakery_local {
     name "Fulfill Sales Order"
     id "act_fulfill_sales_order"
     description "Applies the sales-order fulfillment transition after payment."
-    kind workflow
-
     input {
       id "ain_fulfill_sales_order"
       description "Input payload for fulfilling a paid sales order."
@@ -1363,8 +1355,6 @@ ontology artisan_bakery_local {
     name "Cancel Sales Order"
     id "act_cancel_sales_order"
     description "Cancels an unpaid sales order through its cancellation transition."
-    kind process
-
     input {
       id "ain_cancel_sales_order"
       description "Input payload for cancelling a pending sales order."
@@ -1398,8 +1388,6 @@ ontology artisan_bakery_local {
     name "Create Purchase Order"
     id "act_create_purchase_order"
     description "Creates a purchase order for supplier replenishment."
-    kind process
-
     input {
       id "ain_create_purchase_order"
       description "Input payload required to create a purchase order."
@@ -1458,8 +1446,6 @@ ontology artisan_bakery_local {
     name "Submit Purchase Order"
     id "act_submit_purchase_order"
     description "Submits a draft purchase order to the supplier."
-    kind workflow
-
     input {
       id "ain_submit_purchase_order"
       description "Input payload for submitting a purchase order."
@@ -1494,8 +1480,6 @@ ontology artisan_bakery_local {
     name "Receive Purchase Order"
     id "act_receive_purchase_order"
     description "Marks a submitted purchase order as received."
-    kind workflow
-
     input {
       id "ain_receive_purchase_order"
       description "Input payload for receiving a submitted purchase order."
@@ -1530,8 +1514,6 @@ ontology artisan_bakery_local {
     name "Close Purchase Order"
     id "act_close_purchase_order"
     description "Closes a received purchase order after post-receipt tasks complete."
-    kind workflow
-
     input {
       id "ain_close_purchase_order"
       description "Input payload for closing a received purchase order."
@@ -1558,8 +1540,6 @@ ontology artisan_bakery_local {
     name "Record Invoice Payment"
     id "act_record_invoice_payment"
     description "Records invoice payment details and emits a payment-recorded signal."
-    kind process
-
     input {
       id "ain_record_invoice_payment"
       description "Input payload for recording an invoice payment."
@@ -1593,8 +1573,6 @@ ontology artisan_bakery_local {
     name "Mark Invoice Paid"
     id "act_mark_invoice_paid"
     description "Applies the invoice paid transition once payment is confirmed."
-    kind workflow
-
     input {
       id "ain_mark_invoice_paid"
       description "Input payload for marking an invoice as paid."
@@ -1629,8 +1607,6 @@ ontology artisan_bakery_local {
     name "Mark Invoice Overdue"
     id "act_mark_invoice_overdue"
     description "Applies the invoice overdue transition for unpaid invoices."
-    kind workflow
-
     input {
       id "ain_mark_invoice_overdue"
       description "Input payload for marking an invoice as overdue."
@@ -1657,8 +1633,6 @@ ontology artisan_bakery_local {
     name "Adjust Inventory"
     id "act_adjust_inventory"
     description "Applies a direct quantity adjustment to an inventory item."
-    kind process
-
     input {
       id "ain_adjust_inventory"
       description "Input payload for manually adjusting inventory levels."
@@ -1709,8 +1683,6 @@ ontology artisan_bakery_local {
     name "Restock Inventory"
     id "act_restock_inventory"
     description "Updates inventory quantities based on received purchase orders."
-    kind workflow
-
     input {
       id "ain_restock_inventory"
       description "Input payload for restocking inventory from a purchase order receipt."

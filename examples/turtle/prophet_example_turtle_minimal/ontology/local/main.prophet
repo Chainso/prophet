@@ -108,7 +108,6 @@ ontology support_local {
     name "Triage Ticket"
     id "act_triage_ticket"
     description "Runs ticket triage and returns the updated ticket state."
-    kind process
 
     input {
       id "ain_triage_ticket"

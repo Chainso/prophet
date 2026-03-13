@@ -127,8 +127,8 @@ No example tests should depend on launching uvicorn/flask/django servers in-proc
 ## Packaging Validation
 
 ```bash
-python3 -m build prophet-cli
-python3 -m twine check prophet-cli/dist/*
+.venv/bin/python -m build prophet-cli
+.venv/bin/python -m twine check prophet-cli/dist/*
 ```
 
 ## Performance Benchmark

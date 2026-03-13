@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.24.0",
+  "toolchain_version": "0.25.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_commerce_local",
@@ -637,7 +637,6 @@
       "id": "act_approve_order",
       "name": "approveOrder",
       "display_name": "Approve Order",
-      "kind": "process",
       "input_shape_id": "ain_approve_order",
       "output_event_id": "trans_order_approve",
       "description": "Approves an existing order."
@@ -646,7 +645,6 @@
       "id": "act_create_order",
       "name": "createOrder",
       "display_name": "Create Order",
-      "kind": "process",
       "input_shape_id": "ain_create_order",
       "output_event_id": "aout_create_order",
       "description": "Creates a new order."
@@ -655,7 +653,6 @@
       "id": "act_ship_order",
       "name": "shipOrder",
       "display_name": "Ship Order",
-      "kind": "workflow",
       "input_shape_id": "ain_ship_order",
       "output_event_id": "trans_order_ship",
       "description": "Ships an approved order."
@@ -1055,5 +1052,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "026cc621cb86c87effeb4d1c95d64d9f993c65869a205b9346d57dc90f5ad261",
-  "ir_hash": "cf4f4f9c0d670030d8ed148fe17e49353fd75e5fc4a186c01d8765892bbbf25f"
+  "ir_hash": "11d37bf877f42e3c85893ac1b07e0521d7d1eba23e703d7c537e12a737ae7b7f"
 }

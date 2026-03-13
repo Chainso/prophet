@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.24.0",
+  "toolchain_version": "0.25.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_artisan_bakery_local",
@@ -2520,7 +2520,6 @@
       "id": "act_adjust_inventory",
       "name": "adjustInventory",
       "display_name": "Adjust Inventory",
-      "kind": "process",
       "input_shape_id": "ain_adjust_inventory",
       "output_event_id": "aout_adjust_inventory",
       "description": "Applies a direct quantity adjustment to an inventory item."
@@ -2529,7 +2528,6 @@
       "id": "act_cancel_sales_order",
       "name": "cancelSalesOrder",
       "display_name": "Cancel Sales Order",
-      "kind": "process",
       "input_shape_id": "ain_cancel_sales_order",
       "output_event_id": "trans_sales_order_cancel",
       "description": "Cancels an unpaid sales order through its cancellation transition."
@@ -2538,7 +2536,6 @@
       "id": "act_close_purchase_order",
       "name": "closePurchaseOrder",
       "display_name": "Close Purchase Order",
-      "kind": "workflow",
       "input_shape_id": "ain_close_purchase_order",
       "output_event_id": "trans_purchase_order_close",
       "description": "Closes a received purchase order after post-receipt tasks complete."
@@ -2547,7 +2544,6 @@
       "id": "act_create_purchase_order",
       "name": "createPurchaseOrder",
       "display_name": "Create Purchase Order",
-      "kind": "process",
       "input_shape_id": "ain_create_purchase_order",
       "output_event_id": "aout_create_purchase_order",
       "description": "Creates a purchase order for supplier replenishment."
@@ -2556,7 +2552,6 @@
       "id": "act_create_sales_order",
       "name": "createSalesOrder",
       "display_name": "Create Sales Order",
-      "kind": "process",
       "input_shape_id": "ain_create_sales_order",
       "output_event_id": "aout_create_sales_order",
       "description": "Creates a sales order, computes totals, and returns linked billing references."
@@ -2565,7 +2560,6 @@
       "id": "act_fulfill_sales_order",
       "name": "fulfillSalesOrder",
       "display_name": "Fulfill Sales Order",
-      "kind": "workflow",
       "input_shape_id": "ain_fulfill_sales_order",
       "output_event_id": "trans_sales_order_fulfill",
       "description": "Applies the sales-order fulfillment transition after payment."
@@ -2574,7 +2568,6 @@
       "id": "act_mark_invoice_overdue",
       "name": "markInvoiceOverdue",
       "display_name": "Mark Invoice Overdue",
-      "kind": "workflow",
       "input_shape_id": "ain_mark_invoice_overdue",
       "output_event_id": "trans_invoice_mark_overdue",
       "description": "Applies the invoice overdue transition for unpaid invoices."
@@ -2583,7 +2576,6 @@
       "id": "act_mark_invoice_paid",
       "name": "markInvoicePaid",
       "display_name": "Mark Invoice Paid",
-      "kind": "workflow",
       "input_shape_id": "ain_mark_invoice_paid",
       "output_event_id": "trans_invoice_mark_paid",
       "description": "Applies the invoice paid transition once payment is confirmed."
@@ -2592,7 +2584,6 @@
       "id": "act_mark_sales_order_paid",
       "name": "markSalesOrderPaid",
       "display_name": "Mark Sales Order Paid",
-      "kind": "workflow",
       "input_shape_id": "ain_mark_sales_order_paid",
       "output_event_id": "trans_sales_order_mark_paid",
       "description": "Applies the sales-order payment transition with payment details."
@@ -2601,7 +2592,6 @@
       "id": "act_receive_purchase_order",
       "name": "receivePurchaseOrder",
       "display_name": "Receive Purchase Order",
-      "kind": "workflow",
       "input_shape_id": "ain_receive_purchase_order",
       "output_event_id": "trans_purchase_order_receive",
       "description": "Marks a submitted purchase order as received."
@@ -2610,7 +2600,6 @@
       "id": "act_record_invoice_payment",
       "name": "recordInvoicePayment",
       "display_name": "Record Invoice Payment",
-      "kind": "process",
       "input_shape_id": "ain_record_invoice_payment",
       "output_event_id": "sig_invoice_payment_recorded",
       "description": "Records invoice payment details and emits a payment-recorded signal."
@@ -2619,7 +2608,6 @@
       "id": "act_register_customer",
       "name": "registerCustomer",
       "display_name": "Register Customer",
-      "kind": "process",
       "input_shape_id": "ain_register_customer",
       "output_event_id": "aout_register_customer",
       "description": "Creates and returns a new customer profile for bakery operations."
@@ -2628,7 +2616,6 @@
       "id": "act_restock_inventory",
       "name": "restockInventory",
       "display_name": "Restock Inventory",
-      "kind": "workflow",
       "input_shape_id": "ain_restock_inventory",
       "output_event_id": "aout_restock_inventory",
       "description": "Updates inventory quantities based on received purchase orders."
@@ -2637,7 +2624,6 @@
       "id": "act_submit_purchase_order",
       "name": "submitPurchaseOrder",
       "display_name": "Submit Purchase Order",
-      "kind": "workflow",
       "input_shape_id": "ain_submit_purchase_order",
       "output_event_id": "trans_purchase_order_submit",
       "description": "Submits a draft purchase order to the supplier."
@@ -4377,5 +4363,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "6b94790e01efa543badd3ea7189d16b84fb2cb485afac0ef486457dbef8bf641",
-  "ir_hash": "8bd058466978963573d44db6f11a617454da35e264c22e8d012c4319ed59e657"
+  "ir_hash": "0c124d0c3462a23e5922d640c3b4235bab4e8e4de9ecac578eb20b4014ca5a5c"
 }

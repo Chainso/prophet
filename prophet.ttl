@@ -254,14 +254,6 @@ prophet:Action a owl:Class ;
   rdfs:subClassOf prophet:ProphetConcept ;
   rdfs:label "Action" .
 
-prophet:Process a owl:Class ;
-  rdfs:subClassOf prophet:Action ;
-  rdfs:label "Process" .
-
-prophet:Workflow a owl:Class ;
-  rdfs:subClassOf prophet:Action ;
-  rdfs:label "Workflow" .
-
 prophet:ActionInput a owl:Class ;
   rdfs:subClassOf prophet:PropertyContainer ;
   rdfs:label "Action Input" .
@@ -389,10 +381,8 @@ prophet:invokes a owl:ObjectProperty ;
 # OWL AXIOMS (DISJOINTNESS / PARTITIONS)
 # ============================================================================
 
-prophet:Process owl:disjointWith prophet:Workflow .
 prophet:Signal owl:disjointWith prophet:Transition .
 
-prophet:Action owl:disjointUnionOf (prophet:Process prophet:Workflow) .
 prophet:Event  owl:disjointUnionOf (prophet:Signal prophet:Transition) .
 prophet:Type   owl:disjointUnionOf (prophet:BaseType prophet:CustomType prophet:StructType prophet:ListType prophet:ObjectReference) .
 
@@ -413,14 +403,6 @@ prophet:ProphetConceptNameShape a sh:NodeShape ;
   ] .
 
 # --- 1. Exact Variants (xone partitions) ---
-
-prophet:ActionAbstractShape a sh:NodeShape ;
-  sh:targetClass prophet:Action ;
-  sh:xone (
-    [ sh:class prophet:Process ]
-    [ sh:class prophet:Workflow ]
-  ) ;
-  sh:message "An Action must be exactly one of: Process or Workflow." .
 
 prophet:EventAbstractShape a sh:NodeShape ;
   sh:targetClass prophet:Event ;

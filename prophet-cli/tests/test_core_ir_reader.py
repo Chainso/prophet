@@ -25,7 +25,6 @@ def minimal_ir() -> dict:
             {
                 "id": "a1",
                 "name": "createOrder",
-                "kind": "process",
                 "input_shape_id": "ain_create_order",
                 "output_event_id": "evt_create_order_result",
             }

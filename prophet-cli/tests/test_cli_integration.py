@@ -151,8 +151,6 @@ dependencies {
   }
 
   action createOrder {
-    kind process
-
     input {
       field order {
         type ref(Order)

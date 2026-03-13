@@ -4,6 +4,19 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-03-13
+
+### Changed
+- Simplified the core Prophet action model to remove the `process` / `workflow` split and treat all actions as plain `action` blocks with no `kind` line.
+- Updated parser, validation, IR, typed readers, and Turtle projection/vocabulary to remove action-kind handling and project all actions as `prophet:Action`.
+- Refreshed DSL/quickstart docs, maintainer skill guidance, and all maintained example ontologies/artifacts for the actions-only model.
+- Bumped shared runtime libraries to `0.6.0` across:
+  - `@prophet-ontology/events-runtime`,
+  - `prophet-events-runtime`,
+  - `io.github.chainso:prophet-events-runtime`.
+- Updated default generator runtime version resolution to `0.6.0`.
+- Toolchain/package version advanced to `0.25.0`.
+
 ## [0.24.0] - 2026-02-28
 
 ### Changed
