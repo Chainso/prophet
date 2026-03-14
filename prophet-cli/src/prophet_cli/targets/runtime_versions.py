@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 from typing import Optional
 
-DEFAULT_RUNTIME_VERSION = "0.6.0"
+DEFAULT_RUNTIME_VERSION = "0.7.0"
 DEFAULT_JAVA_RUNTIME_GROUP = "io.github.chainso"
 
 

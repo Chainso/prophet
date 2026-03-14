@@ -73,12 +73,13 @@ def object_ref_target_ids_for_type(type_desc: Dict[str, Any]) -> List[str]:
 def json_schema_for_field(
     field: Dict[str, Any],
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> Dict[str, Any]:
     t = field["type"]
     if t["kind"] == "list":
-        item_schema = json_schema_for_field({"type": t["element"]}, type_by_id, object_by_id, struct_by_id)
+        item_schema = json_schema_for_field({"type": t["element"]}, type_by_id, enum_by_id, object_by_id, struct_by_id)
         return {"type": "array", "items": item_schema}
     if t["kind"] == "object_ref":
         target = object_by_id[t["target_object_id"]]
@@ -86,6 +87,12 @@ def json_schema_for_field(
     if t["kind"] == "struct":
         target = struct_by_id[t["target_struct_id"]]
         return {"$ref": f"#/components/schemas/{target['name']}"}
+    if t["kind"] == "enum":
+        target = enum_by_id.get(t["target_enum_id"], {})
+        return {
+            "type": "string",
+            "enum": [str(value.get("name", "")) for value in target.get("values", []) if isinstance(value, dict)],
+        }
 
     if t["kind"] == "base":
         base = t["name"]
@@ -122,6 +129,7 @@ def render_sql(ir: Dict[str, Any]) -> str:
 
     objects = ir["objects"]
     type_by_id = {t["id"]: t for t in ir.get("types", [])}
+    enum_by_id = {e["id"]: e for e in ir.get("enums", [])}
 
     has_states = any(o.get("states") for o in objects)
     if has_states:
@@ -775,6 +783,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
     action_inputs = ir.get("action_inputs", [])
     events = ir.get("events", [])
     type_by_id = {t["id"]: t for t in ir.get("types", [])}
+    enum_by_id = {e["id"]: e for e in ir.get("enums", [])}
     object_by_id = {o["id"]: o for o in objects}
     struct_by_id = {s["id"]: s for s in structs}
     action_input_by_id = {s["id"]: s for s in action_inputs}
@@ -810,6 +819,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                         camel_case(target_pk["name"]): json_schema_for_field(
                             target_pk,
                             type_by_id,
+                            enum_by_id,
                             object_by_id,
                             struct_by_id,
                         )
@@ -821,7 +831,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         properties: Dict[str, Any] = {}
         for f in struct.get("fields", []):
             prop = camel_case(f["name"])
-            field_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            field_schema = json_schema_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             if isinstance(field_schema, dict):
                 _apply_display_name_hint(field_schema, f)
             properties[prop] = field_schema
@@ -841,7 +851,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         properties: Dict[str, Any] = {}
         for f in obj.get("fields", []):
             prop = camel_case(f["name"])
-            field_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            field_schema = json_schema_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             if isinstance(field_schema, dict):
                 _apply_display_name_hint(field_schema, f)
             properties[prop] = field_schema
@@ -882,7 +892,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         properties: Dict[str, Any] = {}
         for f in shape.get("fields", []):
             prop = camel_case(f["name"])
-            field_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            field_schema = json_schema_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             if isinstance(field_schema, dict):
                 _apply_display_name_hint(field_schema, f)
             properties[prop] = field_schema
@@ -905,7 +915,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         properties: Dict[str, Any] = {}
         for f in [field for field in event.get("fields", []) if isinstance(field, dict)]:
             prop = camel_case(str(f.get("name", "field")))
-            field_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+            field_schema = json_schema_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             if isinstance(field_schema, dict):
                 _apply_display_name_hint(field_schema, f)
             properties[prop] = field_schema
@@ -952,6 +962,8 @@ def render_openapi(ir: Dict[str, Any]) -> str:
         ]
 
         def field_base_type(field_type: Dict[str, Any]) -> Optional[str]:
+            if field_type["kind"] == "enum":
+                return "enum"
             if field_type["kind"] == "base":
                 return str(field_type["name"])
             if field_type["kind"] == "custom":
@@ -967,10 +979,10 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                 target = object_by_id[f["type"]["target_object_id"]]
                 target_pk = primary_key_field_for_object(target)
                 param_name = f"{camel_case(f['name'])}{pascal_case(camel_case(target_pk['name']))}"
-                param_schema = json_schema_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
+                param_schema = json_schema_for_field(target_pk, type_by_id, enum_by_id, object_by_id, struct_by_id)
             else:
                 param_name = camel_case(f["name"])
-                param_schema = json_schema_for_field(f, type_by_id, object_by_id, struct_by_id)
+                param_schema = json_schema_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
 
             filter_name = f"{obj['name']}{pascal_case(param_name)}Filter"
             filter_props: Dict[str, Any] = {"eq": param_schema}
@@ -985,7 +997,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                     filter_props["in"] = {"type": "array", "items": param_schema}
                     filter_props["gte"] = param_schema
                     filter_props["lte"] = param_schema
-                elif base_t != "boolean":
+                elif base_t not in {"boolean"}:
                     filter_props["in"] = {"type": "array", "items": param_schema}
             components_schemas[filter_name] = {"type": "object", "properties": filter_props}
             query_filter_props[param_name] = {"$ref": f"#/components/schemas/{filter_name}"}
@@ -1058,7 +1070,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                     "name": key_name,
                     "in": "path",
                     "required": True,
-                    "schema": json_schema_for_field(key_field, type_by_id, object_by_id, struct_by_id),
+                    "schema": json_schema_for_field(key_field, type_by_id, enum_by_id, object_by_id, struct_by_id),
                 }
             )
         pk_path = "/".join(pk_path_parts) if pk_path_parts else f"{{{pk_param}}}"
@@ -1070,7 +1082,7 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                         "name": pk_param,
                         "in": "path",
                         "required": True,
-                        "schema": json_schema_for_field(pk, type_by_id, object_by_id, struct_by_id),
+                        "schema": json_schema_for_field(pk, type_by_id, enum_by_id, object_by_id, struct_by_id),
                     }
                 ],
                 "responses": {

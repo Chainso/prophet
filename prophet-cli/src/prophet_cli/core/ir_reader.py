@@ -11,6 +11,7 @@ REQUIRED_TOP_LEVEL_KEYS = (
     "toolchain_version",
     "ontology",
     "types",
+    "enums",
     "objects",
     "structs",
     "action_inputs",
@@ -63,6 +64,7 @@ class IRReader:
                 raise ProphetError(f"IR missing required key: {key}")
         list_keys = (
             "types",
+            "enums",
             "objects",
             "structs",
             "action_inputs",
@@ -99,6 +101,9 @@ class IRReader:
 
     def types(self) -> List[Dict[str, Any]]:
         return list(self._ir.get("types", []))
+
+    def enums(self) -> List[Dict[str, Any]]:
+        return list(self._ir.get("enums", []))
 
     def objects(self) -> List[Dict[str, Any]]:
         return list(self._ir.get("objects", []))
@@ -180,6 +185,9 @@ class IRReader:
 
     def type_by_id(self) -> Dict[str, Dict[str, Any]]:
         return self.index_by_id(self.types())
+
+    def enum_by_id(self) -> Dict[str, Dict[str, Any]]:
+        return self.index_by_id(self.enums())
 
     def action_by_id(self) -> Dict[str, Dict[str, Any]]:
         return self.index_by_id(self.actions())

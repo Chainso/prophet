@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.26.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_commerce_local",
@@ -22,6 +22,7 @@
       "description": "Monetary amount expressed as a non-negative decimal value."
     }
   ],
+  "enums": [],
   "objects": [
     {
       "id": "obj_order",
@@ -1052,5 +1053,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "026cc621cb86c87effeb4d1c95d64d9f993c65869a205b9346d57dc90f5ad261",
-  "ir_hash": "00427313aff8f7847f005158cafcdeb3a9c99df1555f4502959de7cce8a5688a"
+  "ir_hash": "04d0c4e8a8a4c7630263d1cc57dba44713edd134a789407ab385cccb51b7d2c5"
 }

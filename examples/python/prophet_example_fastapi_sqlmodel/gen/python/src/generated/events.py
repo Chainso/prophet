@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
+from enum import Enum
 
 from dataclasses import dataclass
 from dataclasses import field
@@ -83,11 +84,20 @@ def create_order_ship_transition_event(payload: EventContracts.OrderShipTransiti
     return OrderShipTransitionDomainEvent(payload=payload)
 
 def _serialize_payload(payload: object) -> dict[str, object]:
+    def _normalize(value: object) -> object:
+        if isinstance(value, Enum):
+            return value.value
+        if isinstance(value, dict):
+            return {str(key): _normalize(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [_normalize(item) for item in value]
+        return value
+
     if dataclasses.is_dataclass(payload):
-        return dataclasses.asdict(payload)
+        return _normalize(dataclasses.asdict(payload))
     if isinstance(payload, dict):
-        return payload
-    return {'value': str(payload)}
+        return _normalize(payload)
+    return {'value': _normalize(payload)}
 
 def _clone_json_like(value: object) -> object:
     if isinstance(value, dict):

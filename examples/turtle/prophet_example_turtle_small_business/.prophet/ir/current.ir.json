@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.26.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_artisan_bakery_local",
@@ -66,6 +66,7 @@
       "description": "Non-negative quantity used for inventory counts and ordered amounts."
     }
   ],
+  "enums": [],
   "objects": [
     {
       "id": "obj_customer",
@@ -4363,5 +4364,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "6b94790e01efa543badd3ea7189d16b84fb2cb485afac0ef486457dbef8bf641",
-  "ir_hash": "0c124d0c3462a23e5922d640c3b4235bab4e8e4de9ecac578eb20b4014ca5a5c"
+  "ir_hash": "f1b70bf6d1d31b26dc59cd66577a0457d9dc8af48bda0035307fe0fa5706a796"
 }

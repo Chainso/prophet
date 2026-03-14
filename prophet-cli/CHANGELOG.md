@@ -4,6 +4,22 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.26.0] - 2026-03-14
+
+### Added
+- Added first-class top-level `enum` definitions to the DSL and compiler type system, including reusable enum field types across objects, structs, action inputs, signals, and transition payloads.
+- Added enum member metadata support (`id`, `name`, `description`) plus shorthand member syntax so `value Pending` works without an empty block.
+
+### Changed
+- Updated IR, validation, compatibility checks, OpenAPI/schema rendering, and Java/Node/Python/Turtle generators to treat enums as native base types instead of custom scalar aliases.
+- Regenerated maintained example outputs and manifests so generated toolchain metadata moves to `0.26.0` and generated runtime dependency pins move to `0.7.0`.
+- Bumped shared runtime libraries to `0.7.0` across:
+  - `@prophet-ontology/events-runtime`,
+  - `prophet-events-runtime`,
+  - `io.github.chainso:prophet-events-runtime`.
+- Updated default generator runtime version resolution to `0.7.0`.
+- Toolchain/package version advanced to `0.26.0`.
+
 ## [0.25.0] - 2026-03-13
 
 ### Changed

@@ -12,7 +12,11 @@ from ..support import _resolve_custom_base
 from ..support import _snake_case
 from ..support import _ts_type_for_descriptor
 
-def _prisma_scalar_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Dict[str, Dict[str, Any]]) -> str:
+def _prisma_scalar_type_for_descriptor(
+    type_desc: Dict[str, Any],
+    type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
+) -> str:
     kind = str(type_desc.get("kind", ""))
     if kind == "base":
         base_map = {
@@ -32,26 +36,31 @@ def _prisma_scalar_type_for_descriptor(type_desc: Dict[str, Any], type_by_id: Di
         return base_map.get(str(type_desc.get("name", "string")), "String")
     if kind == "custom":
         base = _resolve_custom_base(type_by_id, type_desc)
-        return _prisma_scalar_type_for_descriptor({"kind": "base", "name": base}, type_by_id)
+        return _prisma_scalar_type_for_descriptor({"kind": "base", "name": base}, type_by_id, enum_by_id)
+    if kind == "enum":
+        enum_id = str(type_desc.get("target_enum_id", ""))
+        enum_def = enum_by_id.get(enum_id, {})
+        return _pascal_case(str(enum_def.get("name", "Enum")))
     return "String"
 
 
 def _prisma_column_type_for_field(
     field: Dict[str, Any],
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     *,
     provider: str,
 ) -> str:
     type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
     kind = str(type_desc.get("kind", ""))
-    if kind in {"base", "custom"}:
-        return _prisma_scalar_type_for_descriptor(type_desc, type_by_id)
+    if kind in {"base", "custom", "enum"}:
+        return _prisma_scalar_type_for_descriptor(type_desc, type_by_id, enum_by_id)
     if kind == "struct":
         return "Json" if provider == "postgresql" else "String"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
-        if provider == "postgresql" and str(element.get("kind", "")) in {"base", "custom"}:
-            return f"{_prisma_scalar_type_for_descriptor(element, type_by_id)}[]"
+        if provider == "postgresql" and str(element.get("kind", "")) in {"base", "custom", "enum"}:
+            return f"{_prisma_scalar_type_for_descriptor(element, type_by_id, enum_by_id)}[]"
         return "String"
     return "String"
 
@@ -61,6 +70,7 @@ def _prisma_ref_columns(
     *,
     object_by_id: Dict[str, Dict[str, Any]],
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
 ) -> List[Tuple[str, str, str]]:
     type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
     target_id = str(type_desc.get("target_object_id", ""))
@@ -72,12 +82,13 @@ def _prisma_ref_columns(
     for pk_field in target_pk_fields:
         pk_name = str(pk_field.get("name", "id"))
         pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {"kind": "base", "name": "string"}
-        result.append((f"{field_name}_{pk_name}", _prisma_scalar_type_for_descriptor(pk_desc, type_by_id), pk_name))
+        result.append((f"{field_name}_{pk_name}", _prisma_scalar_type_for_descriptor(pk_desc, type_by_id, enum_by_id), pk_name))
     return result
 
 
 def _render_prisma_schema(ir: Dict[str, Any], *, provider: str) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     target_field_names_by_id: Dict[str, set[str]] = {}
     for obj in ir.get("objects", []):
@@ -103,6 +114,20 @@ def _render_prisma_schema(ir: Dict[str, Any], *, provider: str) -> str:
         "}",
         "",
     ]
+    for enum_def in sorted(ir.get("enums", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(enum_def, dict):
+            continue
+        enum_name = _pascal_case(str(enum_def.get("name", "Enum")))
+        lines.append(f"enum {enum_name} {{")
+        for value in sorted(
+            [item for item in enum_def.get("values", []) if isinstance(item, dict)],
+            key=lambda item: str(item.get("id", "")),
+        ):
+            lines.append(f"  {_pascal_case(str(value.get('name', 'Value')))}")
+        lines.append("}")
+        lines.append("")
+    if ir.get("enums"):
+        lines.append("")
     inbound_relations: Dict[str, List[Tuple[str, str, str]]] = {}
     source_relation_name: Dict[Tuple[str, str], str] = {}
     used_names_by_target: Dict[str, set[str]] = {
@@ -158,7 +183,7 @@ def _render_prisma_schema(ir: Dict[str, Any], *, provider: str) -> str:
             required = _is_required(field)
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
             if str(type_desc.get("kind", "")) == "object_ref":
-                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
+                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id, enum_by_id=enum_by_id)
                 target_object_id = str(type_desc.get("target_object_id", ""))
                 target_obj = object_by_id.get(target_object_id, {})
                 target_name = _pascal_case(str(target_obj.get("name", "Object")))
@@ -176,7 +201,7 @@ def _render_prisma_schema(ir: Dict[str, Any], *, provider: str) -> str:
                 )
                 continue
 
-            field_type = _prisma_column_type_for_field(field, type_by_id, provider=provider)
+            field_type = _prisma_column_type_for_field(field, type_by_id, enum_by_id, provider=provider)
             annotations: List[str] = []
             if len(primary_ids) == 1 and primary_ids[0] == field_id:
                 annotations.append("@id")
@@ -222,7 +247,7 @@ def _render_prisma_schema(ir: Dict[str, Any], *, provider: str) -> str:
         for pk_field in _object_primary_key_fields(obj):
             pk_name = str(pk_field.get("name", "id"))
             pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {"kind": "base", "name": "string"}
-            pk_type = _prisma_scalar_type_for_descriptor(pk_desc, type_by_id)
+            pk_type = _prisma_scalar_type_for_descriptor(pk_desc, type_by_id, enum_by_id)
             lines.append(f"  {pk_name} {pk_type}")
         lines.append("  transition_id String")
         lines.append("  from_state String")
@@ -240,6 +265,7 @@ def _render_prisma_schema(ir: Dict[str, Any], *, provider: str) -> str:
 def _render_prisma_adapter(ir: Dict[str, Any], *, provider: str) -> str:
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
     query_contract_by_object_id = {
         str(item.get("object_id", "")): item
@@ -332,7 +358,7 @@ def _render_prisma_adapter(ir: Dict[str, Any], *, provider: str) -> str:
             field_name = str(field.get("name", "field"))
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
             if str(type_desc.get("kind", "")) == "object_ref":
-                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
+                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id, enum_by_id=enum_by_id)
                 if "eq" in operators:
                     lines.append(f"  if ({filter_name}Filter?.eq !== undefined) {{")
                     where_pairs = ", ".join([f"{col}: {filter_name}Filter.eq.{_camel_case(pk_name)}" for col, _, pk_name in ref_cols])
@@ -382,7 +408,12 @@ def _render_prisma_adapter(ir: Dict[str, Any], *, provider: str) -> str:
             pk_name = _camel_case(pk_name_raw)
             pk_type_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
             if str(pk_type_desc.get("kind", "")) == "object_ref":
-                ref_cols = _prisma_ref_columns(pk_field, object_by_id=object_by_id, type_by_id=type_by_id)
+                ref_cols = _prisma_ref_columns(
+                    pk_field,
+                    object_by_id=object_by_id,
+                    type_by_id=type_by_id,
+                    enum_by_id=enum_by_id,
+                )
                 for col, _, ref_pk in ref_cols:
                     unique_parts.append((col, f"id.{pk_name}.{_camel_case(ref_pk)}"))
             else:
@@ -423,7 +454,12 @@ def _render_prisma_adapter(ir: Dict[str, Any], *, provider: str) -> str:
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
             required = _is_required(field)
             if str(type_desc.get("kind", "")) == "object_ref":
-                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
+                ref_cols = _prisma_ref_columns(
+                    field,
+                    object_by_id=object_by_id,
+                    type_by_id=type_by_id,
+                    enum_by_id=enum_by_id,
+                )
                 null_guard = " and ".join([f"row.{col} == null" for col, _, _ in ref_cols]) if ref_cols else "false"
                 if required:
                     lines.append(f"    {prop_name}: {{")
@@ -441,6 +477,7 @@ def _render_prisma_adapter(ir: Dict[str, Any], *, provider: str) -> str:
                 ts_type = _ts_type_for_descriptor(
                     type_desc,
                     type_by_id=type_by_id,
+                    enum_by_id=enum_by_id,
                     object_by_id=object_by_id,
                     struct_by_id=struct_by_id,
                 )
@@ -472,7 +509,12 @@ def _render_prisma_adapter(ir: Dict[str, Any], *, provider: str) -> str:
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
             required = _is_required(field)
             if str(type_desc.get("kind", "")) == "object_ref":
-                ref_cols = _prisma_ref_columns(field, object_by_id=object_by_id, type_by_id=type_by_id)
+                ref_cols = _prisma_ref_columns(
+                    field,
+                    object_by_id=object_by_id,
+                    type_by_id=type_by_id,
+                    enum_by_id=enum_by_id,
+                )
                 for col, _, pk_name in ref_cols:
                     if required:
                         lines.append(f"    {col}: item.{prop_name}.{_camel_case(pk_name)},")

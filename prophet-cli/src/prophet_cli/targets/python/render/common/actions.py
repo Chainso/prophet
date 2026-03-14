@@ -9,6 +9,7 @@ from ..support import _sort_dict_entries
 
 def render_action_contracts(ir: Dict[str, Any]) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
 
@@ -36,6 +37,7 @@ def render_action_contracts(ir: Dict[str, Any]) -> str:
                     _render_dataclass_field(
                         field,
                         type_by_id=type_by_id,
+                        enum_by_id=enum_by_id,
                         object_by_id=object_by_id,
                         struct_by_id=struct_by_id,
                     )

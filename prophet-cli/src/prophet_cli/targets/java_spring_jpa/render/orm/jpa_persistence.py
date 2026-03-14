@@ -10,6 +10,7 @@ from prophet_cli.codegen.rendering import primary_key_field_for_object
 from prophet_cli.codegen.rendering import primary_key_fields_for_object
 from prophet_cli.codegen.rendering import snake_case
 from prophet_cli.targets.java_common.render.support import add_java_imports_for_type
+from prophet_cli.targets.java_common.render.support import enum_target_ids_for_type
 from prophet_cli.targets.java_common.render.support import java_type_for_field
 from prophet_cli.targets.java_common.render.support import java_type_for_type_descriptor
 from prophet_cli.targets.java_common.render.support import object_has_composite_primary_key
@@ -20,6 +21,7 @@ from prophet_cli.targets.java_common.render.support import struct_target_ids_for
 def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> None:
     objects = state["objects"]
     type_by_id = state["type_by_id"]
+    enum_by_id = state["enum_by_id"]
     object_by_id = state["object_by_id"]
     struct_by_id = state["struct_by_id"]
     base_package = state["base_package"]
@@ -56,8 +58,11 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
             required = f.get("cardinality", {}).get("min", 0) > 0
             nullable = "false" if required else "true"
             field_doc = render_javadoc_block(str(f.get("description", "")) or None, indent="    ").rstrip("\n")
-            java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
+            java_t = java_type_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(java_t, imports)
+            for target_enum_id in enum_target_ids_for_type(f["type"]):
+                target_enum = enum_by_id[target_enum_id]
+                imports.add(f"import {base_package}.generated.domain.{target_enum['name']};")
             for target_struct_id in struct_target_ids_for_type(f["type"]):
                 target_struct = struct_by_id[target_struct_id]
                 imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
@@ -69,12 +74,14 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
                     converter_target_type = java_type_for_type_descriptor(
                         f["type"],
                         type_by_id,
+                        enum_by_id,
                         object_by_id,
                         struct_by_id,
                     )
                     element_type = java_type_for_type_descriptor(
                         f["type"]["element"],
                         type_by_id,
+                        enum_by_id,
                         object_by_id,
                         struct_by_id,
                     )
@@ -84,6 +91,7 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
                     converter_target_type = java_type_for_type_descriptor(
                         f["type"],
                         type_by_id,
+                        enum_by_id,
                         object_by_id,
                         struct_by_id,
                     )
@@ -116,6 +124,9 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
                 for target_struct_id in struct_target_ids_for_type(target_ref_type):
                     target_struct = struct_by_id[target_struct_id]
                     converter_imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
+                for target_enum_id in enum_target_ids_for_type(target_ref_type):
+                    target_enum = enum_by_id[target_enum_id]
+                    converter_imports.add(f"import {base_package}.generated.domain.{target_enum['name']};")
 
                 if converter_mode == "list":
                     converter_src = (
@@ -205,6 +216,14 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
                     lines.append(field_doc)
                 if any(f["id"] == key_field["id"] for key_field in pk_fields):
                     lines.append("    @Id")
+                if f["type"]["kind"] == "enum":
+                    imports.update(
+                        {
+                            "import jakarta.persistence.EnumType;",
+                            "import jakarta.persistence.Enumerated;",
+                        }
+                    )
+                    lines.append("    @Enumerated(EnumType.STRING)")
                 lines.append(f"    @Column(name = \"{col_name}\", nullable = {nullable})")
                 lines.append(f"    private {java_t} {camel_case(f['name'])};")
                 lines.append("")
@@ -250,7 +269,7 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
         )
 
         for f in fields:
-            java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
+            java_t = java_type_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             name = camel_case(f["name"])
             method = name[:1].upper() + name[1:]
             lines.append(f"    public {java_t if f['type']['kind'] != 'object_ref' else object_by_id[f['type']['target_object_id']]['name'] + 'Entity'} get{method}() {{")
@@ -298,7 +317,7 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
             key_fields: List[Tuple[str, str, bool]] = []
             key_member_lines: List[str] = []
             for key_field in pk_fields:
-                key_java = java_type_for_field(key_field, type_by_id, object_by_id, struct_by_id)
+                key_java = java_type_for_field(key_field, type_by_id, enum_by_id, object_by_id, struct_by_id)
                 key_name = camel_case(key_field["name"])
                 add_java_imports_for_type(key_java, key_imports)
                 key_fields.append((key_java, key_name, True))
@@ -353,7 +372,7 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
             files[f"src/main/java/{package_path}/generated/persistence/{obj['name']}Key.java"] = key_src
             pk_java = f"{obj['name']}Key"
         else:
-            pk_java = java_type_for_field(pk, type_by_id, object_by_id, struct_by_id)
+            pk_java = java_type_for_field(pk, type_by_id, enum_by_id, object_by_id, struct_by_id)
         repo_src = (
             f"package {base_package}.generated.persistence;\n\n"
             "import org.springframework.data.jpa.repository.JpaRepository;\n\n"

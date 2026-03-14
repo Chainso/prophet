@@ -16,6 +16,25 @@ class TypeDef:
 
 
 @dataclass
+class EnumValueDef:
+    name: str
+    id: str
+    description: Optional[str]
+    line: int
+    display_name: Optional[str] = None
+
+
+@dataclass
+class EnumDef:
+    name: str
+    id: str
+    values: List[EnumValueDef]
+    description: Optional[str]
+    line: int
+    display_name: Optional[str] = None
+
+
+@dataclass
 class FieldDef:
     name: str
     id: str
@@ -130,6 +149,7 @@ class Ontology:
     description: Optional[str] = None
     display_name: Optional[str] = None
     types: List[TypeDef] = field(default_factory=list)
+    enums: List[EnumDef] = field(default_factory=list)
     objects: List[ObjectDef] = field(default_factory=list)
     structs: List[StructDef] = field(default_factory=list)
     action_inputs: List[ActionShapeDef] = field(default_factory=list)

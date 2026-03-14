@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.26.0",
   "stack": {
     "id": "python_flask_sqlalchemy",
     "language": "python",
     "framework": "flask",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "1e2b4f8aea959ce1d7de792d309229c78c0d14b9c80a26def6b24cfdff7f0f97",
+  "ir_hash": "d392ad402d29699da2a98a12b65b5b269c77f2967336a8a668404cedca2f759d",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "3916ae981f398187a024aabeba6548c8b2e4d3e5d5ba8c1b8f3d442969f523b4"
+      "sha256": "e2fc706e2cf1e741c905c99fd4e67c38632421807741a71c97b8a87e91214df3"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
@@ -43,7 +43,7 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "33c26e282e473b6477482aa39d3a268e24ae0ca994ef624073e787b124738666"
+      "sha256": "cde78ca7ef631f85e7c2a4e77da3c1d4f3b03e35decb5b95681a388d1eea324a"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
@@ -51,7 +51,7 @@
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "bdd0b64f2bdce4c167a21c63a6f4dc6d1c8b0d1f110df71892d6e9882e8da2c4"
+      "sha256": "49941580577f447b8f14c148700026a4d8320ba764746e90f452c0783c6681f3"
     },
     {
       "path": "gen/python/src/generated/flask_routes.py",
@@ -67,11 +67,11 @@
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_adapters.py",
-      "sha256": "102a3ae17717113f42eb32d8050b0b8b6465b3260790587b4849dedf2717a84e"
+      "sha256": "a2bcbefe4106f70676b9a60832381cbcf3663f903b1494e5d7cdc9b3df095629"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_models.py",
-      "sha256": "63e7d58e74cf9d226c4bf2555e9cc801c3488976b79ac364767fda3ea449401d"
+      "sha256": "f467e4351cb7eef765db513f0315cb2656816a623c628203bdba7e83677dd575"
     },
     {
       "path": "gen/python/src/generated/transitions.py",

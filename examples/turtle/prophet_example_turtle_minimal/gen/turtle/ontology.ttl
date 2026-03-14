@@ -16,7 +16,7 @@ support_local:ont_support_local a prophet:LocalOntology ;
   prophet:description "Minimal support ontology used for Turtle target examples." .
 
 # ============================================================
-# Custom Types
+# Custom And Enum Types
 # ============================================================
 
 support_local:type_email a prophet:CustomType ;

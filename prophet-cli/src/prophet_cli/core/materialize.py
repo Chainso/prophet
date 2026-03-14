@@ -8,16 +8,19 @@ from .models import Ontology
 
 ONTOLOGY_HEADER_RE = re.compile(r"^ontology\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$")
 ID_LINE_RE = re.compile(r'^id\s+\".*\"$')
+BARE_ENUM_VALUE_RE = re.compile(r"^(?P<indent>\s*)value\s+(?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*$")
 
 BLOCK_START_PATTERNS = [
     re.compile(r"^ontology\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^type\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
+    re.compile(r"^enum\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^object\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^struct\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^action\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^signal\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^trigger\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^field\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
+    re.compile(r"^value\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^state\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^transition\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^input\s*\{$"),
@@ -66,6 +69,11 @@ def _build_id_map(ontology: Ontology, source_lines: List[str]) -> Dict[int, str]
     for item in ontology.types:
         id_map[item.line] = item.id
 
+    for item in ontology.enums:
+        id_map[item.line] = item.id
+        for value in item.values:
+            id_map[value.line] = value.id
+
     for item in ontology.objects:
         id_map[item.line] = item.id
         for field in item.fields:
@@ -108,6 +116,7 @@ def materialize_missing_ids(text: str, ontology: Ontology) -> Tuple[str, bool]:
     id_map = _build_id_map(ontology, lines)
 
     insertions: List[Tuple[int, str]] = []
+    bare_value_expansions: List[Tuple[int, List[str]]] = []
     for start_line, id_value in sorted(id_map.items()):
         if not id_value:
             continue
@@ -116,12 +125,29 @@ def materialize_missing_ids(text: str, ontology: Ontology) -> Tuple[str, bool]:
         if start_line < 1 or start_line > len(lines):
             continue
         header_line = lines[start_line - 1]
+        bare_value_match = BARE_ENUM_VALUE_RE.match(header_line)
+        if bare_value_match:
+            indent = bare_value_match.group("indent")
+            value_name = bare_value_match.group("name")
+            bare_value_expansions.append(
+                (
+                    start_line,
+                    [
+                        f"{indent}value {value_name} {{",
+                        f'{indent}  id "{id_value}"',
+                        f"{indent}}}",
+                    ],
+                )
+            )
+            continue
         indent = re.match(r"^\s*", header_line).group(0)  # type: ignore[union-attr]
         insertions.append((start_line, f'{indent}  id "{id_value}"'))
 
-    if not insertions:
+    if not insertions and not bare_value_expansions:
         return text, False
 
+    for line_no, replacement_lines in sorted(bare_value_expansions, reverse=True):
+        lines[line_no - 1 : line_no] = replacement_lines
     for line_no, insert_line in sorted(insertions, reverse=True):
         lines.insert(line_no, insert_line)
 

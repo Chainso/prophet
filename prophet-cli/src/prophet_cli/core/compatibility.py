@@ -74,6 +74,10 @@ def classify_type_change(old_t: Dict[str, Any], new_t: Dict[str, Any]) -> str:
         if old_t.get("target_type_id") != new_t.get("target_type_id"):
             return "breaking"
 
+    if old_kind == "enum":
+        if old_t.get("target_enum_id") != new_t.get("target_enum_id"):
+            return "breaking"
+
     if old_kind == "object_ref":
         if old_t.get("target_object_id") != new_t.get("target_object_id"):
             return "breaking"
@@ -90,6 +94,8 @@ def describe_type_descriptor(t: Dict[str, Any]) -> str:
         return str(t.get("name", "unknown"))
     if kind == "custom":
         return f"custom({t.get('target_type_id', 'unknown')})"
+    if kind == "enum":
+        return f"enum({t.get('target_enum_id', 'unknown')})"
     if kind == "object_ref":
         return f"ref({t.get('target_object_id', 'unknown')})"
     if kind == "struct":
@@ -104,6 +110,8 @@ def base_type_for_descriptor(
     type_by_id: Dict[str, Dict[str, Any]],
 ) -> Optional[str]:
     kind = type_desc.get("kind")
+    if kind == "enum":
+        return "string"
     if kind == "base":
         return str(type_desc.get("name"))
     if kind == "custom":
@@ -121,6 +129,8 @@ def query_filter_operators_for_field(
     kind = field_type.get("kind")
     if kind in {"list", "struct"}:
         return []
+    if kind == "enum":
+        return ["eq", "in"]
     if kind == "object_ref":
         return ["eq", "in"]
 
@@ -265,6 +275,8 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
     new_objects = {o["id"]: o for o in new_ir.get("objects", [])}
     old_types = {t["id"]: t for t in old_ir.get("types", [])}
     new_types = {t["id"]: t for t in new_ir.get("types", [])}
+    old_enums = {e["id"]: e for e in old_ir.get("enums", [])}
+    new_enums = {e["id"]: e for e in new_ir.get("enums", [])}
 
     for tid in sorted(set(old_types) - set(new_types)):
         add("breaking", f"type removed: {tid}")
@@ -285,6 +297,14 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
             add("additive", f"type base widened: type={tid} {old_base} -> {new_base}")
         if old_t.get("constraints", {}) != new_t.get("constraints", {}):
             add("breaking", f"type constraints changed: type={tid}")
+
+    for eid in sorted(set(old_enums) - set(new_enums)):
+        add("breaking", f"enum removed: {eid}")
+    for eid in sorted(set(new_enums) - set(old_enums)):
+        add("additive", f"enum added: {eid}")
+    for eid in sorted(set(old_enums) & set(new_enums)):
+        if old_enums[eid] != new_enums[eid]:
+            add("breaking", f"enum changed: {eid}")
 
     for oid in sorted(set(old_objects) - set(new_objects)):
         add("breaking", f"object removed: {oid}")

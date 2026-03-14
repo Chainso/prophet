@@ -110,10 +110,20 @@ def _resolve_custom_base(type_by_id: Dict[str, Dict[str, Any]], type_desc: Dict[
     return "string"
 
 
+def _enum_values(enum_by_id: Dict[str, Dict[str, Any]], enum_id: str) -> List[str]:
+    enum_def = enum_by_id.get(enum_id, {})
+    return [
+        str(item.get("name", ""))
+        for item in enum_def.get("values", [])
+        if isinstance(item, dict) and str(item.get("name", ""))
+    ]
+
+
 def _ts_type_for_descriptor(
     type_desc: Dict[str, Any],
     *,
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
@@ -123,6 +133,11 @@ def _ts_type_for_descriptor(
     if kind == "custom":
         base = _resolve_custom_base(type_by_id, type_desc)
         return _ts_base_type(base)
+    if kind == "enum":
+        enum_id = str(type_desc.get("target_enum_id", ""))
+        if enum_id in enum_by_id:
+            return _pascal_case(str(enum_by_id[enum_id].get("name", "Enum")))
+        return "string"
     if kind == "struct":
         struct_id = str(type_desc.get("target_struct_id", ""))
         if struct_id in struct_by_id:
@@ -135,7 +150,9 @@ def _ts_type_for_descriptor(
         return "Record<string, unknown>"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
-        return f"{_ts_type_for_descriptor(element, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)}[]"
+        return (
+            f"{_ts_type_for_descriptor(element, type_by_id=type_by_id, enum_by_id=enum_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)}[]"
+        )
     return "unknown"
 
 
@@ -143,6 +160,7 @@ def _zod_expr_for_descriptor(
     type_desc: Dict[str, Any],
     *,
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
@@ -152,6 +170,15 @@ def _zod_expr_for_descriptor(
     if kind == "custom":
         base = _resolve_custom_base(type_by_id, type_desc)
         return _zod_base_expr(base)
+    if kind == "enum":
+        enum_id = str(type_desc.get("target_enum_id", ""))
+        if enum_id in enum_by_id:
+            return f"z.nativeEnum({_pascal_case(str(enum_by_id[enum_id].get('name', 'Enum')))})"
+        values = _enum_values(enum_by_id, enum_id)
+        if values:
+            serialized = ", ".join(repr(value) for value in values)
+            return f"z.enum([{serialized}] as const)"
+        return "z.string()"
     if kind == "struct":
         struct_id = str(type_desc.get("target_struct_id", ""))
         if struct_id in struct_by_id:
@@ -164,7 +191,9 @@ def _zod_expr_for_descriptor(
         return "z.record(z.string(), z.unknown())"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
-        return f"z.array({_zod_expr_for_descriptor(element, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)})"
+        return (
+            f"z.array({_zod_expr_for_descriptor(element, type_by_id=type_by_id, enum_by_id=enum_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)})"
+        )
     return "z.unknown()"
 
 
@@ -172,12 +201,19 @@ def _render_property(
     field: Dict[str, Any],
     *,
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
     name = _camel_case(str(field.get("name", "field")))
     type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
-    ts_type = _ts_type_for_descriptor(type_desc, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)
+    ts_type = _ts_type_for_descriptor(
+        type_desc,
+        type_by_id=type_by_id,
+        enum_by_id=enum_by_id,
+        object_by_id=object_by_id,
+        struct_by_id=struct_by_id,
+    )
     optional = "?" if not _is_required(field) else ""
     return f"  {name}{optional}: {ts_type};"
 
@@ -186,12 +222,19 @@ def _render_zod_property(
     field: Dict[str, Any],
     *,
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
     name = _camel_case(str(field.get("name", "field")))
     type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
-    expr = _zod_expr_for_descriptor(type_desc, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)
+    expr = _zod_expr_for_descriptor(
+        type_desc,
+        type_by_id=type_by_id,
+        enum_by_id=enum_by_id,
+        object_by_id=object_by_id,
+        struct_by_id=struct_by_id,
+    )
     if not _is_required(field):
         expr = f"{expr}.optional()"
     return f"  {name}: {expr},"
@@ -204,5 +247,4 @@ def _extract_path_params(path: str) -> List[str]:
 
 def _express_path(path: str) -> str:
     return re.sub(r"\{([^{}]+)\}", r":\1", path)
-
 

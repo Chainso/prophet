@@ -31,6 +31,50 @@ class PythonTargetTests(unittest.TestCase):
     def _ontology(self):
         return parse_ontology((EXAMPLE_ROOT / "ontology" / "local" / "main.prophet").read_text(encoding="utf-8"))
 
+    def _enum_ontology(self):
+        return parse_ontology(
+            """
+ontology CommerceLocal {
+  version "0.1.0"
+
+  enum OrderStatus {
+    value Pending {
+      name "Pending"
+    }
+
+    value Approved {
+      name "Approved"
+    }
+  }
+
+  object Order {
+    field orderId {
+      type string
+      key primary
+    }
+
+    field status {
+      type OrderStatus
+    }
+  }
+
+  action createOrder {
+    input {
+      field status {
+        type OrderStatus
+      }
+    }
+
+    output {
+      field orderId {
+        type string
+      }
+    }
+  }
+}
+"""
+        )
+
     def test_python_fastapi_sqlalchemy_stack_generates_expected_artifacts(self) -> None:
         cfg = self._base_cfg()
         cfg["generation"]["stack"] = {"id": "python_fastapi_sqlalchemy"}
@@ -164,6 +208,34 @@ class PythonTargetTests(unittest.TestCase):
         self.assertIn("@prefix prophet:", turtle)
         self.assertIn("prophet:ActionInput", turtle)
         self.assertIn("prophet:EventTrigger", turtle)
+
+    def test_python_stacks_generate_native_enum_artifacts(self) -> None:
+        ontology = self._enum_ontology()
+
+        sqlalchemy_cfg = self._base_cfg()
+        sqlalchemy_cfg["generation"]["stack"] = {"id": "python_fastapi_sqlalchemy"}
+        sqlalchemy_cfg["generation"]["targets"] = ["openapi", "python", "fastapi", "sqlalchemy", "manifest"]
+        with tempfile.TemporaryDirectory(prefix="prophet-python-enum-sa-") as tmp:
+            sqlalchemy_outputs = build_generated_outputs(build_ir(ontology, sqlalchemy_cfg), sqlalchemy_cfg, root=Path(tmp))
+        self.assertIn("class OrderStatus(str, Enum):", sqlalchemy_outputs["gen/python/src/generated/domain.py"])
+        self.assertIn("status: OrderStatus", sqlalchemy_outputs["gen/python/src/generated/domain.py"])
+        self.assertIn("SqlEnum(Domain.OrderStatus, native_enum=False)", sqlalchemy_outputs["gen/python/src/generated/sqlalchemy_models.py"])
+
+        sqlmodel_cfg = self._base_cfg()
+        sqlmodel_cfg["generation"]["stack"] = {"id": "python_fastapi_sqlmodel"}
+        sqlmodel_cfg["generation"]["targets"] = ["openapi", "python", "fastapi", "sqlmodel", "manifest"]
+        with tempfile.TemporaryDirectory(prefix="prophet-python-enum-sm-") as tmp:
+            sqlmodel_outputs = build_generated_outputs(build_ir(ontology, sqlmodel_cfg), sqlmodel_cfg, root=Path(tmp))
+        self.assertIn("class OrderStatus(str, Enum):", sqlmodel_outputs["gen/python/src/generated/domain.py"])
+        self.assertIn("SqlEnum(Domain.OrderStatus, native_enum=False)", sqlmodel_outputs["gen/python/src/generated/sqlmodel_models.py"])
+
+        django_cfg = self._base_cfg()
+        django_cfg["generation"]["stack"] = {"id": "python_django_django_orm"}
+        django_cfg["generation"]["targets"] = ["openapi", "python", "django", "django_orm", "manifest"]
+        with tempfile.TemporaryDirectory(prefix="prophet-python-enum-django-") as tmp:
+            django_outputs = build_generated_outputs(build_ir(ontology, django_cfg), django_cfg, root=Path(tmp))
+        self.assertIn("class OrderStatus(str, Enum):", django_outputs["gen/python/src/generated/domain.py"])
+        self.assertIn("choices=[(item.value, item.value) for item in Domain.OrderStatus]", django_outputs["gen/python/src/generated/django_models.py"])
 
     def test_autodetect_selects_python_fastapi_sqlmodel(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-python-fastapi-") as tmp:

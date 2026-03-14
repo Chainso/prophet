@@ -12,6 +12,7 @@ def _event_ts_type_for_descriptor(
     type_desc: Dict[str, Any],
     *,
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
@@ -23,10 +24,13 @@ def _event_ts_type_for_descriptor(
         return "Record<string, unknown>"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
-        return f"{_event_ts_type_for_descriptor(element, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)}[]"
+        return (
+            f"{_event_ts_type_for_descriptor(element, type_by_id=type_by_id, enum_by_id=enum_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)}[]"
+        )
     return _ts_type_for_descriptor(
         type_desc,
         type_by_id=type_by_id,
+        enum_by_id=enum_by_id,
         object_by_id=object_by_id,
         struct_by_id=struct_by_id,
     )
@@ -36,6 +40,7 @@ def _render_event_property(
     field: Dict[str, Any],
     *,
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
@@ -44,6 +49,7 @@ def _render_event_property(
     ts_type = _event_ts_type_for_descriptor(
         type_desc,
         type_by_id=type_by_id,
+        enum_by_id=enum_by_id,
         object_by_id=object_by_id,
         struct_by_id=struct_by_id,
     )
@@ -54,6 +60,7 @@ def _render_event_property(
 def _collect_domain_symbols_for_type(
     type_desc: Dict[str, Any],
     *,
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> Set[str]:
@@ -71,10 +78,17 @@ def _collect_domain_symbols_for_type(
         if not isinstance(target, dict):
             return set()
         return {_pascal_case(str(target.get("name", "Struct")))}
+    if kind == "enum":
+        enum_id = str(type_desc.get("target_enum_id", ""))
+        target = enum_by_id.get(enum_id)
+        if not isinstance(target, dict):
+            return set()
+        return {_pascal_case(str(target.get("name", "Enum")))}
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
         return _collect_domain_symbols_for_type(
             element,
+            enum_by_id=enum_by_id,
             object_by_id=object_by_id,
             struct_by_id=struct_by_id,
         )
@@ -125,6 +139,7 @@ def _collect_event_object_names_for_type(
 def _render_event_contracts(ir: Dict[str, Any]) -> str:
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
     event_object_names: Set[str] = set()
     domain_symbols: Set[str] = set()
@@ -139,6 +154,7 @@ def _render_event_contracts(ir: Dict[str, Any]) -> str:
             domain_symbols.update(
                 _collect_domain_symbols_for_type(
                     type_desc,
+                    enum_by_id=enum_by_id,
                     object_by_id=object_by_id,
                     struct_by_id=struct_by_id,
                 )
@@ -183,6 +199,7 @@ def _render_event_contracts(ir: Dict[str, Any]) -> str:
                     _render_event_property(
                         field,
                         type_by_id=type_by_id,
+                        enum_by_id=enum_by_id,
                         object_by_id=object_by_id,
                         struct_by_id=struct_by_id,
                     )

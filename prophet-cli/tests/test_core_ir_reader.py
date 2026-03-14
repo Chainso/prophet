@@ -18,6 +18,7 @@ def minimal_ir() -> dict:
         "toolchain_version": "0.4.0",
         "ontology": {"id": "ont", "name": "Ont", "version": "0.1.0"},
         "types": [{"id": "t1", "name": "Money"}],
+        "enums": [],
         "objects": [{"id": "o1", "name": "Order"}],
         "structs": [],
         "action_inputs": [],

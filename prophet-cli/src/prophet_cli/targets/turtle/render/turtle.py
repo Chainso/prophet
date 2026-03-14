@@ -179,6 +179,8 @@ class TurtleRenderContext:
             return self.base_type_ref(str(type_desc.get("name", "")))
         if kind == "custom":
             return self.local_resource(str(type_desc.get("target_type_id", "")))
+        if kind == "enum":
+            return self.local_resource(str(type_desc.get("target_enum_id", "")))
         if kind == "object_ref":
             target_object_id = str(type_desc.get("target_object_id", ""))
             ref_subject = self.local_resource(f"{seed}_object_ref")
@@ -244,6 +246,7 @@ def render_turtle(ir: Dict[str, Any]) -> str:
     context = TurtleRenderContext(ontology_subject=ontology_subject, local_prefix=local_prefix)
 
     types = _sorted_items(ir, "types")
+    enums = _sorted_items(ir, "enums")
     objects = _sorted_items(ir, "objects")
     structs = _sorted_items(ir, "structs")
     action_inputs = _sorted_items(ir, "action_inputs")
@@ -288,11 +291,11 @@ def render_turtle(ir: Dict[str, Any]) -> str:
         ontology_statements.append(("prophet:documentation", _turtle_literal(ontology_documentation)))
     _emit_resource(lines, ontology_subject, "prophet:LocalOntology", ontology_statements)
 
-    if types:
+    if types or enums:
         lines.extend(
             [
                 "# ============================================================",
-                "# Custom Types",
+                "# Custom And Enum Types",
                 "# ============================================================",
                 "",
             ]
@@ -308,6 +311,26 @@ def render_turtle(ir: Dict[str, Any]) -> str:
             constraint_subject = context.local_resource(f"{type_id}_constraint")
             context.constraint_nodes[constraint_subject] = [
                 ("sh:property", _shacl_constraint_property_node(constraints))
+            ]
+            statements.append(("prophet:hasConstraint", constraint_subject))
+        statements.append(("prophet:inLocalOntology", ontology_subject))
+        _emit_resource(lines, subject, "prophet:CustomType", statements)
+
+    for item in enums:
+        enum_id = str(item.get("id", ""))
+        subject = context.local_resource(enum_id)
+        statements = []
+        _append_name_description(statements, item)
+        statements.append(("prophet:derivedFrom", context.base_type_ref("string")))
+        values = [
+            _turtle_literal(str(value.get("name", "")))
+            for value in item.get("values", [])
+            if isinstance(value, dict) and str(value.get("name", "")).strip()
+        ]
+        if values:
+            constraint_subject = context.local_resource(f"{enum_id}_constraint")
+            context.constraint_nodes[constraint_subject] = [
+                ("sh:property", "[ sh:path sh:value ; sh:in ( " + " ".join(values) + " ) ]")
             ]
             statements.append(("prophet:hasConstraint", constraint_subject))
         statements.append(("prophet:inLocalOntology", ontology_subject))

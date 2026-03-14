@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Tuple
 from prophet_cli.codegen.rendering import camel_case
 from prophet_cli.codegen.rendering import object_ref_target_ids_for_type
 from prophet_cli.targets.java_common.render.support import add_java_imports_for_type
+from prophet_cli.targets.java_common.render.support import enum_target_ids_for_type
 from prophet_cli.targets.java_common.render.support import java_type_for_field
 from prophet_cli.targets.java_common.render.support import render_java_record_with_builder
 from prophet_cli.targets.java_common.render.support import struct_target_ids_for_type
@@ -15,11 +16,31 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
     structs = state["structs"]
     action_inputs = state["action_inputs"]
     events = state["events"]
+    enums = state["enums"]
+    enum_by_id = state["enum_by_id"]
     object_by_id = state["object_by_id"]
     struct_by_id = state["struct_by_id"]
     type_by_id = state["type_by_id"]
     base_package = state["base_package"]
     package_path = state["package_path"]
+
+    for enum in enums:
+        vals = ",\n    ".join(f'{value["name"]}("{value["name"]}")' for value in enum.get("values", []))
+        files[f"src/main/java/{package_path}/generated/domain/{enum['name']}.java"] = (
+            f"package {base_package}.generated.domain;\n\n"
+            + "import com.fasterxml.jackson.annotation.JsonValue;\n\n"
+            + f"public enum {enum['name']} {{\n"
+            + f"    {vals};\n\n"
+            + "    private final String value;\n\n"
+            + f"    {enum['name']}(String value) {{\n"
+            + "        this.value = value;\n"
+            + "    }\n\n"
+            + "    @JsonValue\n"
+            + "    public String value() {\n"
+            + "        return value;\n"
+            + "    }\n"
+            + "}\n"
+        )
 
     # domain ref records
     ref_types: Dict[str, Dict[str, Any]] = {}
@@ -46,7 +67,7 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
         )
 
         target_pk = primary_key_field_for_object(target)
-        pk_java = java_type_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
+        pk_java = java_type_for_field(target_pk, type_by_id, enum_by_id, object_by_id, struct_by_id)
         cls = f"{target['name']}Ref"
         ref_fields = [(pk_java, camel_case(target_pk["name"]), True)]
         files[f"src/main/java/{package_path}/generated/domain/{cls}.java"] = render_java_record_with_builder(
@@ -65,11 +86,14 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
         struct_fields: List[Tuple[str, str, bool]] = []
         struct_field_descriptions: Dict[str, str] = {}
         for f in struct.get("fields", []):
-            java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
+            java_t = java_type_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(java_t, imports)
             for target_id in object_ref_target_ids_for_type(f["type"]):
                 target = object_by_id[target_id]
                 imports.add(f"import {base_package}.generated.domain.{target['name']}Ref;")
+            for target_enum_id in enum_target_ids_for_type(f["type"]):
+                target_enum = enum_by_id[target_enum_id]
+                imports.add(f"import {base_package}.generated.domain.{target_enum['name']};")
             for target_struct_id in struct_target_ids_for_type(f["type"]):
                 target_struct = struct_by_id[target_struct_id]
                 if target_struct["name"] != struct["name"]:
@@ -105,8 +129,11 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
         object_field_descriptions: Dict[str, str] = {}
 
         for f in obj.get("fields", []):
-            java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
+            java_t = java_type_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(java_t, imports)
+            for target_enum_id in enum_target_ids_for_type(f["type"]):
+                target_enum = enum_by_id[target_enum_id]
+                imports.add(f"import {base_package}.generated.domain.{target_enum['name']};")
             for target_struct_id in struct_target_ids_for_type(f["type"]):
                 target_struct = struct_by_id[target_struct_id]
                 imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")

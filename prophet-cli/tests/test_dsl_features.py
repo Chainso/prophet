@@ -12,6 +12,7 @@ from prophet_cli.cli import build_ir
 from prophet_cli.cli import build_generated_outputs
 from prophet_cli.cli import parse_ontology
 from prophet_cli.cli import validate_ontology
+from prophet_cli.core.materialize import materialize_missing_ids
 
 
 class DSLFeaturesTests(unittest.TestCase):
@@ -356,6 +357,109 @@ ontology MinimalCommerce {
 """
         with self.assertRaisesRegex(Exception, "no longer supports 'kind'"):
             parse_ontology(ontology_text)
+
+    def test_enums_roundtrip_into_ir_and_openapi(self) -> None:
+        ontology_text = """
+ontology CommerceLocal {
+  version "0.1.0"
+
+  enum OrderStatus {
+    value Pending {
+      name "Pending"
+    }
+
+    value Approved {
+      name "Approved"
+    }
+  }
+
+  object Order {
+    field orderId {
+      type string
+      key primary
+    }
+
+    field status {
+      type OrderStatus
+    }
+  }
+}
+"""
+        ontology = parse_ontology(ontology_text)
+        errors = validate_ontology(ontology)
+        self.assertEqual(errors, [])
+
+        ir = build_ir(ontology, {})
+        self.assertEqual(len(ir["enums"]), 1)
+        self.assertEqual(ir["enums"][0]["name"], "OrderStatus")
+        self.assertEqual([value["name"] for value in ir["enums"][0]["values"]], ["Pending", "Approved"])
+
+        order = next(item for item in ir["objects"] if item["name"] == "Order")
+        status_field = next(field for field in order["fields"] if field["name"] == "status")
+        self.assertEqual(status_field["type"], {"kind": "enum", "target_enum_id": ir["enums"][0]["id"]})
+
+        cfg = {
+            "project": {"ontology_file": "ontology/local/main.prophet"},
+            "generation": {
+                "out_dir": "gen",
+                "stack": {"id": "java_spring_jpa"},
+                "targets": ["openapi", "spring_boot", "manifest"],
+                "spring_boot": {"base_package": "com.example.prophet", "boot_version": "3.3"},
+            },
+        }
+        outputs = build_generated_outputs(ir, cfg)
+        openapi = outputs["gen/openapi/openapi.yaml"]
+        self.assertIn("enum:", openapi)
+        self.assertIn("- Pending", openapi)
+        self.assertIn("- Approved", openapi)
+        self.assertIn(
+            "public enum OrderStatus",
+            outputs["gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/domain/OrderStatus.java"],
+        )
+        self.assertIn(
+            "@Enumerated(EnumType.STRING)",
+            outputs["gen/spring-boot/src/main/java/com/example/prophet/commerce_local/generated/persistence/OrderEntity.java"],
+        )
+
+    def test_enum_member_ids_are_auto_generated(self) -> None:
+        ontology_text = """
+ontology CommerceLocal {
+  version "0.1.0"
+
+  enum OrderStatus {
+    value Pending
+  }
+}
+"""
+        ontology = parse_ontology(ontology_text)
+        self.assertEqual(validate_ontology(ontology), [])
+        self.assertTrue(ontology.enums[0].id)
+        self.assertTrue(ontology.enums[0].values[0].id)
+        materialized_source, changed = materialize_missing_ids(ontology_text, ontology)
+        self.assertTrue(changed)
+        self.assertIn("value Pending {", materialized_source)
+        self.assertIn('id "', materialized_source)
+
+    def test_enum_names_collide_with_type_namespace(self) -> None:
+        ontology_text = """
+ontology CommerceLocal {
+  version "0.1.0"
+
+  enum Status {
+    value Pending {
+    }
+  }
+
+  struct Status {
+    field value {
+      type string
+    }
+  }
+}
+"""
+        ontology = parse_ontology(ontology_text)
+        errors = validate_ontology(ontology)
+        self.assertTrue(any("type namespace name 'Status'" in item for item in errors))
 
 
 if __name__ == "__main__":

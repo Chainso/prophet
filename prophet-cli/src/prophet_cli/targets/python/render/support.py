@@ -75,6 +75,46 @@ def _resolve_custom_base(type_by_id: Dict[str, Dict[str, Any]], type_desc: Dict[
     return "string"
 
 
+def _enum_name_for_type(
+    type_desc: Dict[str, Any],
+    enum_by_id: Dict[str, Dict[str, Any]],
+) -> str | None:
+    enum_id = str(type_desc.get("target_enum_id", ""))
+    enum_item = enum_by_id.get(enum_id)
+    if not isinstance(enum_item, dict):
+        return None
+    return _pascal_case(str(enum_item.get("name", "Enum")))
+
+
+def _enum_member_names(enum_item: Dict[str, Any]) -> List[str]:
+    return [
+        str(value.get("name", ""))
+        for value in enum_item.get("values", [])
+        if isinstance(value, dict) and str(value.get("name", ""))
+    ]
+
+
+def _enum_deserialize_expr(
+    type_desc: Dict[str, Any],
+    value_expr: str,
+    *,
+    enum_by_id: Dict[str, Dict[str, Any]],
+) -> str:
+    enum_name = _enum_name_for_type(type_desc, enum_by_id)
+    if enum_name is None:
+        return value_expr
+    return f"{enum_name}({value_expr}) if {value_expr} is not None and not isinstance({value_expr}, {enum_name}) else {value_expr}"
+
+
+def _enum_serialize_expr(
+    type_desc: Dict[str, Any],
+    value_expr: str,
+) -> str:
+    if str(type_desc.get("kind", "")) != "enum":
+        return value_expr
+    return f"{value_expr}.value if isinstance({value_expr}, Enum) else {value_expr}"
+
+
 def _py_base_type(base_name: str) -> str:
     mapping = {
         "string": "str",
@@ -99,12 +139,16 @@ def _py_type_for_descriptor(
     type_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
     kind = str(type_desc.get("kind", ""))
     if kind == "base":
         return _py_base_type(str(type_desc.get("name", "string")))
     if kind == "custom":
         return _py_base_type(_resolve_custom_base(type_by_id, type_desc))
+    if kind == "enum":
+        enum_name = _enum_name_for_type(type_desc, enum_by_id)
+        return enum_name or "str"
     if kind == "struct":
         struct_id = str(type_desc.get("target_struct_id", ""))
         if struct_id in struct_by_id:
@@ -117,7 +161,17 @@ def _py_type_for_descriptor(
         return "Dict[str, Any]"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
-        return f"List[{_py_type_for_descriptor(element, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)}]"
+        return (
+            "List["
+            + _py_type_for_descriptor(
+                element,
+                type_by_id=type_by_id,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+                enum_by_id=enum_by_id,
+            )
+            + "]"
+        )
     return "Any"
 
 
@@ -127,6 +181,7 @@ def _render_dataclass_field(
     type_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
     name = _camel_case(str(field.get("name", "field")))
     type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
@@ -135,6 +190,7 @@ def _render_dataclass_field(
         type_by_id=type_by_id,
         object_by_id=object_by_id,
         struct_by_id=struct_by_id,
+        enum_by_id=enum_by_id,
     )
     if _is_required(field):
         return f"    {name}: {py_type}"

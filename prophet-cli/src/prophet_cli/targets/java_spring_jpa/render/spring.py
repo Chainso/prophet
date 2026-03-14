@@ -222,6 +222,7 @@ def render_spring_files(
     action_inputs = ir.get("action_inputs", [])
     events = ir.get("events", [])
     type_by_id = {t["id"]: t for t in ir.get("types", [])}
+    enum_by_id = {e["id"]: e for e in ir.get("enums", [])}
     object_by_id = {o["id"]: o for o in objects}
     struct_by_id = {s["id"]: s for s in structs}
     action_input_by_id = {s["id"]: s for s in action_inputs}
@@ -266,10 +267,12 @@ def render_spring_files(
     state: Dict[str, Any] = {
         "objects": objects,
         "structs": structs,
+        "enums": ir.get("enums", []),
         "actions": actions,
         "action_inputs": action_inputs,
         "events": events,
         "type_by_id": type_by_id,
+        "enum_by_id": enum_by_id,
         "object_by_id": object_by_id,
         "struct_by_id": struct_by_id,
         "action_input_by_id": action_input_by_id,

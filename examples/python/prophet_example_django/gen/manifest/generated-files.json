@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.26.0",
   "stack": {
     "id": "python_django_django_orm",
     "language": "python",
     "framework": "django",
     "orm": "django_orm"
   },
-  "ir_hash": "1e2b4f8aea959ce1d7de792d309229c78c0d14b9c80a26def6b24cfdff7f0f97",
+  "ir_hash": "d392ad402d29699da2a98a12b65b5b269c77f2967336a8a668404cedca2f759d",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "8521023375bcb21406da799a9c0272bb81b239ef9ee86d785e95ebba44b41b2f"
+      "sha256": "ca417f0684cb610b5bed63baf44446ceaf01acfed8182084504dac622571a939"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
@@ -43,11 +43,11 @@
     },
     {
       "path": "gen/python/src/generated/django_adapters.py",
-      "sha256": "9ce150e39d378b90117bff46d7bf0c8af6869adcc69fd11657da2a675ea219f0"
+      "sha256": "65e4480667103cdaf32f7d5dec24ade58f787c2910daf446b90338e1743d48c3"
     },
     {
       "path": "gen/python/src/generated/django_models.py",
-      "sha256": "b0ca5674c81df475f9a1f68127d38ff41b8c04bb96d4f39f28ed1a64a1435b31"
+      "sha256": "01331cca2dcb1bffbeaaec73e9546c0550ab1612156a8b8e40ca22663414427f"
     },
     {
       "path": "gen/python/src/generated/django_urls.py",
@@ -59,7 +59,7 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "33c26e282e473b6477482aa39d3a268e24ae0ca994ef624073e787b124738666"
+      "sha256": "cde78ca7ef631f85e7c2a4e77da3c1d4f3b03e35decb5b95681a388d1eea324a"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
@@ -67,7 +67,7 @@
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "bdd0b64f2bdce4c167a21c63a6f4dc6d1c8b0d1f110df71892d6e9882e8da2c4"
+      "sha256": "49941580577f447b8f14c148700026a4d8320ba764746e90f452c0783c6681f3"
     },
     {
       "path": "gen/python/src/generated/persistence.py",

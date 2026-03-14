@@ -7,6 +7,8 @@ from .constants import BASE_TYPES
 from .errors import ProphetError
 from .models import ActionDef
 from .models import ActionShapeDef
+from .models import EnumDef
+from .models import EnumValueDef
 from .models import EventDef
 from .models import FieldDef
 from .models import KeyDef
@@ -165,6 +167,7 @@ def parse_ontology(text: str) -> Ontology:
     ont_description: Optional[str] = None
     ont_display_name: Optional[str] = None
     types: List[TypeDef] = []
+    enums: List[EnumDef] = []
     objects: List[ObjectDef] = []
     structs: List[StructDef] = []
     action_inputs: List[ActionShapeDef] = []
@@ -210,6 +213,12 @@ def parse_ontology(text: str) -> Ontology:
         if m:
             p.pop()
             types.append(parse_type_block(p, m.group(1), ln, id_allocator))
+            continue
+
+        m = re.match(r"^enum\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
+        if m:
+            p.pop()
+            enums.append(parse_enum_block(p, m.group(1), ln, id_allocator))
             continue
 
         m = re.match(r"^object\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
@@ -261,6 +270,7 @@ def parse_ontology(text: str) -> Ontology:
         description=ont_description,
         display_name=ont_display_name,
         types=types,
+        enums=enums,
         objects=objects,
         structs=structs,
         action_inputs=action_inputs,
@@ -328,6 +338,132 @@ def parse_type_block(p: Parser, name: str, block_line: int, id_allocator: IdAllo
         id=t_id,
         base=base,
         constraints=constraints,
+        description=description,
+        line=block_line,
+        display_name=display_name,
+    )
+
+
+def parse_enum_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> EnumDef:
+    enum_id: Optional[str] = None
+    values: List[EnumValueDef] = []
+    description: Optional[str] = None
+    display_name: Optional[str] = None
+
+    while not p.eof():
+        ln, line = p.peek()
+        if line == "}":
+            p.pop()
+            break
+
+        if re.match(r"^id\s+\".*\"$", line):
+            _, row = p.pop()
+            enum_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(enum_id)
+            continue
+
+        m = re.match(r"^value\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
+        if m:
+            p.pop()
+            values.append(parse_enum_value_block(p, m.group(1), ln, id_allocator, name, has_block=True))
+            continue
+
+        m = re.match(r"^value\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
+        if m:
+            p.pop()
+            values.append(parse_enum_value_block(p, m.group(1), ln, id_allocator, name, has_block=False))
+            continue
+
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"enum {name}",
+            )
+            continue
+
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
+
+        raise ProphetError(f"Unexpected enum line {ln}: {line}")
+
+    if enum_id is None:
+        enum_id = id_allocator.generate(f"enum_{name}")
+    return EnumDef(
+        name=name,
+        id=enum_id,
+        values=values,
+        description=description,
+        line=block_line,
+        display_name=display_name,
+    )
+
+
+def parse_enum_value_block(
+    p: Parser,
+    name: str,
+    block_line: int,
+    id_allocator: IdAllocator,
+    enum_name: str,
+    *,
+    has_block: bool,
+) -> EnumValueDef:
+    value_id: Optional[str] = None
+    description: Optional[str] = None
+    display_name: Optional[str] = None
+
+    if not has_block:
+        value_id = id_allocator.generate(f"enumv_{enum_name}_{name}")
+        return EnumValueDef(
+            name=name,
+            id=value_id,
+            description=None,
+            line=block_line,
+            display_name=None,
+        )
+
+    while not p.eof():
+        ln, line = p.peek()
+        if line == "}":
+            p.pop()
+            break
+
+        if re.match(r"^id\s+\".*\"$", line):
+            _, row = p.pop()
+            value_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(value_id)
+            continue
+
+        parsed_name = _parse_optional_name_line(line)
+        if parsed_name is not None:
+            p.pop()
+            display_name = _assign_optional_name(
+                display_name,
+                parsed_name,
+                line=ln,
+                context=f"enum value {enum_name}.{name}",
+            )
+            continue
+
+        parsed_description = _parse_optional_description_line(line)
+        if parsed_description is not None:
+            p.pop()
+            description = parsed_description
+            continue
+
+        raise ProphetError(f"Unexpected enum value line {ln}: {line}")
+
+    if value_id is None:
+        value_id = id_allocator.generate(f"enumv_{enum_name}_{name}")
+    return EnumValueDef(
+        name=name,
+        id=value_id,
         description=description,
         line=block_line,
         display_name=display_name,
@@ -1111,6 +1247,7 @@ def unwrap_list_type_once(type_raw: str) -> Optional[str]:
 def resolve_type_descriptor(
     type_raw: str,
     type_name_to_id: Dict[str, str],
+    enum_name_to_id: Dict[str, str],
     object_name_to_id: Dict[str, str],
     struct_name_to_id: Dict[str, str],
 ) -> Dict[str, Any]:
@@ -1122,7 +1259,13 @@ def resolve_type_descriptor(
     if list_inner is not None:
         return {
             "kind": "list",
-            "element": resolve_type_descriptor(list_inner, type_name_to_id, object_name_to_id, struct_name_to_id),
+            "element": resolve_type_descriptor(
+                list_inner,
+                type_name_to_id,
+                enum_name_to_id,
+                object_name_to_id,
+                struct_name_to_id,
+            ),
         }
 
     ref_match = re.match(r"^ref\(([A-Za-z_][A-Za-z0-9_]*)\)$", raw)
@@ -1137,6 +1280,9 @@ def resolve_type_descriptor(
 
     if raw in struct_name_to_id:
         return {"kind": "struct", "target_struct_id": struct_name_to_id[raw]}
+
+    if raw in enum_name_to_id:
+        return {"kind": "enum", "target_enum_id": enum_name_to_id[raw]}
 
     if raw in type_name_to_id:
         return {"kind": "custom", "target_type_id": type_name_to_id[raw]}

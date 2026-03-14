@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.26.0",
   "stack": {
     "id": "python_fastapi_sqlmodel",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlmodel"
   },
-  "ir_hash": "5c5b1905d65ed15e06b6af63f4714c2d2ff3278e0a873c5a15001060ecbe1a66",
+  "ir_hash": "f39959b1c6ad2b9d8411e9797356d289a2a93831ab9c6333a29117987820b239",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -19,7 +19,7 @@
     },
     {
       "path": "gen/turtle/ontology.ttl",
-      "sha256": "1c0830ced2fea0af376c3088e434b90933d52b25cc3cad7b70136da1ff696ca3"
+      "sha256": "b2c740abd0acfd5625cccded71ad338a419cfede215d0902b98aeb1502959956"
     }
   ]
 }

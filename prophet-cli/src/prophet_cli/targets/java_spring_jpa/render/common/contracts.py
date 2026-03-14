@@ -7,6 +7,7 @@ from prophet_cli.codegen.rendering import object_ref_target_ids_for_type
 from prophet_cli.codegen.rendering import pascal_case
 from prophet_cli.codegen.rendering import primary_key_field_for_object
 from prophet_cli.targets.java_common.render.support import add_java_imports_for_type
+from prophet_cli.targets.java_common.render.support import enum_target_ids_for_type
 from prophet_cli.targets.java_common.render.support import java_type_for_field
 from prophet_cli.targets.java_common.render.support import java_type_for_type_descriptor
 from prophet_cli.targets.java_common.render.support import render_java_record_with_builder
@@ -17,6 +18,7 @@ def _java_event_type_for_descriptor(
     type_desc: Dict[str, Any],
     *,
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
@@ -26,6 +28,7 @@ def _java_event_type_for_descriptor(
         element_java = _java_event_type_for_descriptor(
             element,
             type_by_id=type_by_id,
+            enum_by_id=enum_by_id,
             object_by_id=object_by_id,
             struct_by_id=struct_by_id,
         )
@@ -36,7 +39,7 @@ def _java_event_type_for_descriptor(
         if isinstance(target, dict):
             return f"{target['name']}RefOrObject"
         return "Object"
-    return java_type_for_type_descriptor(type_desc, type_by_id, object_by_id, struct_by_id)
+    return java_type_for_type_descriptor(type_desc, type_by_id, enum_by_id, object_by_id, struct_by_id)
 
 
 def _collect_event_ref_specs_for_type(
@@ -141,6 +144,7 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
     object_by_id = state["object_by_id"]
     struct_by_id = state["struct_by_id"]
     type_by_id = state["type_by_id"]
+    enum_by_id = state["enum_by_id"]
     base_package = state["base_package"]
     package_path = state["package_path"]
     schema_version = str(state.get("ontology_version", "1.0.0"))
@@ -153,11 +157,14 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
         shape_fields: List[Tuple[str, str, bool]] = []
         shape_field_descriptions: Dict[str, str] = {}
         for f in shape.get("fields", []):
-            java_t = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
+            java_t = java_type_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(java_t, imports)
             for target_id in object_ref_target_ids_for_type(f["type"]):
                 target = object_by_id[target_id]
                 imports.add(f"import {base_package}.generated.domain.{target['name']}Ref;")
+            for target_enum_id in enum_target_ids_for_type(f["type"]):
+                target_enum = enum_by_id[target_enum_id]
+                imports.add(f"import {base_package}.generated.domain.{target_enum['name']};")
             for target_struct_id in struct_target_ids_for_type(f["type"]):
                 target_struct = struct_by_id[target_struct_id]
                 imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")
@@ -196,6 +203,7 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
             java_t = _java_event_type_for_descriptor(
                 f["type"],
                 type_by_id=type_by_id,
+                enum_by_id=enum_by_id,
                 object_by_id=object_by_id,
                 struct_by_id=struct_by_id,
             )
@@ -203,6 +211,9 @@ def render_contract_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> N
             for target_id in object_ref_target_ids_for_type(f["type"]):
                 target = object_by_id[target_id]
                 event_imports.add(f"import {base_package}.generated.domain.{target['name']}RefOrObject;")
+            for target_enum_id in enum_target_ids_for_type(f["type"]):
+                target_enum = enum_by_id[target_enum_id]
+                event_imports.add(f"import {base_package}.generated.domain.{target_enum['name']};")
             for target_struct_id in struct_target_ids_for_type(f["type"]):
                 target_struct = struct_by_id[target_struct_id]
                 event_imports.add(f"import {base_package}.generated.domain.{target_struct['name']};")

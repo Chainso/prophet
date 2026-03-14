@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.26.0",
   "stack": {
     "id": "python_fastapi_sqlmodel",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlmodel"
   },
-  "ir_hash": "41ff34aad2c6995983770905ddf8f98df2da87c2d2f0733310bc97f86b4f5a22",
+  "ir_hash": "835f5accd3dc48db9cfbe412c33235b921356177e2d1292f96fb8bc642c0219c",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "7dbb75c1ae51853791626bf82ecd65b6efc4b53ca23a023258fda6beb6e6cf9c"
+      "sha256": "f27ce113d5b11371355518ef500c401607b258280ed62ad44d9aa6e1f5cd1926"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
@@ -43,7 +43,7 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "33c26e282e473b6477482aa39d3a268e24ae0ca994ef624073e787b124738666"
+      "sha256": "cde78ca7ef631f85e7c2a4e77da3c1d4f3b03e35decb5b95681a388d1eea324a"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
@@ -51,7 +51,7 @@
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "bdd0b64f2bdce4c167a21c63a6f4dc6d1c8b0d1f110df71892d6e9882e8da2c4"
+      "sha256": "49941580577f447b8f14c148700026a4d8320ba764746e90f452c0783c6681f3"
     },
     {
       "path": "gen/python/src/generated/fastapi_routes.py",
@@ -67,11 +67,11 @@
     },
     {
       "path": "gen/python/src/generated/sqlmodel_adapters.py",
-      "sha256": "2ba90476013e19ff4fc92496d88ad0772817c69599829eac41f8f1ec24ce78f0"
+      "sha256": "560af742c92d864528100d843f5627561d17124428051e5c793cb88bfa9a5190"
     },
     {
       "path": "gen/python/src/generated/sqlmodel_models.py",
-      "sha256": "8cf94afae32b345a6dab729d7a371bd00c0f92914c4e5f7c1199692307622fe3"
+      "sha256": "0de7ce00d02cf8415f5c12c04aee56e30c07b6b2a54c9caa7a840e1584c3a536"
     },
     {
       "path": "gen/python/src/generated/transitions.py",

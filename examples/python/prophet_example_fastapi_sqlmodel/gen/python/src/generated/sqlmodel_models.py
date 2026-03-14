@@ -4,8 +4,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import JSON, Column, Integer, String
+from sqlalchemy import JSON, Column, Enum as SqlEnum, Integer, String
 from sqlmodel import Field, SQLModel
+from . import domain as Domain
 
 class OrderModel(SQLModel, table=True):
     __tablename__ = 'orders'

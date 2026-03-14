@@ -9,6 +9,7 @@ from prophet_cli.codegen.rendering import primary_key_field_for_object
 from prophet_cli.codegen.rendering import primary_key_fields_for_object
 from prophet_cli.codegen.rendering import snake_case
 from prophet_cli.targets.java_common.render.support import add_java_imports_for_type
+from prophet_cli.targets.java_common.render.support import enum_target_ids_for_type
 from prophet_cli.targets.java_common.render.support import java_type_for_field
 from prophet_cli.targets.java_common.render.support import object_has_composite_primary_key
 from prophet_cli.targets.java_common.render.support import render_java_record_with_builder
@@ -16,6 +17,7 @@ from prophet_cli.targets.java_common.render.support import render_java_record_wi
 def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> None:
     objects = state["objects"]
     type_by_id = state["type_by_id"]
+    enum_by_id = state["enum_by_id"]
     object_by_id = state["object_by_id"]
     struct_by_id = state["struct_by_id"]
     base_package = state["base_package"]
@@ -33,7 +35,7 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
         mapper_name = f"{obj['name']}DomainMapper"
         list_response_name = f"{obj['name']}ListResponse"
         pk_prop = camel_case(pk["name"])
-        pk_java = java_type_for_field(pk, type_by_id, object_by_id, struct_by_id)
+        pk_java = java_type_for_field(pk, type_by_id, enum_by_id, object_by_id, struct_by_id)
         path_table = pluralize(snake_case(obj["name"]))
 
         imports = {
@@ -111,6 +113,8 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
         needs_join_type_import = False
 
         def base_type_for_descriptor(type_desc: Dict[str, Any]) -> Optional[str]:
+            if type_desc["kind"] == "enum":
+                return "enum"
             if type_desc["kind"] == "base":
                 return str(type_desc["name"])
             if type_desc["kind"] == "custom":
@@ -129,7 +133,7 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
                 target = object_by_id[field_type["target_object_id"]]
                 target_pk = primary_key_field_for_object(target)
                 target_pk_prop = camel_case(target_pk["name"])
-                param_java = java_type_for_field(target_pk, type_by_id, object_by_id, struct_by_id)
+                param_java = java_type_for_field(target_pk, type_by_id, enum_by_id, object_by_id, struct_by_id)
                 add_java_imports_for_type(param_java, imports)
                 needs_join_type_import = True
 
@@ -165,12 +169,18 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
                 )
                 continue
 
-            param_java = java_type_for_field(f, type_by_id, object_by_id, struct_by_id)
+            param_java = java_type_for_field(f, type_by_id, enum_by_id, object_by_id, struct_by_id)
             add_java_imports_for_type(param_java, imports)
+            for target_enum_id in enum_target_ids_for_type(field_type):
+                target_enum = enum_by_id[target_enum_id]
+                imports.add(f"import {base_package}.generated.domain.{target_enum['name']};")
             base_type = base_type_for_descriptor(field_type)
 
             filter_imports: set[str] = set()
             add_java_imports_for_type(param_java, filter_imports)
+            for target_enum_id in enum_target_ids_for_type(field_type):
+                target_enum = enum_by_id[target_enum_id]
+                filter_imports.add(f"import {base_package}.generated.domain.{target_enum['name']};")
             filter_fields: List[Tuple[str, str, bool]] = [(param_java, "eq", False)]
             typed_condition_lines = [
                 f"            if (filter.{entity_prop}() != null) {{",
@@ -333,7 +343,7 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
             key_ctor_args: List[str] = []
             for key_field in pk_fields:
                 key_name = camel_case(key_field["name"])
-                key_java = java_type_for_field(key_field, type_by_id, object_by_id, struct_by_id)
+                key_java = java_type_for_field(key_field, type_by_id, enum_by_id, object_by_id, struct_by_id)
                 add_java_imports_for_type(key_java, imports)
                 key_path_parts.append(f"{{{key_name}}}")
                 key_param_decls.append(f"@PathVariable(\"{key_name}\") {key_java} {key_name}")

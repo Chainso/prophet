@@ -64,6 +64,7 @@ def _effective_key_field_names(
 def validate_type_expr(
     type_raw: str,
     type_names: Dict[str, TypeDef],
+    enum_name_to_id: Dict[str, str],
     object_names: Dict[str, ObjectDef],
     struct_names: Dict[str, StructDef],
 ) -> str | None:
@@ -71,6 +72,7 @@ def validate_type_expr(
         resolve_type_descriptor(
             type_raw,
             {t.name: t.id for t in type_names.values()},
+            enum_name_to_id,
             {o.name: o.id for o in object_names.values()},
             {s.name: s.id for s in struct_names.values()},
         )
@@ -85,6 +87,10 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
     id_entries: List[Tuple[str, str, int]] = [("ontology", ont.id, 1)]
     for t in ont.types:
         id_entries.append((f"type {t.name}", t.id, t.line))
+    for enum in ont.enums:
+        id_entries.append((f"enum {enum.name}", enum.id, enum.line))
+        for value in enum.values:
+            id_entries.append((f"enumValue {enum.name}.{value.name}", value.id, value.line))
     for o in ont.objects:
         id_entries.append((f"object {o.name}", o.id, o.line))
         for f in o.fields:
@@ -121,16 +127,58 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
             seen_ids[val] = (label, ln)
 
     type_names = {t.name: t for t in ont.types}
+    enum_name_to_id = {enum.name: enum.id for enum in ont.enums}
     object_names = {o.name: o for o in ont.objects}
     struct_names = {s.name: s for s in ont.structs}
     action_input_names = {s.name: s for s in ont.action_inputs}
     action_names = {a.name: a for a in ont.actions}
 
+    type_namespace: Dict[str, Tuple[str, int]] = {}
+
+    def _register_type_namespace(name: str, label: str, line: int) -> None:
+        existing = type_namespace.get(name)
+        if existing is not None:
+            errors.append(
+                f"line {line}: type namespace name '{name}' collides with {existing[0]} (line {existing[1]})"
+            )
+            return
+        type_namespace[name] = (label, line)
+
     for t in ont.types:
+        _register_type_namespace(t.name, f"type {t.name}", t.line)
         if t.base not in BASE_TYPES:
             errors.append(f"line {t.line}: type {t.name} base '{t.base}' is not a supported base type")
 
+    for enum in ont.enums:
+        _register_type_namespace(enum.name, f"enum {enum.name}", enum.line)
+        if not enum.values:
+            errors.append(f"line {enum.line}: enum {enum.name} must declare at least one value")
+        value_name_lines: Dict[str, int] = {}
+        value_id_lines: Dict[str, int] = {}
+        for value in enum.values:
+            existing_name_line = value_name_lines.get(value.name)
+            if existing_name_line is not None:
+                errors.append(
+                    f"line {value.line}: enum {enum.name} declares duplicate value '{value.name}' (line {existing_name_line})"
+                )
+            else:
+                value_name_lines[value.name] = value.line
+            existing_id_line = value_id_lines.get(value.id)
+            if existing_id_line is not None:
+                errors.append(
+                    f"line {value.line}: enum {enum.name} uses duplicate value id '{value.id}' (line {existing_id_line})"
+                )
+            else:
+                value_id_lines[value.id] = value.line
+
+    for s in ont.structs:
+        _register_type_namespace(s.name, f"struct {s.name}", s.line)
+
     for o in ont.objects:
+        if o.states and o.name + "State" in enum_name_to_id:
+            errors.append(
+                f"line {o.line}: object {o.name} derived state enum name '{o.name}State' collides with enum {o.name}State"
+            )
         for key_def in o.keys:
             if key_def.kind not in {"primary", "display"}:
                 errors.append(
@@ -214,6 +262,7 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                 type_error = validate_type_expr(
                     transition_field.type_raw,
                     type_names,
+                    enum_name_to_id,
                     object_names,
                     struct_names,
                 )
@@ -223,7 +272,7 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                     )
 
         for f in o.fields:
-            type_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
+            type_error = validate_type_expr(f.type_raw, type_names, enum_name_to_id, object_names, struct_names)
             if type_error:
                 errors.append(f"line {f.line}: field {o.name}.{f.name} {type_error}")
                 continue
@@ -231,12 +280,13 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                 descriptor = resolve_type_descriptor(
                     f.type_raw,
                     {t.name: t.id for t in type_names.values()},
+                    enum_name_to_id,
                     {obj.name: obj.id for obj in object_names.values()},
                     {s.name: s.id for s in struct_names.values()},
                 )
-                if descriptor.get("kind") not in {"base", "custom"}:
+                if descriptor.get("kind") not in {"base", "custom", "enum"}:
                     errors.append(
-                        f"line {f.line}: field {o.name}.{f.name} cannot be used in a primary key (only base/custom scalar types are supported)"
+                        f"line {f.line}: field {o.name}.{f.name} cannot be used in a primary key (only base/custom/enum scalar types are supported)"
                     )
 
     for s in ont.structs:
@@ -244,7 +294,7 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
             _validate_reserved_field_name(s.name, f, errors)
             if f.key is not None:
                 errors.append(f"line {f.line}: struct {s.name}.{f.name} must not declare key")
-            type_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
+            type_error = validate_type_expr(f.type_raw, type_names, enum_name_to_id, object_names, struct_names)
             if type_error:
                 errors.append(f"line {f.line}: field {s.name}.{f.name} {type_error}")
 
@@ -255,7 +305,7 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                 errors.append(
                     f"line {f.line}: {kind} {shape_name}.{f.name} must not declare key (keys are only valid on object fields)"
                 )
-            type_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
+            type_error = validate_type_expr(f.type_raw, type_names, enum_name_to_id, object_names, struct_names)
             if type_error:
                 errors.append(f"line {f.line}: field {shape_name}.{f.name} {type_error}")
 
@@ -302,12 +352,13 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         object_primary_counts[o.name] = len(primary_field_names or [])
     for o in ont.objects:
         for f in o.fields:
-            descriptor_error = validate_type_expr(f.type_raw, type_names, object_names, struct_names)
+            descriptor_error = validate_type_expr(f.type_raw, type_names, enum_name_to_id, object_names, struct_names)
             if descriptor_error:
                 continue
             descriptor = resolve_type_descriptor(
                 f.type_raw,
                 {t.name: t.id for t in type_names.values()},
+                enum_name_to_id,
                 {obj.name: obj.id for obj in object_names.values()},
                 {s.name: s.id for s in struct_names.values()},
             )

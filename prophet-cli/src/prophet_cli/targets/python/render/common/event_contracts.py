@@ -15,6 +15,7 @@ def _event_py_type_for_descriptor(
     type_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
     kind = str(type_desc.get("kind", ""))
     if kind == "object_ref":
@@ -25,12 +26,23 @@ def _event_py_type_for_descriptor(
         return "Dict[str, Any]"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
-        return f"List[{_event_py_type_for_descriptor(element, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id)}]"
+        return (
+            "List["
+            + _event_py_type_for_descriptor(
+                element,
+                type_by_id=type_by_id,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+                enum_by_id=enum_by_id,
+            )
+            + "]"
+        )
     return _py_type_for_descriptor(
         type_desc,
         type_by_id=type_by_id,
         object_by_id=object_by_id,
         struct_by_id=struct_by_id,
+        enum_by_id=enum_by_id,
     )
 
 
@@ -40,6 +52,7 @@ def _render_event_dataclass_field(
     type_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
     name = _camel_case(str(field.get("name", "field")))
     type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
@@ -48,6 +61,7 @@ def _render_event_dataclass_field(
         type_by_id=type_by_id,
         object_by_id=object_by_id,
         struct_by_id=struct_by_id,
+        enum_by_id=enum_by_id,
     )
     if _is_required(field):
         return f"    {name}: {py_type}"
@@ -97,6 +111,7 @@ def _collect_event_object_names_for_type(
 
 def render_event_contracts(ir: Dict[str, Any]) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
 
@@ -145,6 +160,7 @@ def render_event_contracts(ir: Dict[str, Any]) -> str:
                         type_by_id=type_by_id,
                         object_by_id=object_by_id,
                         struct_by_id=struct_by_id,
+                        enum_by_id=enum_by_id,
                     )
                 )
         lines.append("")

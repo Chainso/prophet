@@ -8,6 +8,7 @@ from ..support import _render_property
 
 def _render_action_contracts(ir: Dict[str, Any]) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
 
@@ -17,7 +18,9 @@ def _render_action_contracts(ir: Dict[str, Any]) -> str:
         _pascal_case(str(item.get("name", "Struct"))) for item in ir.get("structs", []) if isinstance(item, dict)
     } | {
         _pascal_case(str(item.get("name", "CustomType"))) for item in ir.get("types", []) if isinstance(item, dict)
-    })) if (ir.get("objects") or ir.get("structs") or ir.get("types")) else "", "} from './domain';", ""]
+    } | {
+        _pascal_case(str(item.get("name", "Enum"))) for item in ir.get("enums", []) if isinstance(item, dict)
+    })) if (ir.get("objects") or ir.get("structs") or ir.get("types") or ir.get("enums")) else "", "} from './domain';", ""]
 
     for shape in sorted(ir.get("action_inputs", []), key=lambda item: str(item.get("id", ""))):
         if not isinstance(shape, dict):
@@ -26,9 +29,16 @@ def _render_action_contracts(ir: Dict[str, Any]) -> str:
         lines.append(f"export interface {name} {{")
         for field in list(shape.get("fields", [])):
             if isinstance(field, dict):
-                lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
+                lines.append(
+                    _render_property(
+                        field,
+                        type_by_id=type_by_id,
+                        enum_by_id=enum_by_id,
+                        object_by_id=object_by_id,
+                        struct_by_id=struct_by_id,
+                    )
+                )
         lines.append("}")
         lines.append("")
 
     return "\n".join(lines).replace("import type {\n  \n} from './domain';\n\n", "")
-

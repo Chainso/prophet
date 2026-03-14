@@ -13,6 +13,7 @@ ontology CommerceLocal {
 ## Supported Top-Level Blocks
 
 - `type`
+- `enum`
 - `object`
 - `struct`
 - `action`
@@ -44,11 +45,36 @@ ontology CommerceLocal {
 
 Supported field type forms:
 - Base scalars: `string`, `int`, `long`, `short`, `byte`, `double`, `float`, `decimal`, `boolean`, `datetime`, `date`, `duration`
+- Enums: `<EnumName>`
 - Custom types: `<TypeName>`
 - Object references: `ref(User)`
 - Lists: `string[]`, `list(string)`
 - Nested lists: `string[][]`, `list(list(string))`
 - Structs: `<StructName>`
+
+## Enums
+
+Reusable enums are declared with a top-level `enum` block and referenced by name from fields.
+
+```prophet
+enum OrderStatus {
+  value Pending
+
+  value Approved {
+    name "Approved"
+    description "Order can proceed."
+  }
+}
+
+field status {
+  type OrderStatus
+}
+```
+
+Enum member rules:
+- Canonical serialized value is the member identifier (`Pending`, `Approved`)
+- Members may use the short form `value Pending` when no metadata is needed
+- Members may also use block form to declare `id`, `name`, and `description`
 
 ## Keys
 

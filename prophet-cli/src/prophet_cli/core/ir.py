@@ -46,10 +46,11 @@ def cfg_get(cfg: Dict[str, Any], keys: List[str], default: Any = None) -> Any:
 def resolve_field_type(
     field: FieldDef,
     type_name_to_id: Dict[str, str],
+    enum_name_to_id: Dict[str, str],
     object_name_to_id: Dict[str, str],
     struct_name_to_id: Dict[str, str],
 ) -> Dict[str, Any]:
-    return resolve_type_descriptor(field.type_raw, type_name_to_id, object_name_to_id, struct_name_to_id)
+    return resolve_type_descriptor(field.type_raw, type_name_to_id, enum_name_to_id, object_name_to_id, struct_name_to_id)
 
 
 def build_ir(
@@ -59,6 +60,7 @@ def build_ir(
     ir_version: str,
 ) -> Dict[str, Any]:
     type_name_to_id = {t.name: t.id for t in ont.types}
+    enum_name_to_id = {e.name: e.id for e in ont.enums}
     object_name_to_id = {o.name: o.id for o in ont.objects}
     struct_name_to_id = {s.name: s.id for s in ont.structs}
     action_input_name_to_id = {s.name: s.id for s in ont.action_inputs}
@@ -85,6 +87,27 @@ def build_ir(
             entry["description"] = t.description
         types.append(entry)
 
+    enums = []
+    for enum in sorted_by_id(ont.enums):
+        entry = {
+            "id": enum.id,
+            "name": enum.name,
+            "display_name": _resolved_display_name(enum.name, enum.display_name),
+            "values": [],
+        }
+        if enum.description:
+            entry["description"] = enum.description
+        for value in enum.values:
+            value_entry = {
+                "id": value.id,
+                "name": value.name,
+                "display_name": _resolved_display_name(value.name, value.display_name),
+            }
+            if value.description:
+                value_entry["description"] = value.description
+            entry["values"].append(value_entry)
+        enums.append(entry)
+
     objects = []
     for o in sorted_by_id(ont.objects):
         field_names = [f.name for f in o.fields]
@@ -98,7 +121,7 @@ def build_ir(
 
         obj_fields = []
         for f in o.fields:
-            resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
+            resolved_type = resolve_field_type(f, type_name_to_id, enum_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality: Any = "many" if resolved_type.get("kind") == "list" else 1
             card = {"min": 1 if f.required else 0, "max": max_cardinality}
             f_entry = {
@@ -159,7 +182,7 @@ def build_ir(
     for s in sorted_by_id(ont.structs):
         struct_fields = []
         for f in s.fields:
-            resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
+            resolved_type = resolve_field_type(f, type_name_to_id, enum_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality: Any = "many" if resolved_type.get("kind") == "list" else 1
             struct_fields.append(
                 {
@@ -186,7 +209,7 @@ def build_ir(
     for shape in sorted_by_id(ont.action_inputs):
         shape_fields = []
         for f in shape.fields:
-            resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
+            resolved_type = resolve_field_type(f, type_name_to_id, enum_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality = "many" if resolved_type.get("kind") == "list" else 1
             shape_fields.append(
                 {
@@ -225,7 +248,7 @@ def build_ir(
             entry["description"] = e.description
         signal_fields = []
         for f in e.fields:
-            resolved_type = resolve_field_type(f, type_name_to_id, object_name_to_id, struct_name_to_id)
+            resolved_type = resolve_field_type(f, type_name_to_id, enum_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality = "many" if resolved_type.get("kind") == "list" else 1
             signal_field_entry = {
                 "id": f.id,
@@ -257,7 +280,7 @@ def build_ir(
             transition_name = transition_event_name(obj.name, tr.name)
             transition_fields = []
             for pk_field in primary_key_fields:
-                resolved_type = resolve_field_type(pk_field, type_name_to_id, object_name_to_id, struct_name_to_id)
+                resolved_type = resolve_field_type(pk_field, type_name_to_id, enum_name_to_id, object_name_to_id, struct_name_to_id)
                 transition_fields.append(
                     {
                         "id": f"{tr.id}__pk__{pk_field.id}",
@@ -286,6 +309,7 @@ def build_ir(
                 resolved_type = resolve_field_type(
                     transition_field,
                     type_name_to_id,
+                    enum_name_to_id,
                     object_name_to_id,
                     struct_name_to_id,
                 )
@@ -353,6 +377,7 @@ def build_ir(
             "version": ont.version,
         },
         "types": types,
+        "enums": enums,
         "objects": objects,
         "structs": structs,
         "action_inputs": action_inputs,

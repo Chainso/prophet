@@ -9,6 +9,7 @@ from ..support import _ts_type_for_descriptor
 
 def _render_persistence_contracts(ir: Dict[str, Any]) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
 
@@ -44,9 +45,12 @@ def _render_persistence_contracts(ir: Dict[str, Any]) -> str:
             field_type = _ts_type_for_descriptor(
                 type_desc,
                 type_by_id=type_by_id,
+                enum_by_id=enum_by_id,
                 object_by_id=object_by_id,
                 struct_by_id=struct_by_id,
             )
+            if str(type_desc.get("kind", "")) == "enum":
+                field_type = f"Domain.{field_type}"
             lines.append(f"  {field_name}: {field_type};")
         lines.append("}")
         lines.append("")

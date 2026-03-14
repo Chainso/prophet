@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from django.db import models
+from . import domain as Domain
 
 class OrderModel(models.Model):
     orderId = models.CharField(max_length=255, null=False, blank=False, primary_key=True)

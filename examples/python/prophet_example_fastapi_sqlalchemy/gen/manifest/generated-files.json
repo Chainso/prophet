@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.26.0",
   "stack": {
     "id": "python_fastapi_sqlalchemy",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "41ff34aad2c6995983770905ddf8f98df2da87c2d2f0733310bc97f86b4f5a22",
+  "ir_hash": "835f5accd3dc48db9cfbe412c33235b921356177e2d1292f96fb8bc642c0219c",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
@@ -23,7 +23,7 @@
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "3cce9a77aaddb9c82dd03093d7cf95f135035bb9b03edf5d5d70b49e5767201b"
+      "sha256": "a3ed10faad594b2c0f02d7c15dc8f57afa3f0d4f5a5d73942a623dfcc3f7ffad"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
@@ -43,7 +43,7 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "33c26e282e473b6477482aa39d3a268e24ae0ca994ef624073e787b124738666"
+      "sha256": "cde78ca7ef631f85e7c2a4e77da3c1d4f3b03e35decb5b95681a388d1eea324a"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
@@ -51,7 +51,7 @@
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "bdd0b64f2bdce4c167a21c63a6f4dc6d1c8b0d1f110df71892d6e9882e8da2c4"
+      "sha256": "49941580577f447b8f14c148700026a4d8320ba764746e90f452c0783c6681f3"
     },
     {
       "path": "gen/python/src/generated/fastapi_routes.py",
@@ -67,11 +67,11 @@
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_adapters.py",
-      "sha256": "5ce64027984083754f9df7a5745d2d9449a15cdf1840ec2b13bde3b46e6d8c92"
+      "sha256": "253c91c5f368e0c8efa7838acaa33f2e585c41b671bb0beebbc089dfc86cd0c1"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_models.py",
-      "sha256": "63e7d58e74cf9d226c4bf2555e9cc801c3488976b79ac364767fda3ea449401d"
+      "sha256": "f467e4351cb7eef765db513f0315cb2656816a623c628203bdba7e83677dd575"
     },
     {
       "path": "gen/python/src/generated/transitions.py",

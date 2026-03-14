@@ -31,6 +31,50 @@ class NodeTargetTests(unittest.TestCase):
     def _ontology(self):
         return parse_ontology((EXAMPLE_ROOT / "ontology" / "local" / "main.prophet").read_text(encoding="utf-8"))
 
+    def _enum_ontology(self):
+        return parse_ontology(
+            """
+ontology CommerceLocal {
+  version "0.1.0"
+
+  enum OrderStatus {
+    value Pending {
+      name "Pending"
+    }
+
+    value Approved {
+      name "Approved"
+    }
+  }
+
+  object Order {
+    field orderId {
+      type string
+      key primary
+    }
+
+    field status {
+      type OrderStatus
+    }
+  }
+
+  action createOrder {
+    input {
+      field status {
+        type OrderStatus
+      }
+    }
+
+    output {
+      field orderId {
+        type string
+      }
+    }
+  }
+}
+"""
+        )
+
     def test_node_prisma_stack_generates_expected_artifacts(self) -> None:
         cfg = self._base_cfg()
         cfg["generation"]["stack"] = {"id": "node_express_prisma"}
@@ -120,6 +164,35 @@ class NodeTargetTests(unittest.TestCase):
         self.assertIn("prophet:Action", turtle)
         self.assertNotIn("prophet:Process", turtle)
         self.assertNotIn("prophet:Workflow", turtle)
+
+    def test_node_stacks_generate_native_enum_artifacts(self) -> None:
+        ontology = self._enum_ontology()
+
+        prisma_cfg = self._base_cfg()
+        prisma_cfg["generation"]["stack"] = {"id": "node_express_prisma"}
+        prisma_cfg["generation"]["targets"] = ["openapi", "node_express", "prisma", "manifest"]
+        with tempfile.TemporaryDirectory(prefix="prophet-node-enum-prisma-") as tmp:
+            prisma_outputs = build_generated_outputs(build_ir(ontology, prisma_cfg), prisma_cfg, root=Path(tmp))
+        self.assertIn("export enum OrderStatus", prisma_outputs["gen/node-express/src/generated/domain.ts"])
+        self.assertIn("z.nativeEnum(OrderStatus)", prisma_outputs["gen/node-express/src/generated/validation.ts"])
+        self.assertIn("enum OrderStatus {", prisma_outputs["gen/node-express/prisma/schema.prisma"])
+        self.assertIn("status OrderStatus", prisma_outputs["gen/node-express/prisma/schema.prisma"])
+
+        typeorm_cfg = self._base_cfg()
+        typeorm_cfg["generation"]["stack"] = {"id": "node_express_typeorm"}
+        typeorm_cfg["generation"]["targets"] = ["openapi", "node_express", "typeorm", "manifest"]
+        with tempfile.TemporaryDirectory(prefix="prophet-node-enum-typeorm-") as tmp:
+            typeorm_outputs = build_generated_outputs(build_ir(ontology, typeorm_cfg), typeorm_cfg, root=Path(tmp))
+        self.assertIn("OrderStatus", typeorm_outputs["gen/node-express/src/generated/typeorm-entities.ts"])
+        self.assertIn("enum: Domain.OrderStatus", typeorm_outputs["gen/node-express/src/generated/typeorm-entities.ts"])
+
+        mongoose_cfg = self._base_cfg()
+        mongoose_cfg["generation"]["stack"] = {"id": "node_express_mongoose"}
+        mongoose_cfg["generation"]["targets"] = ["openapi", "node_express", "mongoose", "manifest"]
+        with tempfile.TemporaryDirectory(prefix="prophet-node-enum-mongoose-") as tmp:
+            mongoose_outputs = build_generated_outputs(build_ir(ontology, mongoose_cfg), mongoose_cfg, root=Path(tmp))
+        self.assertIn("OrderStatus", mongoose_outputs["gen/node-express/src/generated/mongoose-models.ts"])
+        self.assertIn("enum: Object.values(Domain.OrderStatus)", mongoose_outputs["gen/node-express/src/generated/mongoose-models.ts"])
 
     def test_autodetect_selects_node_prisma_and_rewrites_default_targets(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-prisma-") as tmp:

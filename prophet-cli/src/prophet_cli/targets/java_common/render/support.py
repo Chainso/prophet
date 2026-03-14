@@ -27,11 +27,12 @@ def effective_base_package(base_package: str, ontology_name: str) -> str:
 def java_type_for_type_descriptor(
     t: Dict[str, Any],
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
     if t["kind"] == "list":
-        elem_java = java_type_for_type_descriptor(t["element"], type_by_id, object_by_id, struct_by_id)
+        elem_java = java_type_for_type_descriptor(t["element"], type_by_id, enum_by_id, object_by_id, struct_by_id)
         return f"List<{elem_java}>"
     if t["kind"] == "object_ref":
         target = object_by_id[t["target_object_id"]]
@@ -39,6 +40,9 @@ def java_type_for_type_descriptor(
     if t["kind"] == "struct":
         target = struct_by_id[t["target_struct_id"]]
         return target["name"]
+    if t["kind"] == "enum":
+        target = enum_by_id[t["target_enum_id"]]
+        return str(target["name"])
 
     if t["kind"] == "base":
         base = t["name"]
@@ -66,10 +70,11 @@ def java_type_for_type_descriptor(
 def java_type_for_field(
     field: Dict[str, Any],
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
     struct_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
-    return java_type_for_type_descriptor(field["type"], type_by_id, object_by_id, struct_by_id)
+    return java_type_for_type_descriptor(field["type"], type_by_id, enum_by_id, object_by_id, struct_by_id)
 
 
 def struct_target_ids_for_type(type_desc: Dict[str, Any]) -> List[str]:
@@ -77,6 +82,14 @@ def struct_target_ids_for_type(type_desc: Dict[str, Any]) -> List[str]:
         return [type_desc["target_struct_id"]]
     if type_desc.get("kind") == "list":
         return struct_target_ids_for_type(type_desc["element"])
+    return []
+
+
+def enum_target_ids_for_type(type_desc: Dict[str, Any]) -> List[str]:
+    if type_desc.get("kind") == "enum":
+        return [type_desc["target_enum_id"]]
+    if type_desc.get("kind") == "list":
+        return enum_target_ids_for_type(type_desc["element"])
     return []
 
 

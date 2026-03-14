@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.26.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_commerce_local",
@@ -22,6 +22,7 @@
       "description": "Non-negative monetary amount used for order totals."
     }
   ],
+  "enums": [],
   "objects": [
     {
       "id": "obj_order",
@@ -1052,5 +1053,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "026cc621cb86c87effeb4d1c95d64d9f993c65869a205b9346d57dc90f5ad261",
-  "ir_hash": "489f23b568d85db57882e80fc854c9f242855fb86cf02fce8ce668df663ef03f"
+  "ir_hash": "00b2bb19e9440de9b934e504e0a68716cd96c3bc14a03df7aaec44e2c1e62cbc"
 }

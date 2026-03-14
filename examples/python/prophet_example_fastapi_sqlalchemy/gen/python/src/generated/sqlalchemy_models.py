@@ -3,8 +3,9 @@ from __future__ import annotations
 
 from typing import Optional
 
-from sqlalchemy import Boolean, DateTime, Float, Integer, JSON, String, func
+from sqlalchemy import Boolean, DateTime, Enum as SqlEnum, Float, Integer, JSON, String, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from . import domain as Domain
 
 class Base(DeclarativeBase):
     pass

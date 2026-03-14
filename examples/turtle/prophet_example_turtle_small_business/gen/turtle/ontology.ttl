@@ -16,7 +16,7 @@ artisan_bakery_local:ont_artisan_bakery_local a prophet:LocalOntology ;
   prophet:description "Operations ontology for a neighborhood bakery: catalog, customers, inventory, purchasing, invoicing, and fulfillment." .
 
 # ============================================================
-# Custom Types
+# Custom And Enum Types
 # ============================================================
 
 artisan_bakery_local:type_currency_code a prophet:CustomType ;

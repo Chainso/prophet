@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import dataclasses
+from enum import Enum
 
 from typing import Callable, Optional
 
@@ -15,8 +16,12 @@ from . import query as Filters
 from . import sqlmodel_models as Models
 
 def _serialize(value):
+    if isinstance(value, Enum):
+        return value.value
     if dataclasses.is_dataclass(value):
-        return dataclasses.asdict(value)
+        return {key: _serialize(item) for key, item in dataclasses.asdict(value).items()}
+    if isinstance(value, dict):
+        return {key: _serialize(item) for key, item in value.items()}
     if isinstance(value, list):
         return [_serialize(item) for item in value]
     return value

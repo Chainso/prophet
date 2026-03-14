@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List
 
+from ..support import _enum_member_names
 from ..support import _object_primary_key_fields
 from ..support import _pascal_case
 from ..support import _py_base_type
@@ -11,6 +12,7 @@ from ..support import _sort_dict_entries
 
 def render_domain_types(ir: Dict[str, Any]) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
 
@@ -19,6 +21,7 @@ def render_domain_types(ir: Dict[str, Any]) -> str:
         "from __future__ import annotations",
         "",
         "from dataclasses import dataclass",
+        "from enum import Enum",
         "from typing import Any, Dict, List, Literal, Optional",
         "",
     ]
@@ -28,6 +31,17 @@ def render_domain_types(ir: Dict[str, Any]) -> str:
         py_type = _py_base_type(str(custom.get("base", "string")))
         lines.append(f"{name} = {py_type}")
     if ir.get("types"):
+        lines.append("")
+
+    for enum_item in _sort_dict_entries(list(ir.get("enums", []))):
+        enum_name = _pascal_case(str(enum_item.get("name", "Enum")))
+        lines.append(f"class {enum_name}(str, Enum):")
+        member_names = _enum_member_names(enum_item)
+        if not member_names:
+            lines.append("    pass")
+        else:
+            for member_name in member_names:
+                lines.append(f"    {member_name} = {member_name!r}")
         lines.append("")
 
     for obj in _sort_dict_entries(list(ir.get("objects", []))):
@@ -43,6 +57,7 @@ def render_domain_types(ir: Dict[str, Any]) -> str:
                     _render_dataclass_field(
                         field,
                         type_by_id=type_by_id,
+                        enum_by_id=enum_by_id,
                         object_by_id=object_by_id,
                         struct_by_id=struct_by_id,
                     )
@@ -62,6 +77,7 @@ def render_domain_types(ir: Dict[str, Any]) -> str:
                     _render_dataclass_field(
                         field,
                         type_by_id=type_by_id,
+                        enum_by_id=enum_by_id,
                         object_by_id=object_by_id,
                         struct_by_id=struct_by_id,
                     )
@@ -87,6 +103,7 @@ def render_domain_types(ir: Dict[str, Any]) -> str:
                     _render_dataclass_field(
                         field,
                         type_by_id=type_by_id,
+                        enum_by_id=enum_by_id,
                         object_by_id=object_by_id,
                         struct_by_id=struct_by_id,
                     )

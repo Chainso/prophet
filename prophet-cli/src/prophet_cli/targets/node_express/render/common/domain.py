@@ -11,6 +11,7 @@ from ..support import _ts_type_for_descriptor
 
 def _render_domain_types(ir: Dict[str, Any]) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
+    enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
     object_by_id = {item["id"]: item for item in ir.get("objects", []) if isinstance(item, dict) and "id" in item}
     struct_by_id = {item["id"]: item for item in ir.get("structs", []) if isinstance(item, dict) and "id" in item}
 
@@ -25,6 +26,21 @@ def _render_domain_types(ir: Dict[str, Any]) -> str:
     if ir.get("types"):
         lines.append("")
 
+    for enum_def in sorted(ir.get("enums", []), key=lambda item: str(item.get("id", ""))):
+        if not isinstance(enum_def, dict):
+            continue
+        name = _pascal_case(str(enum_def.get("name", "Enum")))
+        lines.append(f"export enum {name} {{")
+        for value in sorted(
+            [item for item in enum_def.get("values", []) if isinstance(item, dict)],
+            key=lambda item: str(item.get("id", "")),
+        ):
+            member_name = _pascal_case(str(value.get("name", "Value")))
+            member_value = str(value.get("name", "Value")).replace("\\", "\\\\").replace('"', '\\"')
+            lines.append(f'  {member_name} = "{member_value}",')
+        lines.append("}")
+        lines.append("")
+
     for obj in sorted(ir.get("objects", []), key=lambda item: str(item.get("id", ""))):
         if not isinstance(obj, dict):
             continue
@@ -32,7 +48,15 @@ def _render_domain_types(ir: Dict[str, Any]) -> str:
         pk_fields = _object_primary_key_fields(obj)
         lines.append(f"export interface {obj_name}Ref {{")
         for field in pk_fields:
-            lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
+            lines.append(
+                _render_property(
+                    field,
+                    type_by_id=type_by_id,
+                    enum_by_id=enum_by_id,
+                    object_by_id=object_by_id,
+                    struct_by_id=struct_by_id,
+                )
+            )
         lines.append("}")
         lines.append("")
 
@@ -43,7 +67,15 @@ def _render_domain_types(ir: Dict[str, Any]) -> str:
         lines.append(f"export interface {name} {{")
         for field in list(struct.get("fields", [])):
             if isinstance(field, dict):
-                lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
+                lines.append(
+                    _render_property(
+                        field,
+                        type_by_id=type_by_id,
+                        enum_by_id=enum_by_id,
+                        object_by_id=object_by_id,
+                        struct_by_id=struct_by_id,
+                    )
+                )
         lines.append("}")
         lines.append("")
 
@@ -60,7 +92,15 @@ def _render_domain_types(ir: Dict[str, Any]) -> str:
         lines.append(f"export interface {obj_name} {{")
         for field in list(obj.get("fields", [])):
             if isinstance(field, dict):
-                lines.append(_render_property(field, type_by_id=type_by_id, object_by_id=object_by_id, struct_by_id=struct_by_id))
+                lines.append(
+                    _render_property(
+                        field,
+                        type_by_id=type_by_id,
+                        enum_by_id=enum_by_id,
+                        object_by_id=object_by_id,
+                        struct_by_id=struct_by_id,
+                    )
+                )
         if states:
             lines.append(f"  state: {obj_name}State;")
         lines.append("}")
