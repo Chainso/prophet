@@ -52,16 +52,18 @@ generation:
 The Turtle output is generated deterministically from IR and includes:
 - local ontology metadata
 - custom types
+- enums and enum values
 - structs and property definitions
-- object models, keys, states, transitions
+- object models, keys, and field-level state metadata
 - action inputs/outputs and actions
-- signals/events and triggers
+- events and triggers
 - derived list type nodes
 
 The output is aligned to the base metamodel in [`prophet.ttl`](../../prophet.ttl), including:
 - SHACL `NodeShape` resources for custom type constraints (`prophet:hasConstraint`)
 - `prophet:ObjectReference` resources for `ref(Object)` field types
-- `prophet:initialState` on object models (instead of per-state flags)
+- `prophet:isStateField` on fields marked with `state`
+- `prophet:initialEnumValue` on state-marked fields
 
 Naming semantics in Turtle:
 - `prophet:name` comes from DSL display-name metadata (`name "..."`, fallback to technical symbol).
@@ -114,4 +116,4 @@ This example includes Prophet project scaffolding plus a minimal ontology, but n
 A richer small-business Turtle example is also available at:
 - [examples/turtle/prophet_example_turtle_small_business](../../examples/turtle/prophet_example_turtle_small_business)
 
-This model includes multiple related entities, lifecycle transitions, reusable structs, and trigger wiring intended for more realistic testing scenarios.
+This model includes multiple related entities, enum-backed state fields, reusable structs, and trigger wiring intended for more realistic testing scenarios.

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.27.0",
+  "toolchain_version": "0.27.1",
   "stack": {
     "id": "node_express_mongoose",
     "language": "node",
     "framework": "express",
     "orm": "mongoose"
   },
-  "ir_hash": "8e2e3a81e56ec7c70951dafd7ea154373c73cee785181a8b0d995e249989cbba",
+  "ir_hash": "9eecb34c363547efc242a24d734e8e99ba96da45bf73de6c0c0d4cebdb64b704",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",

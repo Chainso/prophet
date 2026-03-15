@@ -4,6 +4,21 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-03-15
+
+### Changed
+- Updated agent/operator guidance to match the shipped event-and-state-field model:
+  - `output { ... }` and `output event <EventName>` only,
+  - enum-backed object state fields with `state` and `initial <EnumValue>`,
+  - literal field name `state` allowed,
+  - no internal `__prophet_state` or transition runtime guidance.
+- Corrected maintained references and quickstarts that still described removed `signal` / transition-era concepts, especially in:
+  - `prophet-cli/README.md`,
+  - Turtle target reference,
+  - Java/Node/Python quickstarts,
+  - developer and plugin skill docs.
+- Toolchain/package version advanced to `0.27.1`.
+
 ## [0.27.0] - 2026-03-15
 
 ### Changed

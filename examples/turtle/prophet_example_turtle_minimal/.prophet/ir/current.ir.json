@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.27.0",
+  "toolchain_version": "0.27.1",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_support_local",
@@ -337,5 +337,5 @@
     "custom_type_constraint_changes_are_breaking": true
   },
   "query_contracts_version": "2a0356336bdb72cbf7da8eb0b4f110b1b8948d13064448060f974c04a0093a06",
-  "ir_hash": "c9ce1a057d6f7071907bdc2bf48d5ccb4ea2c31f6dbb71f381c65d6fcdbaf998"
+  "ir_hash": "cce8a2c24a5dec4c827b9db1d7cc0ea0734b7806d1437a05d6d9e8eb49fb353e"
 }

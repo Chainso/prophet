@@ -1,6 +1,6 @@
 ---
 name: prophet-execute-ontology-change
-description: Execute Prophet ontology changes directly by editing DSL source files, validating, planning, regenerating artifacts, and verifying integration outcomes. Use when users ask to add, change, or refactor domain models, actions, signals, triggers, refs, structs, keys, or query behavior.
+description: Execute Prophet ontology changes directly by editing DSL source files, validating, planning, regenerating artifacts, and verifying integration outcomes. Use when users ask to add, change, or refactor domain models, actions, events, triggers, refs, structs, enums, keys, state fields, or query behavior.
 license: See LICENSE for complete terms
 allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:*) Bash(prophet:stacks:*) Bash(prophet:hooks:*) Bash(prophet:version:check:*) Bash(prophet:generate:--verify-clean:*) Bash(prophet:gen:--verify-clean:*)
 ---
@@ -24,7 +24,7 @@ allowed-tools: Bash(prophet:validate:*) Bash(prophet:plan:*) Bash(prophet:check:
 Use this real example as your baseline when authoring or refactoring ontology DSL:
 - `examples/java/prophet_example_spring/ontology/local/main.prophet`
 
-Representative excerpt (covers type/object/struct/action/signal/trigger/state/transition):
+Representative excerpt (covers type/object/enum/struct/action/event/trigger/state-field):
 
 ```prophet
 ontology commerce_local {
@@ -35,6 +35,18 @@ ontology commerce_local {
     id "type_money"
     base decimal
     constraint min "0.00"
+  }
+
+  enum OrderStatus {
+    id "enum_order_status"
+
+    value Created {
+      id "enum_order_status_created"
+    }
+
+    value Approved {
+      id "enum_order_status_approved"
+    }
   }
 
   object Order {
@@ -57,19 +69,11 @@ ontology commerce_local {
       optional
     }
 
-    state created {
-      id "state_order_created"
-      initial
-    }
-
-    state approved {
-      id "state_order_approved"
-    }
-
-    transition approve {
-      id "trans_order_approve"
-      from created
-      to approved
+    field status {
+      id "fld_order_status"
+      type OrderStatus
+      state
+      initial Created
     }
   }
 
@@ -102,10 +106,10 @@ ontology commerce_local {
     }
   }
 
-  signal PaymentCaptured {
-    id "sig_payment_captured"
+  event PaymentCaptured {
+    id "evt_payment_captured"
     field order {
-      id "fld_sig_payment_captured_order"
+      id "fld_evt_payment_captured_order"
       type ref(Order)
     }
   }
@@ -142,14 +146,15 @@ Use this as the default decision guide when applying ontology changes.
 
 5. `object <ObjectName> { ... }`
    - Persistent domain entity/aggregate that generates storage and query surfaces.
-   - Owns fields and optional lifecycle state machine.
+   - Owns fields, keys, and optional enum-backed state metadata on one field.
 
 6. `field <fieldName> { type ... }`
-   - Atomic schema unit used in objects, structs, action input/output, and signals.
+   - Atomic schema unit used in objects, structs, action input/output, and events.
    - Fields are required by default; use `optional` only when null/omission is intended.
    - Supported type forms:
      - scalars: `string`, `int`, `long`, `short`, `byte`, `double`, `float`, `decimal`, `boolean`, `datetime`, `date`, `duration`
      - custom type: `Money`
+     - enum: `OrderStatus`
      - object ref: `ref(User)`
      - struct: `Address`
      - lists: `string[]`, `list(string)`, nested lists such as `string[][]`
@@ -163,13 +168,14 @@ Use this as the default decision guide when applying ontology changes.
    - Embedded reusable value object; not a top-level persistent aggregate.
    - Use when the shape is reused and does not need independent lifecycle/query identity.
 
-9. `state <StateName> { ... }` (inside object)
-   - Declares object lifecycle states.
-   - Mark exactly one state as `initial` for deterministic lifecycle start.
+9. `enum <EnumName> { value ... }`
+   - Declares reusable enumerated values for fields and state modeling.
+   - Use top-level enums for workflow/status concepts that appear in multiple contracts.
 
-10. `transition <TransitionName> { from ... to ... }` (inside object)
-   - Declares allowed lifecycle state changes.
-   - Also creates derived transition events for trigger wiring.
+10. State fields on objects
+   - Mark exactly one object field with `state` to identify lifecycle state.
+   - The field must reference an enum and declare `initial <EnumValue>`.
+   - State is ordinary persisted/queryable field data; there is no separate workflow graph syntax.
 
 11. `action <ActionName> { input { ... } output { ... } }`
    - Command API boundary generated as action endpoint + contracts.
@@ -178,22 +184,22 @@ Use this as the default decision guide when applying ontology changes.
 12. Action `input` / `output` blocks
    - Define request/response payload contracts inline.
    - These contracts drive generated DTOs/schemas and event contracts.
+   - Supported output forms:
+     - inline event payload: `output { ... }`
+     - declared top-level event: `output event <EventName>`
 
-13. `signal <SignalName> { ... }`
+13. `event <EventName> { ... }`
    - Explicit top-level domain event declaration.
-   - Use for external or system events that should trigger actions.
+   - Use for external or system events that should trigger actions, or for reusable action output payloads.
 
 14. `trigger <TriggerName> { when event ... invoke ... }`
    - Event-to-action automation rule.
-   - `when event` may reference:
-     - explicit signal name (`PaymentCaptured`)
-     - derived action output event (`<ActionName>Result`)
-     - derived transition event (`<Object><Transition>Transition`)
+   - `when event` references a declared event name or an inline action-output-derived event name.
 
 15. Derived event model (important)
-   - Signals are explicit.
-   - Action outputs and object transitions are implicit event producers by definition.
-   - Keep trigger references aligned with derived naming conventions.
+   - Top-level events are explicit.
+   - Inline action outputs derive event contracts such as `<ActionName> Result`.
+   - There is no secondary signal/transition event subtype.
 
 16. Description metadata
    - `description "..."` and `documentation "..."` are supported synonyms.
@@ -212,10 +218,11 @@ Use this as the default decision guide when applying ontology changes.
 2. Apply DSL edits to satisfy user intent.
 3. Preserve current Prophet modeling rules:
    - fields are required by default; use `optional` when needed,
-   - actions use inline `input {}` and one output form: `output {}`, `output signal <SignalName>`, or `output transition <ObjectName>.<TransitionName>`,
+   - actions use inline `input {}` and an event output form: `output {}` or `output event <EventName>`,
    - use `ref(ObjectName)` for object references,
    - use `struct` for embedded value objects,
-   - signals are top-level explicit events; action outputs produce events and may target signals or transitions.
+   - use top-level `event` blocks for declared events,
+   - use enum-backed object fields marked `state` with `initial <EnumValue>` for lifecycle state.
 4. Run validation:
    - `prophet validate`
 5. Run compatibility/impact plan:

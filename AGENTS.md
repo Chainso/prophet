@@ -39,10 +39,10 @@ Prioritize deterministic generation, compatibility safety, and clear developer e
 - Keep ontology `id` values as immutable compatibility anchors.
 - Spring generated Java package root is ontology-scoped: `<base_package>.<ontology_name>`.
 - When behavior changes, update docs and tests in the same change.
-- Action outputs are event-based: use `output { ... }`, `output signal <SignalName>`, or `output transition <Object>.<transition>`.
-- User-defined DSL field name `state` is reserved globally and must be rejected by validation.
-- Stateful persistence uses internal `__prophet_state` storage while generated domain/query contracts expose logical `state`.
-- Transition codegen must include per-object handler + validator seams and use runtime `TransitionValidationResult`.
+- Action outputs are event-based: use `output { ... }` for an inline event payload or `output event <EventName>` for a declared top-level event.
+- State is modeled on a normal object field: the field must use an enum type, include `state`, and declare `initial <EnumValue>`.
+- The literal field name `state` is allowed; only the `state` metadata marker rules are enforced.
+- Generated persistence/query surfaces use the declared state field directly; there is no internal `__prophet_state` storage or transition runtime.
 
 ## Commands
 

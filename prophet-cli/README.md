@@ -51,7 +51,7 @@ prophet init
 ```
 
 ### `prophet validate`
-Parses + validates ontology references, IDs, states/transitions, action contracts, list types, and action/event/trigger links.
+Parses + validates ontology references, IDs, state-field metadata, action contracts, list types, and action/event/trigger links.
 
 ```bash
 prophet validate

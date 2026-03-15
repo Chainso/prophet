@@ -24,7 +24,7 @@ Replace legacy generated event publishing contracts with async-first `EventPubli
 ### Phase 2: Generator Migration
 
 4. Node codegen migration:
-   - Generate `DomainEvent` closed sum for produced events + additional signals
+   - Generate `DomainEvent` closed sum for produced events + additional events
    - Generate `ActionOutcome<T>` and ergonomic helpers
   - Replace legacy event publishing path with `EventPublisher` path
    - Emit envelopes and publish batched events in deterministic order
