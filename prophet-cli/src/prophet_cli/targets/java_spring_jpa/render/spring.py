@@ -11,7 +11,6 @@ from prophet_cli.targets.java_common.render.support import effective_base_packag
 from prophet_cli.targets.java_spring_jpa.render.common import render_action_runtime_artifacts
 from prophet_cli.targets.java_spring_jpa.render.common import render_contract_artifacts
 from prophet_cli.targets.java_spring_jpa.render.common import render_domain_artifacts
-from prophet_cli.targets.java_spring_jpa.render.common import render_transition_runtime_artifacts
 from prophet_cli.targets.java_spring_jpa.render.orm import render_jpa_persistence_artifacts
 from prophet_cli.targets.java_spring_jpa.render.orm import render_jpa_query_artifacts
 from prophet_cli.targets.runtime_versions import resolve_java_runtime_group
@@ -287,7 +286,6 @@ def render_spring_files(
     render_jpa_persistence_artifacts(files, state)
     render_contract_artifacts(files, state)
     render_action_runtime_artifacts(files, state)
-    render_transition_runtime_artifacts(files, state)
     render_jpa_query_artifacts(files, state)
 
     annotate_generated_java_files(files)

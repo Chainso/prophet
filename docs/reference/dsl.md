@@ -6,7 +6,7 @@
 ontology CommerceLocal {
   name "Commerce Local"
   version "0.1.0"
-  # type/object/struct/action/signal/trigger blocks
+  # type/object/struct/action/event/trigger blocks
 }
 ```
 
@@ -17,7 +17,7 @@ ontology CommerceLocal {
 - `object`
 - `struct`
 - `action`
-- `signal`
+- `event`
 - `trigger`
 
 ## Lexical Rules
@@ -117,7 +117,7 @@ field customer_id {
 ## Action Contracts
 
 Actions declare command contracts inline with `input { ... }`.
-Action output is an event, and can be declared in three forms.
+Action output is an event, and can be declared in two forms.
 
 ```prophet
 action createOrder {
@@ -127,36 +127,54 @@ action createOrder {
     }
   }
 
-  output signal PaymentCaptured
+  output event PaymentCaptured
 }
 ```
 
 Supported output forms:
-- Inline signal payload:
+- Inline event payload:
   - `output { ... }`
-  - derives signal event `<ActionName> Result`
-- Referenced signal:
-  - `output signal <SignalName>`
-- Referenced transition:
-  - `output transition <ObjectName>.<TransitionName>`
+  - derives event `<ActionName> Result`
+- Referenced event:
+  - `output event <EventName>`
+
+## State Fields
+
+State is modeled on a normal object field.
+
+```prophet
+enum OrderStatus {
+  value Created
+  value Approved
+}
+
+object Order {
+  field status {
+    type OrderStatus
+    state
+    initial Created
+  }
+}
+```
+
+Rules:
+- A state field must reference an enum.
+- A state field must declare `initial <EnumValue>`.
+- Each object may declare at most one state field.
+- `state` is valid only inside object fields.
 
 ## Event Semantics
 
-- Top-level event definitions in DSL are `signal` declarations.
-- Object `transition` declarations are also events.
-- Action output always resolves to an event (`signal` or `transition`).
-- Triggers can reference:
-  - signal name (for example `PaymentCaptured`)
-  - derived inline output signal name `<ActionName> Result` (for example `ApproveOrder Result`)
-  - derived transition event name `<Object><Transition>Transition` (for example `OrderApproveTransition`)
+- Top-level event definitions in DSL are `event` declarations.
+- Action output always resolves to an event.
+- Triggers reference event names directly.
 - Action input shape names are derived as `<ActionName> Command` (for example `ApproveOrder Command`).
 - If an action defines display metadata (`name "..."`), derived inline names use that display value as the `<ActionName>` base.
-- Transition events automatically include object primary key fields, `fromState`, and `toState`.
 
-Signal example:
+Event example:
 
 ```prophet
-signal PaymentCaptured {
+event PaymentCaptured {
   field orderId {
     type string
   }
@@ -167,14 +185,13 @@ signal PaymentCaptured {
 
 `prophet validate` enforces:
 - unique IDs across definitions
-- valid state/transition references
 - key constraints
 - action/event/trigger link integrity
 - object-ref target constraints (currently single-field PK targets)
 - valid action input and output-event wiring in action definitions
-- signal schema validity
+- event schema validity
 - valid trigger references to existing events/actions
-- reserved field name `state` cannot be user-defined
+- state field enum + initial-value rules
 
 ## Canonical Example
 

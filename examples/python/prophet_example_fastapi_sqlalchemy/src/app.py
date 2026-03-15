@@ -27,12 +27,11 @@ from generated.actions import (
     CreateOrderCommand,
     ShipOrderCommand,
 )
-from generated.domain import Order, OrderRef, User
-from generated.event_contracts import CreateOrderResult, OrderApproveTransition, OrderShipTransition
+from generated.domain import Order, OrderRef, OrderStatus, User
+from generated.event_contracts import CreateOrderResult, OrderApproved, OrderShipped
 from generated.events import EventPublisherNoOp
 from generated.fastapi_routes import build_generated_router
 from generated.sqlalchemy_adapters import SqlAlchemyRepositories
-from generated.transitions import TransitionServices
 
 
 class CreateOrderHandler(CreateOrderActionHandler):
@@ -52,14 +51,14 @@ class CreateOrderHandler(CreateOrderActionHandler):
                 discountCode=input.discountCode,
                 tags=input.tags,
                 shippingAddress=input.shippingAddress,
-                state="created",
+                status=OrderStatus.Created,
             )
         )
         return CreateOrderResult(order=OrderRef(orderId=order_id))
 
 
 class ApproveOrderHandler(ApproveOrderActionHandler):
-    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> OrderApproveTransition:
+    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> OrderApproved:
         existing = await context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
@@ -78,20 +77,14 @@ class ApproveOrderHandler(ApproveOrderActionHandler):
                 shippingCarrier=existing.shippingCarrier,
                 shippingTrackingNumber=existing.shippingTrackingNumber,
                 shippingPackageIds=existing.shippingPackageIds,
-                state=existing.state,
+                status=OrderStatus.Approved,
             )
         )
-        transitions = TransitionServices(context.repositories)
-        draft = await transitions.order.approveOrder(saved_order)
-        return draft.build(
-            approvedByUserId=saved_order.approvedByUserId,
-            noteCount=len(input.notes or []),
-            approvalReason=saved_order.approvalReason,
-        )
+        return OrderApproved(order=OrderRef(orderId=saved_order.orderId))
 
 
 class ShipOrderHandler(ShipOrderActionHandler):
-    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> OrderShipTransition:
+    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> OrderShipped:
         existing = await context.repositories.order.get_by_id(input.order)
         if existing is None:
             raise ValueError(f"order not found: {input.order.orderId}")
@@ -110,16 +103,10 @@ class ShipOrderHandler(ShipOrderActionHandler):
                 shippingCarrier=input.carrier,
                 shippingTrackingNumber=input.trackingNumber,
                 shippingPackageIds=input.packageIds,
-                state=existing.state,
+                status=OrderStatus.Shipped,
             )
         )
-        transitions = TransitionServices(context.repositories)
-        draft = await transitions.order.shipOrder(saved_order)
-        return draft.build(
-            carrier=input.carrier,
-            trackingNumber=input.trackingNumber,
-            packageIds=input.packageIds,
-        )
+        return OrderShipped(order=OrderRef(orderId=saved_order.orderId))
 
 
 class ActionHandlers(ActionHandlers):
@@ -133,7 +120,11 @@ class ActionHandlers(ActionHandlers):
         self.shipOrder = ShipOrderHandler()
 
 
-engine = create_engine("sqlite:///./dev.db", future=True, connect_args={"check_same_thread": False})
+DB_PATH = ROOT / "dev.db"
+if DB_PATH.exists():
+    DB_PATH.unlink()
+
+engine = create_engine(f"sqlite:///{DB_PATH}", future=True, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 SqlAlchemyModels.Base.metadata.create_all(engine)
 

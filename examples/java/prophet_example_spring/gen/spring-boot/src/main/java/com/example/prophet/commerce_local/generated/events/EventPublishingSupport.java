@@ -117,22 +117,26 @@ public final class EventPublishingSupport {
                 new RefBinding("Order", List.of("order"), List.of("orderId"))
             );
         }
+        else if (event instanceof OrderApprovedEvent typed) {
+            eventType = "OrderApproved";
+            payloadValue = typed.payload();
+            refBindings = List.of(
+                new RefBinding("Order", List.of("order"), List.of("orderId"))
+            );
+        }
+        else if (event instanceof OrderShippedEvent typed) {
+            eventType = "OrderShipped";
+            payloadValue = typed.payload();
+            refBindings = List.of(
+                new RefBinding("Order", List.of("order"), List.of("orderId"))
+            );
+        }
         else if (event instanceof PaymentCapturedEvent typed) {
             eventType = "PaymentCaptured";
             payloadValue = typed.payload();
             refBindings = List.of(
                 new RefBinding("Order", List.of("order"), List.of("orderId"))
             );
-        }
-        else if (event instanceof OrderApproveTransitionEvent typed) {
-            eventType = "OrderApproveTransition";
-            payloadValue = typed.payload();
-            refBindings = List.of();
-        }
-        else if (event instanceof OrderShipTransitionEvent typed) {
-            eventType = "OrderShipTransition";
-            payloadValue = typed.payload();
-            refBindings = List.of();
         }
         else {
             throw new IllegalArgumentException("Unsupported domain event: " + event.getClass().getName());

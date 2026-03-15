@@ -2,7 +2,7 @@ package com.example.prophet.commerce_local.generated.persistence;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.domain.Address;
-import com.example.prophet.commerce_local.generated.domain.OrderState;
+import com.example.prophet.commerce_local.generated.domain.OrderStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -106,9 +106,12 @@ public class OrderEntity {
     @Column(name = "shipping_package_ids", nullable = true, columnDefinition = "text")
     private List<String> shippingPackageIds;
 
+    /**
+     * Current lifecycle status for the order.
+     */
     @Enumerated(EnumType.STRING)
-    @Column(name = "__prophet_state", nullable = false)
-    private OrderState state;
+    @Column(name = "status", nullable = false)
+    private OrderStatus status = OrderStatus.Created;
 
     @Version
     @Column(name = "row_version", nullable = false)
@@ -123,6 +126,9 @@ public class OrderEntity {
     @PrePersist
     void onCreate() {
         OffsetDateTime now = OffsetDateTime.now();
+        if (status == null) {
+            status = OrderStatus.Created;
+        }
         createdAt = now;
         updatedAt = now;
     }
@@ -228,11 +234,11 @@ public class OrderEntity {
         this.shippingPackageIds = shippingPackageIds;
     }
 
-    public OrderState getState() {
-        return state;
+    public OrderStatus getStatus() {
+        return status;
     }
 
-    public void setState(OrderState state) {
-        this.state = state;
+    public void setStatus(OrderStatus status) {
+        this.status = status;
     }
 }

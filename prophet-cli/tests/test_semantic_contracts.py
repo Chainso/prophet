@@ -40,8 +40,6 @@ class SemanticContractTests(unittest.TestCase):
             field_ids = {field["id"] for field in objects_by_id[object_id].get("fields", [])}
             for item in contract.get("filters", []):
                 field_id = item.get("field_id")
-                if field_id == "__state__":
-                    continue
                 self.assertIn(field_id, field_ids)
 
     def test_struct_and_object_ref_types_are_preserved(self) -> None:

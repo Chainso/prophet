@@ -48,9 +48,9 @@ class OrderShippingTrackingNumberFilter:
     contains: Optional[str] = None
 
 @dataclass(kw_only=True)
-class OrderStateFilter:
-    eq: Optional[str] = None
-    inValues: Optional[List[str]] = None
+class OrderStatusFilter:
+    eq: Optional[OrderStatus] = None
+    inValues: Optional[List[OrderStatus]] = None
 
 @dataclass(kw_only=True)
 class OrderTotalAmountFilter:
@@ -68,7 +68,7 @@ class OrderQueryFilter:
     orderId: Optional[OrderOrderIdFilter] = None
     shippingCarrier: Optional[OrderShippingCarrierFilter] = None
     shippingTrackingNumber: Optional[OrderShippingTrackingNumberFilter] = None
-    state: Optional[OrderStateFilter] = None
+    status: Optional[OrderStatusFilter] = None
     totalAmount: Optional[OrderTotalAmountFilter] = None
 
 @dataclass(kw_only=True)

@@ -5,6 +5,7 @@ import type {
   ApprovalContext,
   Money,
   OrderRef,
+  OrderStatus,
   UserRef
 } from './domain.js';
 

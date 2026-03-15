@@ -9,10 +9,10 @@ import com.example.prophet.commerce_local.generated.api.filters.OrderOrderIdFilt
 import com.example.prophet.commerce_local.generated.api.filters.OrderQueryFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderShippingCarrierFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderShippingTrackingNumberFilter;
-import com.example.prophet.commerce_local.generated.api.filters.OrderStateFilter;
+import com.example.prophet.commerce_local.generated.api.filters.OrderStatusFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderTotalAmountFilter;
 import com.example.prophet.commerce_local.generated.domain.Order;
-import com.example.prophet.commerce_local.generated.domain.OrderState;
+import com.example.prophet.commerce_local.generated.domain.OrderStatus;
 import com.example.prophet.commerce_local.generated.mapping.OrderDomainMapper;
 import com.example.prophet.commerce_local.generated.persistence.OrderEntity;
 import com.example.prophet.commerce_local.generated.persistence.OrderRepository;
@@ -165,13 +165,13 @@ public class OrderQueryController {
                     spec = spec.and((root, query, cb) -> cb.like(cb.lower(root.<String>get("shippingTrackingNumber")), "%" + shippingTrackingNumberFilter.contains().toLowerCase() + "%"));
                 }
             }
-            if (filter.state() != null) {
-                OrderStateFilter stateFilter = filter.state();
-                if (stateFilter.eq() != null) {
-                    spec = spec.and((root, query, cb) -> cb.equal(root.get("state"), stateFilter.eq()));
+            if (filter.status() != null) {
+                OrderStatusFilter statusFilter = filter.status();
+                if (statusFilter.eq() != null) {
+                    spec = spec.and((root, query, cb) -> cb.equal(root.get("status"), statusFilter.eq()));
                 }
-                if (stateFilter.in() != null && !stateFilter.in().isEmpty()) {
-                    spec = spec.and((root, query, cb) -> root.get("state").in(stateFilter.in()));
+                if (statusFilter.in() != null && !statusFilter.in().isEmpty()) {
+                    spec = spec.and((root, query, cb) -> root.get("status").in(statusFilter.in()));
                 }
             }
         }

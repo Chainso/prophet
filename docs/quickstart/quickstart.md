@@ -35,12 +35,17 @@ This creates:
 
 ## 3. Define Your Ontology
 
-Edit `ontology/local/main.prophet` to model objects, structs, actions, and signals.
+Edit `ontology/local/main.prophet` to model objects, structs, actions, events, and triggers.
 
 ```prophet
 ontology CommerceLocal {
   name "Commerce Local"
   version "0.1.0"
+
+  enum OrderStatus {
+    value Pending
+    value Approved
+  }
 
   object Order {
     name "Order"
@@ -49,11 +54,11 @@ ontology CommerceLocal {
     field totalAmount { name "Total Amount" type decimal }
     field discountCode { name "Discount Code" type string optional }
     field tags { name "Tags" type string[] optional }
-    state pending { initial }
-    state approved {}
-    transition approve {
-      from pending
-      to approved
+    field status {
+      name "Status"
+      type OrderStatus
+      state
+      initial Pending
     }
   }
 
@@ -76,7 +81,7 @@ ontology CommerceLocal {
     }
   }
 
-  signal PaymentCaptured {
+  event PaymentCaptured {
     name "Payment Captured"
     field order { name "Order" type ref(Order) }
     field providerRef { name "Provider Reference" type string }
@@ -89,12 +94,13 @@ Naming guidance:
 - Use `name "..."` metadata for human-facing labels in docs/UIs.
 
 Action output forms:
-- `output { ... }` for inline signal payloads (derived event `<ActionName> Result`)
-- `output signal <SignalName>`
-- `output transition <ObjectName>.<TransitionName>`
+- `output { ... }` for inline event payloads (derived event `<ActionName> Result`)
+- `output event <EventName>`
 
-Reserved field name:
-- `state` is reserved and cannot be declared manually in DSL fields.
+State fields:
+- mark a normal enum field with `state`
+- declare its initial value with `initial <EnumValue>`
+- generated persistence/query layers use that declared field name directly
 
 ## 4. Configure Generation
 

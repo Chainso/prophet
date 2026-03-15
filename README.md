@@ -20,8 +20,8 @@ Prophet treats that as a modeling problem, not just a coding problem. You define
 
 The result is not a rigid platform. Teams can stay polyglot and still keep one coherent domain model across Java, Node, and Python services.
 
-Action outputs are modeled as events: each action produces exactly one `signal` or `transition` event.
-For stateful objects, generated stacks include transition services/handlers and validator extension points so user code can execute transitions directly and then publish the resulting transition event.
+Action outputs are modeled as events: each action produces exactly one event payload.
+For objects with lifecycle state, generated stacks treat the declared enum field as ordinary persisted/queryable data rather than generating a separate workflow runtime.
 
 ## Why This Matters for Systems Engineering
 

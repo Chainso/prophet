@@ -12,6 +12,24 @@ ontology support_local {
     constraint pattern "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$"
   }
 
+  enum TicketStatus {
+    name "Ticket Status"
+    id "enum_ticket_status"
+    description "Lifecycle status for a support ticket."
+
+    value New {
+      name "New"
+      id "enumv_ticket_status_new"
+      description "Initial lifecycle status before triage occurs."
+    }
+
+    value Triaged {
+      name "Triaged"
+      id "enumv_ticket_status_triaged"
+      description "Lifecycle status after the ticket has been triaged."
+    }
+  }
+
   struct UserRef {
     name "User Ref"
     id "struct_user_ref"
@@ -69,29 +87,17 @@ ontology support_local {
       optional
     }
 
-    state New {
-      name "New"
-      id "state_ticket_new"
-      description "Initial lifecycle state before triage occurs."
-      initial
-    }
-
-    state Triaged {
-      name "Triaged"
-      id "state_ticket_triaged"
-      description "Lifecycle state after the ticket has been triaged."
-    }
-
-    transition Triage {
-      name "Triage"
-      id "trans_ticket_triage"
-      description "Moves a ticket from New to Triaged."
-      from New
-      to Triaged
+    field status {
+      name "Status"
+      id "fld_ticket_status"
+      description "Current lifecycle status for the ticket."
+      type TicketStatus
+      state
+      initial New
     }
   }
 
-  signal TicketCreated {
+  event TicketCreated {
     name "Ticket Created"
     id "sig_ticket_created"
     description "Event emitted when a new ticket is created."

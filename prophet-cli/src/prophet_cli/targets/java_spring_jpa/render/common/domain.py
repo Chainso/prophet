@@ -112,18 +112,8 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
             field_descriptions=struct_field_descriptions,
         )
 
-    # state enums + domain records
+    # object domain records
     for obj in objects:
-        if obj.get("states"):
-            enum_name = f"{obj['name']}State"
-            vals = ",\n    ".join(s["name"].upper() for s in obj["states"])
-            files[f"src/main/java/{package_path}/generated/domain/{enum_name}.java"] = (
-                f"package {base_package}.generated.domain;\n\n"
-                f"public enum {enum_name} {{\n"
-                f"    {vals}\n"
-                "}\n"
-            )
-
         imports: set[str] = set()
         object_fields: List[Tuple[str, str, bool]] = []
         object_field_descriptions: Dict[str, str] = {}
@@ -142,10 +132,6 @@ def render_domain_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> Non
             object_fields.append((java_t, camel_case(f["name"]), required))
             if f.get("description"):
                 object_field_descriptions[camel_case(f["name"])] = str(f["description"])
-
-        if obj.get("states"):
-            object_fields.append((f"{obj['name']}State", "state", True))
-            imports.add(f"import {base_package}.generated.domain.{obj['name']}State;")
 
         files[f"src/main/java/{package_path}/generated/domain/{obj['name']}.java"] = render_java_record_with_builder(
             f"{base_package}.generated.domain",

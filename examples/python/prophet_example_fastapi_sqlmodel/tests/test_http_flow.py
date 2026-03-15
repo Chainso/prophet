@@ -59,9 +59,7 @@ class FastApiSqlModelHttpFlowTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(approve.status_code, 200, approve.text)
         approved = approve.json()
-        self.assertEqual(approved["orderId"], order_id)
-        self.assertEqual(approved["fromState"], "created")
-        self.assertEqual(approved["toState"], "approved")
+        self.assertEqual(approved["order"]["orderId"], order_id)
 
         ship = await self.client.post(
             "/actions/shipOrder",
@@ -74,20 +72,18 @@ class FastApiSqlModelHttpFlowTest(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(ship.status_code, 200, ship.text)
         shipped = ship.json()
-        self.assertEqual(shipped["orderId"], order_id)
-        self.assertEqual(shipped["fromState"], "approved")
-        self.assertEqual(shipped["toState"], "shipped")
+        self.assertEqual(shipped["order"]["orderId"], order_id)
 
         fetched = await self.client.get(f"/orders/{order_id}")
         self.assertEqual(fetched.status_code, 200, fetched.text)
         fetched_json = fetched.json()
         self.assertEqual(fetched_json["orderId"], order_id)
-        self.assertEqual(fetched_json["state"], "shipped")
+        self.assertEqual(fetched_json["status"], "Shipped")
 
         query = await self.client.post(
             "/orders/query?page=0&size=10",
             json={
-                "state": {"eq": "shipped"},
+                "status": {"eq": "Shipped"},
                 "orderId": {"eq": order_id},
             },
         )

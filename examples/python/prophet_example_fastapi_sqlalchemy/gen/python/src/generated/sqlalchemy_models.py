@@ -24,16 +24,7 @@ class OrderModel(Base):
     shippingCarrier: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     shippingTrackingNumber: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     shippingPackageIds: Mapped[Optional[object]] = mapped_column(JSON, nullable=True)
-    state: Mapped[str] = mapped_column('__prophet_state', String, nullable=False, default='created')
-
-class OrderStateHistoryModel(Base):
-    __tablename__ = 'orders_state_history'
-    historyId: Mapped[int] = mapped_column('history_id', Integer, primary_key=True, autoincrement=True)
-    orderId: Mapped[str] = mapped_column(String, nullable=False)
-    transitionId: Mapped[str] = mapped_column('transition_id', String, nullable=False)
-    fromState: Mapped[str] = mapped_column('from_state', String, nullable=False)
-    toState: Mapped[str] = mapped_column('to_state', String, nullable=False)
-    occurredAt: Mapped[object] = mapped_column('occurred_at', DateTime, nullable=False, server_default=func.now())
+    status: Mapped[Domain.OrderStatus] = mapped_column(SqlEnum(Domain.OrderStatus, native_enum=False), primary_key=False, nullable=False, default=Domain.OrderStatus.Created)
 
 class UserModel(Base):
     __tablename__ = 'users'

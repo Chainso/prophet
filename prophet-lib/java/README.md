@@ -14,7 +14,6 @@ Main project repository:
 It defines:
 - an async `EventPublisher` interface (`CompletionStage<Void>`)
 - a canonical `EventWireEnvelope` record
-- `TransitionValidationResult` for generated transition-validator hooks
 - utility helpers (`EventIds.createEventId`, `EventTime.nowIso`)
 - a `NoOpEventPublisher` for local wiring and tests
 
@@ -26,14 +25,14 @@ Maven:
 <dependency>
   <groupId>io.github.chainso</groupId>
   <artifactId>prophet-events-runtime</artifactId>
-  <version>0.7.0</version>
+  <version>0.8.0</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("io.github.chainso:prophet-events-runtime:0.7.0")
+implementation("io.github.chainso:prophet-events-runtime:0.8.0")
 ```
 
 ## API
@@ -65,7 +64,6 @@ Core classes:
 - `io.prophet.events.runtime.NoOpEventPublisher`
 - `io.prophet.events.runtime.EventIds`
 - `io.prophet.events.runtime.EventTime`
-- `io.prophet.events.runtime.TransitionValidationResult`
 
 ## Implement a Platform Publisher
 

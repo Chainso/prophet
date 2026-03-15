@@ -215,6 +215,90 @@ ontology artisan_bakery_local {
     }
   }
 
+  enum PurchaseOrderStatus {
+    name "Purchase Order Status"
+    id "enum_purchase_order_status"
+    description "Lifecycle status for a purchase order."
+
+    value Draft {
+      name "Draft"
+      id "enumv_purchase_order_status_draft"
+      description "Initial state while purchase details are still being prepared."
+    }
+
+    value Submitted {
+      name "Submitted"
+      id "enumv_purchase_order_status_submitted"
+      description "Status after the purchase order has been sent to the supplier."
+    }
+
+    value Received {
+      name "Received"
+      id "enumv_purchase_order_status_received"
+      description "Status after ordered goods have been received."
+    }
+
+    value Closed {
+      name "Closed"
+      id "enumv_purchase_order_status_closed"
+      description "Final status once the purchase order lifecycle is complete."
+    }
+  }
+
+  enum SalesOrderStatus {
+    name "Sales Order Status"
+    id "enum_sales_order_status"
+    description "Lifecycle status for a sales order."
+
+    value PendingPayment {
+      name "Pending Payment"
+      id "enumv_sales_order_status_pending_payment"
+      description "Initial status while payment is still outstanding."
+    }
+
+    value Paid {
+      name "Paid"
+      id "enumv_sales_order_status_paid"
+      description "Status after full payment has been recorded."
+    }
+
+    value Fulfilled {
+      name "Fulfilled"
+      id "enumv_sales_order_status_fulfilled"
+      description "Status after order items have been delivered or completed."
+    }
+
+    value Cancelled {
+      name "Cancelled"
+      id "enumv_sales_order_status_cancelled"
+      description "Terminal status for orders cancelled before completion."
+    }
+  }
+
+  enum InvoiceStatus {
+    name "Invoice Status"
+    id "enum_invoice_status"
+    description "Lifecycle status for an invoice."
+
+    value Issued {
+      name "Issued"
+      id "enumv_invoice_status_issued"
+      description "Initial status after the invoice has been issued."
+    }
+
+    value Paid {
+      name "Paid"
+      id "enumv_invoice_status_paid"
+      description "Status after the invoice has been fully paid."
+    }
+
+    value Overdue {
+      name "Overdue"
+      id "enumv_invoice_status_overdue"
+      description "Status when payment is past due and outstanding."
+    }
+  }
+
   object Customer {
     name "Customer"
     id "obj_customer"
@@ -615,90 +699,13 @@ ontology artisan_bakery_local {
       optional
     }
 
-    state draft {
-      name "Draft"
-      id "state_purchase_order_draft"
-      description "Initial state while purchase details are still being prepared."
-      initial
-    }
-
-    state submitted {
-      name "Submitted"
-      id "state_purchase_order_submitted"
-      description "State after the purchase order has been sent to the supplier."
-    }
-
-    state received {
-      name "Received"
-      id "state_purchase_order_received"
-      description "State after ordered goods have been received."
-    }
-
-    state closed {
-      name "Closed"
-      id "state_purchase_order_closed"
-      description "Final state once the purchase order lifecycle is complete."
-    }
-
-    transition submit {
-      name "Submit"
-      id "trans_purchase_order_submit"
-      description "Moves a purchase order from draft to submitted."
-      from draft
-      to submitted
-
-      field submittedAt {
-        name "Submitted At"
-        id "fld_trans_purchase_order_submit_submitted_at"
-        description "Timestamp captured when the order is submitted."
-        type datetime
-      }
-
-      field buyerNote {
-        name "Buyer Note"
-        id "fld_trans_purchase_order_submit_buyer_note"
-        description "Optional note provided by the buyer at submission time."
-        type string
-        optional
-      }
-    }
-
-    transition receive {
-      name "Receive"
-      id "trans_purchase_order_receive"
-      description "Moves a purchase order from submitted to received."
-      from submitted
-      to received
-
-      field receivedAt {
-        name "Received At"
-        id "fld_trans_purchase_order_receive_received_at"
-        description "Timestamp recorded when goods are received."
-        type datetime
-      }
-
-      field invoiceNumber {
-        name "Invoice Number"
-        id "fld_trans_purchase_order_receive_invoice_number"
-        description "Optional supplier invoice number associated with receipt."
-        type string
-        optional
-      }
-    }
-
-    transition close {
-      name "Close"
-      id "trans_purchase_order_close"
-      description "Moves a purchase order from received to closed."
-      from received
-      to closed
-
-      field closedAt {
-        name "Closed At"
-        id "fld_trans_purchase_order_close_closed_at"
-        description "Timestamp recorded when the purchase order is closed."
-        type datetime
-      }
+    field status {
+      name "Status"
+      id "fld_purchase_order_status"
+      description "Current lifecycle status for the purchase order."
+      type PurchaseOrderStatus
+      state
+      initial Draft
     }
   }
 
@@ -781,97 +788,13 @@ ontology artisan_bakery_local {
       optional
     }
 
-    state pending_payment {
-      name "Pending Payment"
-      id "state_sales_order_pending_payment"
-      description "Initial state while payment is still outstanding."
-      initial
-    }
-
-    state paid {
-      name "Paid"
-      id "state_sales_order_paid"
-      description "State after full payment has been recorded."
-    }
-
-    state fulfilled {
-      name "Fulfilled"
-      id "state_sales_order_fulfilled"
-      description "State after order items have been delivered or completed."
-    }
-
-    state cancelled {
-      name "Cancelled"
-      id "state_sales_order_cancelled"
-      description "Terminal state for orders cancelled before completion."
-    }
-
-    transition markPaid {
-      name "Mark Paid"
-      id "trans_sales_order_mark_paid"
-      description "Moves a sales order from pending payment to paid."
-      from pending_payment
-      to paid
-
-      field paymentAmount {
-        name "Payment Amount"
-        id "fld_trans_sales_order_mark_paid_payment_amount"
-        description "Amount received for this payment transition."
-        type Money
-      }
-
-      field paidAt {
-        name "Paid At"
-        id "fld_trans_sales_order_mark_paid_paid_at"
-        description "Timestamp when payment was recorded."
-        type datetime
-      }
-    }
-
-    transition fulfill {
-      name "Fulfill"
-      id "trans_sales_order_fulfill"
-      description "Moves a paid sales order to fulfilled."
-      from paid
-      to fulfilled
-
-      field fulfilledAt {
-        name "Fulfilled At"
-        id "fld_trans_sales_order_fulfill_fulfilled_at"
-        description "Timestamp when fulfillment completed."
-        type datetime
-      }
-
-      field shipmentTracking {
-        name "Shipment Tracking"
-        id "fld_trans_sales_order_fulfill_shipment_tracking"
-        description "Optional shipment tracking identifier captured at fulfillment."
-        type string
-        optional
-      }
-    }
-
-    transition cancel {
-      name "Cancel"
-      id "trans_sales_order_cancel"
-      description "Moves a pending-payment sales order to cancelled."
-      from pending_payment
-      to cancelled
-
-      field cancelledAt {
-        name "Cancelled At"
-        id "fld_trans_sales_order_cancel_cancelled_at"
-        description "Timestamp when the cancellation was applied."
-        type datetime
-      }
-
-      field reason {
-        name "Reason"
-        id "fld_trans_sales_order_cancel_reason"
-        description "Optional reason recorded for cancellation."
-        type string
-        optional
-      }
+    field status {
+      name "Status"
+      id "fld_sales_order_status"
+      description "Current lifecycle status for the sales order."
+      type SalesOrderStatus
+      state
+      initial PendingPayment
     }
   }
 
@@ -944,61 +867,13 @@ ontology artisan_bakery_local {
       type CurrencyCode
     }
 
-    state issued {
-      name "Issued"
-      id "state_invoice_issued"
-      description "Initial state after the invoice has been issued."
-      initial
-    }
-
-    state paid {
-      name "Paid"
-      id "state_invoice_paid"
-      description "State after the invoice has been fully paid."
-    }
-
-    state overdue {
-      name "Overdue"
-      id "state_invoice_overdue"
-      description "State when payment is past due and outstanding."
-    }
-
-    transition markPaid {
-      name "Mark Paid"
-      id "trans_invoice_mark_paid"
-      description "Moves an invoice from issued to paid."
-      from issued
-      to paid
-
-      field paidAt {
-        name "Paid At"
-        id "fld_trans_invoice_mark_paid_paid_at"
-        description "Timestamp when the invoice payment was settled."
-        type datetime
-      }
-
-      field paymentReference {
-        name "Payment Reference"
-        id "fld_trans_invoice_mark_paid_payment_reference"
-        description "Optional external payment reference identifier."
-        type string
-        optional
-      }
-    }
-
-    transition markOverdue {
-      name "Mark Overdue"
-      id "trans_invoice_mark_overdue"
-      description "Moves an invoice from issued to overdue."
-      from issued
-      to overdue
-
-      field markedAt {
-        name "Marked At"
-        id "fld_trans_invoice_mark_overdue_marked_at"
-        description "Timestamp when the invoice was marked overdue."
-        type datetime
-      }
+    field status {
+      name "Status"
+      id "fld_invoice_status"
+      description "Current lifecycle status for the invoice."
+      type InvoiceStatus
+      state
+      initial Issued
     }
   }
 
@@ -1069,10 +944,10 @@ ontology artisan_bakery_local {
     }
   }
 
-  signal LowStockDetected {
+  event LowStockDetected {
     name "Low Stock Detected"
     id "sig_low_stock_detected"
-    description "Signal emitted when an inventory item drops below its reorder threshold."
+    description "Event emitted when an inventory item drops below its reorder threshold."
 
     field inventory_item {
       name "Inventory Item"
@@ -1096,10 +971,10 @@ ontology artisan_bakery_local {
     }
   }
 
-  signal InvoicePaymentRecorded {
+  event InvoicePaymentRecorded {
     name "Invoice Payment Recorded"
     id "sig_invoice_payment_recorded"
-    description "Signal emitted when a payment is recorded against an invoice."
+    description "Event emitted when a payment is recorded against an invoice."
 
     field invoice {
       name "Invoice"
@@ -1123,10 +998,10 @@ ontology artisan_bakery_local {
     }
   }
 
-  signal SupplierLeadTimeUpdated {
+  event SupplierLeadTimeUpdated {
     name "Supplier Lead Time Updated"
     id "sig_supplier_lead_time_updated"
-    description "Signal emitted when supplier lead-time assumptions are updated."
+    description "Event emitted when supplier lead-time assumptions are updated."
 
     field supplier {
       name "Supplier"
@@ -1140,6 +1015,212 @@ ontology artisan_bakery_local {
       id "fld_sig_supplier_lead_time_updated_lead_time_days"
       description "Updated lead time in days for the supplier."
       type int
+    }
+  }
+
+  event SalesOrderMarkedPaid {
+    name "Sales Order Marked Paid"
+    id "evt_sales_order_marked_paid"
+    description "Event emitted when a sales order is marked as paid."
+
+    field salesOrder {
+      name "Sales Order"
+      id "fld_evt_sales_order_marked_paid_sales_order"
+      description "Sales order that was marked as paid."
+      type ref(SalesOrder)
+    }
+
+    field amount {
+      name "Amount"
+      id "fld_evt_sales_order_marked_paid_amount"
+      description "Amount recorded as paid for the sales order."
+      type Money
+    }
+
+    field paidAt {
+      name "Paid At"
+      id "fld_evt_sales_order_marked_paid_paid_at"
+      description "Timestamp when payment was received or confirmed."
+      type datetime
+    }
+  }
+
+  event SalesOrderFulfilled {
+    name "Sales Order Fulfilled"
+    id "evt_sales_order_fulfilled"
+    description "Event emitted when a sales order is fulfilled."
+
+    field salesOrder {
+      name "Sales Order"
+      id "fld_evt_sales_order_fulfilled_sales_order"
+      description "Sales order that was fulfilled."
+      type ref(SalesOrder)
+    }
+
+    field fulfilledAt {
+      name "Fulfilled At"
+      id "fld_evt_sales_order_fulfilled_fulfilled_at"
+      description "Timestamp when fulfillment was completed."
+      type datetime
+    }
+
+    field shipmentTracking {
+      name "Shipment Tracking"
+      id "fld_evt_sales_order_fulfilled_shipment_tracking"
+      description "Optional shipment tracking identifier captured during fulfillment."
+      type string
+      optional
+    }
+  }
+
+  event SalesOrderCancelled {
+    name "Sales Order Cancelled"
+    id "evt_sales_order_cancelled"
+    description "Event emitted when a sales order is cancelled."
+
+    field salesOrder {
+      name "Sales Order"
+      id "fld_evt_sales_order_cancelled_sales_order"
+      description "Sales order that was cancelled."
+      type ref(SalesOrder)
+    }
+
+    field reason {
+      name "Reason"
+      id "fld_evt_sales_order_cancelled_reason"
+      description "Reason recorded for the cancellation."
+      type string
+    }
+
+    field cancelledAt {
+      name "Cancelled At"
+      id "fld_evt_sales_order_cancelled_cancelled_at"
+      description "Timestamp when the sales order was cancelled."
+      type datetime
+    }
+  }
+
+  event PurchaseOrderSubmitted {
+    name "Purchase Order Submitted"
+    id "evt_purchase_order_submitted"
+    description "Event emitted when a purchase order is submitted to a supplier."
+
+    field purchaseOrder {
+      name "Purchase Order"
+      id "fld_evt_purchase_order_submitted_purchase_order"
+      description "Purchase order that was submitted."
+      type ref(PurchaseOrder)
+    }
+
+    field submittedAt {
+      name "Submitted At"
+      id "fld_evt_purchase_order_submitted_submitted_at"
+      description "Timestamp when the purchase order was submitted."
+      type datetime
+    }
+
+    field buyerNote {
+      name "Buyer Note"
+      id "fld_evt_purchase_order_submitted_buyer_note"
+      description "Optional buyer note attached to the submission."
+      type string
+      optional
+    }
+  }
+
+  event PurchaseOrderReceived {
+    name "Purchase Order Received"
+    id "evt_purchase_order_received"
+    description "Event emitted when a purchase order is marked as received."
+
+    field purchaseOrder {
+      name "Purchase Order"
+      id "fld_evt_purchase_order_received_purchase_order"
+      description "Purchase order that was received."
+      type ref(PurchaseOrder)
+    }
+
+    field receivedAt {
+      name "Received At"
+      id "fld_evt_purchase_order_received_received_at"
+      description "Timestamp when goods were received."
+      type datetime
+    }
+
+    field invoiceNumber {
+      name "Invoice Number"
+      id "fld_evt_purchase_order_received_invoice_number"
+      description "Optional supplier invoice number captured at receipt time."
+      type string
+      optional
+    }
+  }
+
+  event PurchaseOrderClosed {
+    name "Purchase Order Closed"
+    id "evt_purchase_order_closed"
+    description "Event emitted when a purchase order is closed."
+
+    field purchaseOrder {
+      name "Purchase Order"
+      id "fld_evt_purchase_order_closed_purchase_order"
+      description "Purchase order that was closed."
+      type ref(PurchaseOrder)
+    }
+
+    field closedAt {
+      name "Closed At"
+      id "fld_evt_purchase_order_closed_closed_at"
+      description "Timestamp when the purchase order was closed."
+      type datetime
+    }
+  }
+
+  event InvoiceMarkedPaid {
+    name "Invoice Marked Paid"
+    id "evt_invoice_marked_paid"
+    description "Event emitted when an invoice is marked as paid."
+
+    field invoice {
+      name "Invoice"
+      id "fld_evt_invoice_marked_paid_invoice"
+      description "Invoice that was marked as paid."
+      type ref(Invoice)
+    }
+
+    field paidAt {
+      name "Paid At"
+      id "fld_evt_invoice_marked_paid_paid_at"
+      description "Timestamp when payment settlement occurred."
+      type datetime
+    }
+
+    field paymentReference {
+      name "Payment Reference"
+      id "fld_evt_invoice_marked_paid_payment_reference"
+      description "Optional external payment reference recorded for the payment."
+      type string
+      optional
+    }
+  }
+
+  event InvoiceMarkedOverdue {
+    name "Invoice Marked Overdue"
+    id "evt_invoice_marked_overdue"
+    description "Event emitted when an invoice is marked as overdue."
+
+    field invoice {
+      name "Invoice"
+      id "fld_evt_invoice_marked_overdue_invoice"
+      description "Invoice that was marked as overdue."
+      type ref(Invoice)
+    }
+
+    field markedAt {
+      name "Marked At"
+      id "fld_evt_invoice_marked_overdue_marked_at"
+      description "Timestamp when overdue status was assigned."
+      type datetime
     }
   }
 
@@ -1287,7 +1368,7 @@ ontology artisan_bakery_local {
   action markSalesOrderPaid {
     name "Mark Sales Order Paid"
     id "act_mark_sales_order_paid"
-    description "Applies the sales-order payment transition with payment details."
+    description "Marks a sales order as paid and emits payment details."
     input {
       id "ain_mark_sales_order_paid"
       description "Input payload for marking a sales order as paid."
@@ -1295,7 +1376,7 @@ ontology artisan_bakery_local {
       field salesOrder {
         name "Sales Order"
         id "fld_ain_mark_sales_order_paid_sales_order"
-        description "Sales order to transition into the paid state."
+        description "Sales order to mark as paid."
         type ref(SalesOrder)
       }
 
@@ -1314,13 +1395,13 @@ ontology artisan_bakery_local {
       }
     }
 
-    output transition SalesOrder.markPaid
+    output event SalesOrderMarkedPaid
   }
 
   action fulfillSalesOrder {
     name "Fulfill Sales Order"
     id "act_fulfill_sales_order"
-    description "Applies the sales-order fulfillment transition after payment."
+    description "Marks a paid sales order as fulfilled."
     input {
       id "ain_fulfill_sales_order"
       description "Input payload for fulfilling a paid sales order."
@@ -1348,13 +1429,13 @@ ontology artisan_bakery_local {
       }
     }
 
-    output transition SalesOrder.fulfill
+    output event SalesOrderFulfilled
   }
 
   action cancelSalesOrder {
     name "Cancel Sales Order"
     id "act_cancel_sales_order"
-    description "Cancels an unpaid sales order through its cancellation transition."
+    description "Cancels an unpaid sales order and emits the cancellation details."
     input {
       id "ain_cancel_sales_order"
       description "Input payload for cancelling a pending sales order."
@@ -1381,7 +1462,7 @@ ontology artisan_bakery_local {
       }
     }
 
-    output transition SalesOrder.cancel
+    output event SalesOrderCancelled
   }
 
   action createPurchaseOrder {
@@ -1473,7 +1554,7 @@ ontology artisan_bakery_local {
       }
     }
 
-    output transition PurchaseOrder.submit
+    output event PurchaseOrderSubmitted
   }
 
   action receivePurchaseOrder {
@@ -1507,7 +1588,7 @@ ontology artisan_bakery_local {
       }
     }
 
-    output transition PurchaseOrder.receive
+    output event PurchaseOrderReceived
   }
 
   action closePurchaseOrder {
@@ -1533,13 +1614,13 @@ ontology artisan_bakery_local {
       }
     }
 
-    output transition PurchaseOrder.close
+    output event PurchaseOrderClosed
   }
 
   action recordInvoicePayment {
     name "Record Invoice Payment"
     id "act_record_invoice_payment"
-    description "Records invoice payment details and emits a payment-recorded signal."
+    description "Records invoice payment details and emits a payment-recorded event."
     input {
       id "ain_record_invoice_payment"
       description "Input payload for recording an invoice payment."
@@ -1566,13 +1647,13 @@ ontology artisan_bakery_local {
       }
     }
 
-    output signal InvoicePaymentRecorded
+    output event InvoicePaymentRecorded
   }
 
   action markInvoicePaid {
     name "Mark Invoice Paid"
     id "act_mark_invoice_paid"
-    description "Applies the invoice paid transition once payment is confirmed."
+    description "Marks an invoice as paid once payment is confirmed."
     input {
       id "ain_mark_invoice_paid"
       description "Input payload for marking an invoice as paid."
@@ -1580,7 +1661,7 @@ ontology artisan_bakery_local {
       field invoice {
         name "Invoice"
         id "fld_ain_mark_invoice_paid_invoice"
-        description "Invoice to transition into the paid state."
+        description "Invoice to mark as paid."
         type ref(Invoice)
       }
 
@@ -1600,13 +1681,13 @@ ontology artisan_bakery_local {
       }
     }
 
-    output transition Invoice.markPaid
+    output event InvoiceMarkedPaid
   }
 
   action markInvoiceOverdue {
     name "Mark Invoice Overdue"
     id "act_mark_invoice_overdue"
-    description "Applies the invoice overdue transition for unpaid invoices."
+    description "Marks an unpaid invoice as overdue."
     input {
       id "ain_mark_invoice_overdue"
       description "Input payload for marking an invoice as overdue."
@@ -1614,7 +1695,7 @@ ontology artisan_bakery_local {
       field invoice {
         name "Invoice"
         id "fld_ain_mark_invoice_overdue_invoice"
-        description "Invoice to transition into overdue state."
+        description "Invoice to mark as overdue."
         type ref(Invoice)
       }
 
@@ -1626,7 +1707,7 @@ ontology artisan_bakery_local {
       }
     }
 
-    output transition Invoice.markOverdue
+    output event InvoiceMarkedOverdue
   }
 
   action adjustInventory {
@@ -1726,15 +1807,15 @@ ontology artisan_bakery_local {
   trigger onPurchaseOrderReceived {
     name "On Purchase Order Received"
     id "trg_on_purchase_order_received"
-    description "Invokes inventory restocking when purchase-order receipt transitions occur."
-    when event PurchaseOrderReceiveTransition
+    description "Invokes inventory restocking when purchase-order receipt events occur."
+    when event PurchaseOrderReceived
     invoke restockInventory
   }
 
   trigger onInvoicePaymentRecorded {
     name "On Invoice Payment Recorded"
     id "trg_on_invoice_payment_recorded"
-    description "Invokes invoice payment transition after payment-recorded signals."
+    description "Invokes invoice payment processing after payment-recorded events."
     when event InvoicePaymentRecorded
     invoke markInvoicePaid
   }
@@ -1742,8 +1823,8 @@ ontology artisan_bakery_local {
   trigger onSalesOrderMarkedPaid {
     name "On Sales Order Marked Paid"
     id "trg_on_sales_order_marked_paid"
-    description "Invokes order fulfillment after sales-order payment transitions."
-    when event SalesOrderMarkPaidTransition
+    description "Invokes order fulfillment after sales-order payment events."
+    when event SalesOrderMarkedPaid
     invoke fulfillSalesOrder
   }
 }

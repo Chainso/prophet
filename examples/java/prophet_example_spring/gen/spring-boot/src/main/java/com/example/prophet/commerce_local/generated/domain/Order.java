@@ -2,7 +2,7 @@ package com.example.prophet.commerce_local.generated.domain;
 
 import javax.annotation.processing.Generated;
 import com.example.prophet.commerce_local.generated.domain.Address;
-import com.example.prophet.commerce_local.generated.domain.OrderState;
+import com.example.prophet.commerce_local.generated.domain.OrderStatus;
 import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.List;
@@ -60,7 +60,10 @@ public record Order(
      * Optional identifiers for packages in the shipment.
      */
     List<String> shippingPackageIds,
-    @NotNull OrderState state
+    /**
+     * Current lifecycle status for the order.
+     */
+    @NotNull OrderStatus status
 ) implements OrderRefOrObject {
 
     public static Builder builder() {
@@ -80,7 +83,7 @@ public record Order(
         private String shippingCarrier;
         private String shippingTrackingNumber;
         private List<String> shippingPackageIds;
-        private OrderState state;
+        private OrderStatus status;
 
         public Builder orderId(String value) {
             this.orderId = value;
@@ -142,8 +145,8 @@ public record Order(
             return this;
         }
 
-        public Builder state(OrderState value) {
-            this.state = value;
+        public Builder status(OrderStatus value) {
+            this.status = value;
             return this;
         }
         public Order build() {
@@ -160,7 +163,7 @@ public record Order(
                 shippingCarrier,
                 shippingTrackingNumber,
                 shippingPackageIds,
-                state
+                status
             );
         }
     }

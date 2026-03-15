@@ -3,7 +3,7 @@ package com.example.prophet_example_spring.actions;
 import com.example.prophet.commerce_local.generated.actions.CreateOrderCommand;
 import com.example.prophet.commerce_local.generated.actions.handlers.CreateOrderActionHandler;
 import com.example.prophet.commerce_local.generated.domain.OrderRef;
-import com.example.prophet.commerce_local.generated.domain.OrderState;
+import com.example.prophet.commerce_local.generated.domain.OrderStatus;
 import com.example.prophet.commerce_local.generated.events.CreateOrderResult;
 import com.example.prophet.commerce_local.generated.persistence.OrderEntity;
 import com.example.prophet.commerce_local.generated.persistence.OrderRepository;
@@ -43,7 +43,7 @@ public class CreateOrderHandler implements CreateOrderActionHandler {
         order.setDiscountCode(request.discountCode());
         order.setTags(request.tags());
         order.setShippingAddress(request.shippingAddress());
-        order.setState(OrderState.CREATED);
+        order.setStatus(OrderStatus.Created);
         orderRepository.save(order);
 
         return new CreateOrderResult(OrderRef.builder().orderId(order.getOrderId()).build());

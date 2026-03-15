@@ -28,11 +28,6 @@ def _render_query_filters(ir: Dict[str, Any]) -> str:
             if isinstance(item, dict)
         }
         | {
-            f"{_pascal_case(str(item.get('name', 'Object')))}State"
-            for item in ir.get("objects", [])
-            if isinstance(item, dict) and item.get("states")
-        }
-        | {
             _pascal_case(str(item.get("name", "Enum")))
             for item in ir.get("enums", [])
             if isinstance(item, dict)
@@ -62,18 +57,15 @@ def _render_query_filters(ir: Dict[str, Any]) -> str:
                 continue
             field_id = str(item.get("field_id", ""))
             field_name = _camel_case(str(item.get("field_name", "field")))
-            if field_id == "__state__":
-                ts_type = f"{obj_name}State"
-            else:
-                field = fields_by_id.get(field_id, {})
-                type_desc = field.get("type", {}) if isinstance(field, dict) and isinstance(field.get("type"), dict) else {}
-                ts_type = _ts_type_for_descriptor(
-                    type_desc,
-                    type_by_id=type_by_id,
-                    enum_by_id=enum_by_id,
-                    object_by_id=object_by_id,
-                    struct_by_id=struct_by_id,
-                )
+            field = fields_by_id.get(field_id, {})
+            type_desc = field.get("type", {}) if isinstance(field, dict) and isinstance(field.get("type"), dict) else {}
+            ts_type = _ts_type_for_descriptor(
+                type_desc,
+                type_by_id=type_by_id,
+                enum_by_id=enum_by_id,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+            )
             ops = [str(op) for op in item.get("operators", []) if isinstance(op, str)]
             lines.append(f"  {field_name}?: {{")
             if "eq" in ops:

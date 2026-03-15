@@ -21,7 +21,7 @@ model Order {
   shipping_carrier String?
   shipping_tracking_number String?
   shipping_package_ids String?
-  state String @default("created") @map("__prophet_state")
+  status String @default("Created")
   customer User @relation("Order_customer_User", fields: [customer_user_id], references: [user_id])
 }
 
@@ -29,14 +29,4 @@ model User {
   user_id String @id
   email String
   ordersByCustomer Order[] @relation("Order_customer_User")
-}
-
-model OrderStateHistory {
-  history_id Int @id @default(autoincrement())
-  order_id String
-  transition_id String
-  from_state String
-  to_state String
-  occurred_at DateTime @default(now())
-  @@index([order_id], map: "idx_order_state_history_pk")
 }

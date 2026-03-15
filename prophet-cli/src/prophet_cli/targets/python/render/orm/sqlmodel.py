@@ -47,6 +47,34 @@ def _is_json_descriptor(type_desc: Dict[str, Any]) -> bool:
     return str(type_desc.get("kind", "")) in {"list", "struct", "object_ref"}
 
 
+def _state_field_default_expr(
+    field: Dict[str, Any],
+    *,
+    enum_by_id: Dict[str, Dict[str, Any]],
+) -> str | None:
+    if not bool(field.get("is_state_field")):
+        return None
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    if str(type_desc.get("kind", "")) != "enum":
+        return None
+    enum_name = _enum_name_for_type(type_desc, enum_by_id)
+    enum_def = enum_by_id.get(str(type_desc.get("target_enum_id", "")), {})
+    initial_value_id = str(field.get("initial_enum_value_id", ""))
+    if enum_name is None or not initial_value_id:
+        return None
+    initial_value = next(
+        (
+            str(value.get("name", ""))
+            for value in enum_def.get("values", [])
+            if isinstance(value, dict) and str(value.get("id", "")) == initial_value_id
+        ),
+        "",
+    )
+    if not initial_value:
+        return None
+    return f"Domain.{enum_name}.{initial_value}"
+
+
 def render_sqlmodel_models(ir: Dict[str, Any]) -> str:
     type_by_id = {item["id"]: item for item in ir.get("types", []) if isinstance(item, dict) and "id" in item}
     enum_by_id = {item["id"]: item for item in ir.get("enums", []) if isinstance(item, dict) and "id" in item}
@@ -94,14 +122,23 @@ def render_sqlmodel_models(ir: Dict[str, Any]) -> str:
                 continue
 
             if str(type_desc.get("kind", "")) == "enum":
-                column_decl = f"sa_column=Column(SqlEnum({py_type}, native_enum=False), nullable={str(nullable)})"
+                column_decl = (
+                    f"sa_column=Column(SqlEnum({py_type}, native_enum=False), "
+                    f"nullable={str(nullable)}, primary_key={str(is_pk)})"
+                )
+                default_expr = _state_field_default_expr(field, enum_by_id=enum_by_id)
                 if nullable:
                     lines.append(
-                        f"    {prop}: Optional[{py_type}] = Field(default=None, primary_key={str(is_pk)}, {column_decl})"
+                        f"    {prop}: Optional[{py_type}] = Field(default=None, {column_decl})"
                     )
                 else:
+                    if default_expr is not None:
+                        lines.append(
+                            f"    {prop}: {py_type} = Field(default={default_expr}, {column_decl})"
+                        )
+                        continue
                     lines.append(
-                        f"    {prop}: {py_type} = Field(primary_key={str(is_pk)}, {column_decl})"
+                        f"    {prop}: {py_type} = Field({column_decl})"
                     )
                 continue
 
@@ -110,43 +147,7 @@ def render_sqlmodel_models(ir: Dict[str, Any]) -> str:
             else:
                 lines.append(f"    {prop}: {py_type} = Field(primary_key={str(is_pk)})")
 
-        if obj.get("states"):
-            initial = next(
-                (
-                    str(item.get("name", ""))
-                    for item in obj.get("states", [])
-                    if isinstance(item, dict) and item.get("initial")
-                ),
-                "",
-            )
-            if initial:
-                lines.append(
-                    f"    state: str = Field(default='{initial}', sa_column=Column('__prophet_state', String, nullable=False))"
-                )
-            else:
-                lines.append("    state: str = Field(sa_column=Column('__prophet_state', String, nullable=False))")
         lines.append("")
-
-        if obj.get("states"):
-            history_model_name = f"{obj_name}StateHistoryModel"
-            history_table = f"{table_name}_state_history"
-            lines.append(f"class {history_model_name}(SQLModel, table=True):")
-            lines.append(f"    __tablename__ = '{history_table}'")
-            lines.append(
-                "    historyId: Optional[int] = Field(default=None, sa_column=Column('history_id', Integer, primary_key=True, autoincrement=True))"
-            )
-            for pk_field in _object_primary_key_fields(obj):
-                pk_prop = _camel_case(str(pk_field.get("name", "id")))
-                pk_type_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
-                pk_type = _python_type_for_sqlmodel(pk_type_desc, type_by_id, enum_by_id)
-                lines.append(f"    {pk_prop}: {pk_type} = Field(nullable=False)")
-            lines.append("    transitionId: str = Field(sa_column=Column('transition_id', String, nullable=False))")
-            lines.append("    fromState: str = Field(sa_column=Column('from_state', String, nullable=False))")
-            lines.append("    toState: str = Field(sa_column=Column('to_state', String, nullable=False))")
-            lines.append(
-                "    occurredAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), sa_column=Column('occurred_at', String, nullable=False))"
-            )
-            lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -204,8 +205,6 @@ def render_sqlmodel_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
             value_expr = _enum_serialize_expr(type_desc, f"item.{prop}")
             lines.append(f"        {prop}={value_expr if value_expr != f'item.{prop}' else f'_serialize(item.{prop})'},")
-        if obj.get("states"):
-            lines.append("        state=item.state,")
         lines.append("    )")
         lines.append("")
 
@@ -250,8 +249,6 @@ def render_sqlmodel_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
                     lines.append(f"        {prop}=record.{prop},")
             else:
                 lines.append(f"        {prop}=record.{prop},")
-        if obj.get("states"):
-            lines.append("        state=record.state,")
         lines.append("    )")
         lines.append("")
 
@@ -270,10 +267,7 @@ def render_sqlmodel_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
         ):
             field_name = _camel_case(str(filter_def.get("field_name", "field")))
             lines.append(f"        if filter.{field_name} is not None:")
-            if str(filter_def.get("field_id", "")) == "__state__":
-                target = "Models." + obj_name + "Model.state"
-            else:
-                target = "Models." + obj_name + "Model." + field_name
+            target = "Models." + obj_name + "Model." + field_name
             lines.append(f"            if filter.{field_name}.eq is not None:")
             lines.append(f"                stmt = stmt.where({target} == filter.{field_name}.eq)")
             lines.append(f"            if getattr(filter.{field_name}, 'inValues', None):")
@@ -338,40 +332,6 @@ def render_sqlmodel_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
         lines.append("        return item")
         lines.append("")
 
-        if obj.get("states"):
-            history_model_name = f"{obj_name}StateHistoryModel"
-            lines.append(
-                f"    def _apply_transition_sync(self, id: Domain.{obj_name}Ref, expected_state: Domain.{obj_name}State, next_state: Domain.{obj_name}State, transition_id: str) -> Optional[Domain.{obj_name}]:"
-            )
-            lines.append("        with self._session_factory() as session:")
-            lines.append(f"            stmt = update(Models.{obj_name}Model).where(Models.{obj_name}Model.state == expected_state)")
-            for pk in _object_primary_key_fields(obj):
-                pk_prop = _camel_case(str(pk.get("name", "id")))
-                lines.append(f"            stmt = stmt.where(Models.{obj_name}Model.{pk_prop} == id.{pk_prop})")
-            lines.append("            stmt = stmt.values(state=next_state)")
-            lines.append("            result = session.exec(stmt)")
-            lines.append("            if int(getattr(result, 'rowcount', 0) or 0) < 1:")
-            lines.append("                return None")
-            lines.append(f"            history = Models.{history_model_name}(")
-            for pk in _object_primary_key_fields(obj):
-                pk_prop = _camel_case(str(pk.get("name", "id")))
-                lines.append(f"                {pk_prop}=id.{pk_prop},")
-            lines.append("                transitionId=transition_id,")
-            lines.append("                fromState=expected_state,")
-            lines.append("                toState=next_state,")
-            lines.append("            )")
-            lines.append("            session.add(history)")
-            lines.append("            session.commit()")
-            lines.append(f"            refreshed_stmt = select(Models.{obj_name}Model)")
-            for pk in _object_primary_key_fields(obj):
-                pk_prop = _camel_case(str(pk.get("name", "id")))
-                lines.append(f"            refreshed_stmt = refreshed_stmt.where(Models.{obj_name}Model.{pk_prop} == id.{pk_prop})")
-            lines.append("            refreshed = session.exec(refreshed_stmt.limit(1)).first()")
-            lines.append("            if refreshed is None:")
-            lines.append("                return None")
-            lines.append(f"            return _{obj_name.lower()}_to_domain(refreshed)")
-            lines.append("")
-
         if async_mode:
             lines.append("    async def list(self, page: int, size: int) -> Persistence.PagedResult:")
             lines.append("        return self._list_sync(page, size)")
@@ -384,12 +344,6 @@ def render_sqlmodel_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
             lines.append("")
             lines.append(f"    async def save(self, item: Domain.{obj_name}) -> Domain.{obj_name}:")
             lines.append("        return self._save_sync(item)")
-            if obj.get("states"):
-                lines.append("")
-                lines.append(
-                    f"    async def apply_transition(self, id: Domain.{obj_name}Ref, expected_state: Domain.{obj_name}State, next_state: Domain.{obj_name}State, transition_id: str) -> Optional[Domain.{obj_name}]:"
-                )
-                lines.append("        return self._apply_transition_sync(id, expected_state, next_state, transition_id)")
         else:
             lines.append("    def list(self, page: int, size: int) -> Persistence.PagedResult:")
             lines.append("        return self._list_sync(page, size)")
@@ -402,12 +356,6 @@ def render_sqlmodel_adapters(ir: Dict[str, Any], *, async_mode: bool) -> str:
             lines.append("")
             lines.append(f"    def save(self, item: Domain.{obj_name}) -> Domain.{obj_name}:")
             lines.append("        return self._save_sync(item)")
-            if obj.get("states"):
-                lines.append("")
-                lines.append(
-                    f"    def apply_transition(self, id: Domain.{obj_name}Ref, expected_state: Domain.{obj_name}State, next_state: Domain.{obj_name}State, transition_id: str) -> Optional[Domain.{obj_name}]:"
-                )
-                lines.append("        return self._apply_transition_sync(id, expected_state, next_state, transition_id)")
         lines.append("")
 
     lines.append("class SqlModelRepositories:")

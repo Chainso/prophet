@@ -11,6 +11,10 @@ A neighborhood bakery operations domain with connected business workflows:
 - Sales orders, purchase orders, invoices, deliveries
 - Payments and low-stock event automation
 
+## Status
+
+This example is fully migrated to the current field-level state model. Stateful objects use enum fields marked with `state`, and actions emit explicit domain events.
+
 ## What This Example Showcases
 
 - Rich relationship graph via `ref(...)` across many objects
@@ -18,19 +22,8 @@ A neighborhood bakery operations domain with connected business workflows:
 - Reusable structs (`Address`, `ContactPoint`, line-item structs, payment details)
 - Custom constrained types (`Money`, `Quantity`, `Email`, `CurrencyCode`, `PhoneNumber`)
 - Human-facing labels via DSL `name "..."` metadata
-- Multiple state machines with transitions:
-  - `PurchaseOrder`: `draft -> submitted -> received -> closed`
-  - `SalesOrder`: `pending_payment -> paid -> fulfilled` and cancellation path
-  - `Invoice`: `issued -> paid` and overdue path
-- All action output styles:
-  - inline `output { ... }`
-  - `output signal <SignalName>`
-  - `output transition <Object>.<transition>`
-- Trigger-driven orchestration:
-  - low stock to purchase flow
-  - purchase receipt to restock flow
-  - payment signal to invoice state transition
-  - sales payment transition to fulfillment
+- Field-level state metadata on enum fields
+- Explicit domain events and trigger-driven automation across a dense ontology
 
 ## Files to Inspect
 
@@ -58,6 +51,5 @@ pyshacl -s prophet.ttl -d prophet.ttl examples/turtle/prophet_example_turtle_sma
 
 Use this model when you need:
 - realistic relationship density
-- multiple transition/event paths
 - higher-volume Turtle output for ontology tooling tests
-- regression coverage beyond the minimal happy path
+- a larger example with field-level state and explicit event flows

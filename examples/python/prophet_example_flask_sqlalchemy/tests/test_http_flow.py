@@ -51,9 +51,7 @@ class FlaskSqlAlchemyHttpFlowTest(unittest.TestCase):
         )
         self.assertEqual(approve.status_code, 200, approve.get_data(as_text=True))
         approved = approve.get_json()
-        self.assertEqual(approved["orderId"], order_id)
-        self.assertEqual(approved["fromState"], "created")
-        self.assertEqual(approved["toState"], "approved")
+        self.assertEqual(approved["order"]["orderId"], order_id)
 
         ship = self.client.post(
             "/actions/shipOrder",
@@ -66,20 +64,18 @@ class FlaskSqlAlchemyHttpFlowTest(unittest.TestCase):
         )
         self.assertEqual(ship.status_code, 200, ship.get_data(as_text=True))
         shipped = ship.get_json()
-        self.assertEqual(shipped["orderId"], order_id)
-        self.assertEqual(shipped["fromState"], "approved")
-        self.assertEqual(shipped["toState"], "shipped")
+        self.assertEqual(shipped["order"]["orderId"], order_id)
 
         fetched = self.client.get(f"/orders/{order_id}")
         self.assertEqual(fetched.status_code, 200, fetched.get_data(as_text=True))
         fetched_json = fetched.get_json()
         self.assertEqual(fetched_json["orderId"], order_id)
-        self.assertEqual(fetched_json["state"], "shipped")
+        self.assertEqual(fetched_json["status"], "Shipped")
 
         query = self.client.post(
             "/orders/query?page=0&size=10",
             json={
-                "state": {"eq": "shipped"},
+                "status": {"eq": "Shipped"},
                 "orderId": {"eq": order_id},
             },
         )

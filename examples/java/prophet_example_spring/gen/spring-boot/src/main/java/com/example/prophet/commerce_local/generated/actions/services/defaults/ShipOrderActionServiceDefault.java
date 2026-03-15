@@ -7,8 +7,8 @@ import com.example.prophet.commerce_local.generated.actions.services.ShipOrderAc
 import com.example.prophet.commerce_local.generated.events.ActionOutcome;
 import com.example.prophet.commerce_local.generated.events.DomainEvent;
 import com.example.prophet.commerce_local.generated.events.EventPublishingSupport;
-import com.example.prophet.commerce_local.generated.events.OrderShipTransition;
-import com.example.prophet.commerce_local.generated.events.OrderShipTransitionEvent;
+import com.example.prophet.commerce_local.generated.events.OrderShipped;
+import com.example.prophet.commerce_local.generated.events.OrderShippedEvent;
 import io.prophet.events.runtime.EventIds;
 import io.prophet.events.runtime.EventPublisher;
 import java.util.ArrayList;
@@ -31,14 +31,14 @@ public class ShipOrderActionServiceDefault implements ShipOrderActionService {
     }
 
     @Override
-    public OrderShipTransition execute(ShipOrderCommand request) {
+    public OrderShipped execute(ShipOrderCommand request) {
         ShipOrderActionHandler handler = handlerProvider.getIfAvailable();
         if (handler == null) {
             throw new UnsupportedOperationException("No handler bean provided for action 'shipOrder'");
         }
-        ActionOutcome<OrderShipTransition> outcome = handler.handleOutcome(request);
+        ActionOutcome<OrderShipped> outcome = handler.handleOutcome(request);
         List<DomainEvent> events = new ArrayList<>();
-        events.add(new OrderShipTransitionEvent(outcome.output()));
+        events.add(new OrderShippedEvent(outcome.output()));
         events.addAll(outcome.additionalEvents());
         EventPublishingSupport.publishAll(
             eventPublisher,

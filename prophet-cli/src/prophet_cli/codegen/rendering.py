@@ -117,6 +117,21 @@ def json_schema_for_field(
     return {"type": "string"}
 
 
+def state_field_for_object(obj: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    for field in obj.get("fields", []):
+        if isinstance(field, dict) and field.get("is_state_field"):
+            return field
+    return None
+
+
+def enum_value_name_by_id(enum_id: str, value_id: str, enum_by_id: Dict[str, Dict[str, Any]]) -> Optional[str]:
+    enum_def = enum_by_id.get(enum_id, {})
+    for value in enum_def.get("values", []):
+        if isinstance(value, dict) and str(value.get("id", "")) == value_id:
+            return str(value.get("name", ""))
+    return None
+
+
 def yaml_dump_stable(value: Any) -> str:
     return yaml.safe_dump(value, sort_keys=False, default_flow_style=False).rstrip() + "\n"
 
@@ -131,62 +146,12 @@ def render_sql(ir: Dict[str, Any]) -> str:
     type_by_id = {t["id"]: t for t in ir.get("types", [])}
     enum_by_id = {e["id"]: e for e in ir.get("enums", [])}
 
-    has_states = any(o.get("states") for o in objects)
-    if has_states:
-        lines.extend(
-            [
-                "create table if not exists prophet_state_catalog (",
-                "  object_model_id text not null,",
-                "  state_id text not null,",
-                "  state_name text not null,",
-                "  is_initial boolean not null,",
-                "  primary key (object_model_id, state_id),",
-                "  unique (object_model_id, state_name)",
-                ");",
-                "",
-                "create table if not exists prophet_transition_catalog (",
-                "  object_model_id text not null,",
-                "  transition_id text not null,",
-                "  from_state_id text not null,",
-                "  to_state_id text not null,",
-                "  primary key (object_model_id, transition_id)",
-                ");",
-                "",
-            ]
-        )
-
-        state_values: List[str] = []
-        transition_values: List[str] = []
-        for obj in objects:
-            for state in obj.get("states", []):
-                initial = "true" if state.get("initial") else "false"
-                state_values.append(
-                    f"  ('{obj['id']}', '{state['id']}', '{state['name']}', {initial})"
-                )
-            for tr in obj.get("transitions", []):
-                transition_values.append(
-                    f"  ('{obj['id']}', '{tr['id']}', '{tr['from_state_id']}', '{tr['to_state_id']}')"
-                )
-
-        if state_values:
-            lines.append("insert into prophet_state_catalog (object_model_id, state_id, state_name, is_initial)")
-            lines.append("values")
-            lines.append(",\n".join(state_values))
-            lines.append("on conflict do nothing;")
-            lines.append("")
-
-        if transition_values:
-            lines.append("insert into prophet_transition_catalog (object_model_id, transition_id, from_state_id, to_state_id)")
-            lines.append("values")
-            lines.append(",\n".join(transition_values))
-            lines.append("on conflict do nothing;")
-            lines.append("")
-
     object_by_id = {o["id"]: o for o in objects}
 
     for obj in objects:
         table = pluralize(snake_case(obj["name"]))
         fields = obj.get("fields", [])
+        state_field = state_field_for_object(obj)
         pk_fields = primary_key_fields_for_object(obj)
         pk_field_ids = {f.get("id") for f in pk_fields}
         pk_column_by_field_id: Dict[str, str] = {}
@@ -223,9 +188,20 @@ def render_sql(ir: Dict[str, Any]) -> str:
         if pk_columns:
             fk_lines.append(f"  primary key ({', '.join(pk_columns)})")
 
-        if obj.get("states"):
-            enum_vals = ", ".join(f"'{s['name'].upper()}'" for s in obj["states"])
-            column_lines.append(f"  __prophet_state text not null check (__prophet_state in ({enum_vals}))")
+        if state_field is not None and str(state_field.get("type", {}).get("kind", "")) == "enum":
+            enum_id = str(state_field["type"].get("target_enum_id", ""))
+            enum_vals = ", ".join(
+                f"'{str(value.get('name', ''))}'"
+                for value in enum_by_id.get(enum_id, {}).get("values", [])
+                if isinstance(value, dict)
+            )
+            state_col = snake_case(str(state_field.get("name", "state")))
+            column_lines = [
+                line + (f" check ({state_col} in ({enum_vals}))" if line.startswith(f"  {state_col} ") and enum_vals else "")
+                if f"  {state_col} " in line and " check (" not in line
+                else line
+                for line in column_lines
+            ]
 
         column_lines.extend(
             [
@@ -256,35 +232,10 @@ def render_sql(ir: Dict[str, Any]) -> str:
             idx_display = display_index_name_for_object(obj)
             lines.append(f"create index if not exists {idx_display} on {table} ({', '.join(display_columns)});")
 
-        if obj.get("states"):
-            idx_state = f"idx_{table}___prophet_state"
-            lines.append(f"create index if not exists {idx_state} on {table} (__prophet_state);")
-
-            history_table = f"{snake_case(obj['name'])}_state_history"
-            history_pk_columns: List[str] = []
-            history_fk_cols: List[str] = []
-            for pk_field in pk_fields:
-                pk_col_name, pk_sql_type, _, _ = field_sql_column_details(pk_field, type_by_id, object_by_id)
-                history_pk_columns.append(f"  {pk_col_name} {pk_sql_type} not null,")
-                history_fk_cols.append(pk_col_name)
-            fk_columns_clause = ", ".join(history_fk_cols)
-            lines.extend(
-                [
-                    "",
-                    f"create table if not exists {history_table} (",
-                    "  history_id bigserial primary key,",
-                    *history_pk_columns,
-                    "  transition_id text not null,",
-                    "  from_state text not null,",
-                    "  to_state text not null,",
-                    "  changed_at timestamptz not null default now(),",
-                    "  changed_by text,",
-                    f"  constraint fk_{history_table}_entity foreign key ({fk_columns_clause}) references {table}({fk_columns_clause})",
-                    ");",
-                    f"create index if not exists idx_{history_table}_entity on {history_table} ({fk_columns_clause});",
-                    f"create index if not exists idx_{history_table}_changed_at on {history_table} (changed_at);",
-                ]
-            )
+        if state_field is not None:
+            state_col = snake_case(str(state_field.get("name", "state")))
+            idx_state = f"idx_{table}_{state_col}"
+            lines.append(f"create index if not exists {idx_state} on {table} ({state_col});")
 
         lines.append("")
 
@@ -399,10 +350,12 @@ def display_index_name_for_object(obj: Dict[str, Any]) -> str:
 def render_create_table_statements_for_object(
     obj: Dict[str, Any],
     type_by_id: Dict[str, Dict[str, Any]],
+    enum_by_id: Dict[str, Dict[str, Any]],
     object_by_id: Dict[str, Dict[str, Any]],
 ) -> List[str]:
     table = table_name_for_object(obj)
     fields = obj.get("fields", [])
+    state_field = state_field_for_object(obj)
     pk_fields = primary_key_fields_for_object(obj)
     pk_field_ids = {f.get("id") for f in pk_fields}
     pk_column_by_field_id: Dict[str, str] = {}
@@ -434,9 +387,20 @@ def render_create_table_statements_for_object(
         idx_display = display_index_name_for_object(obj)
         index_lines.append(f"create index if not exists {idx_display} on {table} ({', '.join(display_columns)});")
 
-    if obj.get("states"):
-        enum_vals = ", ".join(f"'{s['name'].upper()}'" for s in obj["states"])
-        column_lines.append(f"  __prophet_state text not null check (__prophet_state in ({enum_vals}))")
+    if state_field is not None and str(state_field.get("type", {}).get("kind", "")) == "enum":
+        enum_id = str(state_field["type"].get("target_enum_id", ""))
+        enum_vals = ", ".join(
+            f"'{str(value.get('name', ''))}'"
+            for value in enum_by_id.get(enum_id, {}).get("values", [])
+            if isinstance(value, dict)
+        )
+        state_col = snake_case(str(state_field.get("name", "state")))
+        column_lines = [
+            line + (f" check ({state_col} in ({enum_vals}))" if line.startswith(f"  {state_col} ") and enum_vals else "")
+            if f"  {state_col} " in line and " check (" not in line
+            else line
+            for line in column_lines
+        ]
 
     column_lines.extend(
         [
@@ -457,33 +421,10 @@ def render_create_table_statements_for_object(
         statements.append(col + suffix)
     statements.append(");")
     statements.extend(index_lines)
-    if obj.get("states"):
-        idx_state = f"idx_{table}___prophet_state"
-        statements.append(f"create index if not exists {idx_state} on {table} (__prophet_state);")
-        history_table = f"{snake_case(obj['name'])}_state_history"
-        history_pk_columns: List[str] = []
-        history_fk_cols: List[str] = []
-        for pk_field in pk_fields:
-            pk_col_name, pk_sql_type, _, _ = field_sql_column_details(pk_field, type_by_id, object_by_id)
-            history_pk_columns.append(f"  {pk_col_name} {pk_sql_type} not null,")
-            history_fk_cols.append(pk_col_name)
-        fk_columns_clause = ", ".join(history_fk_cols)
-        statements.extend(
-            [
-                f"create table if not exists {history_table} (",
-                "  history_id bigserial primary key,",
-                *history_pk_columns,
-                "  transition_id text not null,",
-                "  from_state text not null,",
-                "  to_state text not null,",
-                "  changed_at timestamptz not null default now(),",
-                "  changed_by text,",
-                f"  constraint fk_{history_table}_entity foreign key ({fk_columns_clause}) references {table}({fk_columns_clause})",
-                ");",
-                f"create index if not exists idx_{history_table}_entity on {history_table} ({fk_columns_clause});",
-                f"create index if not exists idx_{history_table}_changed_at on {history_table} (changed_at);",
-            ]
-        )
+    if state_field is not None:
+        state_col = snake_case(str(state_field.get("name", "state")))
+        idx_state = f"idx_{table}_{state_col}"
+        statements.append(f"create index if not exists {idx_state} on {table} ({state_col});")
     return statements
 
 
@@ -493,7 +434,9 @@ def render_delta_migration(
     old_objects = {o["id"]: o for o in old_ir.get("objects", [])}
     new_objects = {o["id"]: o for o in new_ir.get("objects", [])}
     old_type_by_id = {t["id"]: t for t in old_ir.get("types", [])}
+    old_enum_by_id = {e["id"]: e for e in old_ir.get("enums", [])}
     type_by_id = {t["id"]: t for t in new_ir.get("types", [])}
+    enum_by_id = {e["id"]: e for e in new_ir.get("enums", [])}
     old_object_by_id = {o["id"]: o for o in old_ir.get("objects", [])}
     object_by_id = {o["id"]: o for o in new_ir.get("objects", [])}
 
@@ -529,7 +472,7 @@ def render_delta_migration(
     for oid in new_only_ids:
         obj = new_objects[oid]
         statements.append(f"-- object added: {obj['name']} ({oid})")
-        statements.extend(render_create_table_statements_for_object(obj, type_by_id, object_by_id))
+        statements.extend(render_create_table_statements_for_object(obj, type_by_id, enum_by_id, object_by_id))
         statements.append("")
         add_finding(
             "object_added",
@@ -727,17 +670,35 @@ def render_delta_migration(
                     f"{old_display_columns}",
                 )
 
-        old_state_names = sorted(s["name"] for s in old_obj.get("states", []))
-        new_state_names = sorted(s["name"] for s in new_obj.get("states", []))
-        if old_state_names != new_state_names:
+        old_state_field = state_field_for_object(old_obj)
+        new_state_field = state_field_for_object(new_obj)
+        old_state_name = str(old_state_field.get("name", "")) if isinstance(old_state_field, dict) else ""
+        new_state_name = str(new_state_field.get("name", "")) if isinstance(new_state_field, dict) else ""
+        old_state_enum_values: List[str] = []
+        new_state_enum_values: List[str] = []
+        if isinstance(old_state_field, dict) and str(old_state_field.get("type", {}).get("kind", "")) == "enum":
+            old_enum_id = str(old_state_field["type"].get("target_enum_id", ""))
+            old_state_enum_values = sorted(
+                str(value.get("name", ""))
+                for value in old_enum_by_id.get(old_enum_id, {}).get("values", [])
+                if isinstance(value, dict)
+            )
+        if isinstance(new_state_field, dict) and str(new_state_field.get("type", {}).get("kind", "")) == "enum":
+            new_enum_id = str(new_state_field["type"].get("target_enum_id", ""))
+            new_state_enum_values = sorted(
+                str(value.get("name", ""))
+                for value in enum_by_id.get(new_enum_id, {}).get("values", [])
+                if isinstance(value, dict)
+            )
+        if old_state_name != new_state_name or old_state_enum_values != new_state_enum_values:
             warnings.append(
-                f"manual_review: state set changed for {new_obj['name']} (__prophet_state constraint may require manual adjustment)."
+                f"manual_review: state field semantics changed for {new_obj['name']}."
             )
             add_finding(
-                "state_set_changed",
+                "state_field_changed",
                 "manual_review",
-                f"state set changed for {new_obj['name']}",
-                "__prophet_state constraint may require manual adjustment",
+                f"state field semantics changed for {new_obj['name']}",
+                f"{old_state_name or '<none>'} -> {new_state_name or '<none>'}",
             )
 
     has_changes = bool(statements or warnings)
@@ -857,13 +818,6 @@ def render_openapi(ir: Dict[str, Any]) -> str:
             properties[prop] = field_schema
             if f.get("cardinality", {}).get("min", 0) > 0:
                 required_props.append(prop)
-        if obj.get("states"):
-            properties["state"] = {
-                "type": "string",
-                "enum": [s["name"].upper() for s in obj["states"]],
-            }
-            required_props.append("state")
-
         components_schemas[obj["name"]] = {
             "type": "object",
             "required": required_props,
@@ -1001,21 +955,6 @@ def render_openapi(ir: Dict[str, Any]) -> str:
                     filter_props["in"] = {"type": "array", "items": param_schema}
             components_schemas[filter_name] = {"type": "object", "properties": filter_props}
             query_filter_props[param_name] = {"$ref": f"#/components/schemas/{filter_name}"}
-
-        if obj.get("states"):
-            state_filter_name = f"{obj['name']}StateFilter"
-            enum_schema = {
-                "type": "string",
-                "enum": [s["name"].upper() for s in obj["states"]],
-            }
-            components_schemas[state_filter_name] = {
-                "type": "object",
-                "properties": {
-                    "eq": enum_schema,
-                    "in": {"type": "array", "items": enum_schema},
-                },
-            }
-            query_filter_props["state"] = {"$ref": f"#/components/schemas/{state_filter_name}"}
 
         query_filter_name = f"{obj['name']}QueryFilter"
         components_schemas[query_filter_name] = {"type": "object", "properties": query_filter_props}

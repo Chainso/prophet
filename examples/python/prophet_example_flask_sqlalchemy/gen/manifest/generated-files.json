@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.26.0",
+  "toolchain_version": "0.27.0",
   "stack": {
     "id": "python_flask_sqlalchemy",
     "language": "python",
     "framework": "flask",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "d392ad402d29699da2a98a12b65b5b269c77f2967336a8a668404cedca2f759d",
+  "ir_hash": "8e2e3a81e56ec7c70951dafd7ea154373c73cee785181a8b0d995e249989cbba",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "53453be1f34d8bbde9a40ad5cad157862939c91f14286c5231c23694cbbae334"
+      "sha256": "7b9851664f37c9aa1a9e9d9a1fc4b0f57fa9cc0b50bb4786684e09b81001b869"
     },
     {
       "path": "gen/manifest/python-autodetect.json",
@@ -19,23 +19,23 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "938f04a65de4c95977f9b9063d672eb3d5b79b2b76c359b619039409752bbc36"
+      "sha256": "0a05714dcd000b0e223c50e72bb1432a22540682d6d4f149fca2f7ec42cfc145"
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "e2fc706e2cf1e741c905c99fd4e67c38632421807741a71c97b8a87e91214df3"
+      "sha256": "b6c09d65cc3e51693a8f69eada983b9dc7b17aa7714ca18feec71042be163b0a"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
-      "sha256": "184921b49c1504359f7c840a26dfc8a2df75988f037fb25bb16e9d93efa5c398"
+      "sha256": "c438288e73e8fecaa1427edda7adf6da247ae41dfd2d8127e70321a419a62b68"
     },
     {
       "path": "gen/python/src/generated/action_handlers.py",
-      "sha256": "32a2d29bdfe4fdf274d67a864d0b8f37022d89f80658306cec93b36ef198dacf"
+      "sha256": "7ec2c246a98181c378b91bda139ac786a8f52d3d3cae7247940985ec8d71e023"
     },
     {
       "path": "gen/python/src/generated/action_service.py",
-      "sha256": "1efe9cdd76c26dc3a4ff5cfe03904d67b7e209be6adf5abbaa0030cd10e442ef"
+      "sha256": "fcf2dd70ce69504985deeda456e42f50915f14272c9fecb832a0f2284761d405"
     },
     {
       "path": "gen/python/src/generated/actions.py",
@@ -43,15 +43,15 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "cde78ca7ef631f85e7c2a4e77da3c1d4f3b03e35decb5b95681a388d1eea324a"
+      "sha256": "4961a7fac331fa51bbc5c1e3df1e9c48153a8ba5761909e649275495e70f0709"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "d2d31ff2ab2c1f1ee9d1a6cf7f8d21a87b06d83dfc260af364bf8164960922c8"
+      "sha256": "e3c2bc7144a968f489df1f7844164985b4c38ebc10f4a0df24bb6d05195bdda4"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "49941580577f447b8f14c148700026a4d8320ba764746e90f452c0783c6681f3"
+      "sha256": "949714acebde789f7219b3325522dd896ca694670a16f75be06da5a0a64a1029"
     },
     {
       "path": "gen/python/src/generated/flask_routes.py",
@@ -59,27 +59,23 @@
     },
     {
       "path": "gen/python/src/generated/persistence.py",
-      "sha256": "f6ba965e2eec2898a2d8a89465702ad6392b36972a9880abc6c6ca266f0a2df6"
+      "sha256": "bb14fda81f3d9be9c1d36aa611058bc580b10ec33342a90c5b8d6b62dcd2964b"
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "15b501bc4fb0eedaf207b5f221eaffda4dc7940c4f60da52d7fafd4ce5855b44"
+      "sha256": "0c612ecd9e27d0b9d9600576608415ba390440b456f6713791d80f6d66308dd7"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_adapters.py",
-      "sha256": "a2bcbefe4106f70676b9a60832381cbcf3663f903b1494e5d7cdc9b3df095629"
+      "sha256": "d833d53fa8c9ce0ec68a30af5cb491519055e6c4eea281d2025de5f053715b00"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_models.py",
-      "sha256": "f467e4351cb7eef765db513f0315cb2656816a623c628203bdba7e83677dd575"
-    },
-    {
-      "path": "gen/python/src/generated/transitions.py",
-      "sha256": "abd39efc6de6445b4960415f8fd3528dedf19231af5eddbec6bd00f29682155c"
+      "sha256": "c2aff01752506d3f8053d6be9e2c7aa6ff5ed463e0b7e5d95398d1df09acb310"
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
+      "sha256": "0109e0e902d8344c37277090b3b77e7d5deac2172d71546a86c507e9fdd369c8"
     }
   ]
 }

@@ -13,8 +13,9 @@ IR is the stable internal contract between DSL/validation and target generators.
 - Reusable field enums are represented separately in top-level `enums`
 - Query contracts captured as versioned IR surface (`query_contracts`, `query_contracts_version`)
 - Action contracts represented through declared input shape + produced event references (`input_shape_id`, `output_event_id`)
-- Event kinds are `signal` or `transition` only (no `action_output` kind)
-- Transition event payloads include implicit object PK fields plus `fromState` and `toState`
+- Events are a single uniform concept with no kind partition
+- State metadata lives on object fields (`is_state_field`, `initial_enum_value_id`)
+- Objects do not carry separate `states` or `transitions` collections
 
 ## Consumer Boundary
 

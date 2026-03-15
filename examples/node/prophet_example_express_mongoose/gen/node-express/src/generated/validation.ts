@@ -2,6 +2,10 @@
 
 import { z } from 'zod';
 
+import {
+  OrderStatus
+} from './domain.js';
+
 export const OrderRefSchema = z.object({
   orderId: z.string(),
 });
@@ -48,24 +52,14 @@ export const CreateOrderResultSchema = z.object({
   order: OrderRefSchema,
 });
 
-export const PaymentCapturedSchema = z.object({
+export const OrderApprovedSchema = z.object({
   order: OrderRefSchema,
 });
 
-export const OrderApproveTransitionSchema = z.object({
-  orderId: z.string(),
-  fromState: z.string(),
-  toState: z.string(),
-  approvedByUserId: z.string().optional(),
-  noteCount: z.number().int(),
-  approvalReason: z.string().optional(),
+export const OrderShippedSchema = z.object({
+  order: OrderRefSchema,
 });
 
-export const OrderShipTransitionSchema = z.object({
-  orderId: z.string(),
-  fromState: z.string(),
-  toState: z.string(),
-  carrier: z.string(),
-  trackingNumber: z.string(),
-  packageIds: z.array(z.string()),
+export const PaymentCapturedSchema = z.object({
+  order: OrderRefSchema,
 });

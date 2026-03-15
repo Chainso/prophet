@@ -7,6 +7,11 @@ from typing import Any, Dict, List, Literal, Optional
 
 Money = float
 
+class OrderStatus(str, Enum):
+    Created = 'Created'
+    Approved = 'Approved'
+    Shipped = 'Shipped'
+
 @dataclass(kw_only=True)
 class OrderRef:
     orderId: str
@@ -27,8 +32,6 @@ class ApprovalContext:
     watchers: Optional[List[UserRef]] = None
     reason: Optional[str] = None
 
-OrderState = Literal['created', 'approved', 'shipped']
-
 @dataclass(kw_only=True)
 class Order:
     orderId: str
@@ -43,7 +46,7 @@ class Order:
     shippingCarrier: Optional[str] = None
     shippingTrackingNumber: Optional[str] = None
     shippingPackageIds: Optional[List[str]] = None
-    state: OrderState
+    status: OrderStatus
 
 @dataclass(kw_only=True)
 class User:

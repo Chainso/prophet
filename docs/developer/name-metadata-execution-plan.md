@@ -61,11 +61,9 @@ Supported on:
 - `type`
 - `object`
 - `struct`
+- `event`
 - `field`
-- `state`
-- `transition`
 - `action` + inline input/output shapes
-- `signal`
 - `trigger`
 
 ### Technical vs Display Naming

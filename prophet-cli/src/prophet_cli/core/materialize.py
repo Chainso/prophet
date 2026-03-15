@@ -17,12 +17,10 @@ BLOCK_START_PATTERNS = [
     re.compile(r"^object\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^struct\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^action\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
-    re.compile(r"^signal\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
+    re.compile(r"^event\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^trigger\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^field\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^value\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
-    re.compile(r"^state\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
-    re.compile(r"^transition\s+[A-Za-z_][A-Za-z0-9_]*\s*\{$"),
     re.compile(r"^input\s*\{$"),
     re.compile(r"^output\s*\{$"),
 ]
@@ -78,12 +76,6 @@ def _build_id_map(ontology: Ontology, source_lines: List[str]) -> Dict[int, str]
         id_map[item.line] = item.id
         for field in item.fields:
             id_map[field.line] = field.id
-        for state in item.states:
-            id_map[state.line] = state.id
-        for transition in item.transitions:
-            id_map[transition.line] = transition.id
-            for field in transition.fields:
-                id_map[field.line] = field.id
 
     for item in ontology.structs:
         id_map[item.line] = item.id

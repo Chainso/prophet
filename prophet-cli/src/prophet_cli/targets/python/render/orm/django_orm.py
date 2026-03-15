@@ -18,6 +18,8 @@ def _django_field_for_descriptor(
     type_by_id: Dict[str, Dict[str, Any]],
     enum_by_id: Dict[str, Dict[str, Any]],
     required: bool,
+    *,
+    default_expr: str | None = None,
 ) -> str:
     kind = str(type_desc.get("kind", ""))
     nullable = "False" if required else "True"
@@ -26,10 +28,12 @@ def _django_field_for_descriptor(
         return f"models.JSONField(null={nullable}, blank={blank})"
     if kind == "enum":
         enum_name = _enum_name_for_type(type_desc, enum_by_id) or "Enum"
+        default_clause = f"default={default_expr}, " if default_expr is not None else ""
         return (
             "models.CharField("
             "max_length=255, "
             f"null={nullable}, blank={blank}, "
+            f"{default_clause}"
             f"choices=[(item.value, item.value) for item in Domain.{enum_name}]"
             ")"
         )
@@ -49,6 +53,31 @@ def _django_field_for_descriptor(
     if base in {"double", "float", "decimal"}:
         return f"models.FloatField(null={nullable}, blank={blank})"
     return f"models.CharField(max_length=255, null={nullable}, blank={blank})"
+
+
+def _state_field_default_expr(
+    field: Dict[str, Any],
+    *,
+    enum_by_id: Dict[str, Dict[str, Any]],
+) -> str | None:
+    if not bool(field.get("is_state_field")):
+        return None
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    enum_def = enum_by_id.get(str(type_desc.get("target_enum_id", "")), {})
+    initial_value_id = str(field.get("initial_enum_value_id", ""))
+    if not initial_value_id:
+        return None
+    initial_value = next(
+        (
+            str(value.get("name", ""))
+            for value in enum_def.get("values", [])
+            if isinstance(value, dict) and str(value.get("id", "")) == initial_value_id
+        ),
+        "",
+    )
+    if not initial_value:
+        return None
+    return repr(initial_value)
 
 
 def render_django_models(ir: Dict[str, Any]) -> str:
@@ -78,24 +107,16 @@ def render_django_models(ir: Dict[str, Any]) -> str:
             prop = _camel_case(str(field.get("name", "field")))
             required = _is_required(field)
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
-            decl = _django_field_for_descriptor(type_desc, type_by_id, enum_by_id, required)
+            decl = _django_field_for_descriptor(
+                type_desc,
+                type_by_id,
+                enum_by_id,
+                required,
+                default_expr=_state_field_default_expr(field, enum_by_id=enum_by_id),
+            )
             if len(primary_ids) == 1 and field_id == primary_ids[0]:
                 decl = decl[:-1] + ", primary_key=True)"
             lines.append(f"    {prop} = {decl}")
-
-        if obj.get("states"):
-            initial = next(
-                (
-                    str(item.get("name", ""))
-                    for item in obj.get("states", [])
-                    if isinstance(item, dict) and item.get("initial")
-                ),
-                "",
-            )
-            if initial:
-                lines.append(f"    state = models.CharField(max_length=64, default='{initial}', db_column='__prophet_state')")
-            else:
-                lines.append("    state = models.CharField(max_length=64, db_column='__prophet_state')")
 
         lines.append("")
         lines.append("    class Meta:")
@@ -112,26 +133,6 @@ def render_django_models(ir: Dict[str, Any]) -> str:
                 quoted = ", ".join([repr(item) for item in composite_names])
                 lines.append(f"        constraints = [models.UniqueConstraint(fields=[{quoted}], name='uniq_{obj_name.lower()}_key')]")
         lines.append("")
-
-        if obj.get("states"):
-            history_model_name = f"{obj_name}StateHistoryModel"
-            history_table_name = f"{obj_name.lower()}s_state_history"
-            lines.append(f"class {history_model_name}(models.Model):")
-            lines.append("    historyId = models.BigAutoField(primary_key=True, db_column='history_id')")
-            for pk_field in _object_primary_key_fields(obj):
-                pk_name = _camel_case(str(pk_field.get("name", "id")))
-                pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
-                pk_decl = _django_field_for_descriptor(pk_desc, type_by_id, enum_by_id, True)
-                lines.append(f"    {pk_name} = {pk_decl}")
-            lines.append("    transitionId = models.CharField(max_length=255, db_column='transition_id')")
-            lines.append("    fromState = models.CharField(max_length=255, db_column='from_state')")
-            lines.append("    toState = models.CharField(max_length=255, db_column='to_state')")
-            lines.append("    occurredAt = models.DateTimeField(auto_now_add=True, db_column='occurred_at')")
-            lines.append("")
-            lines.append("    class Meta:")
-            lines.append("        app_label = 'generated'")
-            lines.append(f"        db_table = '{history_table_name}'")
-            lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -185,8 +186,6 @@ def render_django_adapters(ir: Dict[str, Any]) -> str:
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
             value_expr = _enum_serialize_expr(type_desc, f"item.{prop}")
             lines.append(f"        '{prop}': {value_expr if value_expr != f'item.{prop}' else f'_serialize(item.{prop})'},")
-        if obj.get("states"):
-            lines.append("        'state': item.state,")
         lines.append("    }")
         lines.append("")
 
@@ -231,8 +230,6 @@ def render_django_adapters(ir: Dict[str, Any]) -> str:
                     lines.append(f"        {prop}=record.{prop},")
             else:
                 lines.append(f"        {prop}=record.{prop},")
-        if obj.get("states"):
-            lines.append("        state=record.state,")
         lines.append("    )")
         lines.append("")
 
@@ -249,7 +246,7 @@ def render_django_adapters(ir: Dict[str, Any]) -> str:
             key=lambda item: str(item.get("field_name", "")),
         ):
             field_name = _camel_case(str(filter_def.get("field_name", "field")))
-            model_field = "state" if str(filter_def.get("field_id", "")) == "__state__" else field_name
+            model_field = field_name
             lines.append(f"        if filter.{field_name} is not None:")
             lines.append(f"            if filter.{field_name}.eq is not None:")
             lines.append(f"                queryset = queryset.filter({model_field}=filter.{field_name}.eq)")
@@ -315,37 +312,6 @@ def render_django_adapters(ir: Dict[str, Any]) -> str:
             lines.append("        self._model.objects.create(**payload)")
         lines.append("        return item")
         lines.append("")
-
-        if obj.get("states"):
-            history_model_name = f"{obj_name}StateHistoryModel"
-            lines.append(
-                f"    def apply_transition(self, id: Domain.{obj_name}Ref, expected_state: Domain.{obj_name}State, next_state: Domain.{obj_name}State, transition_id: str) -> Optional[Domain.{obj_name}]:"
-            )
-            if pk_fields:
-                lines.append("        lookup = {")
-                for pk in pk_fields:
-                    pk_prop = _camel_case(str(pk.get("name", "id")))
-                    lines.append(f"            '{pk_prop}': id.{pk_prop},")
-                lines.append("        }")
-                lines.append("        updated = self._model.objects.filter(**lookup, state=expected_state).update(state=next_state)")
-                lines.append("        if int(updated or 0) < 1:")
-                lines.append("            return None")
-                lines.append("        history_payload = {")
-                for pk in pk_fields:
-                    pk_prop = _camel_case(str(pk.get("name", "id")))
-                    lines.append(f"            '{pk_prop}': id.{pk_prop},")
-                lines.append("            'transitionId': transition_id,")
-                lines.append("            'fromState': expected_state,")
-                lines.append("            'toState': next_state,")
-                lines.append("        }")
-                lines.append(f"        Models.{history_model_name}.objects.create(**history_payload)")
-                lines.append("        row = self._model.objects.filter(**lookup).first()")
-                lines.append("        if row is None:")
-                lines.append("            return None")
-                lines.append(f"        return _{obj_name.lower()}_to_domain(row)")
-            else:
-                lines.append("        return None")
-            lines.append("")
 
     lines.append("class DjangoRepositories:")
     lines.append("    def __init__(self):")

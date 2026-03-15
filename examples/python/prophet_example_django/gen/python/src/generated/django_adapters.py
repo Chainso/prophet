@@ -36,7 +36,7 @@ def _order_payload(item: Domain.Order) -> dict:
         'shippingCarrier': _serialize(item.shippingCarrier),
         'shippingTrackingNumber': _serialize(item.shippingTrackingNumber),
         'shippingPackageIds': _serialize(item.shippingPackageIds),
-        'state': item.state,
+        'status': item.status.value if isinstance(item.status, Enum) else item.status,
     }
 
 def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
@@ -53,7 +53,7 @@ def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
         shippingCarrier=record.shippingCarrier,
         shippingTrackingNumber=record.shippingTrackingNumber,
         shippingPackageIds=record.shippingPackageIds,
-        state=record.state,
+        status=Domain.OrderStatus(record.status) if record.status is not None and not isinstance(record.status, Domain.OrderStatus) else record.status,
     )
 
 class OrderDjangoRepository:
@@ -137,17 +137,17 @@ class OrderDjangoRepository:
                 queryset = queryset.filter(shippingTrackingNumber__gte=filter.shippingTrackingNumber.gte)
             if getattr(filter.shippingTrackingNumber, 'lte', None) is not None:
                 queryset = queryset.filter(shippingTrackingNumber__lte=filter.shippingTrackingNumber.lte)
-        if filter.state is not None:
-            if filter.state.eq is not None:
-                queryset = queryset.filter(state=filter.state.eq)
-            if getattr(filter.state, 'inValues', None):
-                queryset = queryset.filter(state__in=filter.state.inValues)
-            if getattr(filter.state, 'contains', None):
-                queryset = queryset.filter(state__icontains=filter.state.contains)
-            if getattr(filter.state, 'gte', None) is not None:
-                queryset = queryset.filter(state__gte=filter.state.gte)
-            if getattr(filter.state, 'lte', None) is not None:
-                queryset = queryset.filter(state__lte=filter.state.lte)
+        if filter.status is not None:
+            if filter.status.eq is not None:
+                queryset = queryset.filter(status=filter.status.eq)
+            if getattr(filter.status, 'inValues', None):
+                queryset = queryset.filter(status__in=filter.status.inValues)
+            if getattr(filter.status, 'contains', None):
+                queryset = queryset.filter(status__icontains=filter.status.contains)
+            if getattr(filter.status, 'gte', None) is not None:
+                queryset = queryset.filter(status__gte=filter.status.gte)
+            if getattr(filter.status, 'lte', None) is not None:
+                queryset = queryset.filter(status__lte=filter.status.lte)
         if filter.totalAmount is not None:
             if filter.totalAmount.eq is not None:
                 queryset = queryset.filter(totalAmount=filter.totalAmount.eq)
@@ -193,25 +193,6 @@ class OrderDjangoRepository:
         }
         self._model.objects.update_or_create(defaults=payload, **lookup)
         return item
-
-    def apply_transition(self, id: Domain.OrderRef, expected_state: Domain.OrderState, next_state: Domain.OrderState, transition_id: str) -> Optional[Domain.Order]:
-        lookup = {
-            'orderId': id.orderId,
-        }
-        updated = self._model.objects.filter(**lookup, state=expected_state).update(state=next_state)
-        if int(updated or 0) < 1:
-            return None
-        history_payload = {
-            'orderId': id.orderId,
-            'transitionId': transition_id,
-            'fromState': expected_state,
-            'toState': next_state,
-        }
-        Models.OrderStateHistoryModel.objects.create(**history_payload)
-        row = self._model.objects.filter(**lookup).first()
-        if row is None:
-            return None
-        return _order_to_domain(row)
 
 def _user_payload(item: Domain.User) -> dict:
     return {

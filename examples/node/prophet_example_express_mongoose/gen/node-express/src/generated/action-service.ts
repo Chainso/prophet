@@ -6,8 +6,8 @@ import type { ActionContext, ActionHandlers } from './action-handlers.js';
 import { createEventId } from '@prophet-ontology/events-runtime';
 import {
   createCreateOrderResultEvent,
-  createOrderApproveTransitionEvent,
-  createOrderShipTransitionEvent,
+  createOrderApprovedEvent,
+  createOrderShippedEvent,
   publishDomainEvents,
   toActionOutcome,
   type EventPublisher
@@ -19,10 +19,10 @@ export class ActionExecutionService {
     private readonly eventPublisher: EventPublisher,
   ) {}
 
-  async approveOrder(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<EventContracts.OrderApproveTransition> {
+  async approveOrder(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<EventContracts.OrderApproved> {
     const result = await this.handlers.approveOrder.handle(input, context);
-    const outcome = toActionOutcome<EventContracts.OrderApproveTransition>(result);
-    const events = [createOrderApproveTransitionEvent(outcome.output), ...outcome.additionalEvents];
+    const outcome = toActionOutcome<EventContracts.OrderApproved>(result);
+    const events = [createOrderApprovedEvent(outcome.output), ...outcome.additionalEvents];
     await publishDomainEvents(this.eventPublisher, events, {
       traceId: context.traceId ?? createEventId(),
       source: context.eventSource ?? 'commerce_local',
@@ -43,10 +43,10 @@ export class ActionExecutionService {
     return outcome.output;
   }
 
-  async shipOrder(input: Actions.ShipOrderCommand, context: ActionContext): Promise<EventContracts.OrderShipTransition> {
+  async shipOrder(input: Actions.ShipOrderCommand, context: ActionContext): Promise<EventContracts.OrderShipped> {
     const result = await this.handlers.shipOrder.handle(input, context);
-    const outcome = toActionOutcome<EventContracts.OrderShipTransition>(result);
-    const events = [createOrderShipTransitionEvent(outcome.output), ...outcome.additionalEvents];
+    const outcome = toActionOutcome<EventContracts.OrderShipped>(result);
+    const events = [createOrderShippedEvent(outcome.output), ...outcome.additionalEvents];
     await publishDomainEvents(this.eventPublisher, events, {
       traceId: context.traceId ?? createEventId(),
       source: context.eventSource ?? 'commerce_local',

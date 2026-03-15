@@ -26,7 +26,7 @@ public class OrderDomainMapper {
             .shippingCarrier(entity.getShippingCarrier())
             .shippingTrackingNumber(entity.getShippingTrackingNumber())
             .shippingPackageIds(entity.getShippingPackageIds())
-            .state(entity.getState())
+            .status(entity.getStatus())
             .build();
     }
 }

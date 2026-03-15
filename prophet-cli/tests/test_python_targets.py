@@ -75,6 +75,49 @@ ontology CommerceLocal {
 """
         )
 
+    def _state_field_event_ontology(self):
+        return parse_ontology(
+            """
+ontology CommerceLocal {
+  version "0.1.0"
+
+  enum OrderStatus {
+    value Created
+    value Approved
+  }
+
+  object Order {
+    field orderId {
+      type string
+      key primary
+    }
+
+    field status {
+      type OrderStatus
+      state
+      initial Created
+    }
+  }
+
+  event OrderApproved {
+    field order {
+      type ref(Order)
+    }
+  }
+
+  action approveOrder {
+    input {
+      field order {
+        type ref(Order)
+      }
+    }
+
+    output event OrderApproved
+  }
+}
+"""
+        )
+
     def test_python_fastapi_sqlalchemy_stack_generates_expected_artifacts(self) -> None:
         cfg = self._base_cfg()
         cfg["generation"]["stack"] = {"id": "python_fastapi_sqlalchemy"}
@@ -124,6 +167,7 @@ ontology CommerceLocal {
         self.assertNotIn("asyncio.to_thread", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
         self.assertNotIn("nullable=false", outputs["gen/python/src/generated/sqlmodel_models.py"])
         self.assertIn("nullable=False", outputs["gen/python/src/generated/sqlmodel_models.py"])
+        self.assertNotIn("primary_key=False, sa_column=", outputs["gen/python/src/generated/sqlmodel_models.py"])
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "python_fastapi_sqlmodel")
@@ -162,6 +206,7 @@ ontology CommerceLocal {
         self.assertIn("gen/python/src/generated/sqlmodel_models.py", outputs)
         self.assertIn("gen/python/src/generated/sqlmodel_adapters.py", outputs)
         self.assertIn("def query(self, filter:", outputs["gen/python/src/generated/sqlmodel_adapters.py"])
+        self.assertNotIn("primary_key=False, sa_column=", outputs["gen/python/src/generated/sqlmodel_models.py"])
 
         manifest = json.loads(outputs["gen/manifest/generated-files.json"])
         self.assertEqual(manifest["stack"]["id"], "python_flask_sqlmodel")
@@ -220,6 +265,7 @@ ontology CommerceLocal {
         self.assertIn("class OrderStatus(str, Enum):", sqlalchemy_outputs["gen/python/src/generated/domain.py"])
         self.assertIn("status: OrderStatus", sqlalchemy_outputs["gen/python/src/generated/domain.py"])
         self.assertIn("SqlEnum(Domain.OrderStatus, native_enum=False)", sqlalchemy_outputs["gen/python/src/generated/sqlalchemy_models.py"])
+        self.assertIn("Domain.OrderStatus(record.status)", sqlalchemy_outputs["gen/python/src/generated/sqlalchemy_adapters.py"])
 
         sqlmodel_cfg = self._base_cfg()
         sqlmodel_cfg["generation"]["stack"] = {"id": "python_fastapi_sqlmodel"}
@@ -228,6 +274,8 @@ ontology CommerceLocal {
             sqlmodel_outputs = build_generated_outputs(build_ir(ontology, sqlmodel_cfg), sqlmodel_cfg, root=Path(tmp))
         self.assertIn("class OrderStatus(str, Enum):", sqlmodel_outputs["gen/python/src/generated/domain.py"])
         self.assertIn("SqlEnum(Domain.OrderStatus, native_enum=False)", sqlmodel_outputs["gen/python/src/generated/sqlmodel_models.py"])
+        self.assertNotIn("primary_key=False, sa_column=", sqlmodel_outputs["gen/python/src/generated/sqlmodel_models.py"])
+        self.assertIn("Domain.OrderStatus(record.status)", sqlmodel_outputs["gen/python/src/generated/sqlmodel_adapters.py"])
 
         django_cfg = self._base_cfg()
         django_cfg["generation"]["stack"] = {"id": "python_django_django_orm"}
@@ -236,6 +284,21 @@ ontology CommerceLocal {
             django_outputs = build_generated_outputs(build_ir(ontology, django_cfg), django_cfg, root=Path(tmp))
         self.assertIn("class OrderStatus(str, Enum):", django_outputs["gen/python/src/generated/domain.py"])
         self.assertIn("choices=[(item.value, item.value) for item in Domain.OrderStatus]", django_outputs["gen/python/src/generated/django_models.py"])
+        self.assertIn("Domain.OrderStatus(record.status)", django_outputs["gen/python/src/generated/django_adapters.py"])
+
+    def test_python_sqlalchemy_generates_marked_state_field_as_normal_enum_field(self) -> None:
+        ontology = self._state_field_event_ontology()
+
+        cfg = self._base_cfg()
+        cfg["generation"]["stack"] = {"id": "python_fastapi_sqlalchemy"}
+        cfg["generation"]["targets"] = ["openapi", "python", "fastapi", "sqlalchemy", "manifest"]
+
+        with tempfile.TemporaryDirectory(prefix="prophet-python-state-field-sa-") as tmp:
+            outputs = build_generated_outputs(build_ir(ontology, cfg), cfg, root=Path(tmp))
+
+        self.assertIn("status: OrderStatus", outputs["gen/python/src/generated/domain.py"])
+        self.assertIn("status: Mapped[Domain.OrderStatus]", outputs["gen/python/src/generated/sqlalchemy_models.py"])
+        self.assertIn("default=Domain.OrderStatus.Created", outputs["gen/python/src/generated/sqlalchemy_models.py"])
 
     def test_autodetect_selects_python_fastapi_sqlmodel(self) -> None:
         with tempfile.TemporaryDirectory(prefix="prophet-autodetect-python-fastapi-") as tmp:

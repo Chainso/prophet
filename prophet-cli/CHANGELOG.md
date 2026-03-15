@@ -4,6 +4,23 @@ All notable changes to `prophet-cli` are documented in this file.
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-03-15
+
+### Changed
+- Reworked workflow modeling to remove dedicated `signal`, object-level `state`, and `transition` concepts in favor of:
+  - top-level `event` blocks,
+  - enum-backed object fields marked with `state`,
+  - explicit `initial <EnumValue>` state defaults.
+- Simplified IR, validation, compatibility handling, Turtle vocabulary, and Java/Node/Python generators around the field-marked state model, removing synthetic state-machine artifacts and transition-specific runtimes.
+- Removed generated transition handlers, validators, history persistence, and runtime `TransitionValidationResult` surfaces across maintained stacks and shared runtime libraries.
+- Refreshed maintained docs, examples, manifests, and compatibility baselines for the event/state-field model.
+- Bumped shared runtime libraries to `0.8.0` across:
+  - `@prophet-ontology/events-runtime`,
+  - `prophet-events-runtime`,
+  - `io.github.chainso:prophet-events-runtime`.
+- Updated default generator runtime version resolution to `0.8.0`.
+- Toolchain/package version advanced to `0.27.0`.
+
 ## [0.26.0] - 2026-03-14
 
 ### Added

@@ -6,7 +6,6 @@ import type * as Filters from './query.js';
 import type * as Persistence from './persistence.js';
 import {
   OrderEntity,
-  OrderStateHistoryEntity,
   UserEntity
 } from './typeorm-entities.js';
 
@@ -47,7 +46,7 @@ function orderEntityToDomain(entity: any): Domain.Order {
     shippingCarrier: entity.shippingCarrier ?? undefined,
     shippingTrackingNumber: entity.shippingTrackingNumber ?? undefined,
     shippingPackageIds: entity.shippingPackageIds ?? undefined,
-    state: entity.state,
+    status: entity.status,
   };
 }
 
@@ -65,7 +64,7 @@ function orderDomainToEntity(item: Domain.Order): OrderEntity {
   entity.shippingCarrier = item.shippingCarrier ?? null;
   entity.shippingTrackingNumber = item.shippingTrackingNumber ?? null;
   entity.shippingPackageIds = item.shippingPackageIds ?? null;
-  entity.state = item.state;
+  entity.status = item.status;
   return entity;
 }
 
@@ -116,14 +115,14 @@ function orderApplyFilter(qb: SelectQueryBuilder<OrderEntity>, filter: Filters.O
   if (shippingTrackingNumberFilter?.eq !== undefined) qb.andWhere('record.shipping_tracking_number = :shippingTrackingNumber_eq', { shippingTrackingNumber_eq: shippingTrackingNumberFilter.eq });
   if (shippingTrackingNumberFilter?.in?.length) qb.andWhere('record.shipping_tracking_number IN (:...shippingTrackingNumber_in)', { shippingTrackingNumber_in: shippingTrackingNumberFilter.in });
   if (typeof shippingTrackingNumberFilter?.contains === 'string' && shippingTrackingNumberFilter.contains.length > 0) qb.andWhere('record.shipping_tracking_number LIKE :shippingTrackingNumber_contains', { shippingTrackingNumber_contains: `%${shippingTrackingNumberFilter.contains}%` });
+  const statusFilter = filter.status;
+  if (statusFilter?.eq !== undefined) qb.andWhere('record.status = :status_eq', { status_eq: statusFilter.eq });
+  if (statusFilter?.in?.length) qb.andWhere('record.status IN (:...status_in)', { status_in: statusFilter.in });
   const totalAmountFilter = filter.totalAmount;
   if (totalAmountFilter?.eq !== undefined) qb.andWhere('record.total_amount = :totalAmount_eq', { totalAmount_eq: totalAmountFilter.eq });
   if (totalAmountFilter?.in?.length) qb.andWhere('record.total_amount IN (:...totalAmount_in)', { totalAmount_in: totalAmountFilter.in });
   if (totalAmountFilter?.gte !== undefined) qb.andWhere('record.total_amount >= :totalAmount_gte', { totalAmount_gte: totalAmountFilter.gte });
   if (totalAmountFilter?.lte !== undefined) qb.andWhere('record.total_amount <= :totalAmount_lte', { totalAmount_lte: totalAmountFilter.lte });
-  const stateFilter = filter.state;
-  if (stateFilter?.eq !== undefined) qb.andWhere('record.__prophet_state = :state_eq', { state_eq: stateFilter.eq });
-  if (stateFilter?.in?.length) qb.andWhere('record.__prophet_state IN (:...state_in)', { state_in: stateFilter.in });
 }
 
 function orderApplyOrderBy(qb: SelectQueryBuilder<OrderEntity>): void {
@@ -132,11 +131,9 @@ function orderApplyOrderBy(qb: SelectQueryBuilder<OrderEntity>): void {
 
 class OrderTypeOrmRepository implements Persistence.OrderRepository {
   private readonly repo: Repository<OrderEntity>;
-  private readonly historyRepo: Repository<OrderStateHistoryEntity>;
 
   constructor(private readonly dataSource: DataSource) {
     this.repo = dataSource.getRepository(OrderEntity);
-    this.historyRepo = dataSource.getRepository(OrderStateHistoryEntity);
   }
 
   async list(page: number, size: number): Promise<Persistence.Page<Domain.Order>> {
@@ -179,36 +176,6 @@ class OrderTypeOrmRepository implements Persistence.OrderRepository {
     const entity = orderDomainToEntity(item);
     const saved = await this.repo.save(entity as any);
     return orderEntityToDomain(saved);
-  }
-
-  async applyTransition(
-    id: Persistence.OrderId,
-    expectedState: Domain.OrderState,
-    nextState: Domain.OrderState,
-    transitionId: string,
-  ): Promise<Domain.Order | null> {
-    const primaryWhere = orderPrimaryWhere(id);
-    const transitionResult = await this.repo
-      .createQueryBuilder()
-      .update(OrderEntity)
-      .set({ state: nextState as string } as any)
-      .where({ ...primaryWhere, state: expectedState } as any)
-      .execute();
-    if (Number(transitionResult.affected ?? 0) < 1) {
-      return null;
-    }
-    const updated = await this.repo.findOneBy(primaryWhere as any);
-    if (!updated) {
-      return null;
-    }
-    const history = this.historyRepo.create({
-      ...primaryWhere,
-      transitionId,
-      fromState: expectedState,
-      toState: nextState,
-    } as any);
-    await this.historyRepo.save(history as any);
-    return orderEntityToDomain(updated);
   }
 }
 

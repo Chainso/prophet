@@ -165,7 +165,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderApproveTransition'
+                $ref: '#/components/schemas/OrderApproved'
   /actions/createOrder:
     post:
       operationId: createOrderAction
@@ -199,7 +199,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/OrderShipTransition'
+                $ref: '#/components/schemas/OrderShipped'
 components:
   schemas:
     UserRef:
@@ -235,7 +235,7 @@ components:
           type: string
           title: Country Code
           x-prophet-display-name: Country Code
-      description: Postal destination details for shipment delivery.
+      description: Postal address used for shipping destinations.
     ApprovalContext:
       type: object
       required:
@@ -255,14 +255,14 @@ components:
           x-prophet-display-name: Reason
       title: Approval Context
       x-prophet-display-name: Approval Context
-      description: Supplemental context used during order approval.
+      description: Supplemental approval context for review workflows.
     Order:
       type: object
       required:
       - orderId
       - customer
       - totalAmount
-      - state
+      - status
       properties:
         orderId:
           type: string
@@ -315,12 +315,14 @@ components:
             type: string
           title: Shipping Package IDs
           x-prophet-display-name: Shipping Package IDs
-        state:
+        status:
           type: string
           enum:
-          - CREATED
-          - APPROVED
-          - SHIPPED
+          - Created
+          - Approved
+          - Shipped
+          title: Status
+          x-prophet-display-name: Status
       description: Customer order aggregate.
     OrderListResponse:
       type: object
@@ -422,7 +424,7 @@ components:
           x-prophet-display-name: Tags
         shippingAddress:
           $ref: '#/components/schemas/Address'
-      description: Input payload required to create a new order.
+      description: Input payload for creating a new order.
     Ship Order Command:
       type: object
       required:
@@ -447,7 +449,7 @@ components:
             type: string
           title: Package IDs
           x-prophet-display-name: Package IDs
-      description: Input payload required to ship an approved order.
+      description: Input payload for shipping an approved order.
     Create Order Result:
       type: object
       required:
@@ -455,7 +457,27 @@ components:
       properties:
         order:
           $ref: '#/components/schemas/OrderRef'
-      description: Output payload returning the created order reference.
+      description: Result payload containing the created order.
+    OrderApproved:
+      type: object
+      required:
+      - order
+      properties:
+        order:
+          $ref: '#/components/schemas/OrderRef'
+      title: Order Approved
+      x-prophet-display-name: Order Approved
+      description: Event emitted when an order is approved.
+    OrderShipped:
+      type: object
+      required:
+      - order
+      properties:
+        order:
+          $ref: '#/components/schemas/OrderRef'
+      title: Order Shipped
+      x-prophet-display-name: Order Shipped
+      description: Event emitted when an order is shipped.
     PaymentCaptured:
       type: object
       required:
@@ -465,69 +487,7 @@ components:
           $ref: '#/components/schemas/OrderRef'
       title: Payment Captured
       x-prophet-display-name: Payment Captured
-      description: Event emitted when payment capture for an order succeeds.
-    OrderApproveTransition:
-      type: object
-      required:
-      - orderId
-      - fromState
-      - toState
-      - noteCount
-      properties:
-        orderId:
-          type: string
-        fromState:
-          type: string
-        toState:
-          type: string
-        approvedByUserId:
-          type: string
-          title: Approved By User ID
-          x-prophet-display-name: Approved By User ID
-        noteCount:
-          type: integer
-          title: Note Count
-          x-prophet-display-name: Note Count
-        approvalReason:
-          type: string
-          title: Approval Reason
-          x-prophet-display-name: Approval Reason
-      title: Approve
-      x-prophet-display-name: Approve
-      description: Transitions an order from created to approved.
-    OrderShipTransition:
-      type: object
-      required:
-      - orderId
-      - fromState
-      - toState
-      - carrier
-      - trackingNumber
-      - packageIds
-      properties:
-        orderId:
-          type: string
-        fromState:
-          type: string
-        toState:
-          type: string
-        carrier:
-          type: string
-          title: Carrier
-          x-prophet-display-name: Carrier
-        trackingNumber:
-          type: string
-          title: Tracking Number
-          x-prophet-display-name: Tracking Number
-        packageIds:
-          type: array
-          items:
-            type: string
-          title: Package IDs
-          x-prophet-display-name: Package IDs
-      title: Ship
-      x-prophet-display-name: Ship
-      description: Transitions an order from approved to shipped.
+      description: Event emitted when payment is successfully captured.
     OrderOrderIdFilter:
       type: object
       properties:
@@ -607,15 +567,15 @@ components:
           items: *id014
         contains:
           type: string
-    OrderStateFilter:
+    OrderStatusFilter:
       type: object
       properties:
         eq: &id015
           type: string
           enum:
-          - CREATED
-          - APPROVED
-          - SHIPPED
+          - Created
+          - Approved
+          - Shipped
         in:
           type: array
           items: *id015
@@ -638,8 +598,8 @@ components:
           $ref: '#/components/schemas/OrderShippingCarrierFilter'
         shippingTrackingNumber:
           $ref: '#/components/schemas/OrderShippingTrackingNumberFilter'
-        state:
-          $ref: '#/components/schemas/OrderStateFilter'
+        status:
+          $ref: '#/components/schemas/OrderStatusFilter'
     UserUserIdFilter:
       type: object
       properties:

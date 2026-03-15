@@ -83,12 +83,6 @@ def _render_domain_types(ir: Dict[str, Any]) -> str:
         if not isinstance(obj, dict):
             continue
         obj_name = _pascal_case(str(obj.get("name", "Object")))
-        states = list(obj.get("states", []))
-        if states:
-            members = " | ".join(f'"{str(item.get("name", ""))}"' for item in states if isinstance(item, dict))
-            lines.append(f"export type {obj_name}State = {members};")
-            lines.append("")
-
         lines.append(f"export interface {obj_name} {{")
         for field in list(obj.get("fields", [])):
             if isinstance(field, dict):
@@ -101,8 +95,6 @@ def _render_domain_types(ir: Dict[str, Any]) -> str:
                         struct_by_id=struct_by_id,
                     )
                 )
-        if states:
-            lines.append(f"  state: {obj_name}State;")
         lines.append("}")
         lines.append("")
 

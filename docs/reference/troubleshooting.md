@@ -103,7 +103,7 @@ generation:
 
 Cause:
 - Python project signals were detected, but Prophet could not infer one safe Python stack.
-- Common cases: multiple frameworks detected (for example FastAPI + Flask), or framework detected without ORM signal.
+- Common cases: multiple frameworks detected (for example FastAPI + Flask), or framework detected without ORM support indicators.
 
 Fix:
 - Set `generation.stack.id` explicitly in `prophet.yaml`:

@@ -14,11 +14,11 @@ export interface ActionContext {
 }
 
 export interface ApproveOrderActionHandler {
-  handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<ActionOutcomeValue<EventContracts.OrderApproveTransition>>;
+  handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<ActionOutcomeValue<EventContracts.OrderApproved>>;
 }
 
 export class ApproveOrderActionHandlerDefault implements ApproveOrderActionHandler {
-  async handle(_input: Actions.ApproveOrderCommand): Promise<ActionOutcome<EventContracts.OrderApproveTransition>> {
+  async handle(_input: Actions.ApproveOrderCommand): Promise<ActionOutcome<EventContracts.OrderApproved>> {
     throw new Error('No implementation registered for action: approveOrder');
   }
 }
@@ -34,11 +34,11 @@ export class CreateOrderActionHandlerDefault implements CreateOrderActionHandler
 }
 
 export interface ShipOrderActionHandler {
-  handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<ActionOutcomeValue<EventContracts.OrderShipTransition>>;
+  handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<ActionOutcomeValue<EventContracts.OrderShipped>>;
 }
 
 export class ShipOrderActionHandlerDefault implements ShipOrderActionHandler {
-  async handle(_input: Actions.ShipOrderCommand): Promise<ActionOutcome<EventContracts.OrderShipTransition>> {
+  async handle(_input: Actions.ShipOrderCommand): Promise<ActionOutcome<EventContracts.OrderShipped>> {
     throw new Error('No implementation registered for action: shipOrder');
   }
 }

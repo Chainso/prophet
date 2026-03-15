@@ -198,9 +198,9 @@ This example models a realistic small-business domain with:
 - customers, employees, suppliers, products, inventory, purchase orders, sales orders, invoices, and deliveries
 - multiple object relationships via `ref(...)`
 - reusable structs for addresses, contacts, order lines, and payment details
-- lifecycle state machines and transitions for purchasing, sales, and invoicing
-- mixed action output forms (`output { ... }`, `output signal ...`, `output transition ...`)
-- signal-driven automation via triggers
+- enum-backed lifecycle state fields for purchasing, sales, and invoicing
+- mixed action output forms (`output { ... }` and `output event ...`)
+- event-driven automation via triggers
 
 Generate and validate:
 

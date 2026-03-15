@@ -2,6 +2,12 @@
 
 export type Money = number;
 
+export enum OrderStatus {
+  Approved = "Approved",
+  Created = "Created",
+  Shipped = "Shipped",
+}
+
 export interface OrderRef {
   orderId: string;
 }
@@ -22,8 +28,6 @@ export interface ApprovalContext {
   reason?: string;
 }
 
-export type OrderState = "created" | "approved" | "shipped";
-
 export interface Order {
   orderId: string;
   customer: UserRef;
@@ -37,7 +41,7 @@ export interface Order {
   shippingCarrier?: string;
   shippingTrackingNumber?: string;
   shippingPackageIds?: string[];
-  state: OrderState;
+  status: OrderStatus;
 }
 
 export interface User {

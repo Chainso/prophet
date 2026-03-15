@@ -11,24 +11,14 @@ export interface CreateOrderResult {
   order: OrderRefOrObject;
 }
 
-export interface PaymentCaptured {
+export interface OrderApproved {
   order: OrderRefOrObject;
 }
 
-export interface OrderApproveTransition {
-  orderId: string;
-  fromState: string;
-  toState: string;
-  approvedByUserId?: string;
-  noteCount: number;
-  approvalReason?: string;
+export interface OrderShipped {
+  order: OrderRefOrObject;
 }
 
-export interface OrderShipTransition {
-  orderId: string;
-  fromState: string;
-  toState: string;
-  carrier: string;
-  trackingNumber: string;
-  packageIds: string[];
+export interface PaymentCaptured {
+  order: OrderRefOrObject;
 }

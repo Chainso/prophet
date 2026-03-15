@@ -11,7 +11,6 @@ from prophet_cli.codegen.rendering import snake_case
 from prophet_cli.targets.java_common.render.support import add_java_imports_for_type
 from prophet_cli.targets.java_common.render.support import enum_target_ids_for_type
 from prophet_cli.targets.java_common.render.support import java_type_for_field
-from prophet_cli.targets.java_common.render.support import object_has_composite_primary_key
 from prophet_cli.targets.java_common.render.support import render_java_record_with_builder
 
 def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> None:
@@ -76,11 +75,6 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
                 )
             else:
                 domain_builder_steps.append(f"            .{prop}(entity.{getter})")
-
-        if obj.get("states"):
-            enum_cls = f"{obj['name']}State"
-            imports.add(f"import {base_package}.generated.domain.{enum_cls};")
-            domain_builder_steps.append("            .state(entity.getState())")
 
         mapper_imports = {
             "import org.springframework.stereotype.Component;",
@@ -245,36 +239,6 @@ def render_jpa_query_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> 
             typed_query_fields.append((filter_record_name, entity_prop, False))
             typed_query_imports.add(f"import {base_package}.generated.api.filters.{filter_record_name};")
             typed_filter_conditions.extend(typed_condition_lines)
-
-        if obj.get("states"):
-            enum_cls = f"{obj['name']}State"
-            state_filter_name = f"{obj['name']}StateFilter"
-            files[
-                f"src/main/java/{package_path}/generated/api/filters/{state_filter_name}.java"
-            ] = render_java_record_with_builder(
-                f"{base_package}.generated.api.filters",
-                {
-                    "import java.util.List;",
-                    f"import {base_package}.generated.domain.{enum_cls};",
-                },
-                state_filter_name,
-                [(enum_cls, "eq", False), (f"List<{enum_cls}>", "in", False)],
-            )
-            typed_query_fields.append((state_filter_name, "state", False))
-            typed_query_imports.add(f"import {base_package}.generated.api.filters.{state_filter_name};")
-            typed_filter_conditions.extend(
-                [
-                    "            if (filter.state() != null) {",
-                    f"                {state_filter_name} stateFilter = filter.state();",
-                    "                if (stateFilter.eq() != null) {",
-                    "                    spec = spec.and((root, query, cb) -> cb.equal(root.get(\"state\"), stateFilter.eq()));",
-                    "                }",
-                    "                if (stateFilter.in() != null && !stateFilter.in().isEmpty()) {",
-                    "                    spec = spec.and((root, query, cb) -> root.get(\"state\").in(stateFilter.in()));",
-                    "                }",
-                    "            }",
-                ]
-            )
 
         typed_query_name = f"{obj['name']}QueryFilter"
         files[

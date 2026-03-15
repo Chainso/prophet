@@ -4,25 +4,30 @@
 
 A Prophet ontology is a domain contract describing:
 - Objects and fields
-- Optional object state models (states and transitions)
+- Optional field-level lifecycle state metadata
 - Action inputs and produced events
-- Actions, signals, and triggers
+- Actions, events, and triggers
 
 Naming model:
 - Technical symbols are the DSL identifiers (`object Order`, `field orderId`).
 - Display labels are optional `name "..."` metadata for human-facing surfaces.
 - Generated wire keys and references stay technical-symbol based.
 
-Event categories in the model:
-- Signals are explicitly defined in DSL (`signal` blocks).
-- Inline action `output { ... }` blocks derive a signal event (`<ActionName> Result`).
-- Actions can also reference existing events via `output signal <SignalName>` and `output transition <Object>.<transition>`.
-- Object transitions are events by definition (derived from object transition definitions).
+Event model:
+- Events are explicitly defined in DSL with `event` blocks.
+- Inline action `output { ... }` blocks derive an event payload named `<ActionName> Result`.
+- Actions can reference existing events via `output event <EventName>`.
+- There is no secondary event subtype.
 
 Event emission behavior in generated action services:
 - The action's produced event is auto-published through generated event publisher wiring.
 - Additional user-returned events are published after the produced event in deterministic order.
-- For transition-producing actions, handlers can use generated transition services/handlers that return transition drafts, then build the final transition event payload.
+
+State model:
+- Lifecycle state is a normal enum field on an object.
+- Mark that field with `state`.
+- Set its initial value with `initial <EnumValue>`.
+- Generated persistence and query code use the declared field name directly.
 
 ## DSL -> IR -> Artifacts
 

@@ -46,6 +46,52 @@ def _object_primary_key_fields(obj: Dict[str, Any]) -> List[Dict[str, Any]]:
     return [by_id[fid] for fid in key_ids if fid in by_id]
 
 
+def _state_field(obj: Dict[str, Any]) -> Dict[str, Any] | None:
+    for field in obj.get("fields", []):
+        if isinstance(field, dict) and bool(field.get("is_state_field")):
+            return field
+    return None
+
+
+def _initial_enum_member_name(
+    field: Dict[str, Any],
+    enum_by_id: Dict[str, Dict[str, Any]],
+) -> str | None:
+    initial_enum_value_id = str(field.get("initial_enum_value_id", ""))
+    if not initial_enum_value_id:
+        return None
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    enum_id = str(type_desc.get("target_enum_id", ""))
+    enum_def = enum_by_id.get(enum_id, {})
+    for value in enum_def.get("values", []):
+        if isinstance(value, dict) and str(value.get("id", "")) == initial_enum_value_id:
+            return str(value.get("name", "")) or None
+    return None
+
+
+def _object_state_field(obj: Dict[str, Any]) -> Dict[str, Any] | None:
+    for field in obj.get("fields", []):
+        if isinstance(field, dict) and bool(field.get("is_state_field", False)):
+            return field
+    return None
+
+
+def _enum_member_name_by_id(
+    enum_by_id: Dict[str, Dict[str, Any]],
+    *,
+    enum_id: str,
+    value_id: str,
+) -> str | None:
+    enum_item = enum_by_id.get(enum_id)
+    if not isinstance(enum_item, dict):
+        return None
+    for value in enum_item.get("values", []):
+        if isinstance(value, dict) and str(value.get("id", "")) == value_id:
+            name = str(value.get("name", "")).strip()
+            return name or None
+    return None
+
+
 def _resolve_custom_base(type_by_id: Dict[str, Dict[str, Any]], type_desc: Dict[str, Any]) -> str:
     current = type_desc
     seen: set[str] = set()
@@ -103,7 +149,10 @@ def _enum_deserialize_expr(
     enum_name = _enum_name_for_type(type_desc, enum_by_id)
     if enum_name is None:
         return value_expr
-    return f"{enum_name}({value_expr}) if {value_expr} is not None and not isinstance({value_expr}, {enum_name}) else {value_expr}"
+    return (
+        f"Domain.{enum_name}({value_expr}) if {value_expr} is not None "
+        f"and not isinstance({value_expr}, Domain.{enum_name}) else {value_expr}"
+    )
 
 
 def _enum_serialize_expr(

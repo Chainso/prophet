@@ -12,6 +12,30 @@ ontology commerce_local {
     constraint min "0.00"
   }
 
+  enum OrderStatus {
+    name "Order Status"
+    id "enum_order_status"
+    description "Lifecycle status for an order."
+
+    value Created {
+      name "Created"
+      id "enumv_order_status_created"
+      description "Initial lifecycle status before review or fulfillment."
+    }
+
+    value Approved {
+      name "Approved"
+      id "enumv_order_status_approved"
+      description "Lifecycle status after approval and before shipping."
+    }
+
+    value Shipped {
+      name "Shipped"
+      id "enumv_order_status_shipped"
+      description "Lifecycle status after shipment is dispatched."
+    }
+  }
+
   object User {
     name "User"
     id "obj_user"
@@ -132,83 +156,13 @@ ontology commerce_local {
       description "Optional identifiers for packages in the shipment."
     }
 
-    state created {
-      name "Created"
-      id "state_order_created"
-      description "Initial lifecycle state before review or fulfillment."
-      initial
-    }
-
-    state approved {
-      name "Approved"
-      id "state_order_approved"
-      description "Lifecycle state after approval and before shipping."
-    }
-
-    state shipped {
-      name "Shipped"
-      id "state_order_shipped"
-      description "Lifecycle state after shipment is dispatched."
-    }
-
-    transition approve {
-      name "Approve"
-      id "trans_order_approve"
-      description "Moves an order from created to approved."
-      from created
-      to approved
-
-      field approvedByUserId {
-        name "Approved By User ID"
-        id "fld_trans_order_approve_approved_by_user_id"
-        type string
-        optional
-        description "Optional approver identifier captured in the transition."
-      }
-
-      field noteCount {
-        name "Note Count"
-        id "fld_trans_order_approve_note_count"
-        type int
-        description "Count of approval notes included with this transition."
-      }
-
-      field approvalReason {
-        name "Approval Reason"
-        id "fld_trans_order_approve_approval_reason"
-        type string
-        optional
-        description "Optional reason text supplied for approval."
-      }
-    }
-
-    transition ship {
-      name "Ship"
-      id "trans_order_ship"
-      description "Moves an order from approved to shipped."
-      from approved
-      to shipped
-
-      field carrier {
-        name "Carrier"
-        id "fld_trans_order_ship_carrier"
-        type string
-        description "Carrier service handling shipment delivery."
-      }
-
-      field trackingNumber {
-        name "Tracking Number"
-        id "fld_trans_order_ship_tracking_number"
-        type string
-        description "Tracking reference assigned for the shipment."
-      }
-
-      field packageIds {
-        name "Package IDs"
-        id "fld_trans_order_ship_package_ids"
-        type string[]
-        description "Package identifiers included in this shipment."
-      }
+    field status {
+      name "Status"
+      id "fld_order_status"
+      type OrderStatus
+      state
+      initial Created
+      description "Current lifecycle status for the order."
     }
   }
 
@@ -370,7 +324,7 @@ ontology commerce_local {
       }
     }
 
-    output transition Order.approve
+    output event OrderApproved
   }
 
   action shipOrder {
@@ -411,10 +365,36 @@ ontology commerce_local {
       }
     }
 
-    output transition Order.ship
+    output event OrderShipped
   }
 
-  signal PaymentCaptured {
+  event OrderApproved {
+    name "Order Approved"
+    id "evt_order_approved"
+    description "Event emitted when an order is approved."
+
+    field order {
+      name "Order"
+      id "fld_evt_order_approved_order"
+      type ref(Order)
+      description "Order that was approved."
+    }
+  }
+
+  event OrderShipped {
+    name "Order Shipped"
+    id "evt_order_shipped"
+    description "Event emitted when an order is shipped."
+
+    field order {
+      name "Order"
+      id "fld_evt_order_shipped_order"
+      type ref(Order)
+      description "Order that was shipped."
+    }
+  }
+
+  event PaymentCaptured {
     name "Payment Captured"
     id "sig_payment_captured"
     description "Event emitted when payment is successfully captured."
@@ -439,7 +419,7 @@ ontology commerce_local {
     name "On Order Approved"
     id "trg_on_order_approved"
     description "Invokes shipping workflow after order approval."
-    when event OrderApproveTransition
+    when event OrderApproved
     invoke shipOrder
   }
 }

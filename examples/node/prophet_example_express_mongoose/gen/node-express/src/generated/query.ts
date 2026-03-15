@@ -2,7 +2,7 @@
 
 import type {
   OrderRef,
-  OrderState,
+  OrderStatus,
   UserRef
 } from './domain.js';
 
@@ -41,15 +41,15 @@ export interface OrderQueryFilter {
     in?: string[];
     contains?: string;
   };
+  status?: {
+    eq?: OrderStatus;
+    in?: OrderStatus[];
+  };
   totalAmount?: {
     eq?: number;
     in?: number[];
     gte?: number;
     lte?: number;
-  };
-  state?: {
-    eq?: OrderState;
-    in?: OrderState[];
   };
 }
 

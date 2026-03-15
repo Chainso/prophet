@@ -9,6 +9,7 @@ from ..support import _object_primary_key_fields
 from ..support import _pascal_case
 from ..support import _pluralize
 from ..support import _resolve_custom_base
+from ..support import _state_field_initial_value
 from ..support import _snake_case
 from ..support import _ts_base_type
 from ..support import _ts_type_for_descriptor
@@ -43,7 +44,7 @@ def _typeorm_column_type_for_descriptor(
     elif kind == "custom":
         base = _resolve_custom_base(type_by_id, type_desc)
     elif kind == "enum":
-        return "enum"
+        return "simple-enum"
     elif kind in {"list", "struct"}:
         return "simple-json"
     elif kind == "object_ref":
@@ -66,6 +67,19 @@ def _typeorm_column_type_for_descriptor(
         "duration": "varchar",
     }
     return mapping.get(base, "varchar")
+
+
+def _typeorm_default_clause(
+    field: Dict[str, Any],
+    *,
+    enum_by_id: Dict[str, Dict[str, Any]],
+) -> str:
+    initial_value = _state_field_initial_value({"fields": [field]}, enum_by_id=enum_by_id)
+    if not initial_value:
+        return ""
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    enum_name = _pascal_case(str(enum_by_id.get(str(type_desc.get("target_enum_id", "")), {}).get("name", "Enum")))
+    return f", default: Domain.{enum_name}.{_pascal_case(initial_value)}"
 
 
 def _render_typeorm_entities(ir: Dict[str, Any]) -> str:
@@ -140,15 +154,16 @@ def _render_typeorm_entities(ir: Dict[str, Any]) -> str:
                 if kind == "enum":
                     enum_name = _pascal_case(str(enum_by_id.get(str(type_desc.get("target_enum_id", "")), {}).get("name", "Enum")))
                     lines.append(
-                        f"  @PrimaryColumn({{ type: 'enum', enum: Domain.{enum_name}, enumName: '{enum_name}', name: '{field_name_raw}' }})"
+                        f"  @PrimaryColumn({{ type: 'simple-enum', enum: Domain.{enum_name}, enumName: '{enum_name}', name: '{field_name_raw}' }})"
                     )
                 else:
                     lines.append(f"  @PrimaryColumn({{ type: '{col_type}', name: '{field_name_raw}' }})")
             else:
                 if kind == "enum":
                     enum_name = _pascal_case(str(enum_by_id.get(str(type_desc.get("target_enum_id", "")), {}).get("name", "Enum")))
+                    default_clause = _typeorm_default_clause(field, enum_by_id=enum_by_id)
                     lines.append(
-                        f"  @Column({{ type: 'enum', enum: Domain.{enum_name}, enumName: '{enum_name}', nullable: {nullable}, name: '{field_name_raw}' }})"
+                        f"  @Column({{ type: 'simple-enum', enum: Domain.{enum_name}, enumName: '{enum_name}', nullable: {nullable}, name: '{field_name_raw}'{default_clause} }})"
                     )
                 else:
                     lines.append(f"  @Column({{ type: '{col_type}', nullable: {nullable}, name: '{field_name_raw}' }})")
@@ -158,51 +173,8 @@ def _render_typeorm_entities(ir: Dict[str, Any]) -> str:
                 lines.append(f"  {field_name}?: {ts_type} | null;")
             lines.append("")
 
-        if obj.get("states"):
-            lines.append("  @Column({ type: 'varchar', nullable: false, name: '__prophet_state' })")
-            lines.append("  state!: string;")
-            lines.append("")
-
         lines.append("}")
         lines.append("")
-
-        if obj.get("states"):
-            history_entity_name = f"{obj_name}StateHistoryEntity"
-            history_table_name = f"{table_name}_state_history"
-            lines.append(f"@Entity('{history_table_name}')")
-            lines.append(f"export class {history_entity_name} {{")
-            lines.append("  @PrimaryGeneratedColumn({ name: 'history_id' })")
-            lines.append("  historyId!: number;")
-            lines.append("")
-            for pk_field in _object_primary_key_fields(obj):
-                pk_name_raw = str(pk_field.get("name", "id"))
-                pk_name = _camel_case(pk_name_raw)
-                pk_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
-                pk_type = _typeorm_column_type_for_descriptor(pk_desc, type_by_id, enum_by_id)
-                pk_ts_type = _ts_scalar_type_for_descriptor(pk_desc, type_by_id, enum_by_id)
-                if str(pk_desc.get("kind", "")) == "enum":
-                    enum_name = _pascal_case(str(enum_by_id.get(str(pk_desc.get("target_enum_id", "")), {}).get("name", "Enum")))
-                    lines.append(
-                        f"  @Column({{ type: 'enum', enum: Domain.{enum_name}, enumName: '{enum_name}', nullable: false, name: '{pk_name_raw}' }})"
-                    )
-                else:
-                    lines.append(f"  @Column({{ type: '{pk_type}', nullable: false, name: '{pk_name_raw}' }})")
-                lines.append(f"  {pk_name}!: {pk_ts_type};")
-                lines.append("")
-            lines.append("  @Column({ type: 'varchar', nullable: false, name: 'transition_id' })")
-            lines.append("  transitionId!: string;")
-            lines.append("")
-            lines.append("  @Column({ type: 'varchar', nullable: false, name: 'from_state' })")
-            lines.append("  fromState!: string;")
-            lines.append("")
-            lines.append("  @Column({ type: 'varchar', nullable: false, name: 'to_state' })")
-            lines.append("  toState!: string;")
-            lines.append("")
-            lines.append("  @Column({ type: 'datetime', nullable: false, name: 'occurred_at', default: () => 'CURRENT_TIMESTAMP' })")
-            lines.append("  occurredAt!: Date;")
-            lines.append("")
-            lines.append("}")
-            lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"
 
@@ -220,11 +192,6 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
                 f"{_pascal_case(str(item.get('name', 'Object')))}Entity"
                 for item in ir.get("objects", [])
                 if isinstance(item, dict)
-            },
-            *{
-                f"{_pascal_case(str(item.get('name', 'Object')))}StateHistoryEntity"
-                for item in ir.get("objects", [])
-                if isinstance(item, dict) and item.get("states")
             },
         }
     )
@@ -310,8 +277,6 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
                 lines.append(f"    {prop_name}: entity.{prop_name},")
             else:
                 lines.append(f"    {prop_name}: entity.{prop_name} ?? undefined,")
-        if obj.get("states"):
-            lines.append("    state: entity.state,")
         lines.append("  };")
         lines.append("}")
         lines.append("")
@@ -337,8 +302,6 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
                         lines.append(f"  entity.{fk_prop} = item.{prop_name}?.{target_prop} ?? null;")
                 continue
             lines.append(f"  entity.{prop_name} = item.{prop_name}{'' if required else ' ?? null'};")
-        if obj.get("states"):
-            lines.append("  entity.state = item.state;")
         lines.append("  return entity;")
         lines.append("}")
         lines.append("")
@@ -372,17 +335,6 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
             filter_name = _camel_case(str(filter_item.get("field_name", "field")))
             operators = [str(op) for op in filter_item.get("operators", []) if isinstance(op, str)]
             lines.append(f"  const {filter_name}Filter = filter.{filter_name};")
-
-            if field_id == "__state__":
-                if "eq" in operators:
-                    lines.append(
-                        f"  if ({filter_name}Filter?.eq !== undefined) qb.andWhere('record.__prophet_state = :{filter_name}_eq', {{ {filter_name}_eq: {filter_name}Filter.eq }});"
-                    )
-                if "in" in operators:
-                    lines.append(
-                        f"  if ({filter_name}Filter?.in?.length) qb.andWhere('record.__prophet_state IN (:...{filter_name}_in)', {{ {filter_name}_in: {filter_name}Filter.in }});"
-                    )
-                continue
 
             field = fields_by_id.get(field_id, {})
             if not field:
@@ -460,13 +412,9 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
 
         lines.append(f"class {obj_name}TypeOrmRepository implements Persistence.{obj_name}Repository {{")
         lines.append(f"  private readonly repo: Repository<{entity_name}>;")
-        if obj.get("states"):
-            lines.append(f"  private readonly historyRepo: Repository<{obj_name}StateHistoryEntity>;")
         lines.append("")
         lines.append("  constructor(private readonly dataSource: DataSource) {")
         lines.append(f"    this.repo = dataSource.getRepository({entity_name});")
-        if obj.get("states"):
-            lines.append(f"    this.historyRepo = dataSource.getRepository({obj_name}StateHistoryEntity);")
         lines.append("  }")
         lines.append("")
         lines.append(f"  async list(page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
@@ -510,37 +458,6 @@ def _render_typeorm_adapter(ir: Dict[str, Any]) -> str:
         lines.append("    const saved = await this.repo.save(entity as any);")
         lines.append(f"    return {repo_var}EntityToDomain(saved);")
         lines.append("  }")
-        if obj.get("states"):
-            lines.append("")
-            lines.append("  async applyTransition(")
-            lines.append(f"    id: Persistence.{obj_name}Id,")
-            lines.append(f"    expectedState: Domain.{obj_name}State,")
-            lines.append(f"    nextState: Domain.{obj_name}State,")
-            lines.append("    transitionId: string,")
-            lines.append(f"  ): Promise<Domain.{obj_name} | null> {{")
-            lines.append(f"    const primaryWhere = {repo_var}PrimaryWhere(id);")
-            lines.append("    const transitionResult = await this.repo")
-            lines.append("      .createQueryBuilder()")
-            lines.append(f"      .update({entity_name})")
-            lines.append("      .set({ state: nextState as string } as any)")
-            lines.append("      .where({ ...primaryWhere, state: expectedState } as any)")
-            lines.append("      .execute();")
-            lines.append("    if (Number(transitionResult.affected ?? 0) < 1) {")
-            lines.append("      return null;")
-            lines.append("    }")
-            lines.append("    const updated = await this.repo.findOneBy(primaryWhere as any);")
-            lines.append("    if (!updated) {")
-            lines.append("      return null;")
-            lines.append("    }")
-            lines.append("    const history = this.historyRepo.create({")
-            lines.append("      ...primaryWhere,")
-            lines.append("      transitionId,")
-            lines.append("      fromState: expectedState,")
-            lines.append("      toState: nextState,")
-            lines.append("    } as any);")
-            lines.append("    await this.historyRepo.save(history as any);")
-            lines.append(f"    return {repo_var}EntityToDomain(updated);")
-            lines.append("  }")
         lines.append("}")
         lines.append("")
 

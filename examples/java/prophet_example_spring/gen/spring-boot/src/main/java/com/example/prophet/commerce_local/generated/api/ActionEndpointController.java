@@ -8,8 +8,8 @@ import com.example.prophet.commerce_local.generated.actions.services.ApproveOrde
 import com.example.prophet.commerce_local.generated.actions.services.CreateOrderActionService;
 import com.example.prophet.commerce_local.generated.actions.services.ShipOrderActionService;
 import com.example.prophet.commerce_local.generated.events.CreateOrderResult;
-import com.example.prophet.commerce_local.generated.events.OrderApproveTransition;
-import com.example.prophet.commerce_local.generated.events.OrderShipTransition;
+import com.example.prophet.commerce_local.generated.events.OrderApproved;
+import com.example.prophet.commerce_local.generated.events.OrderShipped;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,7 +42,7 @@ public class ActionEndpointController {
      * Approves an existing order.
      */
     @PostMapping("/approveOrder")
-    public ResponseEntity<OrderApproveTransition> approveOrder(@Valid @RequestBody ApproveOrderCommand request) {
+    public ResponseEntity<OrderApproved> approveOrder(@Valid @RequestBody ApproveOrderCommand request) {
         try {
             return ResponseEntity.ok(approveOrderService.execute(request));
         } catch (UnsupportedOperationException ex) {
@@ -66,7 +66,7 @@ public class ActionEndpointController {
      * Ships an approved order.
      */
     @PostMapping("/shipOrder")
-    public ResponseEntity<OrderShipTransition> shipOrder(@Valid @RequestBody ShipOrderCommand request) {
+    public ResponseEntity<OrderShipped> shipOrder(@Valid @RequestBody ShipOrderCommand request) {
         try {
             return ResponseEntity.ok(shipOrderService.execute(request));
         } catch (UnsupportedOperationException ex) {

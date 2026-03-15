@@ -76,14 +76,14 @@ function orderWhere(filter: Filters.OrderQueryFilter | undefined): any {
   if (shippingTrackingNumberFilter?.eq !== undefined) and.push({ shipping_tracking_number: shippingTrackingNumberFilter.eq });
   if (shippingTrackingNumberFilter?.in?.length) and.push({ shipping_tracking_number: { in: shippingTrackingNumberFilter.in } });
   if (typeof shippingTrackingNumberFilter?.contains === 'string' && shippingTrackingNumberFilter.contains.length > 0) and.push({ shipping_tracking_number: { contains: shippingTrackingNumberFilter.contains } });
+  const statusFilter = filter.status;
+  if (statusFilter?.eq !== undefined) and.push({ status: statusFilter.eq });
+  if (statusFilter?.in?.length) and.push({ status: { in: statusFilter.in } });
   const totalAmountFilter = filter.totalAmount;
   if (totalAmountFilter?.eq !== undefined) and.push({ total_amount: totalAmountFilter.eq });
   if (totalAmountFilter?.in?.length) and.push({ total_amount: { in: totalAmountFilter.in } });
   if (totalAmountFilter?.gte !== undefined) and.push({ total_amount: { gte: totalAmountFilter.gte } });
   if (totalAmountFilter?.lte !== undefined) and.push({ total_amount: { lte: totalAmountFilter.lte } });
-  const stateFilter = filter.state;
-  if (stateFilter?.eq !== undefined) and.push({ state: stateFilter.eq });
-  if (stateFilter?.in?.length) and.push({ state: { in: stateFilter.in } });
   if (and.length === 0) return {};
   return { AND: and };
 }
@@ -120,7 +120,7 @@ function orderRowToDomain(row: any): Domain.Order {
     shippingCarrier: row.shipping_carrier ?? undefined,
     shippingTrackingNumber: row.shipping_tracking_number ?? undefined,
     shippingPackageIds: parseJsonValue(row.shipping_package_ids) as any,
-    state: row.state,
+    status: row.status,
   };
 }
 
@@ -138,7 +138,7 @@ function orderDomainToRow(item: Domain.Order): any {
     shipping_carrier: item.shippingCarrier ?? null,
     shipping_tracking_number: item.shippingTrackingNumber ?? null,
     shipping_package_ids: item.shippingPackageIds === undefined ? null : JSON.stringify(item.shippingPackageIds),
-    state: item.state,
+    status: item.status,
   };
 }
 
@@ -202,39 +202,6 @@ class OrderPrismaRepository implements Persistence.OrderRepository {
     const payload = orderDomainToRow(item);
     const persisted = await this.delegate.upsert({ where: orderUniqueWhere(orderIdFromDomain(item)), create: payload, update: payload });
     return orderRowToDomain(persisted);
-  }
-
-  async applyTransition(
-    id: Persistence.OrderId,
-    expectedState: Domain.OrderState,
-    nextState: Domain.OrderState,
-    transitionId: string,
-  ): Promise<Domain.Order | null> {
-    const primaryWhere = orderPrimaryWhere(id);
-    const persisted = await this.client.$transaction(async (tx) => {
-      const objDelegate = (tx as any).order;
-      const updateResult = await objDelegate.updateMany({
-        where: { ...primaryWhere, state: expectedState },
-        data: { state: nextState },
-      });
-      if (!updateResult || Number(updateResult.count ?? 0) < 1) {
-        return null;
-      }
-      const updated = await objDelegate.findUnique({ where: orderUniqueWhere(id) });
-      if (!updated) {
-        return null;
-      }
-      await (tx as any).orderStateHistory.create({
-        data: {
-          ...primaryWhere,
-          transition_id: transitionId,
-          from_state: expectedState,
-          to_state: nextState,
-        },
-      });
-      return updated;
-    });
-    return persisted ? orderRowToDomain(persisted) : null;
   }
 }
 

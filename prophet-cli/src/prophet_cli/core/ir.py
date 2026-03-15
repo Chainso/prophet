@@ -10,15 +10,6 @@ from .models import Ontology
 from .parser import resolve_type_descriptor
 
 
-def _pascal_case(value: str) -> str:
-    chunks = [part for part in value.replace("-", "_").split("_") if part]
-    return "".join(chunk[:1].upper() + chunk[1:] for chunk in chunks)
-
-
-def transition_event_name(object_name: str, transition_name: str) -> str:
-    return f"{object_name}{_pascal_case(transition_name)}Transition"
-
-
 def _effective_object_key_field_names(
     field_names_in_order: List[str],
     key_declarations: List[Any],
@@ -65,6 +56,10 @@ def build_ir(
     struct_name_to_id = {s.name: s.id for s in ont.structs}
     action_input_name_to_id = {s.name: s.id for s in ont.action_inputs}
     action_name_to_id = {a.name: a.id for a in ont.actions}
+    enum_values_by_enum_id = {
+        enum.id: {value.name: value.id for value in enum.values}
+        for enum in ont.enums
+    }
 
     def sorted_by_id(items: List[Any]) -> List[Any]:
         return sorted(items, key=lambda x: x.id)
@@ -133,34 +128,16 @@ def build_ir(
             }
             if f.key:
                 f_entry["key"] = f.key
+            if f.is_state_field:
+                f_entry["is_state_field"] = True
+                enum_id = str(resolved_type.get("target_enum_id", ""))
+                if f.initial_enum_value is not None and enum_id in enum_values_by_enum_id:
+                    initial_value_id = enum_values_by_enum_id[enum_id].get(f.initial_enum_value)
+                    if initial_value_id is not None:
+                        f_entry["initial_enum_value_id"] = initial_value_id
             if f.description:
                 f_entry["description"] = f.description
             obj_fields.append(f_entry)
-
-        state_name_to_id = {s.name: s.id for s in o.states}
-        obj_states = []
-        for s in o.states:
-            state_entry = {
-                "id": s.id,
-                "name": s.name,
-                "display_name": _resolved_display_name(s.name, s.display_name),
-                "initial": s.initial,
-            }
-            if s.description:
-                state_entry["description"] = s.description
-            obj_states.append(state_entry)
-        obj_transitions = []
-        for t in o.transitions:
-            transition_entry = {
-                "id": t.id,
-                "name": t.name,
-                "display_name": _resolved_display_name(t.name, t.display_name),
-                "from_state_id": state_name_to_id[t.from_state],
-                "to_state_id": state_name_to_id[t.to_state],
-            }
-            if t.description:
-                transition_entry["description"] = t.description
-            obj_transitions.append(transition_entry)
 
         obj_entry = {
             "id": o.id,
@@ -171,8 +148,6 @@ def build_ir(
                 "primary": {"field_ids": [field_id_by_name[name] for name in primary_key_field_names if name in field_id_by_name]},
                 "display": {"field_ids": [field_id_by_name[name] for name in display_key_field_names if name in field_id_by_name]},
             },
-            "states": obj_states,
-            "transitions": obj_transitions,
         }
         if o.description:
             obj_entry["description"] = o.description
@@ -232,8 +207,6 @@ def build_ir(
             action_input_entry["description"] = shape.description
         action_inputs.append(action_input_entry)
 
-    obj_name_to_states = {o.name: {s.name: s.id for s in o.states} for o in ont.objects}
-
     event_name_to_id: Dict[str, str] = {}
     events = []
     for e in sorted_by_id(ont.events):
@@ -241,16 +214,15 @@ def build_ir(
             "id": e.id,
             "name": e.name,
             "display_name": _resolved_display_name(e.name, e.display_name),
-            "kind": "signal",
             "fields": [],
         }
         if e.description:
             entry["description"] = e.description
-        signal_fields = []
+        event_fields = []
         for f in e.fields:
             resolved_type = resolve_field_type(f, type_name_to_id, enum_name_to_id, object_name_to_id, struct_name_to_id)
             max_cardinality = "many" if resolved_type.get("kind") == "list" else 1
-            signal_field_entry = {
+            event_field_entry = {
                 "id": f.id,
                 "name": f.name,
                 "display_name": _resolved_display_name(f.name, f.display_name),
@@ -258,87 +230,11 @@ def build_ir(
                 "cardinality": {"min": 1 if f.required else 0, "max": max_cardinality},
             }
             if f.description:
-                signal_field_entry["description"] = f.description
-            signal_fields.append(signal_field_entry)
-        entry["fields"] = signal_fields
+                event_field_entry["description"] = f.description
+            event_fields.append(event_field_entry)
+        entry["fields"] = event_fields
         events.append(entry)
         event_name_to_id[e.name] = e.id
-
-    def primary_key_fields_for_object(obj: Any) -> List[FieldDef]:
-        field_names = [f.name for f in obj.fields]
-        field_level_keys: Dict[str, List[str]] = {}
-        for fld in obj.fields:
-            if fld.key:
-                field_level_keys.setdefault(fld.key, []).append(fld.name)
-        primary_key_names = _effective_object_key_field_names(field_names, obj.keys, field_level_keys, "primary")
-        field_by_name = {fld.name: fld for fld in obj.fields}
-        return [field_by_name[name] for name in primary_key_names if name in field_by_name]
-
-    for obj in sorted_by_id(ont.objects):
-        primary_key_fields = primary_key_fields_for_object(obj)
-        for tr in sorted(obj.transitions, key=lambda x: x.id):
-            transition_name = transition_event_name(obj.name, tr.name)
-            transition_fields = []
-            for pk_field in primary_key_fields:
-                resolved_type = resolve_field_type(pk_field, type_name_to_id, enum_name_to_id, object_name_to_id, struct_name_to_id)
-                transition_fields.append(
-                    {
-                        "id": f"{tr.id}__pk__{pk_field.id}",
-                        "name": pk_field.name,
-                        "type": resolved_type,
-                        "cardinality": {"min": 1, "max": 1},
-                    }
-                )
-            transition_fields.extend(
-                [
-                    {
-                        "id": f"{tr.id}__from_state",
-                        "name": "fromState",
-                        "type": {"kind": "base", "name": "string"},
-                        "cardinality": {"min": 1, "max": 1},
-                    },
-                    {
-                        "id": f"{tr.id}__to_state",
-                        "name": "toState",
-                        "type": {"kind": "base", "name": "string"},
-                        "cardinality": {"min": 1, "max": 1},
-                    },
-                ]
-            )
-            for transition_field in tr.fields:
-                resolved_type = resolve_field_type(
-                    transition_field,
-                    type_name_to_id,
-                    enum_name_to_id,
-                    object_name_to_id,
-                    struct_name_to_id,
-                )
-                max_cardinality = "many" if resolved_type.get("kind") == "list" else 1
-                transition_field_entry = {
-                    "id": transition_field.id,
-                    "name": transition_field.name,
-                    "display_name": _resolved_display_name(transition_field.name, transition_field.display_name),
-                    "type": resolved_type,
-                    "cardinality": {"min": 1 if transition_field.required else 0, "max": max_cardinality},
-                }
-                if transition_field.description:
-                    transition_field_entry["description"] = transition_field.description
-                transition_fields.append(transition_field_entry)
-            transition_entry = {
-                "id": tr.id,
-                "name": transition_name,
-                "display_name": _resolved_display_name(tr.name, tr.display_name),
-                "kind": "transition",
-                "fields": transition_fields,
-                "object_id": object_name_to_id[obj.name],
-                "transition_id": tr.id,
-                "from_state_id": obj_name_to_states[obj.name][tr.from_state],
-                "to_state_id": obj_name_to_states[obj.name][tr.to_state],
-            }
-            if tr.description:
-                transition_entry["description"] = tr.description
-            events.append(transition_entry)
-            event_name_to_id[transition_name] = tr.id
 
     actions = []
     for a in sorted_by_id(ont.actions):

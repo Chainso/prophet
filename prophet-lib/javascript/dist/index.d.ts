@@ -28,11 +28,3 @@ export declare class NoOpEventPublisher implements EventPublisher {
   publish(envelope: EventWireEnvelope): Promise<void>;
   publishBatch(envelopes: EventWireEnvelope[]): Promise<void>;
 }
-
-export declare class TransitionValidationResult {
-  passesValidation: boolean;
-  failureReason?: string;
-  constructor(passesValidation: boolean, failureReason?: string);
-  static passed(): TransitionValidationResult;
-  static failed(failureReason: string): TransitionValidationResult;
-}

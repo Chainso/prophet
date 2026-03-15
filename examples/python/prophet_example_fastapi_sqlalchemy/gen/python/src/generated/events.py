@@ -38,21 +38,21 @@ class CreateOrderResultDomainEvent:
     payload: EventContracts.CreateOrderResult
 
 @dataclass(kw_only=True)
+class OrderApprovedDomainEvent:
+    type: Literal['OrderApproved'] = 'OrderApproved'
+    payload: EventContracts.OrderApproved
+
+@dataclass(kw_only=True)
+class OrderShippedDomainEvent:
+    type: Literal['OrderShipped'] = 'OrderShipped'
+    payload: EventContracts.OrderShipped
+
+@dataclass(kw_only=True)
 class PaymentCapturedDomainEvent:
     type: Literal['PaymentCaptured'] = 'PaymentCaptured'
     payload: EventContracts.PaymentCaptured
 
-@dataclass(kw_only=True)
-class OrderApproveTransitionDomainEvent:
-    type: Literal['OrderApproveTransition'] = 'OrderApproveTransition'
-    payload: EventContracts.OrderApproveTransition
-
-@dataclass(kw_only=True)
-class OrderShipTransitionDomainEvent:
-    type: Literal['OrderShipTransition'] = 'OrderShipTransition'
-    payload: EventContracts.OrderShipTransition
-
-DomainEvent = Union[CreateOrderResultDomainEvent, PaymentCapturedDomainEvent, OrderApproveTransitionDomainEvent, OrderShipTransitionDomainEvent]
+DomainEvent = Union[CreateOrderResultDomainEvent, OrderApprovedDomainEvent, OrderShippedDomainEvent, PaymentCapturedDomainEvent]
 
 @dataclass(frozen=True)
 class _RefPathBinding:
@@ -74,14 +74,14 @@ def to_action_outcome(value: ActionOutcomeValue[TOutput]) -> ActionOutcome[TOutp
 def create_create_order_result_event(payload: EventContracts.CreateOrderResult) -> CreateOrderResultDomainEvent:
     return CreateOrderResultDomainEvent(payload=payload)
 
+def create_order_approved_event(payload: EventContracts.OrderApproved) -> OrderApprovedDomainEvent:
+    return OrderApprovedDomainEvent(payload=payload)
+
+def create_order_shipped_event(payload: EventContracts.OrderShipped) -> OrderShippedDomainEvent:
+    return OrderShippedDomainEvent(payload=payload)
+
 def create_payment_captured_event(payload: EventContracts.PaymentCaptured) -> PaymentCapturedDomainEvent:
     return PaymentCapturedDomainEvent(payload=payload)
-
-def create_order_approve_transition_event(payload: EventContracts.OrderApproveTransition) -> OrderApproveTransitionDomainEvent:
-    return OrderApproveTransitionDomainEvent(payload=payload)
-
-def create_order_ship_transition_event(payload: EventContracts.OrderShipTransition) -> OrderShipTransitionDomainEvent:
-    return OrderShipTransitionDomainEvent(payload=payload)
 
 def _serialize_payload(payload: object) -> dict[str, object]:
     def _normalize(value: object) -> object:
@@ -159,14 +159,18 @@ def _to_event_wire_envelope(event: DomainEvent, metadata: EventPublishMetadata) 
         ref_bindings = [
             _RefPathBinding(object_type='Order', path=['order'], primary_keys=['orderId']),
         ]
+    elif isinstance(event, OrderApprovedDomainEvent):
+        ref_bindings = [
+            _RefPathBinding(object_type='Order', path=['order'], primary_keys=['orderId']),
+        ]
+    elif isinstance(event, OrderShippedDomainEvent):
+        ref_bindings = [
+            _RefPathBinding(object_type='Order', path=['order'], primary_keys=['orderId']),
+        ]
     elif isinstance(event, PaymentCapturedDomainEvent):
         ref_bindings = [
             _RefPathBinding(object_type='Order', path=['order'], primary_keys=['orderId']),
         ]
-    elif isinstance(event, OrderApproveTransitionDomainEvent):
-        ref_bindings = []
-    elif isinstance(event, OrderShipTransitionDomainEvent):
-        ref_bindings = []
     payload = _serialize_payload(_clone_json_like(getattr(event, 'payload', {})))
     updated_objects = _normalize_payload_refs(payload, ref_bindings)
     return EventWireEnvelope(

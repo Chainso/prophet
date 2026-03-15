@@ -20,7 +20,6 @@ With `generation.targets` containing `python`:
 - `gen/python/src/generated/actions.py`
 - `gen/python/src/generated/event_contracts.py`
 - `gen/python/src/generated/events.py`
-- `gen/python/src/generated/transitions.py`
 - `gen/python/src/generated/query.py`
 - `gen/python/src/generated/persistence.py`
 - `gen/python/src/generated/action_handlers.py`
@@ -44,15 +43,15 @@ Prophet inspects Python project signals and writes:
 
 - `gen/manifest/python-autodetect.json`
 
-Signals include:
+Autodetect inputs include:
 
 - `pyproject.toml` dependencies
 - `requirements*.txt`
-- `manage.py` (Django signal)
+- `manage.py` (Django project indicator)
 - lockfile hints (`poetry.lock`, `uv.lock`, `Pipfile.lock`)
 
 When stack config is not explicit, Prophet can auto-select one of the five Python stacks above.
-Autodetection fails closed for ambiguous framework signals or missing ORM signals.
+Autodetection fails closed for ambiguous framework indicators or missing ORM indicators.
 
 ## Action and Event Behavior
 
@@ -62,12 +61,9 @@ Autodetection fails closed for ambiguous framework signals or missing ORM signal
 - For produced events emitted through generated action services, wire payloads normalize embedded objects back to refs and emit extracted snapshots in `updated_objects`.
 - `EventPublisherNoOp` is provided for zero-config local wiring.
 - Handlers can return either the produced event payload directly or `ActionOutcome` with additional domain events.
-- Produced transition events are auto-published by generated action services the same way as produced signals.
 - Default action handler implementations raise `NotImplementedError` until replaced by user code.
-- Stateful objects generate transition helpers in `transitions.py`:
-  - `<ObjectName>TransitionHandler` and `<ObjectName>TransitionService`
-  - `<ObjectName>TransitionValidator` and `<ObjectName>TransitionValidatorDefault`
-  - transition drafts seeded with primary keys plus `fromState` and `toState`
+- Generated actions publish their declared produced event.
+- Stateful objects use the declared enum field directly; no transition helpers are generated.
 
 ## Query Behavior
 

@@ -17,23 +17,11 @@ class OrderModel(models.Model):
     shippingCarrier = models.CharField(max_length=255, null=True, blank=True)
     shippingTrackingNumber = models.CharField(max_length=255, null=True, blank=True)
     shippingPackageIds = models.JSONField(null=True, blank=True)
-    state = models.CharField(max_length=64, default='created', db_column='__prophet_state')
+    status = models.CharField(max_length=255, null=False, blank=False, default='Created', choices=[(item.value, item.value) for item in Domain.OrderStatus])
 
     class Meta:
         app_label = 'generated'
         db_table = 'orders'
-
-class OrderStateHistoryModel(models.Model):
-    historyId = models.BigAutoField(primary_key=True, db_column='history_id')
-    orderId = models.CharField(max_length=255, null=False, blank=False)
-    transitionId = models.CharField(max_length=255, db_column='transition_id')
-    fromState = models.CharField(max_length=255, db_column='from_state')
-    toState = models.CharField(max_length=255, db_column='to_state')
-    occurredAt = models.DateTimeField(auto_now_add=True, db_column='occurred_at')
-
-    class Meta:
-        app_label = 'generated'
-        db_table = 'orders_state_history'
 
 class UserModel(models.Model):
     userId = models.CharField(max_length=255, null=False, blank=False, primary_key=True)

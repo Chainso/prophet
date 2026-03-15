@@ -16,10 +16,10 @@ export interface OrderDocument extends Record<string, unknown> {
   shippingCarrier?: string;
   shippingTrackingNumber?: string;
   shippingPackageIds?: string[];
-  state: Domain.OrderState;
+  status: Domain.OrderStatus;
 }
 
-const OrderSchema = new Schema<OrderDocument>({
+const OrderSchema = new Schema({
   orderId: { type: String, required: true },
   customer: { type: Schema.Types.Mixed, required: true },
   totalAmount: { type: Number, required: true },
@@ -32,35 +32,17 @@ const OrderSchema = new Schema<OrderDocument>({
   shippingCarrier: { type: String, required: false },
   shippingTrackingNumber: { type: String, required: false },
   shippingPackageIds: { type: [String], required: false },
-  __prophet_state: { type: String, required: true, default: 'created' },
+  status: { type: String, enum: Object.values(Domain.OrderStatus), required: true, default: 'Created' },
 }, { collection: 'orders', strict: false });
 OrderSchema.index({ orderId: 1 }, { unique: true });
 export const OrderModel: Model<OrderDocument> = model<OrderDocument>('Order', OrderSchema);
-
-export interface OrderStateHistoryDocument extends Record<string, unknown> {
-  orderId: string;
-  transitionId: string;
-  fromState: string;
-  toState: string;
-  occurredAt?: string;
-}
-
-const OrderStateHistorySchema = new Schema<OrderStateHistoryDocument>({
-  orderId: { type: String, required: true },
-  transitionId: { type: String, required: true },
-  fromState: { type: String, required: true },
-  toState: { type: String, required: true },
-  occurredAt: { type: String, required: true, default: () => new Date().toISOString() },
-}, { collection: 'orders_state_history', strict: false });
-OrderStateHistorySchema.index({ orderId: 1 });
-export const OrderStateHistoryModel: Model<OrderStateHistoryDocument> = model<OrderStateHistoryDocument>('OrderStateHistory', OrderStateHistorySchema);
 
 export interface UserDocument extends Record<string, unknown> {
   userId: string;
   email: string;
 }
 
-const UserSchema = new Schema<UserDocument>({
+const UserSchema = new Schema({
   userId: { type: String, required: true },
   email: { type: String, required: true },
 }, { collection: 'users', strict: false });

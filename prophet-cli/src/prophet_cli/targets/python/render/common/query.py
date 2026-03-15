@@ -37,18 +37,15 @@ def render_query_contracts(ir: Dict[str, Any]) -> str:
             class_name = f"{obj_name}{filter_name}Filter"
             field_id = str(filter_def.get("field_id", ""))
             operators = [str(item) for item in filter_def.get("operators", [])]
-            if field_id == "__state__":
-                field_type = "str"
-            else:
-                field = by_field.get(field_id, {})
-                type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
-                field_type = _py_type_for_descriptor(
-                    type_desc,
-                    type_by_id=type_by_id,
-                    object_by_id=object_by_id,
-                    struct_by_id=struct_by_id,
-                    enum_by_id=enum_by_id,
-                )
+            field = by_field.get(field_id, {})
+            type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            field_type = _py_type_for_descriptor(
+                type_desc,
+                type_by_id=type_by_id,
+                object_by_id=object_by_id,
+                struct_by_id=struct_by_id,
+                enum_by_id=enum_by_id,
+            )
 
             lines.append("@dataclass(kw_only=True)")
             lines.append(f"class {class_name}:")

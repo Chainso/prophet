@@ -5,9 +5,9 @@ import { createEventId, nowIso, NoOpEventPublisher, type EventPublisher, type Ev
 
 export type DomainEvent =
   | { type: 'CreateOrderResult'; payload: EventContracts.CreateOrderResult }
+  | { type: 'OrderApproved'; payload: EventContracts.OrderApproved }
+  | { type: 'OrderShipped'; payload: EventContracts.OrderShipped }
   | { type: 'PaymentCaptured'; payload: EventContracts.PaymentCaptured }
-  | { type: 'OrderApproveTransition'; payload: EventContracts.OrderApproveTransition }
-  | { type: 'OrderShipTransition'; payload: EventContracts.OrderShipTransition }
 
 interface RefPathBinding {
   objectType: string;
@@ -130,16 +130,16 @@ export function createCreateOrderResultEvent(payload: EventContracts.CreateOrder
   return { type: 'CreateOrderResult', payload };
 }
 
+export function createOrderApprovedEvent(payload: EventContracts.OrderApproved): DomainEvent {
+  return { type: 'OrderApproved', payload };
+}
+
+export function createOrderShippedEvent(payload: EventContracts.OrderShipped): DomainEvent {
+  return { type: 'OrderShipped', payload };
+}
+
 export function createPaymentCapturedEvent(payload: EventContracts.PaymentCaptured): DomainEvent {
   return { type: 'PaymentCaptured', payload };
-}
-
-export function createOrderApproveTransitionEvent(payload: EventContracts.OrderApproveTransition): DomainEvent {
-  return { type: 'OrderApproveTransition', payload };
-}
-
-export function createOrderShipTransitionEvent(payload: EventContracts.OrderShipTransition): DomainEvent {
-  return { type: 'OrderShipTransition', payload };
 }
 
 function toEventWireEnvelope(event: DomainEvent, metadata: EventPublishMetadata): EventWireEnvelope {
@@ -161,6 +161,40 @@ function toEventWireEnvelope(event: DomainEvent, metadata: EventPublishMetadata)
         updated_objects: updatedObjects.length ? updatedObjects : undefined,
       };
     }
+    case 'OrderApproved': {
+      const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
+      const updatedObjects = normalizePayloadRefs(payload, [
+          { objectType: 'Order', path: ['order'], primaryKeys: ['orderId'] },
+        ]);
+      return {
+        event_id: createEventId(),
+        trace_id: metadata.traceId,
+        event_type: 'OrderApproved',
+        schema_version: '2.0.0',
+        occurred_at: nowIso(),
+        source: metadata.source,
+        payload,
+        attributes: metadata.attributes,
+        updated_objects: updatedObjects.length ? updatedObjects : undefined,
+      };
+    }
+    case 'OrderShipped': {
+      const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
+      const updatedObjects = normalizePayloadRefs(payload, [
+          { objectType: 'Order', path: ['order'], primaryKeys: ['orderId'] },
+        ]);
+      return {
+        event_id: createEventId(),
+        trace_id: metadata.traceId,
+        event_type: 'OrderShipped',
+        schema_version: '2.0.0',
+        occurred_at: nowIso(),
+        source: metadata.source,
+        payload,
+        attributes: metadata.attributes,
+        updated_objects: updatedObjects.length ? updatedObjects : undefined,
+      };
+    }
     case 'PaymentCaptured': {
       const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
       const updatedObjects = normalizePayloadRefs(payload, [
@@ -170,36 +204,6 @@ function toEventWireEnvelope(event: DomainEvent, metadata: EventPublishMetadata)
         event_id: createEventId(),
         trace_id: metadata.traceId,
         event_type: 'PaymentCaptured',
-        schema_version: '2.0.0',
-        occurred_at: nowIso(),
-        source: metadata.source,
-        payload,
-        attributes: metadata.attributes,
-        updated_objects: updatedObjects.length ? updatedObjects : undefined,
-      };
-    }
-    case 'OrderApproveTransition': {
-      const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
-      const updatedObjects = normalizePayloadRefs(payload, []);
-      return {
-        event_id: createEventId(),
-        trace_id: metadata.traceId,
-        event_type: 'OrderApproveTransition',
-        schema_version: '2.0.0',
-        occurred_at: nowIso(),
-        source: metadata.source,
-        payload,
-        attributes: metadata.attributes,
-        updated_objects: updatedObjects.length ? updatedObjects : undefined,
-      };
-    }
-    case 'OrderShipTransition': {
-      const payload = cloneJsonLike(event.payload) as Record<string, unknown>;
-      const updatedObjects = normalizePayloadRefs(payload, []);
-      return {
-        event_id: createEventId(),
-        trace_id: metadata.traceId,
-        event_type: 'OrderShipTransition',
         schema_version: '2.0.0',
         occurred_at: nowIso(),
         source: metadata.source,

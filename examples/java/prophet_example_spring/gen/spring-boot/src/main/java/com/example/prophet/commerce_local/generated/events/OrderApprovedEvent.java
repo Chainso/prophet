@@ -4,5 +4,5 @@ import javax.annotation.processing.Generated;
 
 
 @Generated("prophet-cli")
-public record OrderShipTransitionEvent(OrderShipTransition payload) implements DomainEvent {
+public record OrderApprovedEvent(OrderApproved payload) implements DomainEvent {
 }

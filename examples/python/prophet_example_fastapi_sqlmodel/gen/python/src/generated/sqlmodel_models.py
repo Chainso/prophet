@@ -22,16 +22,7 @@ class OrderModel(SQLModel, table=True):
     shippingCarrier: Optional[str] = Field(default=None, primary_key=False)
     shippingTrackingNumber: Optional[str] = Field(default=None, primary_key=False)
     shippingPackageIds: Optional[list] = Field(default=None, sa_column=Column(JSON, nullable=True, primary_key=False))
-    state: str = Field(default='created', sa_column=Column('__prophet_state', String, nullable=False))
-
-class OrderStateHistoryModel(SQLModel, table=True):
-    __tablename__ = 'orders_state_history'
-    historyId: Optional[int] = Field(default=None, sa_column=Column('history_id', Integer, primary_key=True, autoincrement=True))
-    orderId: str = Field(nullable=False)
-    transitionId: str = Field(sa_column=Column('transition_id', String, nullable=False))
-    fromState: str = Field(sa_column=Column('from_state', String, nullable=False))
-    toState: str = Field(sa_column=Column('to_state', String, nullable=False))
-    occurredAt: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat(), sa_column=Column('occurred_at', String, nullable=False))
+    status: Domain.OrderStatus = Field(default=Domain.OrderStatus.Created, sa_column=Column(SqlEnum(Domain.OrderStatus, native_enum=False), nullable=False, primary_key=False))
 
 class UserModel(SQLModel, table=True):
     __tablename__ = 'users'

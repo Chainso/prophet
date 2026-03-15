@@ -8,7 +8,7 @@ import com.example.prophet.commerce_local.generated.api.filters.OrderDiscountCod
 import com.example.prophet.commerce_local.generated.api.filters.OrderOrderIdFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderShippingCarrierFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderShippingTrackingNumberFilter;
-import com.example.prophet.commerce_local.generated.api.filters.OrderStateFilter;
+import com.example.prophet.commerce_local.generated.api.filters.OrderStatusFilter;
 import com.example.prophet.commerce_local.generated.api.filters.OrderTotalAmountFilter;
 
 @Generated("prophet-cli")
@@ -21,7 +21,7 @@ public record OrderQueryFilter(
     OrderApprovalReasonFilter approvalReason,
     OrderShippingCarrierFilter shippingCarrier,
     OrderShippingTrackingNumberFilter shippingTrackingNumber,
-    OrderStateFilter state
+    OrderStatusFilter status
 ) {
 
     public static Builder builder() {
@@ -37,7 +37,7 @@ public record OrderQueryFilter(
         private OrderApprovalReasonFilter approvalReason;
         private OrderShippingCarrierFilter shippingCarrier;
         private OrderShippingTrackingNumberFilter shippingTrackingNumber;
-        private OrderStateFilter state;
+        private OrderStatusFilter status;
 
         public Builder orderId(OrderOrderIdFilter value) {
             this.orderId = value;
@@ -79,8 +79,8 @@ public record OrderQueryFilter(
             return this;
         }
 
-        public Builder state(OrderStateFilter value) {
-            this.state = value;
+        public Builder status(OrderStatusFilter value) {
+            this.status = value;
             return this;
         }
         public OrderQueryFilter build() {
@@ -93,7 +93,7 @@ public record OrderQueryFilter(
                 approvalReason,
                 shippingCarrier,
                 shippingTrackingNumber,
-                state
+                status
             );
         }
     }

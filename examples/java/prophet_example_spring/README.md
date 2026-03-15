@@ -6,16 +6,16 @@ This example is a runnable Spring Boot app generated from a Prophet ontology for
 
 A compact commerce domain with:
 - users and orders
-- order lifecycle transitions (`created -> approved -> shipped`)
+- order lifecycle state tracked on the `status` enum field (`Created -> Approved -> Shipped`)
 - actions for create/approve/ship order flows
-- signal and transition events
+- explicit events and inline action outputs
 - UI-facing display labels via DSL `name "..."` metadata
 
 ## What This Example Showcases
 
 - `java_spring_jpa` generation end-to-end
 - generated Spring query + action controllers
-- generated JPA entities/repositories and transition support
+- generated JPA entities/repositories around ordinary enum-backed state fields
 - OpenAPI and SQL generation from the same ontology
 - generated extension seams for user-owned action handler logic
 

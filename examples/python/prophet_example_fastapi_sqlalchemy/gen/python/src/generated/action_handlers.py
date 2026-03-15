@@ -20,10 +20,10 @@ class ActionContext:
     eventAttributes: Optional[dict[str, str]] = None
 
 class ApproveOrderActionHandler(Protocol):
-    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcomeValue[OrderApproveTransition]: ...
+    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcomeValue[OrderApproved]: ...
 
 class ApproveOrderActionHandlerDefault:
-    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcome[OrderApproveTransition]:
+    async def handle(self, input: ApproveOrderCommand, context: ActionContext) -> ActionOutcome[OrderApproved]:
         raise NotImplementedError('No implementation registered for action: approveOrder')
 
 class CreateOrderActionHandler(Protocol):
@@ -34,10 +34,10 @@ class CreateOrderActionHandlerDefault:
         raise NotImplementedError('No implementation registered for action: createOrder')
 
 class ShipOrderActionHandler(Protocol):
-    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcomeValue[OrderShipTransition]: ...
+    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcomeValue[OrderShipped]: ...
 
 class ShipOrderActionHandlerDefault:
-    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcome[OrderShipTransition]:
+    async def handle(self, input: ShipOrderCommand, context: ActionContext) -> ActionOutcome[OrderShipped]:
         raise NotImplementedError('No implementation registered for action: shipOrder')
 
 class ActionHandlers(Protocol):

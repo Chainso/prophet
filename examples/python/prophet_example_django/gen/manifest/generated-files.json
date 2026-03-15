@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.26.0",
+  "toolchain_version": "0.27.0",
   "stack": {
     "id": "python_django_django_orm",
     "language": "python",
     "framework": "django",
     "orm": "django_orm"
   },
-  "ir_hash": "d392ad402d29699da2a98a12b65b5b269c77f2967336a8a668404cedca2f759d",
+  "ir_hash": "8e2e3a81e56ec7c70951dafd7ea154373c73cee785181a8b0d995e249989cbba",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "744d8c7b5b29781b2e527774c6fe8af68953f1f6674fd13299d044f05c7873bd"
+      "sha256": "b698d92a008635ee8476118d05c83ad4de8b8c831d5af40a6e47ccbc66cc5cd3"
     },
     {
       "path": "gen/manifest/python-autodetect.json",
@@ -19,23 +19,23 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "938f04a65de4c95977f9b9063d672eb3d5b79b2b76c359b619039409752bbc36"
+      "sha256": "0a05714dcd000b0e223c50e72bb1432a22540682d6d4f149fca2f7ec42cfc145"
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "ca417f0684cb610b5bed63baf44446ceaf01acfed8182084504dac622571a939"
+      "sha256": "7da3435a030c21d34a5d8b0f87d61b583b7beb1fd8170d880c25d8e745f75c51"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
-      "sha256": "184921b49c1504359f7c840a26dfc8a2df75988f037fb25bb16e9d93efa5c398"
+      "sha256": "c438288e73e8fecaa1427edda7adf6da247ae41dfd2d8127e70321a419a62b68"
     },
     {
       "path": "gen/python/src/generated/action_handlers.py",
-      "sha256": "32a2d29bdfe4fdf274d67a864d0b8f37022d89f80658306cec93b36ef198dacf"
+      "sha256": "7ec2c246a98181c378b91bda139ac786a8f52d3d3cae7247940985ec8d71e023"
     },
     {
       "path": "gen/python/src/generated/action_service.py",
-      "sha256": "1efe9cdd76c26dc3a4ff5cfe03904d67b7e209be6adf5abbaa0030cd10e442ef"
+      "sha256": "fcf2dd70ce69504985deeda456e42f50915f14272c9fecb832a0f2284761d405"
     },
     {
       "path": "gen/python/src/generated/actions.py",
@@ -43,11 +43,11 @@
     },
     {
       "path": "gen/python/src/generated/django_adapters.py",
-      "sha256": "65e4480667103cdaf32f7d5dec24ade58f787c2910daf446b90338e1743d48c3"
+      "sha256": "13ead1710ca5a339a9bf9c871bd8907fcebc51901451ff829ee93ff56f0c587b"
     },
     {
       "path": "gen/python/src/generated/django_models.py",
-      "sha256": "01331cca2dcb1bffbeaaec73e9546c0550ab1612156a8b8e40ca22663414427f"
+      "sha256": "057d3a3ab39763372912e54b75295620484305c15521ebdde55cab687d4e4993"
     },
     {
       "path": "gen/python/src/generated/django_urls.py",
@@ -59,31 +59,27 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "cde78ca7ef631f85e7c2a4e77da3c1d4f3b03e35decb5b95681a388d1eea324a"
+      "sha256": "4961a7fac331fa51bbc5c1e3df1e9c48153a8ba5761909e649275495e70f0709"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "d2d31ff2ab2c1f1ee9d1a6cf7f8d21a87b06d83dfc260af364bf8164960922c8"
+      "sha256": "e3c2bc7144a968f489df1f7844164985b4c38ebc10f4a0df24bb6d05195bdda4"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "49941580577f447b8f14c148700026a4d8320ba764746e90f452c0783c6681f3"
+      "sha256": "949714acebde789f7219b3325522dd896ca694670a16f75be06da5a0a64a1029"
     },
     {
       "path": "gen/python/src/generated/persistence.py",
-      "sha256": "f6ba965e2eec2898a2d8a89465702ad6392b36972a9880abc6c6ca266f0a2df6"
+      "sha256": "bb14fda81f3d9be9c1d36aa611058bc580b10ec33342a90c5b8d6b62dcd2964b"
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "15b501bc4fb0eedaf207b5f221eaffda4dc7940c4f60da52d7fafd4ce5855b44"
-    },
-    {
-      "path": "gen/python/src/generated/transitions.py",
-      "sha256": "abd39efc6de6445b4960415f8fd3528dedf19231af5eddbec6bd00f29682155c"
+      "sha256": "0c612ecd9e27d0b9d9600576608415ba390440b456f6713791d80f6d66308dd7"
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
+      "sha256": "0109e0e902d8344c37277090b3b77e7d5deac2172d71546a86c507e9fdd369c8"
     }
   ]
 }

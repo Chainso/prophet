@@ -14,9 +14,7 @@ from .models import FieldDef
 from .models import KeyDef
 from .models import ObjectDef
 from .models import Ontology
-from .models import StateDef
 from .models import StructDef
-from .models import TransitionDef
 from .models import TriggerDef
 from .models import TypeDef
 
@@ -108,10 +106,6 @@ def _snake_case(value: str) -> str:
     normalized = re.sub(r"[^A-Za-z0-9]+", "_", value)
     normalized = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", normalized)
     return normalized.strip("_").lower()
-
-
-def transition_event_name(object_name: str, transition_name: str) -> str:
-    return f"{object_name}{_pascal_case(transition_name)}Transition"
 
 
 def _derived_action_contract_base_name(action_name: str, action_display_name: Optional[str]) -> str:
@@ -244,10 +238,15 @@ def parse_ontology(text: str) -> Ontology:
                 events.append(inline_output_event)
             continue
 
-        m = re.match(r"^signal\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
+        m = re.match(r"^event\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
             p.pop()
-            events.append(parse_signal_block(p, m.group(1), ln, id_allocator))
+            events.append(parse_event_block(p, m.group(1), ln, id_allocator))
+            continue
+
+        m = re.match(r"^signal\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
+        if m:
+            raise ProphetError(f"top-level 'signal' is no longer supported; use 'event' (line {ln})")
             continue
 
         m = re.match(r"^trigger\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
@@ -256,7 +255,7 @@ def parse_ontology(text: str) -> Ontology:
             triggers.append(parse_trigger_block(p, m.group(1), ln, id_allocator))
             continue
 
-        raise ProphetError(f"Unexpected line {ln}: {line}")
+        raise ProphetError(f"Unexpected ontology line {ln}: {line}")
 
     if ont_id is None:
         ont_id = id_allocator.generate(f"ont_{ont_name}")
@@ -474,8 +473,6 @@ def parse_object_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
     o_id: Optional[str] = None
     fields: List[FieldDef] = []
     keys: List[KeyDef] = []
-    states: List[StateDef] = []
-    transitions: List[TransitionDef] = []
     description: Optional[str] = None
     display_name: Optional[str] = None
 
@@ -503,17 +500,10 @@ def parse_object_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
             keys.append(KeyDef(kind=m.group(1), field_names=_parse_key_fields_csv(m.group(2), ln), line=ln))
             continue
 
-        m = re.match(r"^state\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            states.append(parse_state_block(p, m.group(1), ln, id_allocator, name))
-            continue
-
-        m = re.match(r"^transition\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            transitions.append(parse_transition_block(p, m.group(1), ln, id_allocator, name))
-            continue
+        if re.match(r"^(state|transition)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line):
+            raise ProphetError(
+                f"object state/transition blocks are no longer supported; mark an enum field with 'state' instead (line {ln})"
+            )
 
         parsed_name = _parse_optional_name_line(line)
         if parsed_name is not None:
@@ -541,8 +531,6 @@ def parse_object_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
         id=o_id,
         fields=fields,
         keys=keys,
-        states=states,
-        transitions=transitions,
         description=description,
         line=block_line,
         display_name=display_name,
@@ -615,6 +603,8 @@ def parse_field_block(
     type_raw: Optional[str] = None
     required = True
     key: Optional[str] = None
+    is_state_field = False
+    initial_enum_value: Optional[str] = None
     description: Optional[str] = None
     display_name: Optional[str] = None
 
@@ -652,6 +642,17 @@ def parse_field_block(
             key = m.group(1)
             continue
 
+        if line == "state":
+            p.pop()
+            is_state_field = True
+            continue
+
+        m = re.match(r"^initial\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
+        if m:
+            p.pop()
+            initial_enum_value = m.group(1)
+            continue
+
         parsed_name = _parse_optional_name_line(line)
         if parsed_name is not None:
             p.pop()
@@ -682,131 +683,8 @@ def parse_field_block(
         type_raw=type_raw,
         required=required,
         key=key,
-        description=description,
-        line=block_line,
-        display_name=display_name,
-    )
-
-
-def parse_state_block(
-    p: Parser,
-    name: str,
-    block_line: int,
-    id_allocator: IdAllocator,
-    object_name: str,
-) -> StateDef:
-    s_id: Optional[str] = None
-    initial = False
-    description: Optional[str] = None
-    display_name: Optional[str] = None
-    while not p.eof():
-        ln, line = p.peek()
-        if line == "}":
-            p.pop()
-            break
-        if re.match(r"^id\s+\".*\"$", line):
-            _, row = p.pop()
-            s_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
-            id_allocator.reserve(s_id)
-            continue
-        if line == "initial":
-            p.pop()
-            initial = True
-            continue
-        parsed_name = _parse_optional_name_line(line)
-        if parsed_name is not None:
-            p.pop()
-            display_name = _assign_optional_name(
-                display_name,
-                parsed_name,
-                line=ln,
-                context=f"state {object_name}.{name}",
-            )
-            continue
-        parsed_description = _parse_optional_description_line(line)
-        if parsed_description is not None:
-            p.pop()
-            description = parsed_description
-            continue
-        raise ProphetError(f"Unexpected state line {ln}: {line}")
-
-    if s_id is None:
-        s_id = id_allocator.generate(f"state_{object_name}_{name}")
-    return StateDef(
-        name=name,
-        id=s_id,
-        initial=initial,
-        description=description,
-        line=block_line,
-        display_name=display_name,
-    )
-
-
-def parse_transition_block(
-    p: Parser,
-    name: str,
-    block_line: int,
-    id_allocator: IdAllocator,
-    object_name: str,
-) -> TransitionDef:
-    t_id: Optional[str] = None
-    from_state: Optional[str] = None
-    to_state: Optional[str] = None
-    fields: List[FieldDef] = []
-    description: Optional[str] = None
-    display_name: Optional[str] = None
-    while not p.eof():
-        ln, line = p.peek()
-        if line == "}":
-            p.pop()
-            break
-        if re.match(r"^id\s+\".*\"$", line):
-            _, row = p.pop()
-            t_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
-            id_allocator.reserve(t_id)
-            continue
-        m = re.match(r"^from\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
-        if m:
-            p.pop()
-            from_state = m.group(1)
-            continue
-        m = re.match(r"^to\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
-        if m:
-            p.pop()
-            to_state = m.group(1)
-            continue
-        m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
-        if m:
-            p.pop()
-            fields.append(parse_field_block(p, m.group(1), ln, id_allocator, f"trans_{object_name}_{name}"))
-            continue
-        parsed_name = _parse_optional_name_line(line)
-        if parsed_name is not None:
-            p.pop()
-            display_name = _assign_optional_name(
-                display_name,
-                parsed_name,
-                line=ln,
-                context=f"transition {object_name}.{name}",
-            )
-            continue
-        parsed_description = _parse_optional_description_line(line)
-        if parsed_description is not None:
-            p.pop()
-            description = parsed_description
-            continue
-        raise ProphetError(f"Unexpected transition line {ln}: {line}")
-
-    if from_state is None or to_state is None:
-        raise ProphetError(f"Transition {name} missing from/to (line {block_line})")
-    if t_id is None:
-        t_id = id_allocator.generate(f"trans_{object_name}_{name}")
-    return TransitionDef(
-        name=name,
-        id=t_id,
-        from_state=from_state,
-        to_state=to_state,
-        fields=fields,
+        is_state_field=is_state_field,
+        initial_enum_value=initial_enum_value,
         description=description,
         line=block_line,
         display_name=display_name,
@@ -911,7 +789,7 @@ def parse_action_block(
             if produces_event is not None:
                 raise ProphetError(f"Action {name} defines output more than once (line {ln})")
             produces_event = _derived_action_output_event_name(name, display_name)
-            inline_output_event = parse_inline_signal_block(
+            inline_output_event = parse_inline_event_block(
                 p,
                 produces_event,
                 ln,
@@ -921,19 +799,12 @@ def parse_action_block(
             )
             has_inline_output_event = True
             continue
-        m = re.match(r"^output\s+signal\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
+        m = re.match(r"^output\s+event\s+([A-Za-z_][A-Za-z0-9_]*)$", line)
         if m:
             p.pop()
             if produces_event is not None:
                 raise ProphetError(f"Action {name} defines output more than once (line {ln})")
             produces_event = m.group(1)
-            continue
-        m = re.match(r"^output\s+transition\s+([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)$", line)
-        if m:
-            p.pop()
-            if produces_event is not None:
-                raise ProphetError(f"Action {name} defines output more than once (line {ln})")
-            produces_event = transition_event_name(m.group(1), m.group(2))
             continue
         if line.startswith("input "):
             raise ProphetError(
@@ -943,9 +814,17 @@ def parse_action_block(
             raise ProphetError(
                 f"Action {name} no longer supports 'kind'; remove the line and use a plain action block (line {ln})"
             )
+        if line.startswith("output signal "):
+            raise ProphetError(
+                f"Action {name}: use 'output event <EventName>' instead of 'output signal' (line {ln})"
+            )
+        if line.startswith("output transition "):
+            raise ProphetError(
+                f"Action {name}: use 'output event <EventName>' instead of 'output transition' (line {ln})"
+            )
         if line.startswith("output "):
             raise ProphetError(
-                f"Action {name} output must be one of 'output {{ ... }}', 'output signal <SignalName>', or 'output transition <ObjectName>.<TransitionName>' (line {ln})"
+                f"Action {name} output must be one of 'output {{ ... }}' or 'output event <EventName>' (line {ln})"
             )
         parsed_name = _parse_optional_name_line(line)
         if parsed_name is not None:
@@ -996,15 +875,15 @@ def parse_action_block(
     )
 
 
-def parse_inline_signal_block(
+def parse_inline_event_block(
     p: Parser,
-    signal_name: str,
+    event_name: str,
     block_line: int,
     block_label: str,
     id_allocator: IdAllocator,
     id_base: str,
 ) -> EventDef:
-    signal_id: Optional[str] = None
+    event_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
     display_name: Optional[str] = None
@@ -1015,8 +894,8 @@ def parse_inline_signal_block(
             break
         if re.match(r"^id\s+\".*\"$", line):
             _, row = p.pop()
-            signal_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
-            id_allocator.reserve(signal_id)
+            event_id = re.match(r'^id\s+\"(.*)\"$', row).group(1)  # type: ignore[union-attr]
+            id_allocator.reserve(event_id)
             continue
         m = re.match(r"^field\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{$", line)
         if m:
@@ -1040,12 +919,11 @@ def parse_inline_signal_block(
             continue
         raise ProphetError(f"Unexpected {block_label} line {ln}: {line}")
 
-    if signal_id is None:
-        signal_id = id_allocator.generate(id_base)
+    if event_id is None:
+        event_id = id_allocator.generate(id_base)
     return EventDef(
-        name=signal_name,
-        id=signal_id,
-        kind="signal",
+        name=event_name,
+        id=event_id,
         fields=fields,
         description=description,
         line=block_line,
@@ -1109,7 +987,7 @@ def parse_inline_action_shape_block(
     )
 
 
-def parse_signal_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> EventDef:
+def parse_event_block(p: Parser, name: str, block_line: int, id_allocator: IdAllocator) -> EventDef:
     e_id: Optional[str] = None
     fields: List[FieldDef] = []
     description: Optional[str] = None
@@ -1136,7 +1014,7 @@ def parse_signal_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
                 display_name,
                 parsed_name,
                 line=ln,
-                context=f"signal {name}",
+                context=f"event {name}",
             )
             continue
         parsed_description = _parse_optional_description_line(line)
@@ -1144,14 +1022,13 @@ def parse_signal_block(p: Parser, name: str, block_line: int, id_allocator: IdAl
             p.pop()
             description = parsed_description
             continue
-        raise ProphetError(f"Unexpected signal line {ln}: {line}")
+        raise ProphetError(f"Unexpected event line {ln}: {line}")
 
     if e_id is None:
         e_id = id_allocator.generate(f"sig_{name}")
     return EventDef(
         name=name,
         id=e_id,
-        kind="signal",
         fields=fields,
         description=description,
         line=block_line,

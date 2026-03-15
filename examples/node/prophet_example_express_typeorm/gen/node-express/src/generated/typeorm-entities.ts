@@ -47,30 +47,8 @@ export class OrderEntity {
   @Column({ type: 'simple-json', nullable: true, name: 'shipping_package_ids' })
   shippingPackageIds?: unknown | null;
 
-  @Column({ type: 'varchar', nullable: false, name: '__prophet_state' })
-  state!: string;
-
-}
-
-@Entity('orders_state_history')
-export class OrderStateHistoryEntity {
-  @PrimaryGeneratedColumn({ name: 'history_id' })
-  historyId!: number;
-
-  @Column({ type: 'varchar', nullable: false, name: 'order_id' })
-  orderId!: string;
-
-  @Column({ type: 'varchar', nullable: false, name: 'transition_id' })
-  transitionId!: string;
-
-  @Column({ type: 'varchar', nullable: false, name: 'from_state' })
-  fromState!: string;
-
-  @Column({ type: 'varchar', nullable: false, name: 'to_state' })
-  toState!: string;
-
-  @Column({ type: 'datetime', nullable: false, name: 'occurred_at', default: () => 'CURRENT_TIMESTAMP' })
-  occurredAt!: Date;
+  @Column({ type: 'simple-enum', enum: Domain.OrderStatus, enumName: 'OrderStatus', nullable: false, name: 'status', default: Domain.OrderStatus.Created })
+  status!: Domain.OrderStatus;
 
 }
 

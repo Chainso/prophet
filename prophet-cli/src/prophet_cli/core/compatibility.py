@@ -182,15 +182,6 @@ def build_query_contracts(ir: Dict[str, Any]) -> List[Dict[str, Any]]:
                 }
             )
 
-        if obj.get("states"):
-            filters.append(
-                {
-                    "field_id": "__state__",
-                    "field_name": "state",
-                    "operators": ["eq", "in"],
-                }
-            )
-
         contract = {
             "object_id": obj["id"],
             "object_name": obj["name"],
@@ -316,36 +307,13 @@ def compare_irs(old_ir: Dict[str, Any], new_ir: Dict[str, Any]) -> Tuple[str, Li
         new_obj = new_objects[oid]
         compare_field_collections(f"object={oid}", old_obj.get("fields", []), new_obj.get("fields", []))
 
-        old_states = {s["id"]: s for s in old_obj.get("states", [])}
-        new_states = {s["id"]: s for s in new_obj.get("states", [])}
-        for sid in sorted(set(old_states) - set(new_states)):
-            add("breaking", f"state removed: object={oid} state_id={sid}")
-        for sid in sorted(set(new_states) - set(old_states)):
-            add("additive", f"state added: object={oid} state_id={sid}")
-
-        old_trans = {t["id"]: t for t in old_obj.get("transitions", [])}
-        new_trans = {t["id"]: t for t in new_obj.get("transitions", [])}
-        for tid in sorted(set(old_trans) - set(new_trans)):
-            add("breaking", f"transition removed: object={oid} transition_id={tid}")
-        for tid in sorted(set(new_trans) - set(old_trans)):
-            add("additive", f"transition added: object={oid} transition_id={tid}")
-
     def compare_named_list(kind: str, old_list: List[Dict[str, Any]], new_list: List[Dict[str, Any]]) -> None:
         def comparable_payload(item: Dict[str, Any]) -> Dict[str, Any]:
             if kind == "action":
                 keep = ("id", "name", "input_shape_id", "output_event_id")
                 return {k: item.get(k) for k in keep}
             if kind == "event":
-                keep = (
-                    "id",
-                    "name",
-                    "kind",
-                    "fields",
-                    "object_id",
-                    "transition_id",
-                    "from_state_id",
-                    "to_state_id",
-                )
+                keep = ("id", "name", "fields")
                 return {k: item.get(k) for k in keep}
             if kind == "trigger":
                 keep = ("id", "name", "event_id", "action_id")

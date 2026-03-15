@@ -54,9 +54,7 @@ describe('Prophet Express Mongoose HTTP flow', function () {
       notes: ['approved'],
     });
     assert.equal(approved.status, 200);
-    assert.equal(approved.body.orderId, orderId);
-    assert.equal(approved.body.fromState, 'created');
-    assert.equal(approved.body.toState, 'approved');
+    assert.equal(approved.body.order?.orderId, orderId);
 
     const shipped = await client.post('/actions/shipOrder').send({
       order: { orderId },
@@ -65,17 +63,15 @@ describe('Prophet Express Mongoose HTTP flow', function () {
       packageIds: ['pkg-1', 'pkg-2'],
     });
     assert.equal(shipped.status, 200);
-    assert.equal(shipped.body.orderId, orderId);
-    assert.equal(shipped.body.fromState, 'approved');
-    assert.equal(shipped.body.toState, 'shipped');
+    assert.equal(shipped.body.order?.orderId, orderId);
 
     const fetched = await client.get(`/orders/${orderId}`);
     assert.equal(fetched.status, 200);
     assert.equal(fetched.body.orderId, orderId);
-    assert.equal(fetched.body.state, 'shipped');
+    assert.equal(fetched.body.status, 'Shipped');
 
     const queried = await client.post('/orders/query?page=0&size=10').send({
-      state: { eq: 'shipped' },
+      status: { eq: 'Shipped' },
       orderId: { eq: orderId },
     });
     assert.equal(queried.status, 200);

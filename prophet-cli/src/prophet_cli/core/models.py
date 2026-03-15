@@ -41,28 +41,8 @@ class FieldDef:
     type_raw: str
     required: bool
     key: Optional[str]
-    description: Optional[str]
-    line: int
-    display_name: Optional[str] = None
-
-
-@dataclass
-class StateDef:
-    name: str
-    id: str
-    initial: bool
-    description: Optional[str]
-    line: int
-    display_name: Optional[str] = None
-
-
-@dataclass
-class TransitionDef:
-    name: str
-    id: str
-    from_state: str
-    to_state: str
-    fields: List[FieldDef]
+    is_state_field: bool
+    initial_enum_value: Optional[str]
     description: Optional[str]
     line: int
     display_name: Optional[str] = None
@@ -81,8 +61,6 @@ class ObjectDef:
     id: str
     fields: List[FieldDef]
     keys: List[KeyDef]
-    states: List[StateDef]
-    transitions: List[TransitionDef]
     description: Optional[str]
     line: int
     display_name: Optional[str] = None
@@ -123,7 +101,6 @@ class ActionShapeDef:
 class EventDef:
     name: str
     id: str
-    kind: str
     fields: List[FieldDef]
     description: Optional[str]
     line: int

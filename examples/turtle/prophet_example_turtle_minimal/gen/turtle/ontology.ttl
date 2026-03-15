@@ -26,9 +26,19 @@ support_local:type_email a prophet:CustomType ;
   prophet:hasConstraint support_local:type_email_constraint ;
   prophet:inLocalOntology support_local:ont_support_local .
 
+support_local:enum_ticket_status a prophet:CustomType ;
+  prophet:name "Ticket Status" ;
+  prophet:description "Lifecycle status for a support ticket." ;
+  prophet:derivedFrom std:String ;
+  prophet:hasConstraint support_local:enum_ticket_status_constraint ;
+  prophet:inLocalOntology support_local:ont_support_local .
+
 # ============================================================
 # Constraint Shapes
 # ============================================================
+
+support_local:enum_ticket_status_constraint a sh:NodeShape ;
+  sh:property [ sh:path sh:value ; sh:in ( "New" "Triaged" ) ] .
 
 support_local:type_email_constraint a sh:NodeShape ;
   sh:property [ sh:path sh:value ; sh:pattern "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$" ] .
@@ -72,11 +82,9 @@ support_local:obj_ticket a prophet:ObjectModel ;
   prophet:inLocalOntology support_local:ont_support_local ;
   prophet:hasProperty support_local:fld_ticket_assignee ;
   prophet:hasProperty support_local:fld_ticket_id ;
+  prophet:hasProperty support_local:fld_ticket_status ;
   prophet:hasProperty support_local:fld_ticket_tags ;
   prophet:hasProperty support_local:fld_ticket_title ;
-  prophet:hasPossibleState support_local:state_ticket_new ;
-  prophet:hasPossibleState support_local:state_ticket_triaged ;
-  prophet:initialState support_local:state_ticket_new ;
   prophet:hasPrimaryKey support_local:obj_ticket_primary_key ;
   prophet:hasDisplayKey support_local:obj_ticket_display_key .
 
@@ -97,6 +105,17 @@ support_local:fld_ticket_id a prophet:PropertyDefinition ;
   prophet:maxCardinality 1 ;
   prophet:valueType std:String ;
   prophet:inLocalOntology support_local:ont_support_local .
+
+support_local:fld_ticket_status a prophet:PropertyDefinition ;
+  prophet:name "Status" ;
+  prophet:description "Current lifecycle status for the ticket." ;
+  prophet:fieldKey "status" ;
+  prophet:minCardinality 1 ;
+  prophet:maxCardinality 1 ;
+  prophet:valueType support_local:enum_ticket_status ;
+  prophet:inLocalOntology support_local:ont_support_local ;
+  prophet:isStateField true ;
+  prophet:initialEnumValue support_local:enumv_ticket_status_new .
 
 support_local:fld_ticket_tags a prophet:PropertyDefinition ;
   prophet:name "Tags" ;
@@ -137,53 +156,6 @@ support_local:obj_ticket_display_part_0 a prophet:KeyPart ;
   prophet:partProperty support_local:fld_ticket_id ;
   prophet:inLocalOntology support_local:ont_support_local .
 
-support_local:state_ticket_new a prophet:State ;
-  prophet:name "New" ;
-  prophet:description "Initial lifecycle state before triage occurs." ;
-  prophet:stateOf support_local:obj_ticket ;
-  prophet:inLocalOntology support_local:ont_support_local .
-
-support_local:state_ticket_triaged a prophet:State ;
-  prophet:name "Triaged" ;
-  prophet:description "Lifecycle state after the ticket has been triaged." ;
-  prophet:stateOf support_local:obj_ticket ;
-  prophet:inLocalOntology support_local:ont_support_local .
-
-support_local:trans_ticket_triage a prophet:Transition ;
-  prophet:name "Triage" ;
-  prophet:description "Moves a ticket from New to Triaged." ;
-  prophet:transitionOf support_local:obj_ticket ;
-  prophet:fromState support_local:state_ticket_new ;
-  prophet:toState support_local:state_ticket_triaged ;
-  prophet:hasProperty support_local:trans_ticket_triage__from_state ;
-  prophet:hasProperty support_local:trans_ticket_triage__pk__fld_ticket_id ;
-  prophet:hasProperty support_local:trans_ticket_triage__to_state ;
-  prophet:inLocalOntology support_local:ont_support_local .
-
-support_local:trans_ticket_triage__from_state a prophet:PropertyDefinition ;
-  prophet:name "fromState" ;
-  prophet:fieldKey "fromState" ;
-  prophet:minCardinality 1 ;
-  prophet:maxCardinality 1 ;
-  prophet:valueType std:String ;
-  prophet:inLocalOntology support_local:ont_support_local .
-
-support_local:trans_ticket_triage__pk__fld_ticket_id a prophet:PropertyDefinition ;
-  prophet:name "id" ;
-  prophet:fieldKey "id" ;
-  prophet:minCardinality 1 ;
-  prophet:maxCardinality 1 ;
-  prophet:valueType std:String ;
-  prophet:inLocalOntology support_local:ont_support_local .
-
-support_local:trans_ticket_triage__to_state a prophet:PropertyDefinition ;
-  prophet:name "toState" ;
-  prophet:fieldKey "toState" ;
-  prophet:minCardinality 1 ;
-  prophet:maxCardinality 1 ;
-  prophet:valueType std:String ;
-  prophet:inLocalOntology support_local:ont_support_local .
-
 # ============================================================
 # Action Inputs
 # ============================================================
@@ -215,10 +187,10 @@ support_local:act_triage_ticket a prophet:Action ;
   prophet:inLocalOntology support_local:ont_support_local .
 
 # ============================================================
-# Signals
+# Events
 # ============================================================
 
-support_local:aout_triage_ticket a prophet:Signal ;
+support_local:aout_triage_ticket a prophet:Event ;
   prophet:name "Triage Ticket Result" ;
   prophet:description "Result payload with the triaged ticket and resulting state." ;
   prophet:hasProperty support_local:fld_aout_triage_ticket_new_state ;
@@ -243,7 +215,7 @@ support_local:fld_aout_triage_ticket_ticket a prophet:PropertyDefinition ;
   prophet:valueType support_local:fld_aout_triage_ticket_ticket_object_ref ;
   prophet:inLocalOntology support_local:ont_support_local .
 
-support_local:sig_ticket_created a prophet:Signal ;
+support_local:sig_ticket_created a prophet:Event ;
   prophet:name "Ticket Created" ;
   prophet:description "Event emitted when a new ticket is created." ;
   prophet:hasProperty support_local:fld_sig_ticket_created_ticket ;

@@ -62,9 +62,7 @@ class ActionHttpFlowIntegrationTest {
         );
         assertEquals(HttpStatus.OK, approveResponse.getStatusCode());
         assertNotNull(approveResponse.getBody());
-        assertEquals(orderId, approveResponse.getBody().get("orderId"));
-        assertEquals("created", approveResponse.getBody().get("fromState"));
-        assertEquals("approved", approveResponse.getBody().get("toState"));
+        assertEquals(orderId, String.valueOf(((Map<?, ?>) approveResponse.getBody().get("order")).get("orderId")));
 
         ResponseEntity<Map> shipResponse = restTemplate.postForEntity(
             "/actions/shipOrder",
@@ -78,21 +76,19 @@ class ActionHttpFlowIntegrationTest {
         );
         assertEquals(HttpStatus.OK, shipResponse.getStatusCode());
         assertNotNull(shipResponse.getBody());
-        assertEquals(orderId, shipResponse.getBody().get("orderId"));
-        assertEquals("approved", shipResponse.getBody().get("fromState"));
-        assertEquals("shipped", shipResponse.getBody().get("toState"));
+        assertEquals(orderId, String.valueOf(((Map<?, ?>) shipResponse.getBody().get("order")).get("orderId")));
 
         ResponseEntity<Map> getOrderResponse = restTemplate.getForEntity("/orders/" + orderId, Map.class);
         assertEquals(HttpStatus.OK, getOrderResponse.getStatusCode());
         assertNotNull(getOrderResponse.getBody());
         assertEquals(orderId, getOrderResponse.getBody().get("orderId"));
-        assertEquals("SHIPPED", getOrderResponse.getBody().get("state"));
+        assertEquals("Shipped", getOrderResponse.getBody().get("status"));
 
         ResponseEntity<Map> queryResponse = restTemplate.postForEntity(
             "/orders/query",
             Map.of(
                 "orderId", Map.of("eq", orderId),
-                "state", Map.of("eq", "SHIPPED")
+                "status", Map.of("eq", "Shipped")
             ),
             Map.class
         );

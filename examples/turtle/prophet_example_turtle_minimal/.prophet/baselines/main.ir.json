@@ -1,6 +1,6 @@
 {
   "ir_version": "0.1",
-  "toolchain_version": "0.25.0",
+  "toolchain_version": "0.27.0",
   "ontology_source_file": "ontology/local/main.prophet",
   "ontology": {
     "id": "ont_support_local",
@@ -20,6 +20,28 @@
         "pattern": "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$"
       },
       "description": "Email address value validated by a lightweight format pattern."
+    }
+  ],
+  "enums": [
+    {
+      "id": "enum_ticket_status",
+      "name": "TicketStatus",
+      "display_name": "Ticket Status",
+      "values": [
+        {
+          "id": "enumv_ticket_status_new",
+          "name": "New",
+          "display_name": "New",
+          "description": "Initial lifecycle status before triage occurs."
+        },
+        {
+          "id": "enumv_ticket_status_triaged",
+          "name": "Triaged",
+          "display_name": "Triaged",
+          "description": "Lifecycle status after the ticket has been triaged."
+        }
+      ],
+      "description": "Lifecycle status for a support ticket."
     }
   ],
   "objects": [
@@ -87,6 +109,22 @@
             "max": "many"
           },
           "description": "Optional labels used to categorize or filter tickets."
+        },
+        {
+          "id": "fld_ticket_status",
+          "name": "status",
+          "display_name": "Status",
+          "type": {
+            "kind": "enum",
+            "target_enum_id": "enum_ticket_status"
+          },
+          "cardinality": {
+            "min": 1,
+            "max": 1
+          },
+          "is_state_field": true,
+          "initial_enum_value_id": "enumv_ticket_status_new",
+          "description": "Current lifecycle status for the ticket."
         }
       ],
       "keys": {
@@ -99,32 +137,6 @@
           "field_ids": []
         }
       },
-      "states": [
-        {
-          "id": "state_ticket_new",
-          "name": "New",
-          "display_name": "New",
-          "initial": true,
-          "description": "Initial lifecycle state before triage occurs."
-        },
-        {
-          "id": "state_ticket_triaged",
-          "name": "Triaged",
-          "display_name": "Triaged",
-          "initial": false,
-          "description": "Lifecycle state after the ticket has been triaged."
-        }
-      ],
-      "transitions": [
-        {
-          "id": "trans_ticket_triage",
-          "name": "Triage",
-          "display_name": "Triage",
-          "from_state_id": "state_ticket_new",
-          "to_state_id": "state_ticket_triaged",
-          "description": "Moves a ticket from New to Triaged."
-        }
-      ],
       "description": "Support request tracked through a minimal triage lifecycle."
     }
   ],
@@ -205,7 +217,6 @@
       "id": "aout_triage_ticket",
       "name": "Triage Ticket Result",
       "display_name": "Triage Ticket Result",
-      "kind": "signal",
       "fields": [
         {
           "id": "fld_aout_triage_ticket_ticket",
@@ -242,7 +253,6 @@
       "id": "sig_ticket_created",
       "name": "TicketCreated",
       "display_name": "Ticket Created",
-      "kind": "signal",
       "fields": [
         {
           "id": "fld_sig_ticket_created_ticket",
@@ -260,55 +270,6 @@
         }
       ],
       "description": "Event emitted when a new ticket is created."
-    },
-    {
-      "id": "trans_ticket_triage",
-      "name": "TicketTriageTransition",
-      "display_name": "Triage",
-      "kind": "transition",
-      "fields": [
-        {
-          "id": "trans_ticket_triage__pk__fld_ticket_id",
-          "name": "id",
-          "type": {
-            "kind": "base",
-            "name": "string"
-          },
-          "cardinality": {
-            "min": 1,
-            "max": 1
-          }
-        },
-        {
-          "id": "trans_ticket_triage__from_state",
-          "name": "fromState",
-          "type": {
-            "kind": "base",
-            "name": "string"
-          },
-          "cardinality": {
-            "min": 1,
-            "max": 1
-          }
-        },
-        {
-          "id": "trans_ticket_triage__to_state",
-          "name": "toState",
-          "type": {
-            "kind": "base",
-            "name": "string"
-          },
-          "cardinality": {
-            "min": 1,
-            "max": 1
-          }
-        }
-      ],
-      "object_id": "obj_ticket",
-      "transition_id": "trans_ticket_triage",
-      "from_state_id": "state_ticket_new",
-      "to_state_id": "state_ticket_triaged",
-      "description": "Moves a ticket from New to Triaged."
     }
   ],
   "triggers": [
@@ -345,6 +306,14 @@
           ]
         },
         {
+          "field_id": "fld_ticket_status",
+          "field_name": "status",
+          "operators": [
+            "eq",
+            "in"
+          ]
+        },
+        {
           "field_id": "fld_ticket_title",
           "field_name": "title",
           "operators": [
@@ -352,17 +321,9 @@
             "in",
             "contains"
           ]
-        },
-        {
-          "field_id": "__state__",
-          "field_name": "state",
-          "operators": [
-            "eq",
-            "in"
-          ]
         }
       ],
-      "contract_hash": "4b36f249ed2ae0b6c61056a78462de56613890ba2f8a60c74a91bb97607284d9"
+      "contract_hash": "414f15266e1b4e3f8ee9724688882fb320a4be6a512fc89db9bf439fa670a3d1"
     }
   ],
   "generation_profile": {
@@ -375,6 +336,6 @@
     "struct_field_contract_changes_are_breaking": true,
     "custom_type_constraint_changes_are_breaking": true
   },
-  "query_contracts_version": "fa69e4300b3d10c42435b689a584fc0d9713d0fa7137130dda42950aac6ef377",
-  "ir_hash": "5c5b1905d65ed15e06b6af63f4714c2d2ff3278e0a873c5a15001060ecbe1a66"
+  "query_contracts_version": "2a0356336bdb72cbf7da8eb0b4f110b1b8948d13064448060f974c04a0093a06",
+  "ir_hash": "c9ce1a057d6f7071907bdc2bf48d5ccb4ea2c31f6dbb71f381c65d6fcdbaf998"
 }

@@ -94,6 +94,47 @@ def _object_primary_key_fields(obj: Dict[str, Any]) -> List[Dict[str, Any]]:
     return resolved
 
 
+def _state_field(obj: Dict[str, Any]) -> Dict[str, Any] | None:
+    for field in obj.get("fields", []):
+        if isinstance(field, dict) and bool(field.get("is_state_field")):
+            return field
+    return None
+
+
+def _initial_enum_member_name(
+    field: Dict[str, Any],
+    enum_by_id: Dict[str, Dict[str, Any]],
+) -> str | None:
+    initial_enum_value_id = str(field.get("initial_enum_value_id", ""))
+    if not initial_enum_value_id:
+        return None
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    enum_id = str(type_desc.get("target_enum_id", ""))
+    enum_def = enum_by_id.get(enum_id, {})
+    for value in enum_def.get("values", []):
+        if isinstance(value, dict) and str(value.get("id", "")) == initial_enum_value_id:
+            return str(value.get("name", "")) or None
+    return None
+
+def _enum_value_name_by_id(enum_by_id: Dict[str, Dict[str, Any]], value_id: str) -> str | None:
+    for enum_def in enum_by_id.values():
+        for value in enum_def.get("values", []):
+            if isinstance(value, dict) and str(value.get("id", "")) == value_id:
+                name = str(value.get("name", "")).strip()
+                return name or None
+    return None
+
+
+def _state_field_initial_value(obj: Dict[str, Any], *, enum_by_id: Dict[str, Dict[str, Any]]) -> str | None:
+    field = _state_field(obj)
+    if field is None:
+        return None
+    value_id = str(field.get("initial_enum_value_id", "")).strip()
+    if not value_id:
+        return None
+    return _enum_value_name_by_id(enum_by_id, value_id)
+
+
 def _resolve_custom_base(type_by_id: Dict[str, Dict[str, Any]], type_desc: Dict[str, Any]) -> str:
     current = type_desc
     seen: set[str] = set()
@@ -247,4 +288,3 @@ def _extract_path_params(path: str) -> List[str]:
 
 def _express_path(path: str) -> str:
     return re.sub(r"\{([^{}]+)\}", r":\1", path)
-

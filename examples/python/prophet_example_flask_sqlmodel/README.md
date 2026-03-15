@@ -6,9 +6,9 @@ This example is a runnable Flask app generated from a Prophet ontology for a sma
 
 A commerce domain with:
 - users and orders
-- order lifecycle transitions (`created -> approved -> shipped`)
+- order lifecycle state tracked on the `status` enum field (`Created -> Approved -> Shipped`)
 - actions for create/approve/ship
-- signal and transition events
+- explicit events and inline action outputs
 - UI-facing display labels via DSL `name "..."` metadata
 
 ## What This Example Showcases

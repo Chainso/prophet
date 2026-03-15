@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.26.0",
+  "toolchain_version": "0.27.0",
   "stack": {
     "id": "python_fastapi_sqlalchemy",
     "language": "python",
     "framework": "fastapi",
     "orm": "sqlalchemy"
   },
-  "ir_hash": "835f5accd3dc48db9cfbe412c33235b921356177e2d1292f96fb8bc642c0219c",
+  "ir_hash": "8e2e3a81e56ec7c70951dafd7ea154373c73cee785181a8b0d995e249989cbba",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "aeeb8e4ac8c248d9f6372e7e636de7a9476866056487a1a5fa2dda8cc54febe0"
+      "sha256": "c2c7f2d53788302b7f9d8aa7aadc39c6c8da132811ee2e452edbe5092ef57090"
     },
     {
       "path": "gen/manifest/python-autodetect.json",
@@ -19,23 +19,23 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "9aa675a77391f1b520a0af5420842660c49568cd15e377f8c979033681b98ec4"
+      "sha256": "0a05714dcd000b0e223c50e72bb1432a22540682d6d4f149fca2f7ec42cfc145"
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "a3ed10faad594b2c0f02d7c15dc8f57afa3f0d4f5a5d73942a623dfcc3f7ffad"
+      "sha256": "44c7c78a30e245f9005e6aad7211cfdbf4b3b11467801e91c061b49d4d2fc3d4"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
-      "sha256": "184921b49c1504359f7c840a26dfc8a2df75988f037fb25bb16e9d93efa5c398"
+      "sha256": "c438288e73e8fecaa1427edda7adf6da247ae41dfd2d8127e70321a419a62b68"
     },
     {
       "path": "gen/python/src/generated/action_handlers.py",
-      "sha256": "1234b740b2ff6c4b9e19805a5a3cc6700cbc3c7f7729d13c3a16b9434bf1ca88"
+      "sha256": "072c0c1db923f8107f73ff8f6e7d44eae1524b88905c9e751d1b0168be951d15"
     },
     {
       "path": "gen/python/src/generated/action_service.py",
-      "sha256": "9910ce9490a59a8fef10c859165ec4a3bf13ad608d8520b3088c7ab71d748d56"
+      "sha256": "7e7b378afaa638c08933dcab2d4e0d451d3a2b6fb9f1ff592ac38cd6ef989a20"
     },
     {
       "path": "gen/python/src/generated/actions.py",
@@ -43,15 +43,15 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "cde78ca7ef631f85e7c2a4e77da3c1d4f3b03e35decb5b95681a388d1eea324a"
+      "sha256": "4961a7fac331fa51bbc5c1e3df1e9c48153a8ba5761909e649275495e70f0709"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "d2d31ff2ab2c1f1ee9d1a6cf7f8d21a87b06d83dfc260af364bf8164960922c8"
+      "sha256": "e3c2bc7144a968f489df1f7844164985b4c38ebc10f4a0df24bb6d05195bdda4"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "49941580577f447b8f14c148700026a4d8320ba764746e90f452c0783c6681f3"
+      "sha256": "949714acebde789f7219b3325522dd896ca694670a16f75be06da5a0a64a1029"
     },
     {
       "path": "gen/python/src/generated/fastapi_routes.py",
@@ -59,27 +59,23 @@
     },
     {
       "path": "gen/python/src/generated/persistence.py",
-      "sha256": "d8b4ded855321570dff31d2bf21fafde029f708801d29f3a0ed679719e6df339"
+      "sha256": "c083250565a4c6e5e7faa72d41d9a4c79efce453b5c482a4676ffa2462595389"
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "15b501bc4fb0eedaf207b5f221eaffda4dc7940c4f60da52d7fafd4ce5855b44"
+      "sha256": "0c612ecd9e27d0b9d9600576608415ba390440b456f6713791d80f6d66308dd7"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_adapters.py",
-      "sha256": "253c91c5f368e0c8efa7838acaa33f2e585c41b671bb0beebbc089dfc86cd0c1"
+      "sha256": "bdf8d2554f300a30191d23d8cd2b4f095d8d2001ddb9270628856e5ace64b5c2"
     },
     {
       "path": "gen/python/src/generated/sqlalchemy_models.py",
-      "sha256": "f467e4351cb7eef765db513f0315cb2656816a623c628203bdba7e83677dd575"
-    },
-    {
-      "path": "gen/python/src/generated/transitions.py",
-      "sha256": "b3e2648478e23592f5f25d37e7dfe97b552ad884c74412c91adbb799fd194d24"
+      "sha256": "c2aff01752506d3f8053d6be9e2c7aa6ff5ed463e0b7e5d95398d1df09acb310"
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
+      "sha256": "0109e0e902d8344c37277090b3b77e7d5deac2172d71546a86c507e9fdd369c8"
     }
   ]
 }

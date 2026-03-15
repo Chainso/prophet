@@ -61,7 +61,7 @@ from prophet_cli.targets.python import generate_outputs as generate_python_outpu
 from prophet_cli.targets.turtle import render_turtle
 
 
-TOOLCHAIN_VERSION = "0.26.0"
+TOOLCHAIN_VERSION = "0.27.0"
 IR_VERSION = "0.1"
 COMPATIBILITY_POLICY_DOC = "docs/reference/compatibility.md"
 
@@ -981,6 +981,8 @@ def resolve_field_type(
 
 
 def build_ir(ont: Ontology, cfg: Dict[str, Any]) -> Dict[str, Any]:
+    return _core_build_ir(ont, cfg, TOOLCHAIN_VERSION, IR_VERSION)
+
     type_name_to_id = {t.name: t.id for t in ont.types}
     object_name_to_id = {o.name: o.id for o in ont.objects}
     struct_name_to_id = {s.name: s.id for s in ont.structs}

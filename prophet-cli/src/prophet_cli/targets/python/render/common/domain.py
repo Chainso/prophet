@@ -86,16 +86,10 @@ def render_domain_types(ir: Dict[str, Any]) -> str:
 
     for obj in _sort_dict_entries(list(ir.get("objects", []))):
         obj_name = _pascal_case(str(obj.get("name", "Object")))
-        states = [state for state in obj.get("states", []) if isinstance(state, dict)]
-        if states:
-            members = ", ".join([repr(str(state.get("name", ""))) for state in states])
-            lines.append(f"{obj_name}State = Literal[{members}]")
-            lines.append("")
-
         lines.append("@dataclass(kw_only=True)")
         lines.append(f"class {obj_name}:")
         fields = [field for field in obj.get("fields", []) if isinstance(field, dict)]
-        if not fields and not states:
+        if not fields:
             lines.append("    pass")
         else:
             for field in fields:
@@ -108,8 +102,6 @@ def render_domain_types(ir: Dict[str, Any]) -> str:
                         struct_by_id=struct_by_id,
                     )
                 )
-            if states:
-                lines.append(f"    state: {obj_name}State")
         lines.append("")
 
     return "\n".join(lines).rstrip() + "\n"

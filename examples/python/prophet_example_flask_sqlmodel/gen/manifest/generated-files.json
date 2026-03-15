@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
-  "toolchain_version": "0.26.0",
+  "toolchain_version": "0.27.0",
   "stack": {
     "id": "python_flask_sqlmodel",
     "language": "python",
     "framework": "flask",
     "orm": "sqlmodel"
   },
-  "ir_hash": "631206a2395d3cae2ffc2d748cb15d0bf6b52598ae805a38589bc59226f163dc",
+  "ir_hash": "8e2e3a81e56ec7c70951dafd7ea154373c73cee785181a8b0d995e249989cbba",
   "outputs": [
     {
       "path": "gen/manifest/extension-hooks.json",
-      "sha256": "54f0bf29cda0958ef79a04dbb5a5a6c8f38a31ac916a1a26ccb72d2bff8b1b68"
+      "sha256": "25eb9e83f6cf5d3353fd8dcda2d0dda5ab3f73e7861bccb6cab599148d592230"
     },
     {
       "path": "gen/manifest/python-autodetect.json",
@@ -19,23 +19,23 @@
     },
     {
       "path": "gen/openapi/openapi.yaml",
-      "sha256": "cf34c381111d4b39165a05ab39d9e3766276f004e448fa232469e3e7e56b8ae9"
+      "sha256": "0a05714dcd000b0e223c50e72bb1432a22540682d6d4f149fca2f7ec42cfc145"
     },
     {
       "path": "gen/python/pyproject.toml",
-      "sha256": "d7c65934fea1c13af89ef5ed2df2497372442835e860c95c2e248df0de097607"
+      "sha256": "76278be5b139ed8d9e669609cb525d4789a9d2b4afbc9ded9600936dabf6f333"
     },
     {
       "path": "gen/python/src/generated/__init__.py",
-      "sha256": "184921b49c1504359f7c840a26dfc8a2df75988f037fb25bb16e9d93efa5c398"
+      "sha256": "c438288e73e8fecaa1427edda7adf6da247ae41dfd2d8127e70321a419a62b68"
     },
     {
       "path": "gen/python/src/generated/action_handlers.py",
-      "sha256": "32a2d29bdfe4fdf274d67a864d0b8f37022d89f80658306cec93b36ef198dacf"
+      "sha256": "7ec2c246a98181c378b91bda139ac786a8f52d3d3cae7247940985ec8d71e023"
     },
     {
       "path": "gen/python/src/generated/action_service.py",
-      "sha256": "1efe9cdd76c26dc3a4ff5cfe03904d67b7e209be6adf5abbaa0030cd10e442ef"
+      "sha256": "fcf2dd70ce69504985deeda456e42f50915f14272c9fecb832a0f2284761d405"
     },
     {
       "path": "gen/python/src/generated/actions.py",
@@ -43,15 +43,15 @@
     },
     {
       "path": "gen/python/src/generated/domain.py",
-      "sha256": "cde78ca7ef631f85e7c2a4e77da3c1d4f3b03e35decb5b95681a388d1eea324a"
+      "sha256": "4961a7fac331fa51bbc5c1e3df1e9c48153a8ba5761909e649275495e70f0709"
     },
     {
       "path": "gen/python/src/generated/event_contracts.py",
-      "sha256": "d2d31ff2ab2c1f1ee9d1a6cf7f8d21a87b06d83dfc260af364bf8164960922c8"
+      "sha256": "e3c2bc7144a968f489df1f7844164985b4c38ebc10f4a0df24bb6d05195bdda4"
     },
     {
       "path": "gen/python/src/generated/events.py",
-      "sha256": "49941580577f447b8f14c148700026a4d8320ba764746e90f452c0783c6681f3"
+      "sha256": "949714acebde789f7219b3325522dd896ca694670a16f75be06da5a0a64a1029"
     },
     {
       "path": "gen/python/src/generated/flask_routes.py",
@@ -59,27 +59,23 @@
     },
     {
       "path": "gen/python/src/generated/persistence.py",
-      "sha256": "f6ba965e2eec2898a2d8a89465702ad6392b36972a9880abc6c6ca266f0a2df6"
+      "sha256": "bb14fda81f3d9be9c1d36aa611058bc580b10ec33342a90c5b8d6b62dcd2964b"
     },
     {
       "path": "gen/python/src/generated/query.py",
-      "sha256": "15b501bc4fb0eedaf207b5f221eaffda4dc7940c4f60da52d7fafd4ce5855b44"
+      "sha256": "0c612ecd9e27d0b9d9600576608415ba390440b456f6713791d80f6d66308dd7"
     },
     {
       "path": "gen/python/src/generated/sqlmodel_adapters.py",
-      "sha256": "cbf65fb2d3dc935654b9e79d4adf3cfc75a62577cc3b3a1d5ecde4485e44ea46"
+      "sha256": "952ec31f1073f73ecdd28f972445a83e73e6a5b61a85b366fde0afe6d4185510"
     },
     {
       "path": "gen/python/src/generated/sqlmodel_models.py",
-      "sha256": "0de7ce00d02cf8415f5c12c04aee56e30c07b6b2a54c9caa7a840e1584c3a536"
-    },
-    {
-      "path": "gen/python/src/generated/transitions.py",
-      "sha256": "abd39efc6de6445b4960415f8fd3528dedf19231af5eddbec6bd00f29682155c"
+      "sha256": "13373b3702aa9cdf0bc3dce53f221244cfc3dc6ec91a11ee429bde091ccb28cd"
     },
     {
       "path": "gen/sql/schema.sql",
-      "sha256": "98afe395ada919594cdfb0995708bf93560b03356e2efdcbb8ecf2ec4279b9c2"
+      "sha256": "0109e0e902d8344c37277090b3b77e7d5deac2172d71546a86c507e9fdd369c8"
     }
   ]
 }

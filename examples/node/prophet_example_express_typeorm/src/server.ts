@@ -13,11 +13,10 @@ import {
   type ShipOrderActionHandler,
 } from '../gen/node-express/src/generated/action-handlers.js';
 import type * as Actions from '../gen/node-express/src/generated/actions.js';
-import type * as Domain from '../gen/node-express/src/generated/domain.js';
+import * as Domain from '../gen/node-express/src/generated/domain.js';
 import type * as EventContracts from '../gen/node-express/src/generated/event-contracts.js';
-import { TransitionServices } from '../gen/node-express/src/generated/transitions.js';
 import { TypeOrmRepositories } from '../gen/node-express/src/generated/typeorm-adapters.js';
-import { OrderEntity, OrderStateHistoryEntity, UserEntity } from '../gen/node-express/src/generated/typeorm-entities.js';
+import { OrderEntity, UserEntity } from '../gen/node-express/src/generated/typeorm-entities.js';
 
 class CreateOrderHandler implements CreateOrderActionHandler {
   async handle(input: Actions.CreateOrderCommand, context: ActionContext): Promise<EventContracts.CreateOrderResult> {
@@ -34,7 +33,7 @@ class CreateOrderHandler implements CreateOrderActionHandler {
       discountCode: input.discountCode,
       tags: input.tags,
       shippingAddress: input.shippingAddress,
-      state: 'created',
+      status: Domain.OrderStatus.Created,
     };
     await context.repositories.order.save(order);
     return {
@@ -44,7 +43,7 @@ class CreateOrderHandler implements CreateOrderActionHandler {
 }
 
 class ApproveOrderHandler implements ApproveOrderActionHandler {
-  async handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<EventContracts.OrderApproveTransition> {
+  async handle(input: Actions.ApproveOrderCommand, context: ActionContext): Promise<EventContracts.OrderApproved> {
     const existing = await context.repositories.order.getById({ orderId: input.order.orderId });
     if (!existing) {
       throw new Error(`order not found: ${input.order.orderId}`);
@@ -55,21 +54,17 @@ class ApproveOrderHandler implements ApproveOrderActionHandler {
       approvedByUserId: input.approvedBy?.userId,
       approvalNotes: input.notes,
       approvalReason: input.context?.reason,
+      status: Domain.OrderStatus.Approved,
     };
     const savedOrder = await context.repositories.order.save(updatedOrder);
-
-    const transitions = new TransitionServices(context.repositories);
-    const draft = await transitions.order.approveOrder(savedOrder);
-    return draft.build({
-      approvedByUserId: savedOrder.approvedByUserId,
-      noteCount: input.notes?.length ?? 0,
-      approvalReason: savedOrder.approvalReason,
-    });
+    return {
+      order: { orderId: savedOrder.orderId },
+    };
   }
 }
 
 class ShipOrderHandler implements ShipOrderActionHandler {
-  async handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<EventContracts.OrderShipTransition> {
+  async handle(input: Actions.ShipOrderCommand, context: ActionContext): Promise<EventContracts.OrderShipped> {
     const existing = await context.repositories.order.getById({ orderId: input.order.orderId });
     if (!existing) {
       throw new Error(`order not found: ${input.order.orderId}`);
@@ -80,16 +75,12 @@ class ShipOrderHandler implements ShipOrderActionHandler {
       shippingCarrier: input.carrier,
       shippingTrackingNumber: input.trackingNumber,
       shippingPackageIds: input.packageIds,
+      status: Domain.OrderStatus.Shipped,
     };
     const savedOrder = await context.repositories.order.save(updatedOrder);
-
-    const transitions = new TransitionServices(context.repositories);
-    const draft = await transitions.order.shipOrder(savedOrder);
-    return draft.build({
-      carrier: input.carrier,
-      trackingNumber: input.trackingNumber,
-      packageIds: input.packageIds,
-    });
+    return {
+      order: { orderId: savedOrder.orderId },
+    };
   }
 }
 
@@ -103,7 +94,8 @@ export async function createAppRuntime(): Promise<AppRuntime> {
     type: 'sqlite',
     database: './prophet_example.sqlite',
     synchronize: true,
-    entities: [OrderEntity, OrderStateHistoryEntity, UserEntity],
+    dropSchema: true,
+    entities: [OrderEntity, UserEntity],
   });
   await dataSource.initialize();
 

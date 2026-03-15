@@ -13,10 +13,22 @@ from prophet_cli.targets.java_common.render.support import add_java_imports_for_
 from prophet_cli.targets.java_common.render.support import enum_target_ids_for_type
 from prophet_cli.targets.java_common.render.support import java_type_for_field
 from prophet_cli.targets.java_common.render.support import java_type_for_type_descriptor
-from prophet_cli.targets.java_common.render.support import object_has_composite_primary_key
 from prophet_cli.targets.java_common.render.support import render_javadoc_block
-from prophet_cli.targets.java_common.render.support import render_java_record_with_builder
 from prophet_cli.targets.java_common.render.support import struct_target_ids_for_type
+
+
+def _initial_enum_member_name(field: Dict[str, Any], enum_by_id: Dict[str, Dict[str, Any]]) -> str | None:
+    initial_value_id = str(field.get("initial_enum_value_id", "")).strip()
+    if not initial_value_id:
+        return None
+    type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+    enum_id = str(type_desc.get("target_enum_id", "")).strip()
+    enum_def = enum_by_id.get(enum_id, {})
+    for value in enum_def.get("values", []):
+        if isinstance(value, dict) and str(value.get("id", "")).strip() == initial_value_id:
+            member_name = str(value.get("name", "")).strip()
+            return member_name or None
+    return None
 
 def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any]) -> None:
     objects = state["objects"]
@@ -52,6 +64,7 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
 
         lines: List[str] = []
         json_converter_sources: List[Tuple[str, str]] = []
+        pre_persist_default_lines: List[str] = []
 
         for f in fields:
             col_name = snake_case(f["name"])
@@ -224,22 +237,22 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
                         }
                     )
                     lines.append("    @Enumerated(EnumType.STRING)")
+                default_initializer = ""
+                if bool(f.get("is_state_field")):
+                    initial_member_name = _initial_enum_member_name(f, enum_by_id)
+                    if initial_member_name:
+                        field_name = camel_case(f["name"])
+                        default_initializer = f" = {java_t}.{initial_member_name}"
+                        pre_persist_default_lines.extend(
+                            [
+                                f"        if ({field_name} == null) {{",
+                                f"            {field_name} = {java_t}.{initial_member_name};",
+                                "        }",
+                            ]
+                        )
                 lines.append(f"    @Column(name = \"{col_name}\", nullable = {nullable})")
-                lines.append(f"    private {java_t} {camel_case(f['name'])};")
+                lines.append(f"    private {java_t} {camel_case(f['name'])}{default_initializer};")
                 lines.append("")
-
-        if obj.get("states"):
-            imports.update(
-                {
-                    "import jakarta.persistence.EnumType;",
-                    "import jakarta.persistence.Enumerated;",
-                    f"import {base_package}.generated.domain.{obj['name']}State;",
-                }
-            )
-            lines.append("    @Enumerated(EnumType.STRING)")
-            lines.append("    @Column(name = \"__prophet_state\", nullable = false)")
-            lines.append(f"    private {obj['name']}State state;")
-            lines.append("")
 
         lines.extend(
             [
@@ -256,6 +269,7 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
                 "    @PrePersist",
                 "    void onCreate() {",
                 "        OffsetDateTime now = OffsetDateTime.now();",
+                *pre_persist_default_lines,
                 "        createdAt = now;",
                 "        updatedAt = now;",
                 "    }",
@@ -278,16 +292,6 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
             lines.append("")
             lines.append(f"    public void set{method}({java_t if f['type']['kind'] != 'object_ref' else object_by_id[f['type']['target_object_id']]['name'] + 'Entity'} {name}) {{")
             lines.append(f"        this.{name} = {name};")
-            lines.append("    }")
-            lines.append("")
-
-        if obj.get("states"):
-            lines.append(f"    public {obj['name']}State getState() {{")
-            lines.append("        return state;")
-            lines.append("    }")
-            lines.append("")
-            lines.append(f"    public void setState({obj['name']}State state) {{")
-            lines.append("        this.state = state;")
             lines.append("    }")
             lines.append("")
 
@@ -381,76 +385,6 @@ def render_jpa_persistence_artifacts(files: Dict[str, str], state: Dict[str, Any
             "}\n"
         )
         files[f"src/main/java/{package_path}/generated/persistence/{obj['name']}Repository.java"] = repo_src
-
-        if obj.get("states") and not composite_pk:
-            history_entity_name = f"{obj['name']}StateHistoryEntity"
-            history_repo_name = f"{obj['name']}StateHistoryRepository"
-            pk_col = snake_case(pk["name"])
-            history_table = f"{snake_case(obj['name'])}_state_history"
-            history_entity = (
-                f"package {base_package}.generated.persistence;\n\n"
-                "import jakarta.persistence.Column;\n"
-                "import jakarta.persistence.Entity;\n"
-                "import jakarta.persistence.FetchType;\n"
-                "import jakarta.persistence.GeneratedValue;\n"
-                "import jakarta.persistence.GenerationType;\n"
-                "import jakarta.persistence.Id;\n"
-                "import jakarta.persistence.JoinColumn;\n"
-                "import jakarta.persistence.ManyToOne;\n"
-                "import jakarta.persistence.PrePersist;\n"
-                "import jakarta.persistence.Table;\n"
-                "import java.time.OffsetDateTime;\n\n"
-                "@Entity\n"
-                f"@Table(name = \"{history_table}\")\n"
-                f"public class {history_entity_name} {{\n\n"
-                "    @Id\n"
-                "    @GeneratedValue(strategy = GenerationType.IDENTITY)\n"
-                "    @Column(name = \"history_id\")\n"
-                "    private Long historyId;\n\n"
-                "    @ManyToOne(fetch = FetchType.LAZY, optional = false)\n"
-                f"    @JoinColumn(name = \"{pk_col}\", nullable = false)\n"
-                f"    private {obj['name']}Entity {camel_case(obj['name'])};\n\n"
-                "    @Column(name = \"transition_id\", nullable = false)\n"
-                "    private String transitionId;\n\n"
-                "    @Column(name = \"from_state\", nullable = false)\n"
-                "    private String fromState;\n\n"
-                "    @Column(name = \"to_state\", nullable = false)\n"
-                "    private String toState;\n\n"
-                "    @Column(name = \"changed_at\", nullable = false)\n"
-                "    private OffsetDateTime changedAt;\n\n"
-                "    @Column(name = \"changed_by\")\n"
-                "    private String changedBy;\n\n"
-                "    @PrePersist\n"
-                "    void onCreate() {\n"
-                "        if (changedAt == null) {\n"
-                "            changedAt = OffsetDateTime.now();\n"
-                "        }\n"
-                "    }\n\n"
-                f"    public void set{obj['name']}({obj['name']}Entity value) {{\n"
-                f"        this.{camel_case(obj['name'])} = value;\n"
-                "    }\n\n"
-                "    public void setTransitionId(String transitionId) {\n"
-                "        this.transitionId = transitionId;\n"
-                "    }\n\n"
-                "    public void setFromState(String fromState) {\n"
-                "        this.fromState = fromState;\n"
-                "    }\n\n"
-                "    public void setToState(String toState) {\n"
-                "        this.toState = toState;\n"
-                "    }\n\n"
-                "    public void setChangedBy(String changedBy) {\n"
-                "        this.changedBy = changedBy;\n"
-                "    }\n"
-                "}\n"
-            )
-            files[f"src/main/java/{package_path}/generated/persistence/{history_entity_name}.java"] = history_entity
-            history_repo = (
-                f"package {base_package}.generated.persistence;\n\n"
-                "import org.springframework.data.jpa.repository.JpaRepository;\n\n"
-                f"public interface {history_repo_name} extends JpaRepository<{history_entity_name}, Long> {{\n"
-                "}\n"
-            )
-            files[f"src/main/java/{package_path}/generated/persistence/{history_repo_name}.java"] = history_repo
 
     config_src = (
         f"package {base_package}.generated.config;\n\n"

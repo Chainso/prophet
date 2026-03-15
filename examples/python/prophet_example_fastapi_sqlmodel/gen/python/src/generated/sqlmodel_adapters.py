@@ -40,7 +40,7 @@ def _order_to_model(item: Domain.Order) -> Models.OrderModel:
         shippingCarrier=_serialize(item.shippingCarrier),
         shippingTrackingNumber=_serialize(item.shippingTrackingNumber),
         shippingPackageIds=_serialize(item.shippingPackageIds),
-        state=item.state,
+        status=item.status.value if isinstance(item.status, Enum) else item.status,
     )
 
 def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
@@ -57,7 +57,7 @@ def _order_to_domain(record: Models.OrderModel) -> Domain.Order:
         shippingCarrier=record.shippingCarrier,
         shippingTrackingNumber=record.shippingTrackingNumber,
         shippingPackageIds=record.shippingPackageIds,
-        state=record.state,
+        status=Domain.OrderStatus(record.status) if record.status is not None and not isinstance(record.status, Domain.OrderStatus) else record.status,
     )
 
 class OrderSqlModelRepository:
@@ -142,17 +142,17 @@ class OrderSqlModelRepository:
                 stmt = stmt.where(Models.OrderModel.shippingTrackingNumber >= filter.shippingTrackingNumber.gte)
             if getattr(filter.shippingTrackingNumber, 'lte', None) is not None:
                 stmt = stmt.where(Models.OrderModel.shippingTrackingNumber <= filter.shippingTrackingNumber.lte)
-        if filter.state is not None:
-            if filter.state.eq is not None:
-                stmt = stmt.where(Models.OrderModel.state == filter.state.eq)
-            if getattr(filter.state, 'inValues', None):
-                stmt = stmt.where(Models.OrderModel.state.in_(filter.state.inValues))
-            if getattr(filter.state, 'contains', None):
-                stmt = stmt.where(Models.OrderModel.state.contains(filter.state.contains))
-            if getattr(filter.state, 'gte', None) is not None:
-                stmt = stmt.where(Models.OrderModel.state >= filter.state.gte)
-            if getattr(filter.state, 'lte', None) is not None:
-                stmt = stmt.where(Models.OrderModel.state <= filter.state.lte)
+        if filter.status is not None:
+            if filter.status.eq is not None:
+                stmt = stmt.where(Models.OrderModel.status == filter.status.eq)
+            if getattr(filter.status, 'inValues', None):
+                stmt = stmt.where(Models.OrderModel.status.in_(filter.status.inValues))
+            if getattr(filter.status, 'contains', None):
+                stmt = stmt.where(Models.OrderModel.status.contains(filter.status.contains))
+            if getattr(filter.status, 'gte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.status >= filter.status.gte)
+            if getattr(filter.status, 'lte', None) is not None:
+                stmt = stmt.where(Models.OrderModel.status <= filter.status.lte)
         if filter.totalAmount is not None:
             if filter.totalAmount.eq is not None:
                 stmt = stmt.where(Models.OrderModel.totalAmount == filter.totalAmount.eq)
@@ -203,29 +203,6 @@ class OrderSqlModelRepository:
             session.commit()
         return item
 
-    def _apply_transition_sync(self, id: Domain.OrderRef, expected_state: Domain.OrderState, next_state: Domain.OrderState, transition_id: str) -> Optional[Domain.Order]:
-        with self._session_factory() as session:
-            stmt = update(Models.OrderModel).where(Models.OrderModel.state == expected_state)
-            stmt = stmt.where(Models.OrderModel.orderId == id.orderId)
-            stmt = stmt.values(state=next_state)
-            result = session.exec(stmt)
-            if int(getattr(result, 'rowcount', 0) or 0) < 1:
-                return None
-            history = Models.OrderStateHistoryModel(
-                orderId=id.orderId,
-                transitionId=transition_id,
-                fromState=expected_state,
-                toState=next_state,
-            )
-            session.add(history)
-            session.commit()
-            refreshed_stmt = select(Models.OrderModel)
-            refreshed_stmt = refreshed_stmt.where(Models.OrderModel.orderId == id.orderId)
-            refreshed = session.exec(refreshed_stmt.limit(1)).first()
-            if refreshed is None:
-                return None
-            return _order_to_domain(refreshed)
-
     async def list(self, page: int, size: int) -> Persistence.PagedResult:
         return self._list_sync(page, size)
 
@@ -237,9 +214,6 @@ class OrderSqlModelRepository:
 
     async def save(self, item: Domain.Order) -> Domain.Order:
         return self._save_sync(item)
-
-    async def apply_transition(self, id: Domain.OrderRef, expected_state: Domain.OrderState, next_state: Domain.OrderState, transition_id: str) -> Optional[Domain.Order]:
-        return self._apply_transition_sync(id, expected_state, next_state, transition_id)
 
 def _user_to_model(item: Domain.User) -> Models.UserModel:
     return Models.UserModel(

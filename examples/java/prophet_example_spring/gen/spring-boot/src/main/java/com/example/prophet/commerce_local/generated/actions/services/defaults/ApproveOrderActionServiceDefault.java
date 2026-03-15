@@ -7,8 +7,8 @@ import com.example.prophet.commerce_local.generated.actions.services.ApproveOrde
 import com.example.prophet.commerce_local.generated.events.ActionOutcome;
 import com.example.prophet.commerce_local.generated.events.DomainEvent;
 import com.example.prophet.commerce_local.generated.events.EventPublishingSupport;
-import com.example.prophet.commerce_local.generated.events.OrderApproveTransition;
-import com.example.prophet.commerce_local.generated.events.OrderApproveTransitionEvent;
+import com.example.prophet.commerce_local.generated.events.OrderApproved;
+import com.example.prophet.commerce_local.generated.events.OrderApprovedEvent;
 import io.prophet.events.runtime.EventIds;
 import io.prophet.events.runtime.EventPublisher;
 import java.util.ArrayList;
@@ -31,14 +31,14 @@ public class ApproveOrderActionServiceDefault implements ApproveOrderActionServi
     }
 
     @Override
-    public OrderApproveTransition execute(ApproveOrderCommand request) {
+    public OrderApproved execute(ApproveOrderCommand request) {
         ApproveOrderActionHandler handler = handlerProvider.getIfAvailable();
         if (handler == null) {
             throw new UnsupportedOperationException("No handler bean provided for action 'approveOrder'");
         }
-        ActionOutcome<OrderApproveTransition> outcome = handler.handleOutcome(request);
+        ActionOutcome<OrderApproved> outcome = handler.handleOutcome(request);
         List<DomainEvent> events = new ArrayList<>();
-        events.add(new OrderApproveTransitionEvent(outcome.output()));
+        events.add(new OrderApprovedEvent(outcome.output()));
         events.addAll(outcome.additionalEvents());
         EventPublishingSupport.publishAll(
             eventPublisher,

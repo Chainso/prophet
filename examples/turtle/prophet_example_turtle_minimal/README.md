@@ -8,18 +8,18 @@ A simple support workflow:
 - `Ticket` object with basic fields and lifecycle state
 - `UserRef` struct for assignee details
 - `Email` custom type with regex constraint
-- `triageTicket` action and `TicketCreated` signal
+- `triageTicket` action and `TicketCreated` event
 - `onTicketCreated` trigger that invokes triage
 
 ## What This Example Showcases
 
 - Custom type constraints (`constraint pattern`) and SHACL projection
 - Structs embedded in objects (`assignee: UserRef`)
-- Object references (`ref(Ticket)`) for action/signal payloads
+- Object references (`ref(Ticket)`) for action/event payloads
 - Lists (`string[]`) in object fields
 - Human-facing labels via DSL `name "..."` metadata
-- State machine basics: `state`, `transition`, `initial`
-- Action inline output (`output { ... }`) deriving `<ActionName>Result`
+- Enum-backed state fields with `state` + `initial`
+- Action inline output (`output { ... }`) deriving `<ActionName> Result`
 - Deterministic Turtle generation in `gen/turtle/ontology.ttl`
 
 ## Files to Inspect

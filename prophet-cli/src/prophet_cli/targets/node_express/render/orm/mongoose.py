@@ -11,6 +11,7 @@ from ..support import _pascal_case
 from ..support import _pluralize
 from ..support import _resolve_custom_base
 from ..support import _snake_case
+from ..support import _state_field_initial_value
 from ..support import _ts_base_type
 
 def _js_object_key(name: str) -> str:
@@ -59,21 +60,24 @@ def _mongoose_field_config_expr(
     type_desc: Dict[str, Any],
     *,
     required: bool,
+    default_value: str = "",
     type_by_id: Dict[str, Dict[str, Any]],
     enum_by_id: Dict[str, Dict[str, Any]],
 ) -> str:
     kind = str(type_desc.get("kind", ""))
     required_str = "true" if required else "false"
+    escaped_default = default_value.replace("\\", "\\\\").replace("'", "\\'")
+    default_suffix = f", default: '{escaped_default}'" if default_value else ""
     if kind == "enum":
         enum_name = _pascal_case(str(enum_by_id.get(str(type_desc.get("target_enum_id", "")), {}).get("name", "Enum")))
-        return f"{{ type: String, enum: Object.values(Domain.{enum_name}), required: {required_str} }}"
+        return f"{{ type: String, enum: Object.values(Domain.{enum_name}), required: {required_str}{default_suffix} }}"
     if kind == "list":
         element = type_desc.get("element", {}) if isinstance(type_desc.get("element"), dict) else {}
         if str(element.get("kind", "")) == "enum":
             enum_name = _pascal_case(str(enum_by_id.get(str(element.get("target_enum_id", "")), {}).get("name", "Enum")))
             return f"{{ type: [{{ type: String, enum: Object.values(Domain.{enum_name}) }}], required: {required_str} }}"
     schema_type = _mongoose_schema_type_for_descriptor(type_desc, type_by_id)
-    return f"{{ type: {schema_type}, required: {required_str} }}"
+    return f"{{ type: {schema_type}, required: {required_str}{default_suffix} }}"
 
 
 def _ts_type_for_mongoose_document_descriptor(
@@ -168,30 +172,21 @@ def _render_mongoose_models(ir: Dict[str, Any]) -> str:
                 lines.append(f"  {field_name}: {ts_type};")
             else:
                 lines.append(f"  {field_name}?: {ts_type};")
-        if obj.get("states"):
-            lines.append(f"  state: Domain.{obj_name}State;")
         lines.append("}")
         lines.append("")
 
-        lines.append(f"const {obj_name}Schema = new Schema<{obj_name}Document>({{")
+        lines.append(f"const {obj_name}Schema = new Schema({{")
         for field in list(obj.get("fields", [])):
             if not isinstance(field, dict):
                 continue
             field_name = _camel_case(str(field.get("name", "field")))
             type_desc = field.get("type", {}) if isinstance(field.get("type"), dict) else {}
+            default_value = ""
+            if bool(field.get("is_state_field")):
+                default_value = _state_field_initial_value({"fields": [field]}, enum_by_id=enum_by_id) or ""
             lines.append(
-                f"  {field_name}: {_mongoose_field_config_expr(type_desc, required=_is_required(field), type_by_id=type_by_id, enum_by_id=enum_by_id)},"
+                f"  {field_name}: {_mongoose_field_config_expr(type_desc, required=_is_required(field), default_value=default_value, type_by_id=type_by_id, enum_by_id=enum_by_id)},"
             )
-        if obj.get("states"):
-            initial_state = next(
-                (str(state.get("name", "")) for state in obj.get("states", []) if isinstance(state, dict) and bool(state.get("initial"))),
-                "",
-            )
-            if initial_state:
-                escaped_state = initial_state.replace("\\", "\\\\").replace("'", "\\'")
-                lines.append(f"  __prophet_state: {{ type: String, required: true, default: '{escaped_state}' }},")
-            else:
-                lines.append("  __prophet_state: { type: String, required: true },")
         lines.append(f"}}, {{ collection: '{table_name}', strict: false }});")
 
         primary_ids = set(obj.get("keys", {}).get("primary", {}).get("field_ids", []))
@@ -229,56 +224,6 @@ def _render_mongoose_models(ir: Dict[str, Any]) -> str:
 
         lines.append(f"export const {obj_name}Model: Model<{obj_name}Document> = model<{obj_name}Document>('{obj_name}', {obj_name}Schema);")
         lines.append("")
-
-        if obj.get("states"):
-            history_doc_name = f"{obj_name}StateHistoryDocument"
-            history_model_name = f"{obj_name}StateHistoryModel"
-            history_collection_name = f"{table_name}_state_history"
-            lines.append(f"export interface {history_doc_name} extends Record<string, unknown> {{")
-            for pk_field in _object_primary_key_fields(obj):
-                pk_prop = _camel_case(str(pk_field.get("name", "id")))
-                pk_type_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
-                pk_type = _ts_type_for_mongoose_document_descriptor(
-                    pk_type_desc,
-                    type_by_id=type_by_id,
-                    enum_by_id=enum_by_id,
-                    object_by_id=object_by_id,
-                    struct_by_id=struct_by_id,
-                )
-                lines.append(f"  {pk_prop}: {pk_type};")
-            lines.append("  transitionId: string;")
-            lines.append("  fromState: string;")
-            lines.append("  toState: string;")
-            lines.append("  occurredAt?: string;")
-            lines.append("}")
-            lines.append("")
-            lines.append(f"const {obj_name}StateHistorySchema = new Schema<{history_doc_name}>({{")
-            for pk_field in _object_primary_key_fields(obj):
-                pk_name = str(pk_field.get("name", "id"))
-                pk_prop = _camel_case(pk_name)
-                pk_type_desc = pk_field.get("type", {}) if isinstance(pk_field.get("type"), dict) else {}
-                pk_schema_type = _mongoose_schema_type_for_descriptor(pk_type_desc, type_by_id)
-                if str(pk_type_desc.get("kind", "")) == "enum":
-                    enum_name = _pascal_case(str(enum_by_id.get(str(pk_type_desc.get("target_enum_id", "")), {}).get("name", "Enum")))
-                    lines.append(
-                        f"  {pk_prop}: {{ type: String, enum: Object.values(Domain.{enum_name}), required: true }},"
-                    )
-                else:
-                    lines.append(f"  {pk_prop}: {{ type: {pk_schema_type}, required: true }},")
-            lines.append("  transitionId: { type: String, required: true },")
-            lines.append("  fromState: { type: String, required: true },")
-            lines.append("  toState: { type: String, required: true },")
-            lines.append("  occurredAt: { type: String, required: true, default: () => new Date().toISOString() },")
-            lines.append(f"}}, {{ collection: '{history_collection_name}', strict: false }});")
-            history_index_paths = [_camel_case(str(field.get("name", "id"))) for field in _object_primary_key_fields(obj)]
-            if history_index_paths:
-                history_index_spec = ", ".join([f"{_js_object_key(path)}: 1" for path in history_index_paths])
-                lines.append(f"{obj_name}StateHistorySchema.index({{ {history_index_spec} }});")
-            lines.append(
-                f"export const {history_model_name}: Model<{history_doc_name}> = model<{history_doc_name}>('{obj_name}StateHistory', {obj_name}StateHistorySchema);"
-            )
-            lines.append("")
-
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -295,26 +240,14 @@ def _render_mongoose_adapter(ir: Dict[str, Any]) -> str:
             f"{_pascal_case(str(item.get('name', 'Object')))}Model"
             for item in ir.get("objects", [])
             if isinstance(item, dict)
-        }.union(
-            {
-                f"{_pascal_case(str(item.get('name', 'Object')))}StateHistoryModel"
-                for item in ir.get("objects", [])
-                if isinstance(item, dict) and item.get("states")
-            }
-        )
+        }
     )
     model_type_imports = sorted(
         {
             f"{_pascal_case(str(item.get('name', 'Object')))}Document"
             for item in ir.get("objects", [])
             if isinstance(item, dict)
-        }.union(
-            {
-                f"{_pascal_case(str(item.get('name', 'Object')))}StateHistoryDocument"
-                for item in ir.get("objects", [])
-                if isinstance(item, dict) and item.get("states")
-            }
-        )
+        }
     )
 
     lines = [
@@ -354,8 +287,6 @@ def _render_mongoose_adapter(ir: Dict[str, Any]) -> str:
             continue
         obj_name = _pascal_case(str(obj.get("name", "Object")))
         lines.append(f"  {_camel_case(obj_name)}?: Model<{obj_name}Document>;")
-        if obj.get("states"):
-            lines.append(f"  {_camel_case(f'{obj_name}StateHistory')}?: Model<{obj_name}StateHistoryDocument>;")
     lines.append("}")
     lines.append("")
 
@@ -372,12 +303,7 @@ def _render_mongoose_adapter(ir: Dict[str, Any]) -> str:
             continue
         obj_name = _pascal_case(str(obj.get("name", "Object")))
         repo_var = _camel_case(obj_name)
-        if obj.get("states"):
-            lines.append(
-                f"    this.{repo_var} = new {obj_name}MongooseRepository(models.{repo_var} ?? {obj_name}Model, models.{_camel_case(f'{obj_name}StateHistory')} ?? {obj_name}StateHistoryModel);"
-            )
-        else:
-            lines.append(f"    this.{repo_var} = new {obj_name}MongooseRepository(models.{repo_var} ?? {obj_name}Model);")
+        lines.append(f"    this.{repo_var} = new {obj_name}MongooseRepository(models.{repo_var} ?? {obj_name}Model);")
     lines.append("  }")
     lines.append("}")
     lines.append("")
@@ -404,13 +330,6 @@ def _render_mongoose_adapter(ir: Dict[str, Any]) -> str:
             filter_name = _camel_case(str(filter_item.get("field_name", "field")))
             operators = [str(op) for op in filter_item.get("operators", []) if isinstance(op, str)]
             lines.append(f"  const {filter_name}Filter = filter.{filter_name};")
-
-            if field_id == "__state__":
-                if "eq" in operators:
-                    lines.append(f"  if ({filter_name}Filter?.eq !== undefined) and.push({{ __prophet_state: {filter_name}Filter.eq }});")
-                if "in" in operators:
-                    lines.append(f"  if ({filter_name}Filter?.in?.length) and.push({{ __prophet_state: {{ $in: {filter_name}Filter.in }} }});")
-                continue
 
             field = fields_by_id.get(field_id, {})
             if not field:
@@ -505,8 +424,6 @@ def _render_mongoose_adapter(ir: Dict[str, Any]) -> str:
                 lines.append(f"    {prop_name}: doc.{prop_name},")
             else:
                 lines.append(f"    {prop_name}: doc.{prop_name} ?? undefined,")
-        if obj.get("states"):
-            lines.append("    state: doc.__prophet_state,")
         lines.append("  };")
         lines.append("}")
         lines.append("")
@@ -521,19 +438,12 @@ def _render_mongoose_adapter(ir: Dict[str, Any]) -> str:
                 lines.append(f"    {prop_name}: item.{prop_name},")
             else:
                 lines.append(f"    {prop_name}: item.{prop_name} ?? null,")
-        if obj.get("states"):
-            lines.append("    __prophet_state: item.state,")
         lines.append("  };")
         lines.append("}")
         lines.append("")
 
         lines.append(f"class {obj_name}MongooseRepository implements Persistence.{obj_name}Repository {{")
-        if obj.get("states"):
-            lines.append(
-                f"  constructor(private readonly model: Model<{doc_type}>, private readonly historyModel: Model<{obj_name}StateHistoryDocument>) {{}}"
-            )
-        else:
-            lines.append(f"  constructor(private readonly model: Model<{doc_type}>) {{}}")
+        lines.append(f"  constructor(private readonly model: Model<{doc_type}>) {{}}")
         lines.append("")
         lines.append(f"  async list(page: number, size: number): Promise<Persistence.Page<Domain.{obj_name}>> {{")
         lines.append("    const normalized = normalizePage(page, size);")
@@ -580,34 +490,6 @@ def _render_mongoose_adapter(ir: Dict[str, Any]) -> str:
         lines.append(f"    if (!persisted) return {repo_var}DocumentToDomain(payload);")
         lines.append(f"    return {repo_var}DocumentToDomain(persisted);")
         lines.append("  }")
-        if obj.get("states"):
-            lines.append("")
-            lines.append("  async applyTransition(")
-            lines.append(f"    id: Persistence.{obj_name}Id,")
-            lines.append(f"    expectedState: Domain.{obj_name}State,")
-            lines.append(f"    nextState: Domain.{obj_name}State,")
-            lines.append("    transitionId: string,")
-            lines.append(f"  ): Promise<Domain.{obj_name} | null> {{")
-            lines.append(f"    const primaryFilter = {repo_var}PrimaryFilter(id);")
-            lines.append("    const persisted = await this.model")
-            lines.append("      .findOneAndUpdate(")
-            lines.append("        { ...primaryFilter, __prophet_state: expectedState },")
-            lines.append("        { $set: { __prophet_state: nextState } },")
-            lines.append("        { new: true, lean: true },")
-            lines.append("      )")
-            lines.append("      .exec();")
-            lines.append("    if (!persisted) {")
-            lines.append("      return null;")
-            lines.append("    }")
-            lines.append("    await this.historyModel.create({")
-            lines.append("      ...id,")
-            lines.append("      transitionId,")
-            lines.append("      fromState: expectedState,")
-            lines.append("      toState: nextState,")
-            lines.append("      occurredAt: new Date().toISOString(),")
-            lines.append("    });")
-            lines.append(f"    return {repo_var}DocumentToDomain(persisted);")
-            lines.append("  }")
         lines.append("}")
         lines.append("")
 

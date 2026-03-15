@@ -3,32 +3,22 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
 
 from .constants import BASE_TYPES
+from .errors import ProphetError
 from .models import FieldDef
 from .models import ObjectDef
 from .models import Ontology
 from .models import StructDef
 from .models import TypeDef
 from .parser import resolve_type_descriptor
-from .errors import ProphetError
 
-RESERVED_FIELD_NAMES = {"state"}
 RESERVED_FIELD_PREFIXES = ("__prophet_",)
 
 
-def _pascal_case(value: str) -> str:
-    chunks = [part for part in value.replace("-", "_").split("_") if part]
-    return "".join(chunk[:1].upper() + chunk[1:] for chunk in chunks)
-
-
-def transition_event_name(object_name: str, transition_name: str) -> str:
-    return f"{object_name}{_pascal_case(transition_name)}Transition"
-
-
-def _validate_reserved_field_name(owner: str, field: FieldDef, errors: List[str]) -> None:
-    if field.name in RESERVED_FIELD_NAMES:
-        errors.append(
-            f"line {field.line}: field {owner}.{field.name} uses reserved name '{field.name}'"
-        )
+def _validate_reserved_field_name(
+    owner: str,
+    field: FieldDef,
+    errors: List[str],
+) -> None:
     for prefix in RESERVED_FIELD_PREFIXES:
         if field.name.startswith(prefix):
             errors.append(
@@ -95,12 +85,6 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         id_entries.append((f"object {o.name}", o.id, o.line))
         for f in o.fields:
             id_entries.append((f"field {o.name}.{f.name}", f.id, f.line))
-        for s in o.states:
-            id_entries.append((f"state {o.name}.{s.name}", s.id, s.line))
-        for tr in o.transitions:
-            id_entries.append((f"transition {o.name}.{tr.name}", tr.id, tr.line))
-            for f in tr.fields:
-                id_entries.append((f"field {o.name}.{tr.name}.{f.name}", f.id, f.line))
     for s in ont.structs:
         id_entries.append((f"struct {s.name}", s.id, s.line))
         for f in s.fields:
@@ -132,6 +116,8 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
     struct_names = {s.name: s for s in ont.structs}
     action_input_names = {s.name: s for s in ont.action_inputs}
     action_names = {a.name: a for a in ont.actions}
+    event_names = {e.name: e for e in ont.events}
+    enum_values_by_name = {enum.name: {value.name: value.id for value in enum.values} for enum in ont.enums}
 
     type_namespace: Dict[str, Tuple[str, int]] = {}
 
@@ -153,42 +139,56 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
         _register_type_namespace(enum.name, f"enum {enum.name}", enum.line)
         if not enum.values:
             errors.append(f"line {enum.line}: enum {enum.name} must declare at least one value")
-        value_name_lines: Dict[str, int] = {}
-        value_id_lines: Dict[str, int] = {}
+        seen_value_names: Dict[str, int] = {}
+        seen_value_ids: Dict[str, int] = {}
         for value in enum.values:
-            existing_name_line = value_name_lines.get(value.name)
-            if existing_name_line is not None:
+            previous_name_line = seen_value_names.get(value.name)
+            if previous_name_line is not None:
                 errors.append(
-                    f"line {value.line}: enum {enum.name} declares duplicate value '{value.name}' (line {existing_name_line})"
+                    f"line {value.line}: enum {enum.name} declares duplicate value '{value.name}' (line {previous_name_line})"
                 )
             else:
-                value_name_lines[value.name] = value.line
-            existing_id_line = value_id_lines.get(value.id)
-            if existing_id_line is not None:
+                seen_value_names[value.name] = value.line
+            previous_id_line = seen_value_ids.get(value.id)
+            if previous_id_line is not None:
                 errors.append(
-                    f"line {value.line}: enum {enum.name} uses duplicate value id '{value.id}' (line {existing_id_line})"
+                    f"line {value.line}: enum {enum.name} uses duplicate value id '{value.id}' (line {previous_id_line})"
                 )
             else:
-                value_id_lines[value.id] = value.line
+                seen_value_ids[value.id] = value.line
 
     for s in ont.structs:
         _register_type_namespace(s.name, f"struct {s.name}", s.line)
 
-    for o in ont.objects:
-        if o.states and o.name + "State" in enum_name_to_id:
+    def _validate_non_object_field(owner_kind: str, owner_name: str, field: FieldDef) -> None:
+        _validate_reserved_field_name(owner_name, field, errors)
+        if field.key is not None:
             errors.append(
-                f"line {o.line}: object {o.name} derived state enum name '{o.name}State' collides with enum {o.name}State"
+                f"line {field.line}: {owner_kind} {owner_name}.{field.name} must not declare key (keys are only valid on object fields)"
             )
+        if field.is_state_field:
+            errors.append(
+                f"line {field.line}: {owner_kind} {owner_name}.{field.name} must not be marked as state"
+            )
+        if field.initial_enum_value is not None:
+            errors.append(
+                f"line {field.line}: {owner_kind} {owner_name}.{field.name} must not declare an initial enum value"
+            )
+        type_error = validate_type_expr(
+            field.type_raw,
+            type_names,
+            enum_name_to_id,
+            object_names,
+            struct_names,
+        )
+        if type_error:
+            errors.append(f"line {field.line}: field {owner_name}.{field.name} {type_error}")
+
+    for o in ont.objects:
         for key_def in o.keys:
             if key_def.kind not in {"primary", "display"}:
                 errors.append(
                     f"line {key_def.line}: object {o.name} key kind '{key_def.kind}' is invalid; expected primary or display"
-                )
-        for f in o.fields:
-            _validate_reserved_field_name(o.name, f, errors)
-            if f.key is not None and f.key not in {"primary", "display"}:
-                errors.append(
-                    f"line {f.line}: field {o.name}.{f.name} key kind '{f.key}' is invalid; expected primary or display"
                 )
 
         field_by_name = {f.name: f for f in o.fields}
@@ -204,10 +204,9 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                         f"line {o.line}: object {o.name} key primary references unknown field '{field_name}'"
                     )
                     continue
-                primary_field = field_by_name[field_name]
-                if not primary_field.required:
+                if not field_by_name[field_name].required:
                     errors.append(
-                        f"line {primary_field.line}: object {o.name} primary key field {field_name} must be required"
+                        f"line {field_by_name[field_name].line}: object {o.name} primary key field {field_name} must be required"
                     )
 
         display_field_names = _effective_key_field_names(o, "display", errors)
@@ -220,141 +219,28 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                         f"line {o.line}: object {o.name} key display references unknown field '{field_name}'"
                     )
 
-        state_names = {s.name: s for s in o.states}
-        if o.states:
-            initials = [s for s in o.states if s.initial]
-            if len(initials) != 1:
-                errors.append(f"line {o.line}: object {o.name} with states must have exactly one initial state")
-
-        for tr in o.transitions:
-            if tr.from_state not in state_names:
-                errors.append(f"line {tr.line}: transition {o.name}.{tr.name} from unknown state '{tr.from_state}'")
-            if tr.to_state not in state_names:
-                errors.append(f"line {tr.line}: transition {o.name}.{tr.name} to unknown state '{tr.to_state}'")
-            if tr.from_state == tr.to_state:
-                errors.append(
-                    f"line {tr.line}: transition {o.name}.{tr.name} must change state (from and to cannot match)"
-                )
-
-            transition_field_names: set[str] = set()
-            transition_field_dups: set[str] = set()
-            for transition_field in tr.fields:
-                if transition_field.name in transition_field_names:
-                    transition_field_dups.add(transition_field.name)
-                transition_field_names.add(transition_field.name)
-            for duplicate_name in sorted(transition_field_dups):
-                errors.append(
-                    f"line {tr.line}: transition {o.name}.{tr.name} declares duplicate field '{duplicate_name}'"
-                )
-
-            implicit_field_names = set(primary_field_names or [])
-            implicit_field_names.update({"fromState", "toState"})
-            for transition_field in tr.fields:
-                _validate_reserved_field_name(f"{o.name}.{tr.name}", transition_field, errors)
-                if transition_field.key is not None:
-                    errors.append(
-                        f"line {transition_field.line}: transition {o.name}.{tr.name}.{transition_field.name} must not declare key"
-                    )
-                if transition_field.name in implicit_field_names:
-                    errors.append(
-                        f"line {transition_field.line}: transition {o.name}.{tr.name}.{transition_field.name} collides with implicit transition field '{transition_field.name}'"
-                    )
-                type_error = validate_type_expr(
-                    transition_field.type_raw,
-                    type_names,
-                    enum_name_to_id,
-                    object_names,
-                    struct_names,
-                )
-                if type_error:
-                    errors.append(
-                        f"line {transition_field.line}: field {o.name}.{tr.name}.{transition_field.name} {type_error}"
-                    )
+        state_fields = [field for field in o.fields if field.is_state_field]
+        if len(state_fields) > 1:
+            errors.append(f"line {o.line}: object {o.name} may declare at most one state field")
 
         for f in o.fields:
-            type_error = validate_type_expr(f.type_raw, type_names, enum_name_to_id, object_names, struct_names)
+            _validate_reserved_field_name(o.name, f, errors)
+            if f.key is not None and f.key not in {"primary", "display"}:
+                errors.append(
+                    f"line {f.line}: field {o.name}.{f.name} key kind '{f.key}' is invalid; expected primary or display"
+                )
+
+            type_error = validate_type_expr(
+                f.type_raw,
+                type_names,
+                enum_name_to_id,
+                object_names,
+                struct_names,
+            )
             if type_error:
                 errors.append(f"line {f.line}: field {o.name}.{f.name} {type_error}")
                 continue
-            if primary_field_names and f.name in set(primary_field_names):
-                descriptor = resolve_type_descriptor(
-                    f.type_raw,
-                    {t.name: t.id for t in type_names.values()},
-                    enum_name_to_id,
-                    {obj.name: obj.id for obj in object_names.values()},
-                    {s.name: s.id for s in struct_names.values()},
-                )
-                if descriptor.get("kind") not in {"base", "custom", "enum"}:
-                    errors.append(
-                        f"line {f.line}: field {o.name}.{f.name} cannot be used in a primary key (only base/custom/enum scalar types are supported)"
-                    )
 
-    for s in ont.structs:
-        for f in s.fields:
-            _validate_reserved_field_name(s.name, f, errors)
-            if f.key is not None:
-                errors.append(f"line {f.line}: struct {s.name}.{f.name} must not declare key")
-            type_error = validate_type_expr(f.type_raw, type_names, enum_name_to_id, object_names, struct_names)
-            if type_error:
-                errors.append(f"line {f.line}: field {s.name}.{f.name} {type_error}")
-
-    def validate_action_shape_fields(kind: str, shape_name: str, fields: List[FieldDef]) -> None:
-        for f in fields:
-            _validate_reserved_field_name(shape_name, f, errors)
-            if f.key is not None:
-                errors.append(
-                    f"line {f.line}: {kind} {shape_name}.{f.name} must not declare key (keys are only valid on object fields)"
-                )
-            type_error = validate_type_expr(f.type_raw, type_names, enum_name_to_id, object_names, struct_names)
-            if type_error:
-                errors.append(f"line {f.line}: field {shape_name}.{f.name} {type_error}")
-
-    for shape in ont.action_inputs:
-        validate_action_shape_fields("actionInput", shape.name, shape.fields)
-
-    for a in ont.actions:
-        if a.input_shape not in action_input_names:
-            errors.append(f"line {a.line}: action {a.name} input shape '{a.input_shape}' not found")
-
-    for signal in ont.events:
-        if signal.kind != "signal":
-            errors.append(
-                f"line {signal.line}: signal {signal.name} has unsupported kind '{signal.kind}'"
-            )
-        validate_action_shape_fields("signal", signal.name, signal.fields)
-
-    event_name_sources: Dict[str, str] = {}
-    for signal in ont.events:
-        event_name_sources[signal.name] = f"signal {signal.name}"
-    for obj in ont.objects:
-        for tr in obj.transitions:
-            derived_name = transition_event_name(obj.name, tr.name)
-            existing = event_name_sources.get(derived_name)
-            if existing is not None:
-                errors.append(
-                    f"line {tr.line}: transition event name '{derived_name}' collides with {existing}"
-                )
-            event_name_sources[derived_name] = f"transition {obj.name}.{tr.name}"
-
-    for a in ont.actions:
-        if a.produces_event not in event_name_sources:
-            errors.append(f"line {a.line}: action {a.name} output event '{a.produces_event}' not found")
-
-    for tr in ont.triggers:
-        if tr.event_name not in event_name_sources:
-            errors.append(f"line {tr.line}: trigger {tr.name} references unknown event '{tr.event_name}'")
-        if tr.action_name not in action_names:
-            errors.append(f"line {tr.line}: trigger {tr.name} references unknown action '{tr.action_name}'")
-
-    object_primary_counts: Dict[str, int] = {}
-    for o in ont.objects:
-        primary_field_names = _effective_key_field_names(o, "primary", [])
-        object_primary_counts[o.name] = len(primary_field_names or [])
-    for o in ont.objects:
-        for f in o.fields:
-            descriptor_error = validate_type_expr(f.type_raw, type_names, enum_name_to_id, object_names, struct_names)
-            if descriptor_error:
-                continue
             descriptor = resolve_type_descriptor(
                 f.type_raw,
                 {t.name: t.id for t in type_names.values()},
@@ -362,20 +248,89 @@ def validate_ontology(ont: Ontology, strict_enums: bool = False) -> List[str]:
                 {obj.name: obj.id for obj in object_names.values()},
                 {s.name: s.id for s in struct_names.values()},
             )
+
+            if primary_field_names and f.name in set(primary_field_names):
+                if descriptor.get("kind") not in {"base", "custom", "enum"}:
+                    errors.append(
+                        f"line {f.line}: field {o.name}.{f.name} cannot be used in a primary key (only base/custom/enum scalar types are supported)"
+                    )
+
+            if f.is_state_field:
+                if descriptor.get("kind") != "enum":
+                    errors.append(f"line {f.line}: state field {o.name}.{f.name} must use an enum type")
+                if f.initial_enum_value is None:
+                    errors.append(f"line {f.line}: state field {o.name}.{f.name} must declare an initial enum value")
+                elif descriptor.get("kind") == "enum":
+                    target_enum_id = str(descriptor.get("target_enum_id", ""))
+                    target_enum_name = next(
+                        (enum.name for enum in ont.enums if enum.id == target_enum_id),
+                        None,
+                    )
+                    if target_enum_name is not None and f.initial_enum_value not in enum_values_by_name[target_enum_name]:
+                        errors.append(
+                            f"line {f.line}: state field {o.name}.{f.name} initial value '{f.initial_enum_value}' is not a member of enum {target_enum_name}"
+                        )
+            elif f.initial_enum_value is not None:
+                errors.append(
+                    f"line {f.line}: field {o.name}.{f.name} must be marked as state before declaring an initial enum value"
+                )
+
+    for s in ont.structs:
+        for f in s.fields:
+            _validate_non_object_field("struct", s.name, f)
+
+    for shape in ont.action_inputs:
+        for f in shape.fields:
+            _validate_non_object_field("actionInput", shape.name, f)
+
+    for e in ont.events:
+        for f in e.fields:
+            _validate_non_object_field("event", e.name, f)
+
+    for a in ont.actions:
+        if a.input_shape not in action_input_names:
+            errors.append(f"line {a.line}: action {a.name} input shape '{a.input_shape}' not found")
+        if a.produces_event not in event_names:
+            errors.append(f"line {a.line}: action {a.name} output event '{a.produces_event}' not found")
+
+    for tr in ont.triggers:
+        if tr.event_name not in event_names:
+            errors.append(f"line {tr.line}: trigger {tr.name} references unknown event '{tr.event_name}'")
+        if tr.action_name not in action_names:
+            errors.append(f"line {tr.line}: trigger {tr.name} references unknown action '{tr.action_name}'")
+
+    object_primary_counts: Dict[str, int] = {}
+    for obj in ont.objects:
+        primary_field_names = _effective_key_field_names(obj, "primary", [])
+        object_primary_counts[obj.name] = len(primary_field_names or [])
+
+    for obj in ont.objects:
+        for field in obj.fields:
+            descriptor_error = validate_type_expr(
+                field.type_raw,
+                type_names,
+                enum_name_to_id,
+                object_names,
+                struct_names,
+            )
+            if descriptor_error:
+                continue
+            descriptor = resolve_type_descriptor(
+                field.type_raw,
+                {t.name: t.id for t in type_names.values()},
+                enum_name_to_id,
+                {object_model.name: object_model.id for object_model in ont.objects},
+                {struct.name: struct.id for struct in ont.structs},
+            )
             if descriptor.get("kind") != "object_ref":
                 continue
             target_object_id = descriptor.get("target_object_id")
-            target_name = next((obj.name for obj in ont.objects if obj.id == target_object_id), None)
+            target_name = next((candidate.name for candidate in ont.objects if candidate.id == target_object_id), None)
             if target_name is None:
                 continue
             if object_primary_counts.get(target_name, 0) != 1:
                 errors.append(
-                    f"line {f.line}: field {o.name}.{f.name} references object {target_name} which does not have exactly one primary key field (object refs currently require single-field primary keys)"
+                    f"line {field.line}: field {obj.name}.{field.name} references object {target_name} which does not have exactly one primary key field (object refs currently require single-field primary keys)"
                 )
-
-    if strict_enums:
-        for o in ont.objects:
-            if len({s.name for s in o.states}) != len(o.states):
-                errors.append(f"line {o.line}: object {o.name} has duplicate state names")
 
     return errors

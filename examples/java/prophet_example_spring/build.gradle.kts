@@ -30,7 +30,7 @@ dependencies {
 	testImplementation("org.testcontainers:junit-jupiter")
 	testImplementation("org.testcontainers:postgresql")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-	implementation(project(":prophet_generated"))
+    implementation(project(":prophet_generated"))
 }
 
 tasks.withType<Test> {
